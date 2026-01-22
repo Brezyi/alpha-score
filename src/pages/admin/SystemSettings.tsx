@@ -1,226 +1,101 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useUserRole } from "@/hooks/useUserRole";
-import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Settings, Shield, Bell, Database, RefreshCw, Save } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { useSystemSettings, SystemSettings as SettingsType } from "@/hooks/useSystemSettings";
+import { useToast } from "@/hooks/use-toast";
+import { ProfileMenu } from "@/components/ProfileMenu";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, Shield, Settings, Palette, Bell, Brain, Loader2, Save, RefreshCw } from "lucide-react";
 
 export default function SystemSettings() {
   const navigate = useNavigate();
-  const { isOwner } = useUserRole();
+  const { isOwner, loading: roleLoading } = useUserRole();
+  const { settings, loading, saving, updateMultipleSettings, refetch } = useSystemSettings();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
   
-  // Settings state
-  const [settings, setSettings] = useState({
-    maintenanceMode: false,
-    autoConfirmEmail: true,
-    maxUploadSize: 10,
-    streakReminderEnabled: true,
-    analyticsEnabled: true,
-  });
+  const [localSettings, setLocalSettings] = useState<SettingsType>(settings);
+  const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    if (!isOwner) {
-      navigate("/admin");
-      return;
-    }
-  }, [isOwner, navigate]);
+    if (!roleLoading && !isOwner) navigate("/admin");
+  }, [isOwner, roleLoading, navigate]);
+
+  useEffect(() => { setLocalSettings(settings); }, [settings]);
+  useEffect(() => { setHasChanges(JSON.stringify(localSettings) !== JSON.stringify(settings)); }, [localSettings, settings]);
 
   const handleSave = async () => {
-    setLoading(true);
-    try {
-      // Simulate saving settings
-      await new Promise(resolve => setTimeout(resolve, 500));
-      toast({
-        title: "Einstellungen gespeichert",
-        description: "Die Systemeinstellungen wurden erfolgreich aktualisiert.",
-      });
-    } catch (error) {
-      toast({
-        title: "Fehler",
-        description: "Einstellungen konnten nicht gespeichert werden.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
+    const changes: Partial<SettingsType> = {};
+    (Object.keys(localSettings) as (keyof SettingsType)[]).forEach((key) => {
+      if (localSettings[key] !== settings[key]) {
+        changes[key] = localSettings[key] as SettingsType[typeof key];
+      }
+    });
+    if (Object.keys(changes).length > 0) await updateMultipleSettings(changes);
   };
 
+  if (roleLoading || loading) {
+    return <div className="min-h-screen bg-background flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+  }
   if (!isOwner) return null;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <button
-            onClick={() => navigate("/admin")}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Zurück</span>
-          </button>
-          <div className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-primary" />
-            <h1 className="text-lg font-bold">Systemeinstellungen</h1>
+      <header className="sticky top-0 z-50 glass-card border-b border-border">
+        <div className="container flex items-center justify-between h-16 px-4">
+          <div className="flex items-center gap-4">
+            <Link to="/admin"><Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button></Link>
+            <div className="flex items-center gap-2"><Settings className="w-6 h-6 text-primary" /><span className="text-xl font-bold">Systemeinstellungen</span></div>
           </div>
-          <Button onClick={handleSave} disabled={loading} size="sm">
-            {loading ? <RefreshCw className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-            Speichern
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={refetch} disabled={saving}><RefreshCw className="w-4 h-4 mr-2" />Aktualisieren</Button>
+            <Button onClick={handleSave} disabled={saving || !hasChanges} className="gap-2">{saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}Speichern</Button>
+            <ProfileMenu />
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl space-y-6">
-        {/* Title */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-            <Shield className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold">Systemeinstellungen</h2>
-            <p className="text-muted-foreground">
-              Nur für Owner zugänglich
-            </p>
-          </div>
-        </div>
-
-        {/* General Settings */}
+      <main className="container px-4 py-8 max-w-4xl space-y-6">
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Database className="w-5 h-5" />
-              Allgemeine Einstellungen
-            </CardTitle>
-            <CardDescription>
-              Grundlegende Systemkonfiguration
-            </CardDescription>
-          </CardHeader>
+          <CardHeader><div className="flex items-center gap-2"><Palette className="w-5 h-5 text-primary" /><CardTitle>Branding & Design</CardTitle></div><CardDescription>Passe das Erscheinungsbild an</CardDescription></CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Wartungsmodus</Label>
-                <p className="text-sm text-muted-foreground">
-                  Deaktiviert den Zugriff für normale Nutzer
-                </p>
-              </div>
-              <Switch
-                checked={settings.maintenanceMode}
-                onCheckedChange={(checked) => 
-                  setSettings(prev => ({ ...prev, maintenanceMode: checked }))
-                }
-              />
-            </div>
-            
-            <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>E-Mail Auto-Bestätigung</Label>
-                <p className="text-sm text-muted-foreground">
-                  Neue Nutzer werden automatisch bestätigt
-                </p>
-              </div>
-              <Switch
-                checked={settings.autoConfirmEmail}
-                onCheckedChange={(checked) => 
-                  setSettings(prev => ({ ...prev, autoConfirmEmail: checked }))
-                }
-              />
-            </div>
-            
-            <Separator />
-            
-            <div className="space-y-2">
-              <Label>Max. Upload-Größe (MB)</Label>
-              <Input
-                type="number"
-                value={settings.maxUploadSize}
-                onChange={(e) => 
-                  setSettings(prev => ({ ...prev, maxUploadSize: parseInt(e.target.value) || 10 }))
-                }
-                className="w-32"
-              />
-              <p className="text-sm text-muted-foreground">
-                Maximale Dateigröße für Foto-Uploads
-              </p>
+            <div className="space-y-2"><Label>App-Name</Label><Input value={localSettings.app_name} onChange={(e) => setLocalSettings((s) => ({ ...s, app_name: e.target.value }))} /></div>
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-2"><Label>Standard-Theme</Label><Select value={localSettings.default_theme} onValueChange={(v: "dark"|"light") => setLocalSettings((s) => ({ ...s, default_theme: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="dark">Dunkel</SelectItem><SelectItem value="light">Hell</SelectItem></SelectContent></Select></div>
+              <div className="space-y-2"><Label>Akzentfarbe</Label><div className="flex gap-2"><Input type="color" value={localSettings.accent_color} onChange={(e) => setLocalSettings((s) => ({ ...s, accent_color: e.target.value }))} className="w-14 h-10 p-1" /><Input value={localSettings.accent_color} onChange={(e) => setLocalSettings((s) => ({ ...s, accent_color: e.target.value }))} className="flex-1" /></div></div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Notification Settings */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="w-5 h-5" />
-              Benachrichtigungen
-            </CardTitle>
-            <CardDescription>
-              Push-Benachrichtigungen und Erinnerungen
-            </CardDescription>
-          </CardHeader>
+          <CardHeader><div className="flex items-center gap-2"><Shield className="w-5 h-5 text-primary" /><CardTitle>Allgemeine Einstellungen</CardTitle></div></CardHeader>
           <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Streak-Erinnerungen</Label>
-                <p className="text-sm text-muted-foreground">
-                  Tägliche Erinnerungen an inaktive Nutzer
-                </p>
-              </div>
-              <Switch
-                checked={settings.streakReminderEnabled}
-                onCheckedChange={(checked) => 
-                  setSettings(prev => ({ ...prev, streakReminderEnabled: checked }))
-                }
-              />
-            </div>
-            
+            <div className="flex items-center justify-between"><div><Label className="text-base">Wartungsmodus</Label><p className="text-sm text-muted-foreground">Sperrt die App für Nutzer</p></div><Switch checked={localSettings.maintenance_mode} onCheckedChange={(c) => setLocalSettings((s) => ({ ...s, maintenance_mode: c }))} /></div>
             <Separator />
-            
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Analytics aktiviert</Label>
-                <p className="text-sm text-muted-foreground">
-                  Nutzungsstatistiken sammeln
-                </p>
-              </div>
-              <Switch
-                checked={settings.analyticsEnabled}
-                onCheckedChange={(checked) => 
-                  setSettings(prev => ({ ...prev, analyticsEnabled: checked }))
-                }
-              />
-            </div>
+            <div className="flex items-center justify-between"><div><Label className="text-base">E-Mail Auto-Confirm</Label><p className="text-sm text-muted-foreground">Automatische Bestätigung</p></div><Switch checked={localSettings.auto_confirm_email} onCheckedChange={(c) => setLocalSettings((s) => ({ ...s, auto_confirm_email: c }))} /></div>
+            <Separator />
+            <div className="space-y-2"><Label>Max. Upload-Größe (MB)</Label><Input type="number" min={1} max={50} value={localSettings.max_upload_size_mb} onChange={(e) => setLocalSettings((s) => ({ ...s, max_upload_size_mb: parseInt(e.target.value) || 10 }))} /></div>
           </CardContent>
         </Card>
 
-        {/* Danger Zone */}
-        <Card className="border-destructive/50">
-          <CardHeader>
-            <CardTitle className="text-destructive">Gefahrenzone</CardTitle>
-            <CardDescription>
-              Irreversible Aktionen - mit Vorsicht verwenden
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-medium">Cache leeren</p>
-                <p className="text-sm text-muted-foreground">
-                  Löscht alle zwischengespeicherten Daten
-                </p>
-              </div>
-              <Button variant="outline" size="sm">
-                Cache leeren
-              </Button>
-            </div>
+        <Card>
+          <CardHeader><div className="flex items-center gap-2"><Brain className="w-5 h-5 text-primary" /><CardTitle>KI-Parameter</CardTitle></div></CardHeader>
+          <CardContent>
+            <div className="space-y-2"><Label>Analyse-Intensität</Label><Select value={localSettings.ai_analysis_intensity} onValueChange={(v: "light"|"standard"|"deep") => setLocalSettings((s) => ({ ...s, ai_analysis_intensity: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="light">Leicht</SelectItem><SelectItem value="standard">Standard</SelectItem><SelectItem value="deep">Tiefgehend</SelectItem></SelectContent></Select></div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader><div className="flex items-center gap-2"><Bell className="w-5 h-5 text-primary" /><CardTitle>Benachrichtigungen</CardTitle></div></CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex items-center justify-between"><div><Label className="text-base">Streak-Erinnerungen</Label></div><Switch checked={localSettings.streak_reminder_enabled} onCheckedChange={(c) => setLocalSettings((s) => ({ ...s, streak_reminder_enabled: c }))} /></div>
+            <Separator />
+            <div className="flex items-center justify-between"><div><Label className="text-base">Analytics aktivieren</Label></div><Switch checked={localSettings.analytics_enabled} onCheckedChange={(c) => setLocalSettings((s) => ({ ...s, analytics_enabled: c }))} /></div>
           </CardContent>
         </Card>
       </main>
