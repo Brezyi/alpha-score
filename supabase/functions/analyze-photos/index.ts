@@ -38,6 +38,25 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
+    // SECURITY: Verify user is authenticated
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Authorization required");
+    }
+
+    const token = authHeader.replace("Bearer ", "");
+    const supabaseAuth = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+    if (authError || !user) {
+      logStep("Authentication failed", { error: authError?.message });
+      throw new Error("Unauthorized: Authentication required");
+    }
+    logStep("User authenticated", { userId: user.id });
+
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
@@ -58,7 +77,13 @@ serve(async (req) => {
     if (fetchError || !analysis) {
       throw new Error(`Analysis not found: ${fetchError?.message}`);
     }
-    logStep("Analysis fetched", { status: analysis.status, photoCount: analysis.photo_urls?.length });
+
+    // SECURITY: Verify user owns this analysis
+    if (analysis.user_id !== user.id) {
+      logStep("Ownership check failed", { analysisUserId: analysis.user_id, requestUserId: user.id });
+      throw new Error("Unauthorized: Analysis does not belong to user");
+    }
+    logStep("Analysis fetched and ownership verified", { status: analysis.status, photoCount: analysis.photo_urls?.length });
 
     // Update status to processing
     await supabaseClient
