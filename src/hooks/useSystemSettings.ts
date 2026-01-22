@@ -34,6 +34,18 @@ const defaultSettings: SystemSettings = {
   accent_color: "#00FF88",
 };
 
+// Parse value from JSONB - handles both raw values and JSON strings
+const parseSettingValue = (value: unknown): unknown => {
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
+  return value;
+};
+
 export function useSystemSettings() {
   const [settings, setSettings] = useState<SystemSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
@@ -52,18 +64,23 @@ export function useSystemSettings() {
       if (data && data.length > 0) {
         const parsed: Record<string, unknown> = {};
         (data as SettingsRow[]).forEach((row) => {
-          parsed[row.key] = row.value;
+          parsed[row.key] = parseSettingValue(row.value);
         });
+
         setSettings({
-          app_name: (parsed.app_name as string) ?? defaultSettings.app_name,
-          maintenance_mode: (parsed.maintenance_mode as boolean) ?? defaultSettings.maintenance_mode,
-          auto_confirm_email: (parsed.auto_confirm_email as boolean) ?? defaultSettings.auto_confirm_email,
-          max_upload_size_mb: (parsed.max_upload_size_mb as number) ?? defaultSettings.max_upload_size_mb,
-          streak_reminder_enabled: (parsed.streak_reminder_enabled as boolean) ?? defaultSettings.streak_reminder_enabled,
-          analytics_enabled: (parsed.analytics_enabled as boolean) ?? defaultSettings.analytics_enabled,
-          ai_analysis_intensity: (parsed.ai_analysis_intensity as SystemSettings["ai_analysis_intensity"]) ?? defaultSettings.ai_analysis_intensity,
-          default_theme: (parsed.default_theme as SystemSettings["default_theme"]) ?? defaultSettings.default_theme,
-          accent_color: (parsed.accent_color as string) ?? defaultSettings.accent_color,
+          app_name: typeof parsed.app_name === "string" ? parsed.app_name : defaultSettings.app_name,
+          maintenance_mode: typeof parsed.maintenance_mode === "boolean" ? parsed.maintenance_mode : defaultSettings.maintenance_mode,
+          auto_confirm_email: typeof parsed.auto_confirm_email === "boolean" ? parsed.auto_confirm_email : defaultSettings.auto_confirm_email,
+          max_upload_size_mb: typeof parsed.max_upload_size_mb === "number" ? parsed.max_upload_size_mb : defaultSettings.max_upload_size_mb,
+          streak_reminder_enabled: typeof parsed.streak_reminder_enabled === "boolean" ? parsed.streak_reminder_enabled : defaultSettings.streak_reminder_enabled,
+          analytics_enabled: typeof parsed.analytics_enabled === "boolean" ? parsed.analytics_enabled : defaultSettings.analytics_enabled,
+          ai_analysis_intensity: ["light", "standard", "deep"].includes(parsed.ai_analysis_intensity as string)
+            ? (parsed.ai_analysis_intensity as SystemSettings["ai_analysis_intensity"])
+            : defaultSettings.ai_analysis_intensity,
+          default_theme: ["dark", "light"].includes(parsed.default_theme as string)
+            ? (parsed.default_theme as SystemSettings["default_theme"])
+            : defaultSettings.default_theme,
+          accent_color: typeof parsed.accent_color === "string" ? parsed.accent_color : defaultSettings.accent_color,
         });
       }
     } catch (error) {
@@ -86,9 +103,12 @@ export function useSystemSettings() {
     async <K extends keyof SystemSettings>(key: K, value: SystemSettings[K]) => {
       setSaving(true);
       try {
+        // Store values properly as JSON in the JSONB column
+        const jsonValue = typeof value === "string" ? JSON.stringify(value) : value;
+        
         const { error } = await supabase
           .from("system_settings")
-          .update({ value: value as unknown })
+          .update({ value: jsonValue })
           .eq("key", key);
 
         if (error) throw error;
@@ -117,12 +137,15 @@ export function useSystemSettings() {
     async (updates: Partial<SystemSettings>) => {
       setSaving(true);
       try {
-        const promises = Object.entries(updates).map(([key, value]) =>
-          supabase
+        const promises = Object.entries(updates).map(([key, value]) => {
+          // Store values properly as JSON in the JSONB column
+          const jsonValue = typeof value === "string" ? JSON.stringify(value) : value;
+          
+          return supabase
             .from("system_settings")
-            .update({ value: value as unknown })
-            .eq("key", key)
-        );
+            .update({ value: jsonValue })
+            .eq("key", key);
+        });
 
         const results = await Promise.all(promises);
         const errors = results.filter((r) => r.error);

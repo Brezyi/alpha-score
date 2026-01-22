@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { SystemSettingsProvider } from "./contexts/SystemSettingsContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -39,10 +40,11 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <ThemeProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <SystemSettingsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
@@ -119,9 +121,10 @@ const App = () => (
             <CookieConsent />
           </BrowserRouter>
         </TooltipProvider>
-      </ThemeProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+      </SystemSettingsProvider>
+    </ThemeProvider>
+  </AuthProvider>
+</QueryClientProvider>
 );
 
 export default App;
