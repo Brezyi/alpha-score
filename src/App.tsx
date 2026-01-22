@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import AnalysisUpload from "./pages/AnalysisUpload";
 import AnalysisResults from "./pages/AnalysisResults";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Coach from "./pages/Coach";
 import Plan from "./pages/Plan";
 import Progress from "./pages/Progress";
@@ -39,6 +41,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/upload" element={<AnalysisUpload />} />
             <Route path="/analysis/:id" element={<AnalysisResults />} />
