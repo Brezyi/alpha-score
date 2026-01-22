@@ -82,32 +82,41 @@ ${detailedResults.hair ? `- Haare: ${detailedResults.hair.score}/10 - ${detailed
 ${detailedResults.overall_vibe ? `- Gesamtausstrahlung: ${detailedResults.overall_vibe.score}/10 - ${detailedResults.overall_vibe.details}` : ""}
 `;
 
-    const systemPrompt = `Du bist ein Looksmaxing-Experte und erstellst PERSONALISIERTE Verbesserungspläne.
+    const systemPrompt = `Du bist ein erfahrener Looksmaxing-Coach und erstellst UMFANGREICHE, PERSONALISIERTE Verbesserungspläne.
 
 REGELN:
 1. Der Plan muss DIREKT aus den Analyse-Ergebnissen abgeleitet werden
 2. Keine generischen Ratschläge - alles muss zum spezifischen Nutzer passen
 3. Priorisiere nach IMPACT: Was bringt die größte Verbesserung?
-4. Sei KONKRET: Produktnamen, Dosierungen, Frequenzen
+4. Sei EXTREM KONKRET: Produktnamen, Dosierungen, Frequenzen, Zeitangaben
 5. Kategorisiere in Tages-, Wochen- und Monatsaufgaben
+6. WICHTIG: Erstelle einen UMFANGREICHEN Plan mit MINDESTENS 20-30 Aufgaben insgesamt
 
-KATEGORIEN:
-- skincare: Hautpflege-Routine
-- hair: Haare, Bart, Frisur
-- body: Fitness, Körperfett, Haltung
-- style: Kleidung, Grooming
-- teeth: Zahnpflege, Lächeln
-- mindset: Ausstrahlung, Selbstbewusstsein
+KATEGORIEN (alle müssen abgedeckt werden):
+- skincare: Hautpflege-Routine (Morgen + Abend, Produkte, Behandlungen)
+- hair: Haare, Bart, Frisur (Pflege, Styling, Schnitt-Empfehlungen)
+- body: Fitness, Körperfett, Haltung (Übungen, Ernährung, Schlaf)
+- style: Kleidung, Grooming, Accessoires
+- teeth: Zahnpflege, Lächeln, Mundgesundheit
+- mindset: Ausstrahlung, Selbstbewusstsein, Körpersprache
 
-Erstelle 3-5 hochspezifische Aufgaben pro relevanter Kategorie.
-Überspringe Kategorien, die laut Analyse keine Priorität haben.`;
+AUFGABEN PRO KATEGORIE:
+- Erstelle 4-6 spezifische Aufgaben pro Kategorie
+- Mische Tages-, Wochen- und Monatsaufgaben
+- Jede Aufgabe muss eine klare Handlungsanweisung sein
+- Begründe JEDE Aufgabe mit Bezug zur Analyse`;
 
-    const userPrompt = `Basierend auf dieser Analyse, erstelle einen PERSONALISIERTEN Looksmax-Plan:
+    const userPrompt = `Basierend auf dieser Analyse, erstelle einen UMFANGREICHEN, PERSONALISIERTEN Looksmax-Plan:
 
 ${analysisContext}
 
-Generiere Aufgaben die DIREKT die identifizierten Schwächen adressieren.
-Fokus auf die Top-3 Prioritäten aus der Analyse.`;
+ANFORDERUNGEN:
+- Generiere MINDESTENS 25 konkrete Aufgaben
+- Decke ALLE 6 Kategorien ab (skincare, hair, body, style, teeth, mindset)
+- Jede Kategorie braucht 4-6 spezifische Aufgaben
+- Fokussiere besonders auf die identifizierten Schwächen
+- Inkludiere sowohl Quick-Wins als auch langfristige Verbesserungen
+- Sei bei jeder Aufgabe SPEZIFISCH (z.B. "2x täglich Retinol 0.5% auftragen" statt "Hautpflege machen")`;
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
