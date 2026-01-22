@@ -9,13 +9,10 @@ import {
   ArrowLeft,
   Users,
   BarChart3,
-  FileText,
   MessageSquare,
   Shield,
   Crown,
-  Activity,
   History,
-  Flag,
   HelpCircle
 } from "lucide-react";
 
@@ -33,7 +30,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
 
   const [openTickets, setOpenTickets] = useState(0);
-  const [pendingReports, setPendingReports] = useState(0);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -54,14 +50,7 @@ export default function AdminDashboard() {
           .select('*', { count: 'exact', head: true })
           .eq('status', 'open');
 
-        // Fetch pending reports
-        const { count: reportsCount } = await supabase
-          .from('reports')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending');
-
         setOpenTickets(ticketsCount || 0);
-        setPendingReports(reportsCount || 0);
 
         setStats([
           { 
@@ -81,12 +70,6 @@ export default function AdminDashboard() {
             value: ticketsCount || 0, 
             icon: HelpCircle,
             change: ticketsCount ? `${ticketsCount} offen` : "Keine offenen"
-          },
-          { 
-            label: "Reports", 
-            value: reportsCount || 0, 
-            icon: Flag,
-            change: reportsCount ? `${reportsCount} ausstehend` : "Keine offenen"
           },
         ]);
       } catch (error) {
@@ -145,8 +128,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {stats.map((stat) => {
             const Icon = stat.icon;
             return (
@@ -190,15 +172,15 @@ export default function AdminDashboard() {
           >
             <CardContent className="p-6 flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <MessageSquare className="w-6 h-6 text-primary" />
+                <HelpCircle className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="font-semibold">Support & Reports</p>
-                <p className="text-sm text-muted-foreground">Tickets & Meldungen verwalten</p>
+                <p className="font-semibold">Support</p>
+                <p className="text-sm text-muted-foreground">Tickets verwalten</p>
               </div>
-              {(openTickets > 0 || pendingReports > 0) && (
+              {openTickets > 0 && (
                 <Badge className="absolute top-3 right-3 bg-destructive">
-                  {openTickets + pendingReports}
+                  {openTickets}
                 </Badge>
               )}
             </CardContent>
