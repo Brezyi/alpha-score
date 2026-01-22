@@ -187,6 +187,7 @@ export default function SystemSettings() {
               appName={localSettings.app_name}
               logoUrl={localSettings.app_logo_url}
               faviconUrl={localSettings.favicon_url}
+              accentColor={localSettings.accent_color}
             />
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
