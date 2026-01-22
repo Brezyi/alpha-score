@@ -77,7 +77,19 @@ export function useProfile() {
           },
           (payload) => {
             console.log("[Profile] Realtime update:", payload);
-            setProfile(payload.new as Profile);
+            const newProfile = payload.new as Profile;
+            const oldProfile = payload.old as Profile | null;
+            
+            // Show toast if display_name changed
+            if (oldProfile?.display_name && newProfile.display_name && 
+                oldProfile.display_name !== newProfile.display_name) {
+              toast({
+                title: "Profil aktualisiert",
+                description: `Name geändert zu "${newProfile.display_name}"`,
+              });
+            }
+            
+            setProfile(newProfile);
           }
         )
         .subscribe();
