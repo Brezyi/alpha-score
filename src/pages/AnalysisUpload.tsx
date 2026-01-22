@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useStreak } from "@/hooks/useStreak";
 import { 
   Upload, 
   X, 
@@ -39,6 +40,7 @@ export default function AnalysisUpload() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { recordActivity } = useStreak();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -160,6 +162,9 @@ export default function AnalysisUpload() {
         .single();
 
       if (dbError) throw dbError;
+
+      // Record activity for streak
+      await recordActivity();
 
       toast({
         title: "Upload erfolgreich!",
