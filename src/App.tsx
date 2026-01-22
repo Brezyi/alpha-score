@@ -26,6 +26,7 @@ import AGB from "./pages/AGB";
 import NotFound from "./pages/NotFound";
 import CookieConsent from "./components/CookieConsent";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { DocumentTitleUpdater } from "./components/DocumentTitleUpdater";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import AuditLogs from "./pages/admin/AuditLogs";
@@ -42,6 +43,7 @@ const App = () => (
       <ThemeProvider>
         <SystemSettingsProvider>
           <TooltipProvider>
+            <DocumentTitleUpdater />
             <Toaster />
             <Sonner />
             <BrowserRouter>
