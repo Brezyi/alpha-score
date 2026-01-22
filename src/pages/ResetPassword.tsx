@@ -14,33 +14,63 @@ export default function ResetPassword() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Check if we have a valid session from the reset link
+  // Handle the password recovery session from the email link
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // Listen for auth state changes (when user clicks the reset link)
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (event === "PASSWORD_RECOVERY") {
-            // User clicked the password reset link
-            console.log("Password recovery session active");
-          }
-        }
-      );
+    const handlePasswordRecovery = async () => {
+      // Check if there's a hash fragment with access_token (from email link)
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+      const type = hashParams.get("type");
 
-      return () => subscription.unsubscribe();
+      if (accessToken && type === "recovery") {
+        // Set the session from the recovery tokens
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken || "",
+        });
+
+        if (!error) {
+          setSessionReady(true);
+          // Clean up the URL
+          window.history.replaceState(null, "", window.location.pathname);
+        } else {
+          setError("Der Reset-Link ist ungültig oder abgelaufen.");
+        }
+      } else {
+        // Check for existing session (in case of page refresh)
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          setSessionReady(true);
+        } else {
+          // Listen for PASSWORD_RECOVERY event
+          const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            (event, session) => {
+              if (event === "PASSWORD_RECOVERY" && session) {
+                setSessionReady(true);
+              }
+            }
+          );
+          return () => subscription.unsubscribe();
+        }
+      }
     };
 
-    checkSession();
+    handlePasswordRecovery();
   }, []);
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!sessionReady) {
+      setError("Keine gültige Session. Bitte fordere einen neuen Reset-Link an.");
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError("Die Passwörter stimmen nicht überein.");
@@ -67,7 +97,8 @@ export default function ResetPassword() {
         description: "Du kannst dich jetzt mit deinem neuen Passwort anmelden.",
       });
 
-      // Redirect to login after 3 seconds
+      // Sign out and redirect to login after 3 seconds
+      await supabase.auth.signOut();
       setTimeout(() => {
         navigate("/login");
       }, 3000);
@@ -183,7 +214,7 @@ export default function ResetPassword() {
               variant="hero" 
               size="lg" 
               className="w-full"
-              disabled={loading}
+              disabled={loading || !sessionReady}
             >
               {loading ? (
                 <>
@@ -194,6 +225,12 @@ export default function ResetPassword() {
                 "Passwort ändern"
               )}
             </Button>
+
+            {!sessionReady && !error && (
+              <p className="text-sm text-muted-foreground text-center">
+                Warte auf Session-Validierung...
+              </p>
+            )}
           </form>
 
           {/* Login Link */}
