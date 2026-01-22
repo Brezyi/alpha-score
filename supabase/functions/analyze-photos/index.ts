@@ -52,6 +52,18 @@ serve(async (req) => {
     const photoUrls = analysis.photo_urls || [];
     const photoDataUrls: string[] = [];
 
+    // Helper function to convert ArrayBuffer to base64 without stack overflow
+    const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      const chunkSize = 8192; // Process in chunks to avoid stack overflow
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+        binary += String.fromCharCode(...chunk);
+      }
+      return btoa(binary);
+    };
+
     for (const url of photoUrls) {
       // Extract file path from the URL
       const urlParts = url.split('/analysis-photos/');
@@ -69,13 +81,17 @@ serve(async (req) => {
         }
 
         if (signedData?.signedUrl) {
-          // Fetch and convert to base64
-          const imageResponse = await fetch(signedData.signedUrl);
-          const imageBuffer = await imageResponse.arrayBuffer();
-          const base64 = btoa(String.fromCharCode(...new Uint8Array(imageBuffer)));
-          const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
-          photoDataUrls.push(`data:${contentType};base64,${base64}`);
-          logStep("Photo converted to base64", { filePath });
+          try {
+            // Fetch and convert to base64
+            const imageResponse = await fetch(signedData.signedUrl);
+            const imageBuffer = await imageResponse.arrayBuffer();
+            const base64 = arrayBufferToBase64(imageBuffer);
+            const contentType = imageResponse.headers.get('content-type') || 'image/jpeg';
+            photoDataUrls.push(`data:${contentType};base64,${base64}`);
+            logStep("Photo converted to base64", { filePath, size: imageBuffer.byteLength });
+          } catch (conversionError) {
+            logStep("Photo conversion error", { filePath, error: String(conversionError) });
+          }
         }
       }
     }
