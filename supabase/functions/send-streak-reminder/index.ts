@@ -17,6 +17,50 @@ interface StreakData {
   last_activity_date: string | null;
 }
 
+// Web Push implementation using web-push compatible approach
+async function sendWebPush(
+  subscription: { endpoint: string; p256dh: string; auth: string },
+  payload: { title: string; body: string; icon?: string; badge?: string; data?: Record<string, unknown> },
+  vapidPublicKey: string,
+  vapidPrivateKey: string
+): Promise<Response> {
+  // Import web-push for Deno
+  const webpush = await import("https://esm.sh/web-push@3.6.7");
+  
+  webpush.setVapidDetails(
+    "mailto:support@facerank.app",
+    vapidPublicKey,
+    vapidPrivateKey
+  );
+
+  const pushSubscription = {
+    endpoint: subscription.endpoint,
+    keys: {
+      p256dh: subscription.p256dh,
+      auth: subscription.auth,
+    },
+  };
+
+  try {
+    await webpush.sendNotification(
+      pushSubscription,
+      JSON.stringify(payload),
+      {
+        TTL: 86400,
+        urgency: "normal",
+      }
+    );
+    return new Response(null, { status: 201 });
+  } catch (error: unknown) {
+    const err = error as { statusCode?: number; message?: string };
+    if (err.statusCode === 410 || err.statusCode === 404) {
+      return new Response(null, { status: err.statusCode });
+    }
+    console.error("Web push error:", err.message || error);
+    return new Response(null, { status: 500 });
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -25,7 +69,7 @@ Deno.serve(async (req) => {
   try {
     const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
     const vapidPublicKey = Deno.env.get("VAPID_PUBLIC_KEY");
-    
+
     if (!vapidPrivateKey || !vapidPublicKey) {
       throw new Error("VAPID keys not configured");
     }
@@ -53,7 +97,7 @@ Deno.serve(async (req) => {
 
     // Get streak data for users with subscriptions
     const userIds = [...new Set(subscriptions.map((s: PushSubscription) => s.user_id))];
-    
+
     const { data: streaks, error: streakError } = await supabase
       .from("user_streaks")
       .select("user_id, current_streak, last_activity_date")
@@ -63,15 +107,22 @@ Deno.serve(async (req) => {
 
     const streakMap = new Map<string, StreakData>();
     (streaks || []).forEach((s: StreakData & { user_id: string }) => {
-      streakMap.set(s.user_id, { current_streak: s.current_streak, last_activity_date: s.last_activity_date });
+      streakMap.set(s.user_id, {
+        current_streak: s.current_streak,
+        last_activity_date: s.last_activity_date,
+      });
     });
 
     // Send notifications to users who haven't been active today
-    const results: { success: number; failed: number; skipped: number } = { success: 0, failed: 0, skipped: 0 };
+    const results: { success: number; failed: number; skipped: number } = {
+      success: 0,
+      failed: 0,
+      skipped: 0,
+    };
 
     for (const sub of subscriptions as PushSubscription[]) {
       const streak = streakMap.get(sub.user_id);
-      
+
       // Skip if user was already active today
       if (streak?.last_activity_date === today) {
         results.skipped++;
@@ -96,37 +147,38 @@ Deno.serve(async (req) => {
       }
 
       try {
-        // For now, we'll use a simple approach with the Push API
-        // Full Web Push encryption requires external library
-        // This logs the intended notification for debugging
-        console.log(`Would send to ${sub.user_id}: ${title} - ${body}`);
-        
-        // Attempt to send using fetch to push service
-        // Note: Full implementation requires proper VAPID signing and payload encryption
-        const response = await fetch(sub.endpoint, {
-          method: "POST",
-          headers: {
-            "TTL": "86400",
-            "Content-Length": "0",
+        console.log(`Sending push to ${sub.user_id}: ${title}`);
+
+        const response = await sendWebPush(
+          { endpoint: sub.endpoint, p256dh: sub.p256dh, auth: sub.auth },
+          {
+            title,
+            body,
+            icon: "/favicon.ico",
+            badge: "/favicon.ico",
+            data: { url: "/dashboard" },
           },
-        });
+          vapidPublicKey,
+          vapidPrivateKey
+        );
 
         if (response.ok || response.status === 201) {
           results.success++;
+          console.log(`Push sent successfully to ${sub.user_id}`);
         } else if (response.status === 410 || response.status === 404) {
           // Subscription expired or invalid, remove it
           await supabase
             .from("push_subscriptions")
             .delete()
             .eq("endpoint", sub.endpoint);
-          console.log(`Removed expired subscription: ${sub.endpoint}`);
+          console.log(`Removed expired subscription for ${sub.user_id}`);
           results.failed++;
         } else {
-          console.error(`Push failed for ${sub.endpoint}: ${response.status} ${response.statusText}`);
+          console.error(`Push failed for ${sub.user_id}: ${response.status}`);
           results.failed++;
         }
       } catch (pushError) {
-        console.error(`Error sending push to ${sub.endpoint}:`, pushError);
+        console.error(`Error sending push to ${sub.user_id}:`, pushError);
         results.failed++;
       }
     }
