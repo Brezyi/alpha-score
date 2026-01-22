@@ -168,6 +168,13 @@ export default function AnalysisUpload() {
         description: "Deine Analyse wird jetzt verarbeitet...",
       });
 
+      // Trigger AI analysis (fire and forget - results page will poll/show status)
+      supabase.functions.invoke("analyze-photos", {
+        body: { analysisId: analysis.id }
+      }).catch(err => {
+        console.error("Analysis trigger error:", err);
+      });
+
       // Navigate to results page
       navigate(`/analysis/${analysis.id}`);
 
