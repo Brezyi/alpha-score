@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { generateSignedUrls } from "@/hooks/useSignedImageUrl";
+import { ProgressImage } from "@/components/ProgressImage";
 import { 
   ArrowLeft, 
   TrendingUp, 
@@ -19,10 +21,16 @@ import {
   ChevronLeft,
   ChevronRight,
   BarChart3,
-  Zap
+  Zap,
+  Loader2,
+  RefreshCw,
+  AlertCircle,
+  Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { format } from "date-fns";
+import { de } from "date-fns/locale";
 
 interface Analysis {
   id: string;
@@ -31,12 +39,15 @@ interface Analysis {
   status: string;
   strengths: string[] | null;
   weaknesses: string[] | null;
+  priorities: string[] | null;
   photo_urls: string[];
+  signedPhotoUrls?: (string | null)[];
 }
 
 export default function Progress() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -49,38 +60,60 @@ export default function Progress() {
     }
   }, [user, authLoading, navigate]);
 
-  // Fetch analyses
-  useEffect(() => {
-    const fetchAnalyses = async () => {
-      if (!user) return;
+  // Fetch analyses with signed URLs
+  const fetchAnalyses = useCallback(async () => {
+    if (!user) return;
 
-      try {
-        const { data, error } = await supabase
-          .from("analyses")
-          .select("id, looks_score, created_at, status, strengths, weaknesses, photo_urls")
-          .eq("user_id", user.id)
-          .eq("status", "completed")
-          .order("created_at", { ascending: false });
+    setLoading(true);
+    setError(null);
 
-        if (error) throw error;
-        setAnalyses(data || []);
-      } catch (error) {
-        console.error("Error fetching analyses:", error);
-      } finally {
-        setLoading(false);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from("analyses")
+        .select("id, looks_score, created_at, status, strengths, weaknesses, priorities, photo_urls")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false });
+
+      if (fetchError) throw fetchError;
+
+      if (!data || data.length === 0) {
+        setAnalyses([]);
+        return;
       }
-    };
 
-    if (user) {
-      fetchAnalyses();
+      // Generate signed URLs for all photos
+      const analysesWithSignedUrls = await Promise.all(
+        data.map(async (analysis) => {
+          if (!analysis.photo_urls || analysis.photo_urls.length === 0) {
+            return { ...analysis, signedPhotoUrls: [] };
+          }
+          
+          const signedUrls = await generateSignedUrls(analysis.photo_urls);
+          return { ...analysis, signedPhotoUrls: signedUrls };
+        })
+      );
+
+      setAnalyses(analysesWithSignedUrls);
+    } catch (err) {
+      console.error("Error fetching analyses:", err);
+      setError("Analysen konnten nicht geladen werden.");
+    } finally {
+      setLoading(false);
     }
   }, [user]);
 
-  if (authLoading || loading || subscriptionLoading) {
+  useEffect(() => {
+    if (user) {
+      fetchAnalyses();
+    }
+  }, [user, fetchAnalyses]);
+
+  if (authLoading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Wird geladen...</p>
         </div>
       </div>
@@ -156,7 +189,7 @@ export default function Progress() {
     .slice()
     .reverse()
     .map((a, index) => ({
-      date: new Date(a.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+      date: format(new Date(a.created_at), "dd.MM", { locale: de }),
       score: a.looks_score,
       index: index + 1,
     }));
@@ -168,11 +201,7 @@ export default function Progress() {
   const beforeAnalysis = completedAnalyses[compareIndex + 1];
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric"
-    });
+    return format(new Date(dateStr), "dd. MMM yyyy", { locale: de });
   };
 
   // Strength/Weakness trends
@@ -204,20 +233,56 @@ export default function Progress() {
             <ArrowLeft className="w-4 h-4" />
             Dashboard
           </Link>
-          <div className="flex items-center gap-2 text-sm text-primary">
-            <Crown className="w-4 h-4" />
-            Premium
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchAnalyses}
+              disabled={loading}
+            >
+              <RefreshCw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
+              Aktualisieren
+            </Button>
+            <div className="flex items-center gap-2 text-sm text-primary">
+              <Crown className="w-4 h-4" />
+              Premium
+            </div>
           </div>
         </div>
 
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Dein Fortschritt</h1>
           <p className="text-muted-foreground">
-            Verfolge deine Entwicklung über Zeit
+            Verfolge deine Entwicklung über Zeit ({completedAnalyses.length} Analysen)
           </p>
         </div>
 
-        {completedAnalyses.length === 0 ? (
+        {/* Error State */}
+        {error && (
+          <Card className="p-6 mb-6 border-destructive/50 bg-destructive/5">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              <div>
+                <p className="font-medium text-destructive">{error}</p>
+                <Button 
+                  variant="link" 
+                  className="p-0 h-auto text-sm" 
+                  onClick={fetchAnalyses}
+                >
+                  Erneut versuchen
+                </Button>
+              </div>
+            </div>
+          </Card>
+        )}
+
+        {/* Loading State */}
+        {loading ? (
+          <div className="text-center py-16">
+            <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Lade Analysen...</p>
+          </div>
+        ) : completedAnalyses.length === 0 ? (
           <Card className="p-8 text-center">
             <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h2 className="text-xl font-semibold mb-2">Keine Analysen vorhanden</h2>
@@ -364,19 +429,15 @@ export default function Progress() {
                 <div className="grid md:grid-cols-2 gap-6">
                   {/* Before */}
                   <div>
-                    <div className="text-sm text-muted-foreground mb-2">Vorher</div>
+                    <div className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      Vorher
+                    </div>
                     <div className="aspect-square rounded-xl overflow-hidden bg-card mb-3">
-                      {beforeAnalysis?.photo_urls?.[0] ? (
-                        <img 
-                          src={beforeAnalysis.photo_urls[0]} 
-                          alt="Vorher" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                          <Camera className="w-12 h-12" />
-                        </div>
-                      )}
+                      <ProgressImage 
+                        src={beforeAnalysis?.signedPhotoUrls?.[0] || beforeAnalysis?.photo_urls?.[0]} 
+                        alt="Vorher" 
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
@@ -390,19 +451,15 @@ export default function Progress() {
 
                   {/* After */}
                   <div>
-                    <div className="text-sm text-muted-foreground mb-2">Nachher</div>
+                    <div className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-primary" />
+                      Nachher
+                    </div>
                     <div className="aspect-square rounded-xl overflow-hidden bg-card mb-3">
-                      {afterAnalysis?.photo_urls?.[0] ? (
-                        <img 
-                          src={afterAnalysis.photo_urls[0]} 
-                          alt="Nachher" 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                          <Camera className="w-12 h-12" />
-                        </div>
-                      )}
+                      <ProgressImage 
+                        src={afterAnalysis?.signedPhotoUrls?.[0] || afterAnalysis?.photo_urls?.[0]} 
+                        alt="Nachher" 
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-muted-foreground">
@@ -496,27 +553,26 @@ export default function Progress() {
                   return (
                     <div 
                       key={analysis.id}
-                      className="flex items-center gap-4 p-3 rounded-lg bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                      className="flex items-center gap-4 p-3 rounded-lg bg-card hover:bg-accent/50 transition-colors cursor-pointer group"
                       onClick={() => navigate(`/analysis/${analysis.id}`)}
                     >
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        {analysis.photo_urls?.[0] ? (
-                          <img 
-                            src={analysis.photo_urls[0]} 
-                            alt="Analyse" 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center">
-                            <Camera className="w-5 h-5 text-muted-foreground" />
-                          </div>
-                        )}
+                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        <ProgressImage 
+                          src={analysis.signedPhotoUrls?.[0] || analysis.photo_urls?.[0]} 
+                          alt="Analyse" 
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium">
+                        <div className="font-medium flex items-center gap-2">
                           Score: {analysis.looks_score?.toFixed(1)}
+                          {index === 0 && (
+                            <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+                              Aktuell
+                            </span>
+                          )}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Calendar className="w-3 h-3" />
                           {formatDate(analysis.created_at)}
                         </div>
                       </div>
@@ -537,6 +593,7 @@ export default function Progress() {
                           {scoreDiff > 0 ? "+" : ""}{scoreDiff.toFixed(1)}
                         </div>
                       )}
+                      <Eye className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   );
                 })}
