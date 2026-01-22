@@ -175,15 +175,66 @@ export default function SystemSettings() {
 
         {/* Reset Branding Confirmation Dialog */}
         <AlertDialog open={showResetBrandingDialog} onOpenChange={setShowResetBrandingDialog}>
-          <AlertDialogContent>
+          <AlertDialogContent className="max-w-md">
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 <RotateCcw className="w-5 h-5 text-primary" />
                 Branding zurücksetzen?
               </AlertDialogTitle>
-              <AlertDialogDescription>
-                Alle Branding-Einstellungen (App-Name, Logo, Favicon, Akzentfarbe, Theme) werden auf die Standardwerte zurückgesetzt. 
-                Diese Änderung wird erst nach dem Speichern wirksam.
+              <AlertDialogDescription asChild>
+                <div className="space-y-4">
+                  <p>Diese Änderung wird erst nach dem Speichern wirksam.</p>
+                  
+                  <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-3 text-sm">
+                    <div className="grid grid-cols-3 gap-2 text-muted-foreground font-medium border-b border-border pb-2">
+                      <span>Einstellung</span>
+                      <span>Aktuell</span>
+                      <span>Standard</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <span className="text-foreground">App-Name</span>
+                      <span className="truncate text-muted-foreground">{localSettings.app_name || "—"}</span>
+                      <span className="text-primary">{defaultBrandingSettings.app_name}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <span className="text-foreground">Logo</span>
+                      <span className="text-muted-foreground">{localSettings.app_logo_url ? "✓ Gesetzt" : "—"}</span>
+                      <span className="text-primary">Standard</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <span className="text-foreground">Favicon</span>
+                      <span className="text-muted-foreground">{localSettings.favicon_url ? "✓ Gesetzt" : "—"}</span>
+                      <span className="text-primary">Standard</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <span className="text-foreground">Akzentfarbe</span>
+                      <div className="flex items-center gap-1.5">
+                        <div 
+                          className="w-4 h-4 rounded border border-border" 
+                          style={{ backgroundColor: localSettings.accent_color }}
+                        />
+                        <span className="text-muted-foreground text-xs">{localSettings.accent_color}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div 
+                          className="w-4 h-4 rounded border border-border" 
+                          style={{ backgroundColor: defaultBrandingSettings.accent_color }}
+                        />
+                        <span className="text-primary text-xs">{defaultBrandingSettings.accent_color}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-2 items-center">
+                      <span className="text-foreground">Theme</span>
+                      <span className="text-muted-foreground">{localSettings.default_theme === "dark" ? "Dunkel" : "Hell"}</span>
+                      <span className="text-primary">{defaultBrandingSettings.default_theme === "dark" ? "Dunkel" : "Hell"}</span>
+                    </div>
+                  </div>
+                </div>
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
