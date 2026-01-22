@@ -185,17 +185,22 @@ export default function AdminDashboard() {
           </Card>
 
           <Card 
-            className="bg-card border-border hover:border-primary/50 transition-colors cursor-pointer"
-            onClick={() => navigate("/admin/reports")}
+            className="bg-card border-border hover:border-primary/50 transition-colors cursor-pointer relative"
+            onClick={() => navigate("/admin/support")}
           >
             <CardContent className="p-6 flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <FileText className="w-6 h-6 text-primary" />
+                <Flag className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <p className="font-semibold">Reports</p>
-                <p className="text-sm text-muted-foreground">Analysen & Statistiken</p>
+                <p className="font-semibold">Reports & Meldungen</p>
+                <p className="text-sm text-muted-foreground">Gemeldete Inhalte prüfen</p>
               </div>
+              {pendingReports > 0 && (
+                <Badge className="absolute top-3 right-3 bg-destructive">
+                  {pendingReports}
+                </Badge>
+              )}
             </CardContent>
           </Card>
 

@@ -6,6 +6,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { ReportModal } from "@/components/ReportModal";
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -19,7 +20,8 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Flag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,6 +35,7 @@ export default function AnalysisResults() {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const { isPremium, loading: subscriptionLoading } = useSubscription();
 
   // Redirect to login if not authenticated
@@ -208,9 +211,24 @@ export default function AnalysisResults() {
             <span>Zurück</span>
           </button>
           <h1 className="text-lg font-bold">Ergebnisse</h1>
-          <div className="w-20" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setReportModalOpen(true)}
+            className="text-muted-foreground hover:text-destructive"
+          >
+            <Flag className="w-4 h-4" />
+          </Button>
         </div>
       </header>
+
+      {/* Report Modal */}
+      <ReportModal
+        open={reportModalOpen}
+        onOpenChange={setReportModalOpen}
+        contentType="analysis"
+        contentId={id}
+      />
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Photo Display */}

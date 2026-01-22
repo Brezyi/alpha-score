@@ -23,6 +23,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { ReportModal } from "@/components/ReportModal";
 import {
   User,
   Settings,
@@ -34,6 +35,7 @@ import {
   Moon,
   Sun,
   HelpCircle,
+  Flag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,6 +70,7 @@ export function ProfileMenu() {
   const { role } = useUserRole();
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -218,9 +221,30 @@ export function ProfileMenu() {
             <Button onClick={handleSaveProfile} className="w-full">
               Speichern
             </Button>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setProfileOpen(false);
+                setReportModalOpen(true);
+              }}
+              className="w-full text-muted-foreground hover:text-destructive"
+            >
+              <Flag className="w-4 h-4 mr-2" />
+              Eigenes Profil melden
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Report Modal */}
+      <ReportModal
+        open={reportModalOpen}
+        onOpenChange={setReportModalOpen}
+        contentType="user"
+        contentId={user.id}
+      />
 
       {/* Design Settings Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
