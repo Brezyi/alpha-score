@@ -98,6 +98,42 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          accent_color: string | null
+          avatar_url: string | null
+          background_style: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          theme: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accent_color?: string | null
+          avatar_url?: string | null
+          background_style?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          theme?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accent_color?: string | null
+          avatar_url?: string | null
+          background_style?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          theme?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string

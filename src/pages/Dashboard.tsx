@@ -6,18 +6,16 @@ import {
   MessageSquare, 
   Target, 
   Crown,
-  LogOut,
-  User,
   Flame,
   ChevronRight,
   Lock,
-  Calendar,
   ArrowUpRight,
   ArrowDownRight,
   Minus,
   Loader2,
   Shield,
-  Trophy
+  Trophy,
+  Calendar
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -28,6 +26,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useStreak } from "@/hooks/useStreak";
 import { PushNotificationToggle } from "@/components/PushNotificationToggle";
+import { ProfileMenu } from "@/components/ProfileMenu";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 type Analysis = {
@@ -117,15 +116,6 @@ const Dashboard = () => {
     }
   }, [user]);
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Abgemeldet",
-      description: "Bis bald!",
-    });
-    navigate("/");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -194,14 +184,7 @@ const Dashboard = () => {
                   </Button>
                 </Link>
               )}
-              <Link to="/profile">
-                <Button variant="ghost" size="icon">
-                  <User className="w-5 h-5" />
-                </Button>
-              </Link>
-              <Button variant="ghost" size="icon" onClick={handleLogout}>
-                <LogOut className="w-5 h-5" />
-              </Button>
+              <ProfileMenu />
             </div>
           </div>
         </div>
