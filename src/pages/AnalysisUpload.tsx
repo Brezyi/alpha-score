@@ -12,9 +12,11 @@ import {
   ArrowLeft,
   Sparkles,
   Image as ImageIcon,
-  Check
+  Check,
+  HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PhotoGuidelinesModal } from "@/components/PhotoGuidelinesModal";
 
 interface UploadedPhoto {
   file: File;
@@ -207,7 +209,13 @@ export default function AnalysisUpload() {
             <span>Zurück</span>
           </button>
           <h1 className="text-lg font-bold">KI-Analyse</h1>
-          <div className="w-20" />
+          <PhotoGuidelinesModal 
+            trigger={
+              <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                <HelpCircle className="w-5 h-5" />
+              </button>
+            }
+          />
         </div>
       </header>
 
@@ -382,8 +390,17 @@ export default function AnalysisUpload() {
         <div className="mt-8 p-4 rounded-xl bg-primary/5 border border-primary/20">
           <div className="flex items-start gap-3">
             <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="font-medium text-sm">Tipps für bessere Ergebnisse</p>
+            <div className="flex-1">
+              <div className="flex items-center justify-between">
+                <p className="font-medium text-sm">Tipps für bessere Ergebnisse</p>
+                <PhotoGuidelinesModal 
+                  trigger={
+                    <button className="text-xs text-primary hover:underline">
+                      Alle Richtlinien
+                    </button>
+                  }
+                />
+              </div>
               <ul className="text-sm text-muted-foreground mt-2 space-y-1">
                 <li>• Gute Beleuchtung (Tageslicht ist ideal)</li>
                 <li>• Neutraler Gesichtsausdruck</li>
