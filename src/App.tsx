@@ -30,6 +30,8 @@ import UserManagement from "./pages/admin/UserManagement";
 import AuditLogs from "./pages/admin/AuditLogs";
 import Support from "./pages/Support";
 import SupportManagement from "./pages/admin/SupportManagement";
+import SystemSettings from "./pages/admin/SystemSettings";
+import RevenueOverview from "./pages/admin/RevenueOverview";
 
 const queryClient = new QueryClient();
 
@@ -91,6 +93,22 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRole={["admin", "owner"]}>
                     <SupportManagement />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/settings" 
+                element={
+                  <ProtectedRoute requiredRole={["owner"]}>
+                    <SystemSettings />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/billing" 
+                element={
+                  <ProtectedRoute requiredRole={["owner"]}>
+                    <RevenueOverview />
                   </ProtectedRoute>
                 } 
               />
