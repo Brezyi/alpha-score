@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { 
   ArrowLeft, 
   Send, 
@@ -14,13 +16,15 @@ import {
   Sparkles,
   User,
   Bot,
-  Lock
+  Lock,
+  Square
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  isStreaming?: boolean;
 }
 
 export default function Coach() {
@@ -30,6 +34,7 @@ export default function Coach() {
   const { user, loading } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
@@ -45,10 +50,29 @@ export default function Coach() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const stopStreaming = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsLoading(false);
+      // Mark the last message as no longer streaming
+      setMessages(prev => {
+        const updated = [...prev];
+        if (updated.length > 0 && updated[updated.length - 1].role === "assistant") {
+          updated[updated.length - 1] = { ...updated[updated.length - 1], isStreaming: false };
+        }
+        return updated;
+      });
+    }
+  }, []);
+
   const streamChat = useCallback(async (userMessage: string) => {
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
+
+    // Create abort controller for this request
+    abortControllerRef.current = new AbortController();
 
     let assistantContent = "";
 
@@ -67,6 +91,7 @@ export default function Coach() {
           body: JSON.stringify({ 
             messages: newMessages.map(m => ({ role: m.role, content: m.content }))
           }),
+          signal: abortControllerRef.current.signal,
         }
       );
 
@@ -81,8 +106,8 @@ export default function Coach() {
       const decoder = new TextDecoder();
       let buffer = "";
 
-      // Add empty assistant message
-      setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+      // Add empty assistant message with streaming indicator
+      setMessages(prev => [...prev, { role: "assistant", content: "", isStreaming: true }]);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -100,7 +125,20 @@ export default function Coach() {
           if (!line.startsWith("data: ")) continue;
 
           const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
+          if (jsonStr === "[DONE]") {
+            // Mark streaming as complete
+            setMessages(prev => {
+              const updated = [...prev];
+              if (updated.length > 0) {
+                updated[updated.length - 1] = { 
+                  ...updated[updated.length - 1], 
+                  isStreaming: false 
+                };
+              }
+              return updated;
+            });
+            break;
+          }
 
           try {
             const parsed = JSON.parse(jsonStr);
@@ -109,19 +147,36 @@ export default function Coach() {
               assistantContent += content;
               setMessages(prev => {
                 const updated = [...prev];
-                updated[updated.length - 1] = { role: "assistant", content: assistantContent };
+                updated[updated.length - 1] = { 
+                  role: "assistant", 
+                  content: assistantContent,
+                  isStreaming: true
+                };
                 return updated;
               });
             }
           } catch {
-            // Partial JSON, wait for more
+            // Partial JSON, wait for more data
             buffer = line + "\n" + buffer;
             break;
           }
         }
       }
 
+      // Ensure streaming is marked as complete
+      setMessages(prev => {
+        const updated = [...prev];
+        if (updated.length > 0 && updated[updated.length - 1].role === "assistant") {
+          updated[updated.length - 1] = { ...updated[updated.length - 1], isStreaming: false };
+        }
+        return updated;
+      });
+
     } catch (error: any) {
+      if (error.name === "AbortError") {
+        // User cancelled, don't show error
+        return;
+      }
       console.error("Chat error:", error);
       toast({
         title: "Fehler",
@@ -132,6 +187,7 @@ export default function Coach() {
       setMessages(messages);
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
     }
   }, [messages, toast]);
 
@@ -278,15 +334,30 @@ export default function Coach() {
                     : "bg-card border border-border"
                 )}
               >
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                  {message.content || (
-                    <span className="inline-flex gap-1">
-                      <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                      <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                      <span className="w-2 h-2 bg-current rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                    </span>
-                  )}
-                </p>
+                {message.role === "assistant" ? (
+                  <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2">
+                    {message.content ? (
+                      <>
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {message.content}
+                        </ReactMarkdown>
+                        {message.isStreaming && (
+                          <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse rounded-sm" />
+                        )}
+                      </>
+                    ) : (
+                      <span className="inline-flex gap-1 py-1">
+                        <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                        <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                        <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">
+                    {message.content}
+                  </p>
+                )}
               </div>
               {message.role === "user" && (
                 <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
@@ -313,14 +384,26 @@ export default function Coach() {
               disabled={isLoading}
               rows={1}
             />
-            <Button 
-              type="submit" 
-              size="icon" 
-              className="h-12 w-12 flex-shrink-0"
-              disabled={!input.trim() || isLoading}
-            >
-              <Send className="w-5 h-5" />
-            </Button>
+            {isLoading ? (
+              <Button 
+                type="button"
+                size="icon" 
+                variant="outline"
+                className="h-12 w-12 flex-shrink-0"
+                onClick={stopStreaming}
+              >
+                <Square className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button 
+                type="submit" 
+                size="icon" 
+                className="h-12 w-12 flex-shrink-0"
+                disabled={!input.trim()}
+              >
+                <Send className="w-5 h-5" />
+              </Button>
+            )}
           </div>
         </form>
       </div>
