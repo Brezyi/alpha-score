@@ -197,20 +197,9 @@ export default function SystemSettings() {
 
         <Card>
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Palette className="w-5 h-5 text-primary" />
-                <CardTitle>Branding & Design</CardTitle>
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setShowResetBrandingDialog(true)}
-                className="gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Zurücksetzen
-              </Button>
+            <div className="flex items-center gap-2">
+              <Palette className="w-5 h-5 text-primary" />
+              <CardTitle>Branding & Design</CardTitle>
             </div>
             <CardDescription>Passe das Erscheinungsbild an</CardDescription>
           </CardHeader>
@@ -269,6 +258,18 @@ export default function SystemSettings() {
                   />
                 </div>
               </div>
+            </div>
+            <Separator />
+            <div className="flex justify-end">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowResetBrandingDialog(true)}
+                className="gap-2 text-muted-foreground hover:text-foreground"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Branding zurücksetzen
+              </Button>
             </div>
           </CardContent>
         </Card>
