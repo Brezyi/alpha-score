@@ -22,7 +22,9 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSupport, SupportTicket, TicketStatus } from "@/hooks/useSupport";
+import { useTicketMessages } from "@/hooks/useTicketMessages";
 import { ProfileMenu } from "@/components/ProfileMenu";
+import { TicketChat } from "@/components/TicketChat";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ArrowLeft,
@@ -33,7 +35,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Search,
-  Filter,
   Image as ImageIcon,
   Paperclip,
   User,
@@ -42,6 +43,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Send,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -75,6 +77,12 @@ const SupportManagement = () => {
   const [loadingAttachments, setLoadingAttachments] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [replyMessage, setReplyMessage] = useState("");
+
+  // Messages hook for chat
+  const { messages, loading: messagesLoading, sending, sendMessage } = useTicketMessages(
+    selectedTicket?.id || null
+  );
 
   // Load signed URLs for attachments when ticket is selected
   useEffect(() => {
@@ -136,6 +144,16 @@ const SupportManagement = () => {
       setSelectedTicket(null);
       setAdminNotes("");
       setNewStatus("");
+      setReplyMessage("");
+    }
+  };
+
+  const handleSendAdminReply = async () => {
+    if (!replyMessage.trim() || !selectedTicket) return;
+    
+    const result = await sendMessage(replyMessage, true); // true = is admin
+    if (result) {
+      setReplyMessage("");
     }
   };
 
@@ -428,6 +446,47 @@ const SupportManagement = () => {
                 </div>
               )}
 
+              {/* Chat Section */}
+              <div className="border-t pt-4">
+                <h4 className="font-medium flex items-center gap-2 mb-4">
+                  <MessageSquare className="w-4 h-4 text-primary" />
+                  Kommunikation
+                </h4>
+                
+                <TicketChat 
+                  messages={messages} 
+                  loading={messagesLoading} 
+                  currentUserId={user.id} 
+                />
+
+                {/* Reply Input */}
+                <div className="mt-4 flex gap-2">
+                  <Input
+                    value={replyMessage}
+                    onChange={(e) => setReplyMessage(e.target.value)}
+                    placeholder="Antwort an Nutzer schreiben..."
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendAdminReply();
+                      }
+                    }}
+                    disabled={sending}
+                  />
+                  <Button 
+                    onClick={handleSendAdminReply} 
+                    disabled={!replyMessage.trim() || sending}
+                    size="icon"
+                  >
+                    {sending ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+
               {/* Admin Section */}
               <div className="border-t pt-6 space-y-4">
                 <h4 className="font-medium flex items-center gap-2">
@@ -467,12 +526,12 @@ const SupportManagement = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Admin-Notizen / Antwort</Label>
+                  <Label>Interne Admin-Notizen (nur für Admins sichtbar)</Label>
                   <Textarea
                     value={adminNotes}
                     onChange={(e) => setAdminNotes(e.target.value)}
-                    placeholder="Notizen oder Antwort für den Nutzer eingeben..."
-                    rows={4}
+                    placeholder="Interne Notizen zum Ticket..."
+                    rows={3}
                     className="resize-none"
                   />
                 </div>

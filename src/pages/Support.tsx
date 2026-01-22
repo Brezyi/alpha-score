@@ -13,9 +13,17 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSupport, TicketCategory, TicketStatus } from "@/hooks/useSupport";
+import { useSupport, TicketCategory, TicketStatus, SupportTicket } from "@/hooks/useSupport";
+import { useTicketMessages } from "@/hooks/useTicketMessages";
 import { ProfileMenu } from "@/components/ProfileMenu";
+import { TicketChat } from "@/components/TicketChat";
 import {
   ArrowLeft,
   HelpCircle,
@@ -28,6 +36,8 @@ import {
   CreditCard,
   User,
   MoreHorizontal,
+  Send,
+  ChevronRight,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -55,6 +65,15 @@ const Support = () => {
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
+  
+  // Ticket detail dialog
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [replyMessage, setReplyMessage] = useState("");
+  
+  // Messages hook
+  const { messages, loading: messagesLoading, sending, sendMessage } = useTicketMessages(
+    selectedTicket?.id || null
+  );
 
   if (authLoading) {
     return (
@@ -99,7 +118,20 @@ const Support = () => {
     }
   };
 
+  const handleSendReply = async () => {
+    if (!replyMessage.trim() || !selectedTicket) return;
+    
+    const result = await sendMessage(replyMessage, false);
+    if (result) {
+      setReplyMessage("");
+    }
+  };
+
   const userTickets = tickets.filter((t) => t.user_id === user.id);
+  const hasUnreadAdminReply = (ticket: SupportTicket) => {
+    // Check if there are admin messages for this ticket
+    return ticket.admin_notes !== null || messages.some(m => m.is_admin && m.ticket_id === ticket.id);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -277,7 +309,11 @@ const Support = () => {
                   const categoryConfig = CATEGORIES.find((c) => c.value === ticket.category);
 
                   return (
-                    <Card key={ticket.id}>
+                    <Card 
+                      key={ticket.id} 
+                      className="cursor-pointer hover:border-primary/50 transition-colors"
+                      onClick={() => setSelectedTicket(ticket)}
+                    >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1 min-w-0">
@@ -290,22 +326,23 @@ const Support = () => {
                                 {statusConfig.icon}
                                 <span className="ml-1">{statusConfig.label}</span>
                               </Badge>
+                              {ticket.admin_notes && (
+                                <Badge variant="secondary" className="gap-1">
+                                  <MessageSquare className="w-3 h-3" />
+                                  Antwort
+                                </Badge>
+                              )}
                             </div>
                             <h4 className="font-medium mb-1 truncate">{ticket.subject}</h4>
                             <p className="text-sm text-muted-foreground line-clamp-2">
                               {ticket.description}
                             </p>
-                            {ticket.admin_notes && (
-                              <div className="mt-3 p-3 rounded-lg bg-primary/10 border border-primary/20">
-                                <p className="text-xs font-medium text-primary mb-1">Admin-Antwort:</p>
-                                <p className="text-sm">{ticket.admin_notes}</p>
-                              </div>
-                            )}
                           </div>
-                          <div className="text-right shrink-0">
+                          <div className="flex items-center gap-2 shrink-0">
                             <p className="text-xs text-muted-foreground">
                               {format(new Date(ticket.created_at), "dd. MMM yyyy", { locale: de })}
                             </p>
+                            <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           </div>
                         </div>
                       </CardContent>
@@ -316,6 +353,92 @@ const Support = () => {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Ticket Detail Dialog */}
+        <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
+          <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-primary" />
+                Ticket Details
+              </DialogTitle>
+            </DialogHeader>
+            
+            {selectedTicket && (
+              <div className="flex-1 overflow-hidden flex flex-col">
+                {/* Ticket Info */}
+                <div className="space-y-3 pb-4 border-b">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Badge className={STATUS_CONFIG[selectedTicket.status].color}>
+                      {STATUS_CONFIG[selectedTicket.status].icon}
+                      <span className="ml-1">{STATUS_CONFIG[selectedTicket.status].label}</span>
+                    </Badge>
+                    <Badge variant="outline">
+                      {CATEGORIES.find(c => c.value === selectedTicket.category)?.icon}
+                      <span className="ml-1">{CATEGORIES.find(c => c.value === selectedTicket.category)?.label}</span>
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(selectedTicket.created_at), "dd.MM.yyyy HH:mm", { locale: de })}
+                    </span>
+                  </div>
+                  <h4 className="font-semibold">{selectedTicket.subject}</h4>
+                  <p className="text-sm text-muted-foreground">{selectedTicket.description}</p>
+                </div>
+
+                {/* Chat Messages */}
+                <div className="flex-1 overflow-y-auto py-4">
+                  <TicketChat 
+                    messages={messages} 
+                    loading={messagesLoading} 
+                    currentUserId={user.id} 
+                  />
+                </div>
+
+                {/* Reply Input */}
+                {selectedTicket.status !== "closed" && (
+                  <div className="pt-4 border-t">
+                    <div className="flex gap-2">
+                      <Input
+                        value={replyMessage}
+                        onChange={(e) => setReplyMessage(e.target.value)}
+                        placeholder="Antwort schreiben..."
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendReply();
+                          }
+                        }}
+                        disabled={sending}
+                      />
+                      <Button 
+                        onClick={handleSendReply} 
+                        disabled={!replyMessage.trim() || sending}
+                        size="icon"
+                      >
+                        {sending ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Send className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Drücke Enter zum Senden
+                    </p>
+                  </div>
+                )}
+
+                {selectedTicket.status === "closed" && (
+                  <div className="pt-4 border-t text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Dieses Ticket ist geschlossen. Erstelle ein neues Ticket für weitere Hilfe.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
