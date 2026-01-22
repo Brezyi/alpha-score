@@ -33,6 +33,7 @@ import {
   Shield,
   Moon,
   Sun,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -142,6 +143,10 @@ export function ProfileMenu() {
           <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer">
             <Palette className="mr-2 h-4 w-4" />
             <span>Design anpassen</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate("/support")} className="cursor-pointer">
+            <HelpCircle className="mr-2 h-4 w-4" />
+            <span>Support</span>
           </DropdownMenuItem>
           {(role === "admin" || role === "owner") && (
             <DropdownMenuItem onClick={() => navigate("/admin")} className="cursor-pointer">
