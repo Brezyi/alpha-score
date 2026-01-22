@@ -29,6 +29,7 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 
 type Task = {
   id: string;
@@ -68,6 +69,7 @@ const Plan = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, loading: subLoading } = useSubscription();
+  const { settings } = useGlobalSettings();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -227,7 +229,7 @@ const Plan = () => {
               </Link>
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-primary" />
-                <span className="font-bold">FaceRank</span>
+                <span className="font-bold">{settings.app_name}</span>
               </div>
             </div>
           </div>

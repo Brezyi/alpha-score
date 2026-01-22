@@ -1,4 +1,5 @@
 import { Star, Quote } from "lucide-react";
+import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 
 const testimonials = [
   {
@@ -28,6 +29,8 @@ const testimonials = [
 ];
 
 const Testimonials = () => {
+  const { settings } = useGlobalSettings();
+  
   return (
     <section className="relative py-24 overflow-hidden" id="testimonials">
       <div className="container relative z-10 px-4">
@@ -37,7 +40,7 @@ const Testimonials = () => {
             Echte <span className="text-gradient">Ergebnisse</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Was unsere Nutzer über FaceRank sagen.
+            Was unsere Nutzer über {settings.app_name} sagen.
           </p>
         </div>
 

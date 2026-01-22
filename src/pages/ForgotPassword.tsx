@@ -6,12 +6,14 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
   const { toast } = useToast();
+  const { settings } = useGlobalSettings();
 
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +96,7 @@ export default function ForgotPassword() {
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold">FaceRank</span>
+            <span className="text-2xl font-bold">{settings.app_name}</span>
           </div>
 
           {/* Header */}

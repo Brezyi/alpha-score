@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 
 export default function ResetPassword() {
   const [password, setPassword] = useState("");
@@ -17,6 +18,7 @@ export default function ResetPassword() {
   const [sessionReady, setSessionReady] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { settings } = useGlobalSettings();
 
   // Handle the password recovery session from the email link
   useEffect(() => {
@@ -145,7 +147,7 @@ export default function ResetPassword() {
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold">FaceRank</span>
+            <span className="text-2xl font-bold">{settings.app_name}</span>
           </div>
 
           {/* Header */}

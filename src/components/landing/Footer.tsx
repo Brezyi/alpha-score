@@ -1,7 +1,9 @@
 import { Zap } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 
 const Footer = () => {
+  const { settings } = useGlobalSettings();
   const currentYear = new Date().getFullYear();
 
   return (
@@ -15,7 +17,7 @@ const Footer = () => {
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <Zap className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">FaceRank</span>
+              <span className="text-xl font-bold">{settings.app_name}</span>
             </Link>
 
             {/* Main Links */}
@@ -51,7 +53,7 @@ const Footer = () => {
 
             {/* Copyright */}
             <p className="text-sm text-muted-foreground">
-              © {currentYear} FaceRank. Alle Rechte vorbehalten.
+              © {currentYear} {settings.app_name}. Alle Rechte vorbehalten.
             </p>
           </div>
         </div>
