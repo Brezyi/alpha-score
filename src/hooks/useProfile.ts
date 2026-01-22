@@ -62,7 +62,31 @@ export function useProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+
+    // Subscribe to realtime changes for immediate updates across components
+    if (user) {
+      const channel = supabase
+        .channel(`profile_changes_${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "profiles",
+            filter: `user_id=eq.${user.id}`,
+          },
+          (payload) => {
+            console.log("[Profile] Realtime update:", payload);
+            setProfile(payload.new as Profile);
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [fetchProfile, user]);
 
   const updateProfile = useCallback(
     async (updates: Partial<Pick<Profile, "display_name" | "avatar_url" | "theme" | "accent_color" | "background_style">>) => {
