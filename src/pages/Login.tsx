@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -25,6 +26,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { settings } = useGlobalSettings();
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -101,7 +103,7 @@ const Login = () => {
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
               <Zap className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-2xl font-bold">FaceRank</span>
+            <span className="text-2xl font-bold">{settings.app_name}</span>
           </div>
 
           {/* Header */}
