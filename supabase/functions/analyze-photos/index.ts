@@ -253,26 +253,79 @@ Wichtig: Sei streng bei der Bewertung. Das Foto muss für eine professionelle Ge
 
     logStep("Face validation passed - proceeding with main analysis");
 
-    // ====== STEP 2: Main AI Analysis ======
-    const systemPrompt = `Du bist ein Experte für Gesichts- und Körperanalyse. Analysiere die hochgeladenen Fotos objektiv und professionell.
+    // ====== STEP 2: Main AI Analysis (Critical & Detailed) ======
+    const systemPrompt = `Du bist ein KRITISCHER Experte für männliche Attraktivität und Looksmaxing.
 
-Bewerte folgende Aspekte:
-- Gesichtssymmetrie
-- Jawline/Kieferpartie
-- Augen und Augenbrauen
-- Hautbild
-- Haare und Haarstyling
-- Körperproportionen (falls Körperfoto vorhanden)
+DEINE BEWERTUNGSPHILOSOPHIE:
+- STRENG und EHRLICH - keine Schönfärberei
+- SPEZIFISCH - benenne exakt was falsch ist, nicht vage
+- SACHLICH - wie ein Arzt, der eine Diagnose stellt
+- KONSTRUKTIV - jede Kritik mit Lösungsansatz
 
-Gib eine ehrliche, aber konstruktive Bewertung ab. Fokussiere auf verbesserbare Aspekte.`;
+BEWERTUNGSSKALA (streng kalibriert):
+1-2: Starke Defizite in mehreren Bereichen
+3-4: Unterdurchschnittlich, deutliches Verbesserungspotenzial
+5: Exakt durchschnittlich
+6: Leicht überdurchschnittlich
+7: Gut, aber erkennbare Schwächen
+8: Sehr gut, nur minimale Verbesserungen möglich
+9: Exzellent, nahezu perfekt
+10: Praktisch nicht erreichbar
 
-    const userPrompt = `Analysiere diese Fotos und gib folgendes zurück:
-1. Einen Looks Score von 1-10 (mit einer Dezimalstelle, z.B. 7.3)
-2. 3-5 Stärken (was gut aussieht)
-3. 3-5 Schwächen/Verbesserungspotenzial
-4. 3-5 priorisierte Empfehlungen (was sollte zuerst verbessert werden)
+Die meisten Menschen liegen zwischen 4-6. Sei nicht inflationär mit hohen Scores.
 
-Sei ehrlich aber respektvoll. Fokussiere auf Dinge, die verbessert werden können.`;
+BEWERTE DIESE BEREICHE MIT TEIL-SCORES (1-10):
+
+1. GESICHTSSYMMETRIE
+- Achsenabweichung links/rechts
+- Augenposition (gleiche Höhe?)
+- Wangenknochen Symmetrie
+- Nasenausrichtung
+
+2. JAWLINE / KIEFERPARTIE
+- Definition der Kieferlinie
+- Submentaler Fettanteil (Doppelkinn?)
+- Kinnprojektion
+- Massetergröße
+
+3. AUGENBEREICH
+- Kanthalneigung (positiv/negativ?)
+- Oberlidbelastung
+- Augenringe/Hyperpigmentierung
+- Augenbrauenposition/-form
+- PSL (positive canthal tilt gut)
+
+4. HAUT
+- Akne/Unreinheiten
+- Textur/Poren
+- Hyperpigmentierung
+- Anzeichen von Sonnenschäden
+- Pflegezustand
+
+5. HAARE
+- Haarlinie (Geheimratsecken?)
+- Dichte (diffuse Ausdünnung?)
+- Styling-Eignung
+- Farbqualität
+
+6. GESAMTAUSSTRAHLUNG
+- Körperfettanteil (sichtbar im Gesicht)
+- Gesichtszüge-Harmonie
+- Maskulinität der Features`;
+
+    const userPrompt = `Analysiere diese Fotos KRITISCH und DETAILLIERT.
+
+WICHTIG:
+- Keine generischen Aussagen wie "gutes Gesicht"
+- Konkret benennen WAS schlecht ist und WARUM
+- Teil-Scores für jeden Bereich vergeben
+- Die Top-3 Schwächen klar priorisieren nach IMPACT
+- Konkrete, umsetzbare Verbesserungsvorschläge
+
+Beispiel für SCHLECHTE Aussage: "Könnte Haut verbessern"
+Beispiel für GUTE Aussage: "Aktive Akne an Kinn und Wangen (ca. 5-7 Läsionen), deutliche Postakne-Hyperpigmentierung. Score: 4/10"
+
+Analysiere JEDEN Bereich mit dieser Detailtiefe.`;
 
     const messages = [
       { role: "system", content: systemPrompt },
@@ -302,28 +355,86 @@ Sei ehrlich aber respektvoll. Fokussiere auf Dinge, die verbessert werden könne
             type: "function",
             function: {
               name: "submit_analysis",
-              description: "Submit the completed face/body analysis with scores and recommendations",
+              description: "Submit the completed critical face/body analysis with sub-scores",
               parameters: {
                 type: "object",
                 properties: {
-                  looks_score: { type: "number", description: "Overall looks score from 1.0 to 10.0" },
-                  strengths: { type: "array", items: { type: "string" }, description: "List of 3-5 positive aspects/strengths" },
-                  weaknesses: { type: "array", items: { type: "string" }, description: "List of 3-5 areas for improvement" },
-                  priorities: { type: "array", items: { type: "string" }, description: "Prioritized list of 3-5 recommendations" },
+                  looks_score: { 
+                    type: "number", 
+                    description: "Overall looks score from 1.0 to 10.0 (streng kalibriert, Durchschnitt ist 5)" 
+                  },
+                  strengths: { 
+                    type: "array", 
+                    items: { type: "string" }, 
+                    description: "2-4 spezifische Stärken mit konkreten Details" 
+                  },
+                  weaknesses: { 
+                    type: "array", 
+                    items: { type: "string" }, 
+                    description: "3-5 spezifische Schwächen, klar und direkt benannt" 
+                  },
+                  priorities: { 
+                    type: "array", 
+                    items: { type: "string" }, 
+                    description: "Top 3 Verbesserungen priorisiert nach Impact mit konkreten Maßnahmen" 
+                  },
                   detailed_analysis: {
                     type: "object",
                     properties: {
-                      face_symmetry: { type: "string" },
-                      jawline: { type: "string" },
-                      eyes: { type: "string" },
-                      skin: { type: "string" },
-                      hair: { type: "string" },
-                      body: { type: "string" }
+                      face_symmetry: { 
+                        type: "object",
+                        properties: {
+                          score: { type: "number", description: "Score 1-10" },
+                          details: { type: "string", description: "Spezifische Beobachtungen zu Symmetrie-Abweichungen" },
+                          issues: { type: "array", items: { type: "string" }, description: "Konkrete Probleme" }
+                        }
+                      },
+                      jawline: { 
+                        type: "object",
+                        properties: {
+                          score: { type: "number", description: "Score 1-10" },
+                          details: { type: "string", description: "Bewertung von Definition, Fettanteil, Projektion" },
+                          issues: { type: "array", items: { type: "string" }, description: "Konkrete Probleme" }
+                        }
+                      },
+                      eyes: { 
+                        type: "object",
+                        properties: {
+                          score: { type: "number", description: "Score 1-10" },
+                          details: { type: "string", description: "Kanthalneigung, Lider, Augenringe, Brauen" },
+                          issues: { type: "array", items: { type: "string" }, description: "Konkrete Probleme" }
+                        }
+                      },
+                      skin: { 
+                        type: "object",
+                        properties: {
+                          score: { type: "number", description: "Score 1-10" },
+                          details: { type: "string", description: "Textur, Unreinheiten, Pflegezustand" },
+                          issues: { type: "array", items: { type: "string" }, description: "Konkrete Probleme" }
+                        }
+                      },
+                      hair: { 
+                        type: "object",
+                        properties: {
+                          score: { type: "number", description: "Score 1-10" },
+                          details: { type: "string", description: "Haarlinie, Dichte, Styling" },
+                          issues: { type: "array", items: { type: "string" }, description: "Konkrete Probleme" },
+                          recommendation: { type: "string", description: "Frisur-Empfehlung falls nötig" }
+                        }
+                      },
+                      overall_vibe: { 
+                        type: "object",
+                        properties: {
+                          score: { type: "number", description: "Score 1-10" },
+                          details: { type: "string", description: "Gesamteindruck, Körperfett, Harmonie" },
+                          body_fat_estimate: { type: "string", description: "Geschätzter Körperfettanteil falls erkennbar" }
+                        }
+                      }
                     },
-                    description: "Detailed analysis of each aspect"
+                    description: "Detaillierte Analyse mit Teil-Scores für jeden Bereich"
                   }
                 },
-                required: ["looks_score", "strengths", "weaknesses", "priorities"]
+                required: ["looks_score", "strengths", "weaknesses", "priorities", "detailed_analysis"]
               }
             }
           }

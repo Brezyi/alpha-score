@@ -489,6 +489,140 @@ export default function Progress() {
               </Card>
             )}
 
+            {/* Improvement Insight Card */}
+            {completedAnalyses.length >= 2 && (
+              <Card className="p-6 mb-8 bg-gradient-to-br from-primary/10 to-card border-primary/20">
+                <div className="flex items-center gap-2 mb-4">
+                  <Flame className="w-5 h-5 text-primary" />
+                  <h3 className="font-bold">Deine Entwicklung</h3>
+                </div>
+                <div className="space-y-4">
+                  {/* Score Change */}
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
+                    <span className="text-muted-foreground">Score seit Start</span>
+                    <div className={cn(
+                      "flex items-center gap-2 font-bold text-lg",
+                      totalImprovement && parseFloat(totalImprovement) > 0 && "text-green-500",
+                      totalImprovement && parseFloat(totalImprovement) < 0 && "text-red-500"
+                    )}>
+                      {totalImprovement && parseFloat(totalImprovement) > 0 ? (
+                        <TrendingUp className="w-5 h-5" />
+                      ) : totalImprovement && parseFloat(totalImprovement) < 0 ? (
+                        <TrendingDown className="w-5 h-5" />
+                      ) : (
+                        <Minus className="w-5 h-5" />
+                      )}
+                      {totalImprovement ? (parseFloat(totalImprovement) > 0 ? "+" : "") + totalImprovement : "0"} Punkte
+                    </div>
+                  </div>
+
+                  {/* What Improved */}
+                  {completedAnalyses.length >= 2 && (
+                    <>
+                      {(() => {
+                        const latest = completedAnalyses[0];
+                        const previous = completedAnalyses[1];
+                        const latestStrengths = new Set(latest.strengths || []);
+                        const prevStrengths = new Set(previous.strengths || []);
+                        const newStrengths = [...latestStrengths].filter(s => !prevStrengths.has(s));
+                        const latestWeaknesses = new Set(latest.weaknesses || []);
+                        const prevWeaknesses = new Set(previous.weaknesses || []);
+                        const resolvedWeaknesses = [...prevWeaknesses].filter(w => !latestWeaknesses.has(w));
+
+                        return (
+                          <>
+                            {newStrengths.length > 0 && (
+                              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                                <div className="flex items-center gap-2 text-green-500 text-sm font-medium mb-2">
+                                  <TrendingUp className="w-4 h-4" />
+                                  Neu als Stärke erkannt
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {newStrengths.slice(0, 3).map((s, i) => (
+                                    <span key={i} className="px-2 py-1 rounded-full bg-green-500/20 text-green-500 text-xs">
+                                      {s}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {resolvedWeaknesses.length > 0 && (
+                              <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                                <div className="flex items-center gap-2 text-blue-500 text-sm font-medium mb-2">
+                                  <Target className="w-4 h-4" />
+                                  Schwäche verbessert
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {resolvedWeaknesses.slice(0, 3).map((w, i) => (
+                                    <span key={i} className="px-2 py-1 rounded-full bg-blue-500/20 text-blue-500 text-xs line-through opacity-70">
+                                      {w}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {newStrengths.length === 0 && resolvedWeaknesses.length === 0 && (
+                              <p className="text-sm text-muted-foreground">
+                                Bleib dran! Bei der nächsten Analyse sehen wir, was sich verbessert hat.
+                              </p>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </>
+                  )}
+                </div>
+              </Card>
+            )}
+
+            {/* Milestones */}
+            {completedAnalyses.length > 0 && (
+              <Card className="p-6 mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <Crown className="w-5 h-5 text-amber-500" />
+                  <h3 className="font-bold">Meilensteine</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border",
+                    completedAnalyses.length >= 1 
+                      ? "bg-amber-500/10 border-amber-500/30" 
+                      : "bg-muted/30 border-border"
+                  )}>
+                    <div className="text-2xl mb-1">{completedAnalyses.length >= 1 ? "🎯" : "🔒"}</div>
+                    <div className="text-xs font-medium">Erste Analyse</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border",
+                    completedAnalyses.length >= 3 
+                      ? "bg-amber-500/10 border-amber-500/30" 
+                      : "bg-muted/30 border-border"
+                  )}>
+                    <div className="text-2xl mb-1">{completedAnalyses.length >= 3 ? "📊" : "🔒"}</div>
+                    <div className="text-xs font-medium">3 Analysen</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border",
+                    totalImprovement && parseFloat(totalImprovement) >= 0.5 
+                      ? "bg-amber-500/10 border-amber-500/30" 
+                      : "bg-muted/30 border-border"
+                  )}>
+                    <div className="text-2xl mb-1">{totalImprovement && parseFloat(totalImprovement) >= 0.5 ? "📈" : "🔒"}</div>
+                    <div className="text-xs font-medium">+0.5 Punkte</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border",
+                    totalImprovement && parseFloat(totalImprovement) >= 1.0 
+                      ? "bg-amber-500/10 border-amber-500/30" 
+                      : "bg-muted/30 border-border"
+                  )}>
+                    <div className="text-2xl mb-1">{totalImprovement && parseFloat(totalImprovement) >= 1.0 ? "🏆" : "🔒"}</div>
+                    <div className="text-xs font-medium">+1.0 Punkte</div>
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* Trends */}
             <div className="grid md:grid-cols-2 gap-6 mb-8">
               {/* Top Strengths */}
