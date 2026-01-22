@@ -16,7 +16,8 @@ import {
   ArrowDownRight,
   Minus,
   Loader2,
-  Shield
+  Shield,
+  Trophy
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -25,6 +26,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useStreak } from "@/hooks/useStreak";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 type Analysis = {
@@ -79,6 +81,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { isPremium } = useSubscription();
   const { isAdminOrOwner, role } = useUserRole();
+  const { currentStreak, longestStreak, isActiveToday, loading: streakLoading } = useStreak();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -247,8 +250,26 @@ const Dashboard = () => {
           <div className="p-4 rounded-2xl glass-card">
             <div className="text-sm text-muted-foreground mb-1">Streak</div>
             <div className="text-3xl font-bold flex items-center gap-2">
-              0 <Flame className="w-6 h-6 text-orange-500" />
+              {streakLoading ? (
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              ) : (
+                <>
+                  {currentStreak}
+                  <Flame className={`w-6 h-6 ${currentStreak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+                </>
+              )}
             </div>
+            {!streakLoading && longestStreak > 0 && (
+              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
+                <Trophy className="w-3 h-3" />
+                Best: {longestStreak}
+              </div>
+            )}
+            {!streakLoading && !isActiveToday && currentStreak > 0 && (
+              <div className="text-xs text-orange-400 mt-1">
+                Heute noch aktiv werden!
+              </div>
+            )}
           </div>
           <div className="p-4 rounded-2xl glass-card">
             <div className="text-sm text-muted-foreground mb-1">Tasks heute</div>
