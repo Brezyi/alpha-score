@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useStreak } from "@/hooks/useStreak";
+import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 type Analysis = {
@@ -349,6 +350,11 @@ const Dashboard = () => {
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           </div>
         )}
+
+        {/* Push Notification Toggle */}
+        <div className="mb-8">
+          <PushNotificationToggle />
+        </div>
 
         {/* Quick Actions */}
         <div className="mb-8">
