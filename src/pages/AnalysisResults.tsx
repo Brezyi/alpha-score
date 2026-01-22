@@ -56,10 +56,20 @@ export default function AnalysisResults() {
     // Generate signed URLs for photos
     if (data.photo_urls && data.photo_urls.length > 0) {
       const urls = await Promise.all(
-        data.photo_urls.map(async (path: string) => {
-          const { data: signedData } = await supabase.storage
+        data.photo_urls.map(async (photoUrl: string) => {
+          // Extract path from full URL (e.g., ".../analysis-photos/user-id/file.webp")
+          const bucketPath = photoUrl.includes('/analysis-photos/')
+            ? photoUrl.split('/analysis-photos/')[1]
+            : photoUrl;
+          
+          const { data: signedData, error } = await supabase.storage
             .from("analysis-photos")
-            .createSignedUrl(path, 3600); // 1 hour expiry
+            .createSignedUrl(bucketPath, 3600); // 1 hour expiry
+          
+          if (error) {
+            console.error("Error creating signed URL:", error);
+            return null;
+          }
           return signedData?.signedUrl || null;
         })
       );
