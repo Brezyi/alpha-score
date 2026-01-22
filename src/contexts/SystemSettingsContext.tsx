@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface SystemSettings {
   app_name: string;
+  app_logo_url: string;
   maintenance_mode: boolean;
   auto_confirm_email: boolean;
   max_upload_size_mb: number;
@@ -22,6 +23,7 @@ interface SettingsRow {
 
 const defaultSettings: SystemSettings = {
   app_name: "FaceRank",
+  app_logo_url: "",
   maintenance_mode: false,
   auto_confirm_email: true,
   max_upload_size_mb: 10,
@@ -86,6 +88,7 @@ export const SystemSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
 
         const newSettings: SystemSettings = {
           app_name: typeof parsed.app_name === "string" ? parsed.app_name : defaultSettings.app_name,
+          app_logo_url: typeof parsed.app_logo_url === "string" ? parsed.app_logo_url : defaultSettings.app_logo_url,
           maintenance_mode: typeof parsed.maintenance_mode === "boolean" ? parsed.maintenance_mode : defaultSettings.maintenance_mode,
           auto_confirm_email: typeof parsed.auto_confirm_email === "boolean" ? parsed.auto_confirm_email : defaultSettings.auto_confirm_email,
           max_upload_size_mb: typeof parsed.max_upload_size_mb === "number" ? parsed.max_upload_size_mb : defaultSettings.max_upload_size_mb,

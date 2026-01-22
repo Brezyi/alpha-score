@@ -14,9 +14,17 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                <Zap className="w-5 h-5 text-primary-foreground" />
-              </div>
+              {settings.app_logo_url ? (
+                <img 
+                  src={settings.app_logo_url} 
+                  alt={settings.app_name} 
+                  className="w-10 h-10 rounded-xl object-contain"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-primary-foreground" />
+                </div>
+              )}
               <span className="text-xl font-bold">{settings.app_name}</span>
             </Link>
 
