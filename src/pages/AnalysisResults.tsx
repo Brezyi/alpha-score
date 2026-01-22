@@ -241,16 +241,8 @@ export default function AnalysisResults() {
 
         {/* Lightbox Dialog */}
         <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
-          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none [&>button]:bg-black/50 [&>button]:text-white [&>button]:hover:bg-black/70">
             <div className="relative w-full h-full flex items-center justify-center min-h-[50vh]">
-              {/* Close button */}
-              <button
-                onClick={() => setLightboxOpen(false)}
-                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-
               {/* Navigation - Previous */}
               {photoUrls.length > 1 && (
                 <button
