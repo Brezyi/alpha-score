@@ -20,7 +20,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useSystemSettings, SystemSettings as SettingsType } from "@/hooks/useSystemSettings";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Settings, Palette, Bell, Brain, Loader2, Save, RefreshCw, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Shield, Settings, Palette, Bell, Brain, Loader2, Save, RefreshCw, AlertTriangle, RotateCcw } from "lucide-react";
 import { LogoUpload } from "@/components/admin/LogoUpload";
 import { FaviconUpload } from "@/components/admin/FaviconUpload";
 import { BrandingPreview } from "@/components/admin/BrandingPreview";
@@ -33,7 +33,24 @@ export default function SystemSettings() {
   const [localSettings, setLocalSettings] = useState<SettingsType>(settings);
   const [hasChanges, setHasChanges] = useState(false);
   const [showMaintenanceDialog, setShowMaintenanceDialog] = useState(false);
+  const [showResetBrandingDialog, setShowResetBrandingDialog] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
+
+  const defaultBrandingSettings = {
+    app_name: "LooksMax",
+    app_logo_url: "",
+    favicon_url: "",
+    accent_color: "#00FF88",
+    default_theme: "dark" as const,
+  };
+
+  const resetBrandingSettings = () => {
+    setLocalSettings((s) => ({
+      ...s,
+      ...defaultBrandingSettings,
+    }));
+    setShowResetBrandingDialog(false);
+  };
 
   useEffect(() => {
     if (!roleLoading && !isOwner) navigate("/admin");
@@ -156,11 +173,44 @@ export default function SystemSettings() {
           </div>
         )}
 
+        {/* Reset Branding Confirmation Dialog */}
+        <AlertDialog open={showResetBrandingDialog} onOpenChange={setShowResetBrandingDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <RotateCcw className="w-5 h-5 text-primary" />
+                Branding zurücksetzen?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Alle Branding-Einstellungen (App-Name, Logo, Favicon, Akzentfarbe, Theme) werden auf die Standardwerte zurückgesetzt. 
+                Diese Änderung wird erst nach dem Speichern wirksam.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+              <AlertDialogAction onClick={resetBrandingSettings}>
+                Zurücksetzen
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Palette className="w-5 h-5 text-primary" />
-              <CardTitle>Branding & Design</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Palette className="w-5 h-5 text-primary" />
+                <CardTitle>Branding & Design</CardTitle>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowResetBrandingDialog(true)}
+                className="gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Zurücksetzen
+              </Button>
             </div>
             <CardDescription>Passe das Erscheinungsbild an</CardDescription>
           </CardHeader>
