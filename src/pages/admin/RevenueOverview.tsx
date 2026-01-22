@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,18 +14,43 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ArrowLeft, TrendingUp, CreditCard, Users, RefreshCw, Euro, Crown, Infinity } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, TrendingUp, CreditCard, Users, RefreshCw, Euro, Crown, Infinity, Download, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
 interface SubscriptionData {
   id: string;
-  customer_email: string;
+  stripe_customer_id: string;
+  stripe_subscription_id: string | null;
+  plan_type: "premium" | "lifetime";
   status: string;
-  plan: "premium" | "lifetime";
   amount: number;
-  current_period_end?: string;
-  created: string;
+  currency: string;
+  customer_email: string | null;
+  current_period_end: string | null;
+  created_at: string;
+  cancel_at_period_end: boolean;
+}
+
+interface PaymentData {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_type: string;
+  customer_email: string | null;
+  created_at: string;
 }
 
 interface RevenueStats {
@@ -32,63 +58,132 @@ interface RevenueStats {
   monthlyRevenue: number;
   activeSubscriptions: number;
   lifetimePurchases: number;
+  canceledSubscriptions: number;
 }
 
 export default function RevenueOverview() {
   const navigate = useNavigate();
-  const { isOwner } = useUserRole();
+  const { isOwner, isAdmin } = useUserRole();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [subscriptions, setSubscriptions] = useState<SubscriptionData[]>([]);
+  const [payments, setPayments] = useState<PaymentData[]>([]);
   const [stats, setStats] = useState<RevenueStats>({
     totalRevenue: 0,
     monthlyRevenue: 0,
     activeSubscriptions: 0,
     lifetimePurchases: 0,
+    canceledSubscriptions: 0,
   });
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isOwner) {
+    if (!isOwner && !isAdmin) {
       navigate("/admin");
       return;
     }
-    fetchRevenueData();
-  }, [isOwner, navigate]);
+    fetchLocalData();
+  }, [isOwner, isAdmin, navigate]);
 
-  const fetchRevenueData = async () => {
+  const fetchLocalData = useCallback(async () => {
     setLoading(true);
+    setError(null);
+    
     try {
-      const { data, error } = await supabase.functions.invoke("get-revenue-data");
-      
-      if (error) {
-        console.error("Error fetching revenue data:", error);
-        // Use mock data for display
-        setStats({
-          totalRevenue: 0,
-          monthlyRevenue: 0,
-          activeSubscriptions: 0,
-          lifetimePurchases: 0,
-        });
-        setSubscriptions([]);
-      } else if (data) {
-        setStats(data.stats || {
-          totalRevenue: 0,
-          monthlyRevenue: 0,
-          activeSubscriptions: 0,
-          lifetimePurchases: 0,
-        });
-        setSubscriptions(data.subscriptions || []);
+      // Fetch subscriptions from local database
+      const { data: subsData, error: subsError } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (subsError) {
+        console.error("Error fetching subscriptions:", subsError);
+        throw new Error("Fehler beim Laden der Abonnements");
       }
-    } catch (error) {
-      console.error("Error:", error);
+
+      // Fetch recent payments
+      const { data: paymentsData, error: paymentsError } = await supabase
+        .from("payments")
+        .select("*")
+        .eq("status", "succeeded")
+        .order("created_at", { ascending: false })
+        .limit(50);
+
+      if (paymentsError) {
+        console.error("Error fetching payments:", paymentsError);
+      }
+
+      const subs = (subsData || []) as SubscriptionData[];
+      const pays = (paymentsData || []) as PaymentData[];
+
+      setSubscriptions(subs);
+      setPayments(pays);
+
+      // Calculate stats from local data
+      const activeMonthly = subs.filter(s => s.status === "active" && s.plan_type === "premium");
+      const activeLifetime = subs.filter(s => s.status === "active" && s.plan_type === "lifetime");
+      const canceled = subs.filter(s => s.status === "canceled");
+
+      const monthlyRevenue = activeMonthly.reduce((sum, s) => sum + (s.amount || 0), 0);
+      const totalFromPayments = pays.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+      setStats({
+        totalRevenue: totalFromPayments || (monthlyRevenue + activeLifetime.reduce((sum, s) => sum + (s.amount || 0), 0)),
+        monthlyRevenue: monthlyRevenue,
+        activeSubscriptions: activeMonthly.length,
+        lifetimePurchases: activeLifetime.length,
+        canceledSubscriptions: canceled.length,
+      });
+
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Unbekannter Fehler";
+      setError(message);
+      console.error("Error:", err);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const syncWithStripe = async () => {
+    if (!isOwner) {
+      toast({
+        title: "Keine Berechtigung",
+        description: "Nur Owner können Stripe-Daten synchronisieren.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("sync-stripe-data");
+      
+      if (error) throw error;
+
+      toast({
+        title: "Synchronisation erfolgreich",
+        description: `${data.syncedSubscriptions} Abos und ${data.syncedPayments} Zahlungen synchronisiert.`,
+      });
+
+      // Refresh local data
+      await fetchLocalData();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Synchronisation fehlgeschlagen";
+      toast({
+        title: "Fehler bei Synchronisation",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setSyncing(false);
+    }
   };
 
-  const formatCurrency = (amount: number) => {
+  const formatCurrency = (amount: number, currency = "eur") => {
     return new Intl.NumberFormat("de-DE", {
       style: "currency",
-      currency: "EUR",
+      currency: currency.toUpperCase(),
     }).format(amount / 100);
   };
 
@@ -109,20 +204,25 @@ export default function RevenueOverview() {
     );
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, cancelAtPeriodEnd?: boolean) => {
+    if (cancelAtPeriodEnd && status === "active") {
+      return <Badge className="bg-yellow-500/20 text-yellow-500">Kündigung ausstehend</Badge>;
+    }
     switch (status) {
       case "active":
         return <Badge className="bg-green-500/20 text-green-500">Aktiv</Badge>;
       case "canceled":
         return <Badge className="bg-red-500/20 text-red-500">Gekündigt</Badge>;
       case "past_due":
-        return <Badge className="bg-yellow-500/20 text-yellow-500">Überfällig</Badge>;
+        return <Badge className="bg-orange-500/20 text-orange-500">Überfällig</Badge>;
+      case "trialing":
+        return <Badge className="bg-blue-500/20 text-blue-500">Testphase</Badge>;
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
-  if (!isOwner) return null;
+  if (!isOwner && !isAdmin) return null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -140,14 +240,55 @@ export default function RevenueOverview() {
             <TrendingUp className="w-5 h-5 text-primary" />
             <h1 className="text-lg font-bold">Umsatz & Abos</h1>
           </div>
-          <Button onClick={fetchRevenueData} disabled={loading} variant="outline" size="sm">
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Aktualisieren
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={fetchLocalData} disabled={loading} variant="outline" size="sm">
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Aktualisieren
+            </Button>
+            {isOwner && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button disabled={syncing} size="sm">
+                    <Download className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`} />
+                    Stripe Sync
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Stripe-Daten synchronisieren?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Dies holt alle aktuellen Abonnements und Zahlungen von Stripe und speichert sie lokal. 
+                      Der Vorgang kann einige Sekunden dauern.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                    <AlertDialogAction onClick={syncWithStripe}>Synchronisieren</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-6xl space-y-6">
+        {/* Error Display */}
+        {error && (
+          <Card className="border-destructive bg-destructive/10">
+            <CardContent className="flex items-center gap-3 p-4">
+              <AlertCircle className="w-5 h-5 text-destructive" />
+              <div>
+                <p className="font-medium text-destructive">Fehler beim Laden</p>
+                <p className="text-sm text-muted-foreground">{error}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={fetchLocalData} className="ml-auto">
+                Erneut versuchen
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Title */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
@@ -156,13 +297,13 @@ export default function RevenueOverview() {
           <div>
             <h2 className="text-2xl font-bold">Umsatzübersicht</h2>
             <p className="text-muted-foreground">
-              Stripe-Abonnements und Einmalzahlungen
+              Lokale Daten - Stripe Webhooks synchronisieren automatisch
             </p>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
@@ -218,6 +359,20 @@ export default function RevenueOverview() {
               </div>
             </CardContent>
           </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                  <Users className="w-5 h-5 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{stats.canceledSubscriptions}</p>
+                  <p className="text-xs text-muted-foreground">Gekündigt</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Subscriptions Table */}
@@ -225,10 +380,10 @@ export default function RevenueOverview() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="w-5 h-5" />
-              Aktive Abonnements
+              Alle Abonnements
             </CardTitle>
             <CardDescription>
-              Alle zahlenden Kunden und deren Abos
+              Abos und Lifetime-Käufe aus der lokalen Datenbank
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -240,7 +395,7 @@ export default function RevenueOverview() {
               <div className="text-center py-12 text-muted-foreground">
                 <CreditCard className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>Noch keine Abonnements</p>
-                <p className="text-sm">Zahlende Kunden erscheinen hier</p>
+                <p className="text-sm">Nutze "Stripe Sync" um Daten zu laden</p>
               </div>
             ) : (
               <Table>
@@ -258,18 +413,18 @@ export default function RevenueOverview() {
                   {subscriptions.map((sub) => (
                     <TableRow key={sub.id}>
                       <TableCell className="font-medium">
-                        {sub.customer_email}
+                        {sub.customer_email || "Unbekannt"}
                       </TableCell>
-                      <TableCell>{getPlanBadge(sub.plan)}</TableCell>
-                      <TableCell>{getStatusBadge(sub.status)}</TableCell>
-                      <TableCell>{formatCurrency(sub.amount)}</TableCell>
+                      <TableCell>{getPlanBadge(sub.plan_type)}</TableCell>
+                      <TableCell>{getStatusBadge(sub.status, sub.cancel_at_period_end)}</TableCell>
+                      <TableCell>{formatCurrency(sub.amount, sub.currency)}</TableCell>
                       <TableCell>
-                        {format(new Date(sub.created), "dd.MM.yyyy", { locale: de })}
+                        {format(new Date(sub.created_at), "dd.MM.yyyy", { locale: de })}
                       </TableCell>
                       <TableCell>
                         {sub.current_period_end 
                           ? format(new Date(sub.current_period_end), "dd.MM.yyyy", { locale: de })
-                          : "—"
+                          : sub.plan_type === "lifetime" ? "∞" : "—"
                         }
                       </TableCell>
                     </TableRow>
@@ -279,6 +434,51 @@ export default function RevenueOverview() {
             )}
           </CardContent>
         </Card>
+
+        {/* Recent Payments */}
+        {payments.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Euro className="w-5 h-5" />
+                Letzte Zahlungen
+              </CardTitle>
+              <CardDescription>
+                Die letzten 50 erfolgreichen Zahlungen
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Kunde</TableHead>
+                    <TableHead>Typ</TableHead>
+                    <TableHead>Betrag</TableHead>
+                    <TableHead>Datum</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {payments.slice(0, 10).map((payment) => (
+                    <TableRow key={payment.id}>
+                      <TableCell className="font-medium">
+                        {payment.customer_email || "Unbekannt"}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {payment.payment_type === "subscription" ? "Abo" : "Einmalig"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{formatCurrency(payment.amount, payment.currency)}</TableCell>
+                      <TableCell>
+                        {format(new Date(payment.created_at), "dd.MM.yyyy HH:mm", { locale: de })}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        )}
       </main>
     </div>
   );
