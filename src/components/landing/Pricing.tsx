@@ -1,6 +1,10 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Crown, Zap, Lock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Check, Crown, Zap, Lock, Loader2 } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSubscription, STRIPE_PRICES } from "@/hooks/useSubscription";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const plans = [
   {
@@ -64,6 +68,44 @@ const plans = [
 ];
 
 const Pricing = () => {
+  const [loading, setLoading] = useState<string | null>(null);
+  const { createCheckout, isPremium, subscriptionType } = useSubscription();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handlePurchase = async (planName: string) => {
+    try {
+      // Check if user is logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Anmeldung erforderlich",
+          description: "Bitte melde dich an, um Premium zu kaufen.",
+        });
+        navigate("/login");
+        return;
+      }
+
+      setLoading(planName);
+      
+      if (planName === "Premium") {
+        await createCheckout("premium");
+      } else if (planName === "Lifetime") {
+        await createCheckout("lifetime");
+      }
+    } catch (error: any) {
+      console.error("Purchase error:", error);
+      toast({
+        title: "Fehler",
+        description: error.message || "Zahlung konnte nicht gestartet werden",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
+
   return (
     <section className="relative py-24 overflow-hidden" id="pricing">
       {/* Background */}
@@ -140,15 +182,36 @@ const Pricing = () => {
               </ul>
 
               {/* CTA */}
-              <Link to="/register" className="block">
+              {plan.name === "Free" ? (
+                <Link to="/register" className="block">
+                  <Button 
+                    variant={plan.variant} 
+                    size="lg" 
+                    className="w-full"
+                  >
+                    {plan.cta}
+                  </Button>
+                </Link>
+              ) : (
                 <Button 
                   variant={plan.variant} 
                   size="lg" 
                   className="w-full"
+                  onClick={() => handlePurchase(plan.name)}
+                  disabled={loading !== null || (isPremium && (subscriptionType === "lifetime" || (subscriptionType === "premium" && plan.name === "Premium")))}
                 >
-                  {plan.cta}
+                  {loading === plan.name ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Wird geladen...
+                    </>
+                  ) : isPremium && (subscriptionType === "lifetime" || (subscriptionType === "premium" && plan.name === "Premium")) ? (
+                    "Bereits aktiviert ✓"
+                  ) : (
+                    plan.cta
+                  )}
                 </Button>
-              </Link>
+              )}
             </div>
           ))}
         </div>
