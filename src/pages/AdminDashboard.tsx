@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { 
@@ -13,7 +14,9 @@ import {
   Shield,
   Crown,
   Activity,
-  History
+  History,
+  Flag,
+  HelpCircle
 } from "lucide-react";
 
 interface DashboardStat {
@@ -29,6 +32,9 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStat[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [openTickets, setOpenTickets] = useState(0);
+  const [pendingReports, setPendingReports] = useState(0);
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -41,6 +47,21 @@ export default function AdminDashboard() {
         const { count: usersCount } = await supabase
           .from('user_roles')
           .select('*', { count: 'exact', head: true });
+
+        // Fetch open support tickets
+        const { count: ticketsCount } = await supabase
+          .from('support_tickets')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'open');
+
+        // Fetch pending reports
+        const { count: reportsCount } = await supabase
+          .from('reports')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending');
+
+        setOpenTickets(ticketsCount || 0);
+        setPendingReports(reportsCount || 0);
 
         setStats([
           { 
@@ -56,16 +77,16 @@ export default function AdminDashboard() {
             change: "+5 heute"
           },
           { 
-            label: "Aktive Sessions", 
-            value: "24", 
-            icon: Activity,
-            change: "Live"
+            label: "Support-Tickets", 
+            value: ticketsCount || 0, 
+            icon: HelpCircle,
+            change: ticketsCount ? `${ticketsCount} offen` : "Keine offenen"
           },
           { 
-            label: "Support-Tickets", 
-            value: "3", 
-            icon: MessageSquare,
-            change: "2 offen"
+            label: "Reports", 
+            value: reportsCount || 0, 
+            icon: Flag,
+            change: reportsCount ? `${reportsCount} ausstehend` : "Keine offenen"
           },
         ]);
       } catch (error) {

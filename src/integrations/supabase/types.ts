@@ -164,6 +164,93 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reported_content_id: string | null
+          reported_content_type: string
+          reported_user_id: string | null
+          reporter_id: string
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reported_content_id?: string | null
+          reported_content_type: string
+          reported_user_id?: string | null
+          reporter_id: string
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reported_content_id?: string | null
+          reported_content_type?: string
+          reported_user_id?: string | null
+          reporter_id?: string
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      support_tickets: {
+        Row: {
+          admin_notes: string | null
+          assigned_to: string | null
+          attachment_urls: string[] | null
+          category: string
+          created_at: string
+          description: string
+          id: string
+          status: string
+          subject: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          attachment_urls?: string[] | null
+          category: string
+          created_at?: string
+          description: string
+          id?: string
+          status?: string
+          subject: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          assigned_to?: string | null
+          attachment_urls?: string[] | null
+          category?: string
+          created_at?: string
+          description?: string
+          id?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

@@ -15,7 +15,8 @@ import {
   Loader2,
   Shield,
   Trophy,
-  Calendar
+  Calendar,
+  HelpCircle
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -71,6 +72,14 @@ const quickActions = [
     href: "/coach",
     color: "bg-purple-500/10 text-purple-400",
     premium: true,
+  },
+  {
+    icon: HelpCircle,
+    title: "Support",
+    description: "Hilfe & Problemlösung",
+    href: "/support",
+    color: "bg-muted text-muted-foreground",
+    premium: false,
   },
 ];
 
