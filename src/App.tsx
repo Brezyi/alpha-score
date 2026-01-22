@@ -11,6 +11,7 @@ import AnalysisUpload from "./pages/AnalysisUpload";
 import AnalysisResults from "./pages/AnalysisResults";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Coach from "./pages/Coach";
+import Plan from "./pages/Plan";
 import Features from "./pages/Features";
 import PricingPage from "./pages/PricingPage";
 import Datenschutz from "./pages/Datenschutz";
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/analysis/:id" element={<AnalysisResults />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/coach" element={<Coach />} />
+          <Route path="/plan" element={<Plan />} />
           <Route path="/features" element={<Features />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/datenschutz" element={<Datenschutz />} />
