@@ -12,7 +12,9 @@ import {
   TrendingUp,
   TrendingDown,
   Target,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle,
+  Camera
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -86,6 +88,51 @@ export default function AnalysisResults() {
             <RefreshCw className="w-4 h-4 animate-spin" />
             <span>Automatische Aktualisierung</span>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Handle validation_failed status (face not detected)
+  if (analysis?.status === 'validation_failed') {
+    const validationError = (analysis.detailed_results as any)?.validation_error || 
+      "Kein Gesicht erkannt. Bitte lade ein klares Foto deines Gesichts hoch (frontal, gute Beleuchtung).";
+    
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-sm px-4">
+          <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-10 h-10 text-warning" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">Foto nicht geeignet</h2>
+          <p className="text-muted-foreground mb-6">
+            {validationError}
+          </p>
+          
+          {/* Tips Box */}
+          <Card className="bg-primary/5 border-primary/20 mb-6 text-left">
+            <CardContent className="p-4">
+              <p className="font-medium text-sm mb-2 flex items-center gap-2">
+                <Camera className="w-4 h-4 text-primary" />
+                Tipps für ein gutes Foto:
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-1">
+                <li>• Frontale Aufnahme, Blick in die Kamera</li>
+                <li>• Gute Beleuchtung (Tageslicht ideal)</li>
+                <li>• Keine Sonnenbrille oder Maske</li>
+                <li>• Gesicht sollte gut sichtbar sein</li>
+                <li>• Scharfes, nicht verschwommenes Bild</li>
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Button onClick={() => navigate("/upload")} variant="hero" size="lg" className="w-full">
+            <Camera className="w-5 h-5" />
+            Neues Foto hochladen
+          </Button>
+          <p className="text-xs text-muted-foreground mt-3">
+            Keine Kosten entstanden – versuche es einfach erneut
+          </p>
         </div>
       </div>
     );
