@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { AppRole } from "./useUserRole";
 
 export interface SubscriptionState {
   isPremium: boolean;
-  subscriptionType: "premium" | "lifetime" | null;
+  subscriptionType: "premium" | "lifetime" | "owner" | null;
   subscriptionEnd: string | null;
   loading: boolean;
   error: string | null;
@@ -47,6 +48,22 @@ export function useSubscription() {
           isPremium: false,
           subscriptionType: null,
           subscriptionEnd: null,
+          loading: false,
+          error: null,
+        });
+        return;
+      }
+
+      // Check if user is owner - owners get full premium access
+      const { data: roleData } = await supabase.rpc('get_user_role', {
+        _user_id: session.user.id
+      });
+
+      if (roleData === 'owner') {
+        setState({
+          isPremium: true,
+          subscriptionType: "owner",
+          subscriptionEnd: null, // Never expires
           loading: false,
           error: null,
         });
