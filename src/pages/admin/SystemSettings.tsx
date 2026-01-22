@@ -183,7 +183,30 @@ export default function SystemSettings() {
               </AlertDialogTitle>
               <AlertDialogDescription asChild>
                 <div className="space-y-4">
-                  <p>Diese Änderung wird erst nach dem Speichern wirksam.</p>
+                  {(() => {
+                    const changedCount = [
+                      localSettings.app_name !== defaultBrandingSettings.app_name,
+                      localSettings.app_logo_url !== defaultBrandingSettings.app_logo_url,
+                      localSettings.favicon_url !== defaultBrandingSettings.favicon_url,
+                      localSettings.accent_color !== defaultBrandingSettings.accent_color,
+                      localSettings.default_theme !== defaultBrandingSettings.default_theme,
+                    ].filter(Boolean).length;
+                    
+                    return changedCount > 0 ? (
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 border border-destructive/20">
+                        <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" />
+                        <span className="text-sm text-destructive font-medium">
+                          {changedCount} {changedCount === 1 ? "Einstellung weicht" : "Einstellungen weichen"} vom Standard ab
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-primary/10 border border-primary/20">
+                        <span className="text-sm text-primary">Alle Einstellungen entsprechen bereits dem Standard</span>
+                      </div>
+                    );
+                  })()}
+                  
+                  <p className="text-muted-foreground text-sm">Diese Änderung wird erst nach dem Speichern wirksam.</p>
                   
                   <div className="rounded-lg border border-border bg-muted/50 p-3 space-y-3 text-sm">
                     <div className="grid grid-cols-3 gap-2 text-muted-foreground font-medium border-b border-border pb-2">
