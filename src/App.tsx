@@ -13,6 +13,7 @@ import AnalysisResults from "./pages/AnalysisResults";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Coach from "./pages/Coach";
 import Plan from "./pages/Plan";
+import Progress from "./pages/Progress";
 import Features from "./pages/Features";
 import PricingPage from "./pages/PricingPage";
 import Datenschutz from "./pages/Datenschutz";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="/coach" element={<Coach />} />
             <Route path="/plan" element={<Plan />} />
+            <Route path="/progress" element={<Progress />} />
             <Route path="/features" element={<Features />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/datenschutz" element={<Datenschutz />} />
