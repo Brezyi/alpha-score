@@ -28,6 +28,8 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import AuditLogs from "./pages/admin/AuditLogs";
+import Support from "./pages/Support";
+import SupportManagement from "./pages/admin/SupportManagement";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,7 @@ const App = () => (
               <Route path="/coach" element={<Coach />} />
               <Route path="/plan" element={<Plan />} />
               <Route path="/progress" element={<Progress />} />
+              <Route path="/support" element={<Support />} />
               <Route path="/features" element={<Features />} />
               <Route path="/pricing" element={<PricingPage />} />
               <Route path="/datenschutz" element={<Datenschutz />} />
@@ -80,6 +83,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRole={["admin", "owner"]}>
                     <AuditLogs />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin/support" 
+                element={
+                  <ProtectedRoute requiredRole={["admin", "owner"]}>
+                    <SupportManagement />
                   </ProtectedRoute>
                 } 
               />
