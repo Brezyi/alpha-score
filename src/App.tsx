@@ -19,6 +19,9 @@ import Impressum from "./pages/Impressum";
 import AGB from "./pages/AGB";
 import NotFound from "./pages/NotFound";
 import CookieConsent from "./components/CookieConsent";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserManagement from "./pages/admin/UserManagement";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +46,25 @@ const App = () => (
           <Route path="/datenschutz" element={<Datenschutz />} />
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/agb" element={<AGB />} />
+          
+          {/* Admin Routes - Protected by role */}
+          <Route 
+            path="/admin" 
+            element={
+              <ProtectedRoute requiredRole={["admin", "owner"]}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/users" 
+            element={
+              <ProtectedRoute requiredRole={["admin", "owner"]}>
+                <UserManagement />
+              </ProtectedRoute>
+            } 
+          />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
