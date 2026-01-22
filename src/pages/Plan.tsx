@@ -13,7 +13,12 @@ import {
   Loader2,
   RefreshCw,
   Crown,
-  Lock
+  Lock,
+  Target,
+  AlertCircle,
+  Clock,
+  Calendar,
+  Flame
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -22,6 +27,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 type Task = {
   id: string;
@@ -33,9 +40,12 @@ type Task = {
 };
 
 type Analysis = {
+  id: string;
+  looks_score: number | null;
   weaknesses: string[] | null;
   priorities: string[] | null;
   strengths: string[] | null;
+  detailed_results: any;
 };
 
 const CATEGORIES = [
@@ -47,47 +57,6 @@ const CATEGORIES = [
   { id: "mindset", name: "Mindset & Haltung", icon: Brain, color: "bg-blue-500/20 text-blue-400" },
 ];
 
-const DEFAULT_TASKS: Record<string, { title: string; description: string }[]> = {
-  skincare: [
-    { title: "Morgens Gesicht reinigen", description: "Sanfter Cleanser für deinen Hauttyp" },
-    { title: "Sonnenschutz auftragen (SPF 30+)", description: "Täglich, auch bei Bewölkung" },
-    { title: "Abends Feuchtigkeitscreme", description: "Auf feuchte Haut auftragen" },
-    { title: "Retinol 2-3x pro Woche", description: "Abends, langsam einführen" },
-    { title: "Ausreichend Wasser trinken (2-3L)", description: "Hydration von innen" },
-  ],
-  hair: [
-    { title: "Friseurtermin alle 4-6 Wochen", description: "Regelmäßiger Schnitt für sauberen Look" },
-    { title: "Haarstyling-Produkt finden", description: "Matt-Paste, Pomade oder Sea Salt Spray" },
-    { title: "Augenbrauen trimmen/zupfen", description: "Sauber halten, nicht übertreiben" },
-    { title: "Bartpflege (falls vorhanden)", description: "Trimmen, Öl, klare Konturen" },
-  ],
-  body: [
-    { title: "3-4x pro Woche Training", description: "Kraft- oder Ausdauertraining" },
-    { title: "Protein-Ziel erreichen (1.6g/kg)", description: "Muskeln brauchen Protein" },
-    { title: "8 Stunden Schlaf", description: "Regeneration ist alles" },
-    { title: "Körperhaltung verbessern", description: "Schultern zurück, Brust raus" },
-    { title: "Körperfett optimieren", description: "Definiertes Gesicht bei 12-15% KFA" },
-  ],
-  style: [
-    { title: "Kleiderschrank ausmisten", description: "Weg mit schlecht sitzenden Teilen" },
-    { title: "Basis-Garderobe aufbauen", description: "Neutrale Farben, gute Passform" },
-    { title: "Passende Schuhgröße/Stil", description: "Saubere, zeitlose Schuhe" },
-    { title: "Accessoires reduzieren", description: "Weniger ist mehr - eine gute Uhr reicht" },
-  ],
-  teeth: [
-    { title: "2x täglich Zähne putzen", description: "Mindestens 2 Minuten" },
-    { title: "Zahnseide täglich", description: "Zwischen den Zähnen nicht vergessen" },
-    { title: "Zahnarzt alle 6 Monate", description: "Professionelle Reinigung" },
-    { title: "Whitening-Stripes probieren", description: "Für ein helleres Lächeln" },
-  ],
-  mindset: [
-    { title: "Aufrechte Körperhaltung üben", description: "Selbstbewusstsein ausstrahlen" },
-    { title: "Blickkontakt halten", description: "3-5 Sekunden, dann wegschauen" },
-    { title: "Langsamer sprechen", description: "Wirkt selbstbewusster" },
-    { title: "Täglich 10 Min. Meditation", description: "Innere Ruhe und Fokus" },
-  ],
-};
-
 const Plan = () => {
   const { user, loading } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -95,6 +64,7 @@ const Plan = () => {
   const [generating, setGenerating] = useState(false);
   const [latestAnalysis, setLatestAnalysis] = useState<Analysis | null>(null);
   const [activeCategory, setActiveCategory] = useState("skincare");
+  const [focusAreas, setFocusAreas] = useState<string[]>([]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, loading: subLoading } = useSubscription();
@@ -125,7 +95,7 @@ const Plan = () => {
         // Fetch latest completed analysis
         const { data: analysisData, error: analysisError } = await supabase
           .from("analyses")
-          .select("weaknesses, priorities, strengths")
+          .select("id, looks_score, weaknesses, priorities, strengths, detailed_results")
           .eq("user_id", user.id)
           .eq("status", "completed")
           .order("created_at", { ascending: false })
@@ -134,6 +104,16 @@ const Plan = () => {
 
         if (analysisError) throw analysisError;
         setLatestAnalysis(analysisData);
+
+        // Auto-select first category with tasks
+        if (tasksData && tasksData.length > 0) {
+          const firstCatWithTasks = CATEGORIES.find(c => 
+            tasksData.some(t => t.category === c.id)
+          );
+          if (firstCatWithTasks) {
+            setActiveCategory(firstCatWithTasks.id);
+          }
+        }
 
       } catch (error: any) {
         console.error("Error fetching data:", error);
@@ -147,50 +127,61 @@ const Plan = () => {
     }
   }, [user]);
 
-  const generateDefaultTasks = async () => {
+  const generatePersonalizedPlan = async () => {
     if (!user) return;
+    
+    if (!latestAnalysis) {
+      toast({
+        title: "Keine Analyse vorhanden",
+        description: "Mache zuerst eine Analyse, damit wir deinen Plan personalisieren können.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setGenerating(true);
 
     try {
-      // Delete existing tasks
-      await supabase
-        .from("user_tasks")
-        .delete()
-        .eq("user_id", user.id);
-
-      // Create default tasks for all categories
-      const allTasks: any[] = [];
+      const { data: session } = await supabase.auth.getSession();
       
-      Object.entries(DEFAULT_TASKS).forEach(([category, categoryTasks]) => {
-        categoryTasks.forEach((task, index) => {
-          allTasks.push({
-            user_id: user.id,
-            category,
-            title: task.title,
-            description: task.description,
-            priority: index + 1,
-            completed: false,
-          });
-        });
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-personalized-plan`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session?.session?.access_token}`,
+          },
+        }
+      );
 
-      const { data, error } = await supabase
-        .from("user_tasks")
-        .insert(allTasks)
-        .select();
+      const result = await response.json();
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(result.error || "Plan generation failed");
+      }
 
-      setTasks(data || []);
+      setTasks(result.tasks || []);
+      setFocusAreas(result.focus_areas || []);
+
       toast({
-        title: "Plan erstellt!",
-        description: "Dein personalisierter Looksmax-Plan ist bereit.",
+        title: "Plan erstellt! 🎯",
+        description: "Dein personalisierter Looksmax-Plan basiert auf deiner Analyse.",
       });
+
+      // Select first category with new tasks
+      if (result.tasks?.length > 0) {
+        const firstCat = CATEGORIES.find(c => 
+          result.tasks.some((t: Task) => t.category === c.id)
+        );
+        if (firstCat) setActiveCategory(firstCat.id);
+      }
+
     } catch (error: any) {
-      console.error("Error generating tasks:", error);
+      console.error("Error generating plan:", error);
       toast({
         title: "Fehler",
-        description: "Plan konnte nicht erstellt werden.",
+        description: error.message || "Plan konnte nicht erstellt werden.",
         variant: "destructive",
       });
     } finally {
@@ -273,6 +264,17 @@ const Plan = () => {
   const overallTotal = tasks.length;
   const overallProgress = overallTotal > 0 ? (overallCompleted / overallTotal) * 100 : 0;
 
+  // Get detailed scores from analysis
+  const detailedResults = latestAnalysis?.detailed_results as any || {};
+  const subScores = [
+    { name: "Symmetrie", score: detailedResults.face_symmetry?.score, icon: Target },
+    { name: "Jawline", score: detailedResults.jawline?.score, icon: Zap },
+    { name: "Augen", score: detailedResults.eyes?.score, icon: Sparkles },
+    { name: "Haut", score: detailedResults.skin?.score, icon: Droplets },
+    { name: "Haare", score: detailedResults.hair?.score, icon: Scissors },
+    { name: "Ausstrahlung", score: detailedResults.overall_vibe?.score, icon: Flame },
+  ].filter(s => s.score !== undefined);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -293,20 +295,71 @@ const Plan = () => {
 
       <main className="container px-4 py-8">
         {/* Title & Analysis Info */}
-        <div className="mb-8">
+        <div className="mb-6">
           <h1 className="text-3xl font-bold mb-2">Dein Looksmax-Plan</h1>
           <p className="text-muted-foreground">
             {latestAnalysis ? (
-              <>Basierend auf deiner Analyse – fokussiere dich auf die Prioritäten.</>
+              <>Personalisiert basierend auf deiner Analyse (Score: {latestAnalysis.looks_score?.toFixed(1)})</>
             ) : (
-              <>Starte mit dem Standard-Plan oder mache eine Analyse für personalisierte Empfehlungen.</>
+              <>Starte eine Analyse für einen personalisierten Plan.</>
             )}
           </p>
         </div>
 
+        {/* Sub-Scores from Analysis */}
+        {subScores.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">Deine Teil-Scores</h3>
+            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+              {subScores.map((item) => (
+                <Card key={item.name} className={cn(
+                  "p-3 text-center",
+                  item.score >= 7 ? "border-green-500/30 bg-green-500/5" :
+                  item.score >= 5 ? "border-yellow-500/30 bg-yellow-500/5" :
+                  "border-red-500/30 bg-red-500/5"
+                )}>
+                  <item.icon className={cn(
+                    "w-4 h-4 mx-auto mb-1",
+                    item.score >= 7 ? "text-green-500" :
+                    item.score >= 5 ? "text-yellow-500" :
+                    "text-red-500"
+                  )} />
+                  <div className="text-xs text-muted-foreground">{item.name}</div>
+                  <div className={cn(
+                    "text-lg font-bold",
+                    item.score >= 7 ? "text-green-500" :
+                    item.score >= 5 ? "text-yellow-500" :
+                    "text-red-500"
+                  )}>{item.score.toFixed(1)}</div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Focus Areas / Priorities */}
+        {(focusAreas.length > 0 || (latestAnalysis?.priorities && latestAnalysis.priorities.length > 0)) && (
+          <Card className="p-4 bg-primary/5 border-primary/20 mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-primary">Deine Top-Prioritäten</span>
+            </div>
+            <div className="space-y-2">
+              {(focusAreas.length > 0 ? focusAreas : latestAnalysis?.priorities || []).slice(0, 3).map((item, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
+                    {i + 1}
+                  </div>
+                  <span className="text-sm">{item}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
         {/* Overall Progress */}
         {tasks.length > 0 && (
-          <div className="p-6 rounded-2xl glass-card mb-8">
+          <div className="p-6 rounded-2xl glass-card mb-6">
             <div className="flex items-center justify-between mb-3">
               <span className="font-semibold">Gesamtfortschritt</span>
               <span className="text-sm text-muted-foreground">
@@ -324,44 +377,45 @@ const Plan = () => {
           </div>
         )}
 
-        {/* Analysis Insights */}
-        {latestAnalysis && latestAnalysis.priorities && latestAnalysis.priorities.length > 0 && (
-          <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 mb-8">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Deine Prioritäten aus der Analyse</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {latestAnalysis.priorities.slice(0, 4).map((priority, i) => (
-                <span key={i} className="px-3 py-1 rounded-full bg-background/50 text-sm">
-                  {priority}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Empty State / Generate Button */}
         {tasks.length === 0 && !tasksLoading && (
           <div className="text-center py-12 rounded-2xl glass-card mb-8">
-            <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
-            <h3 className="text-xl font-bold mb-2">Noch kein Plan erstellt</h3>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Generiere deinen personalisierten Looksmax-Plan mit Aufgaben in allen wichtigen Kategorien.
-            </p>
-            <Button variant="hero" size="lg" onClick={generateDefaultTasks} disabled={generating}>
-              {generating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Wird erstellt...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  Plan generieren
-                </>
-              )}
-            </Button>
+            {!latestAnalysis ? (
+              <>
+                <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Zuerst Analyse durchführen</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Für einen personalisierten Plan brauchen wir deine Analyse-Ergebnisse.
+                </p>
+                <Link to="/upload">
+                  <Button variant="hero" size="lg">
+                    <Sparkles className="w-5 h-5" />
+                    Analyse starten
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
+                <h3 className="text-xl font-bold mb-2">Personalisierter Plan bereit</h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  Basierend auf deiner Analyse erstellen wir einen Plan, der genau auf deine Schwächen abzielt.
+                </p>
+                <Button variant="hero" size="lg" onClick={generatePersonalizedPlan} disabled={generating}>
+                  {generating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      KI erstellt Plan...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Plan generieren
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
           </div>
         )}
 
@@ -371,6 +425,8 @@ const Plan = () => {
             <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
               {CATEGORIES.map((cat) => {
                 const catTasks = tasks.filter(t => t.category === cat.id);
+                if (catTasks.length === 0) return null;
+                
                 const catCompleted = catTasks.filter(t => t.completed).length;
                 const isActive = activeCategory === cat.id;
                 
@@ -386,13 +442,11 @@ const Plan = () => {
                   >
                     <cat.icon className="w-4 h-4" />
                     <span className="text-sm font-medium">{cat.name}</span>
-                    {catTasks.length > 0 && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                        isActive ? "bg-primary-foreground/20" : "bg-muted"
-                      }`}>
-                        {catCompleted}/{catTasks.length}
-                      </span>
-                    )}
+                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                      isActive ? "bg-primary-foreground/20" : "bg-muted"
+                    }`}>
+                      {catCompleted}/{catTasks.length}
+                    </span>
                   </button>
                 );
               })}
@@ -420,25 +474,34 @@ const Plan = () => {
                   <div
                     key={task.id}
                     onClick={() => toggleTask(task.id, task.completed)}
-                    className={`flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all ${
+                    className={cn(
+                      "flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all",
                       task.completed 
                         ? "bg-muted/30 opacity-60" 
                         : "glass-card hover:border-primary/50"
-                    }`}
+                    )}
                   >
-                    <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                    <div className={cn(
+                      "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
                       task.completed 
                         ? "bg-primary border-primary" 
                         : "border-muted-foreground/50 hover:border-primary"
-                    }`}>
+                    )}>
                       {task.completed && <Check className="w-4 h-4 text-primary-foreground" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className={`font-medium ${task.completed ? "line-through" : ""}`}>
-                        {task.title}
-                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className={cn("font-medium", task.completed && "line-through")}>
+                          {task.title}
+                        </p>
+                        {task.priority === 1 && (
+                          <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs font-medium">
+                            Priorität
+                          </span>
+                        )}
+                      </div>
                       {task.description && (
-                        <p className="text-sm text-muted-foreground mt-0.5">
+                        <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">
                           {task.description}
                         </p>
                       )}
@@ -448,17 +511,24 @@ const Plan = () => {
               )}
             </div>
 
-            {/* Reset Button */}
+            {/* Regenerate Button */}
             <div className="text-center">
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={generateDefaultTasks}
-                disabled={generating}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={generatePersonalizedPlan}
+                disabled={generating || !latestAnalysis}
               >
-                <RefreshCw className={`w-4 h-4 ${generating ? "animate-spin" : ""}`} />
-                Plan zurücksetzen
+                {generating ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                )}
+                Plan neu generieren
               </Button>
+              <p className="text-xs text-muted-foreground mt-2">
+                Basierend auf deiner aktuellen Analyse
+              </p>
             </div>
           </>
         )}
