@@ -151,7 +151,7 @@ export default function Coach() {
     };
   }, [isSpeechSupported, toast]);
 
-  const toggleListening = useCallback(() => {
+  const toggleListening = useCallback(async () => {
     if (!recognitionRef.current) {
       toast({
         title: "Nicht unterstützt",
@@ -165,16 +165,42 @@ export default function Coach() {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
+      // First request microphone permission explicitly
       try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Stop the stream immediately - we just needed permission
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Now start speech recognition
         recognitionRef.current.start();
         setIsListening(true);
-      } catch (error) {
-        console.error('Failed to start speech recognition:', error);
+        
         toast({
-          title: "Fehler",
-          description: "Spracherkennung konnte nicht gestartet werden.",
-          variant: "destructive",
+          title: "🎤 Mikrofon aktiv",
+          description: "Sprich jetzt - ich höre zu!",
         });
+      } catch (error: any) {
+        console.error('Microphone permission error:', error);
+        
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          toast({
+            title: "Mikrofon-Zugriff benötigt",
+            description: "Bitte klicke auf das Mikrofon-Symbol in der Adressleiste deines Browsers und erlaube den Zugriff.",
+            variant: "destructive",
+          });
+        } else if (error.name === 'NotFoundError') {
+          toast({
+            title: "Kein Mikrofon gefunden",
+            description: "Bitte schließe ein Mikrofon an oder prüfe deine Geräteeinstellungen.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Fehler",
+            description: "Mikrofon konnte nicht aktiviert werden. Bitte prüfe deine Browser-Einstellungen.",
+            variant: "destructive",
+          });
+        }
       }
     }
   }, [isListening, toast]);
