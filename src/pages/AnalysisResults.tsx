@@ -210,12 +210,12 @@ export default function AnalysisResults() {
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Photo Display */}
         {photoUrls.length > 0 && (
-          <div className="mb-6">
-            <div className="flex gap-3 justify-center">
+          <div className="mb-8">
+            <div className="flex gap-4 justify-center flex-wrap">
               {photoUrls.map((url, index) => (
                 <div 
                   key={index} 
-                  className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-primary/30 shadow-lg"
+                  className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl bg-card"
                 >
                   <img 
                     src={url} 
