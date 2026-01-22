@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
 import { Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,30 +17,15 @@ export function ProtectedRoute({
   redirectTo = "/login" 
 }: ProtectedRouteProps) {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
 
+  // Redirect when not authenticated (after loading completes)
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-      setAuthLoading(false);
-    };
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setIsAuthenticated(!!session);
-      if (event === 'SIGNED_OUT') {
-        navigate(redirectTo);
-      }
-    });
-
-    checkAuth();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, redirectTo]);
+    if (!authLoading && !user) {
+      navigate(redirectTo);
+    }
+  }, [authLoading, user, navigate, redirectTo]);
 
   // Loading state
   if (authLoading || roleLoading) {
@@ -55,8 +40,7 @@ export function ProtectedRoute({
   }
 
   // Not authenticated
-  if (!isAuthenticated) {
-    navigate(redirectTo);
+  if (!user) {
     return null;
   }
 
