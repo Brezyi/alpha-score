@@ -15,7 +15,8 @@ import {
   Target,
   RefreshCw,
   AlertTriangle,
-  Camera
+  Camera,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,7 @@ export default function AnalysisResults() {
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const { isPremium, loading: subscriptionLoading } = useSubscription();
 
   // Redirect to login if not authenticated
@@ -50,6 +52,20 @@ export default function AnalysisResults() {
     }
 
     setAnalysis(data);
+    
+    // Generate signed URLs for photos
+    if (data.photo_urls && data.photo_urls.length > 0) {
+      const urls = await Promise.all(
+        data.photo_urls.map(async (path: string) => {
+          const { data: signedData } = await supabase.storage
+            .from("analysis-photos")
+            .createSignedUrl(path, 3600); // 1 hour expiry
+          return signedData?.signedUrl || null;
+        })
+      );
+      setPhotoUrls(urls.filter(Boolean) as string[]);
+    }
+    
     // Only continue processing if status is pending/processing - stop polling for all other states
     const stillProcessing = data.status === 'pending' || data.status === 'processing';
     setIsProcessing(stillProcessing);
@@ -182,6 +198,26 @@ export default function AnalysisResults() {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
+        {/* Photo Display */}
+        {photoUrls.length > 0 && (
+          <div className="mb-6">
+            <div className="flex gap-3 justify-center">
+              {photoUrls.map((url, index) => (
+                <div 
+                  key={index} 
+                  className="relative w-24 h-24 rounded-xl overflow-hidden border-2 border-primary/30 shadow-lg"
+                >
+                  <img 
+                    src={url} 
+                    alt={`Foto ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Score Card */}
         <Card className="bg-gradient-to-br from-card to-primary/5 border-primary/20 mb-6 overflow-hidden">
           <CardContent className="p-6 text-center relative">
