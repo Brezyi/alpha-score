@@ -31,11 +31,11 @@ export default function SystemSettings() {
 
   const handleSave = async () => {
     const changes: Partial<SettingsType> = {};
-    (Object.keys(localSettings) as (keyof SettingsType)[]).forEach((key) => {
+    for (const key of Object.keys(localSettings) as (keyof SettingsType)[]) {
       if (localSettings[key] !== settings[key]) {
-        changes[key] = localSettings[key] as SettingsType[typeof key];
+        (changes as Record<string, unknown>)[key] = localSettings[key];
       }
-    });
+    }
     if (Object.keys(changes).length > 0) await updateMultipleSettings(changes);
   };
 
