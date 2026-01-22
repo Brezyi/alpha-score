@@ -22,6 +22,7 @@ import CookieConsent from "./components/CookieConsent";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
+import AuditLogs from "./pages/admin/AuditLogs";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +62,14 @@ const App = () => (
             element={
               <ProtectedRoute requiredRole={["admin", "owner"]}>
                 <UserManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/audit" 
+            element={
+              <ProtectedRoute requiredRole={["admin", "owner"]}>
+                <AuditLogs />
               </ProtectedRoute>
             } 
           />
