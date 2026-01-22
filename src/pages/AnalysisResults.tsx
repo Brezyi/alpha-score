@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { 
   ArrowLeft, 
@@ -21,17 +22,21 @@ import { cn } from "@/lib/utils";
 export default function AnalysisResults() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const { isPremium, loading: subscriptionLoading } = useSubscription();
 
-  const fetchAnalysis = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
       navigate("/login");
-      return;
     }
+  }, [user, authLoading, navigate]);
+
+  const fetchAnalysis = useCallback(async () => {
+    if (!user) return;
 
     const { data, error } = await supabase
       .from('analyses')
@@ -49,7 +54,7 @@ export default function AnalysisResults() {
     const stillProcessing = data.status === 'pending' || data.status === 'processing';
     setIsProcessing(stillProcessing);
     setLoading(false);
-  }, [id, navigate]);
+  }, [id, navigate, user]);
 
   useEffect(() => {
     fetchAnalysis();

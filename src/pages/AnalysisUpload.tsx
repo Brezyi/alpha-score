@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Upload, 
@@ -35,21 +36,16 @@ export default function AnalysisUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [activeType, setActiveType] = useState<"front" | "side" | "body">("front");
-  const [user, setUser] = useState<any>(null);
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
-      }
-      setUser(session.user);
-    };
-    checkAuth();
-  }, [navigate]);
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [user, loading, navigate]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();

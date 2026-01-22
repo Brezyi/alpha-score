@@ -21,6 +21,7 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -71,8 +72,7 @@ const quickActions = [
 ];
 
 const Dashboard = () => {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useAuth();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [analysesLoading, setAnalysesLoading] = useState(true);
   const navigate = useNavigate();
@@ -80,27 +80,12 @@ const Dashboard = () => {
   const { isPremium } = useSubscription();
   const { isAdminOrOwner, role } = useUserRole();
 
+  // Redirect to login if not authenticated
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        navigate("/login");
-      }
-      setLoading(false);
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        setUser(session.user);
-      } else {
-        navigate("/login");
-      }
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (!loading && !user) {
+      navigate("/login");
+    }
+  }, [user, loading, navigate]);
 
   // Fetch analyses
   useEffect(() => {
