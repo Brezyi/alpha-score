@@ -17,7 +17,9 @@ import {
   User,
   Bot,
   Lock,
-  Square
+  Square,
+  Mic,
+  MicOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -27,17 +29,155 @@ interface Message {
   isStreaming?: boolean;
 }
 
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  resultIndex: number;
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionResultList {
+  length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult;
+}
+
+interface SpeechRecognitionResult {
+  isFinal: boolean;
+  length: number;
+  item(index: number): SpeechRecognitionAlternative;
+  [index: number]: SpeechRecognitionAlternative;
+}
+
+interface SpeechRecognitionAlternative {
+  transcript: string;
+  confidence: number;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: Event) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
 export default function Coach() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const { user, loading } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
+
+  // Check if speech recognition is supported
+  const isSpeechSupported = typeof window !== 'undefined' && 
+    ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if (!isSpeechSupported) return;
+
+    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognitionClass();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = 'de-DE';
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let finalTranscript = '';
+      let interimTranscript = '';
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      // Update input with transcript
+      if (finalTranscript) {
+        setInput(prev => prev + finalTranscript);
+      } else if (interimTranscript) {
+        // Show interim results in a temporary way
+        setInput(prev => {
+          // Remove previous interim and add new
+          const baseText = prev.replace(/\[.*\]$/, '');
+          return baseText + interimTranscript;
+        });
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      if (event.error === 'not-allowed') {
+        toast({
+          title: "Mikrofon blockiert",
+          description: "Bitte erlaube den Zugriff auf dein Mikrofon in den Browser-Einstellungen.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+      }
+    };
+  }, [isSpeechSupported, toast]);
+
+  const toggleListening = useCallback(() => {
+    if (!recognitionRef.current) {
+      toast({
+        title: "Nicht unterstützt",
+        description: "Spracherkennung wird von deinem Browser nicht unterstützt. Versuche Chrome oder Edge.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+        toast({
+          title: "Fehler",
+          description: "Spracherkennung konnte nicht gestartet werden.",
+          variant: "destructive",
+        });
+      }
+    }
+  }, [isListening, toast]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -374,13 +514,37 @@ export default function Coach() {
       <div className="sticky bottom-0 bg-background border-t border-border">
         <form onSubmit={handleSubmit} className="container mx-auto px-4 py-4 max-w-2xl">
           <div className="flex gap-2">
+            {/* Microphone Button */}
+            {isSpeechSupported && (
+              <Button
+                type="button"
+                size="icon"
+                variant={isListening ? "default" : "outline"}
+                className={cn(
+                  "h-12 w-12 flex-shrink-0 transition-all",
+                  isListening && "bg-destructive hover:bg-destructive/90 animate-pulse"
+                )}
+                onClick={toggleListening}
+                disabled={isLoading}
+              >
+                {isListening ? (
+                  <MicOff className="w-5 h-5" />
+                ) : (
+                  <Mic className="w-5 h-5" />
+                )}
+              </Button>
+            )}
+            
             <Textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Schreib deine Frage..."
-              className="min-h-[48px] max-h-32 resize-none"
+              placeholder={isListening ? "Ich höre zu..." : "Schreib deine Frage..."}
+              className={cn(
+                "min-h-[48px] max-h-32 resize-none",
+                isListening && "border-destructive"
+              )}
               disabled={isLoading}
               rows={1}
             />
@@ -405,6 +569,11 @@ export default function Coach() {
               </Button>
             )}
           </div>
+          {isListening && (
+            <p className="text-xs text-destructive mt-2 text-center animate-pulse">
+              🎤 Sprich jetzt... Tippe auf das Mikrofon zum Beenden
+            </p>
+          )}
         </form>
       </div>
     </div>
