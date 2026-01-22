@@ -45,7 +45,9 @@ export default function AnalysisResults() {
     }
 
     setAnalysis(data);
-    setIsProcessing(data.status === 'pending' || data.status === 'processing');
+    // Only continue processing if status is pending/processing - stop polling for all other states
+    const stillProcessing = data.status === 'pending' || data.status === 'processing';
+    setIsProcessing(stillProcessing);
     setLoading(false);
   }, [id, navigate]);
 
