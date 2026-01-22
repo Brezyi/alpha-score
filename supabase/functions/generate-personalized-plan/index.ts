@@ -200,7 +200,7 @@ Fokus auf die Top-3 Prioritäten aus der Analyse.`;
       category: task.category,
       title: task.title,
       description: `${task.description}\n\n📌 Warum: ${task.reason}`,
-      priority: task.priority,
+      priority: Math.round(Number(task.priority)) || 1,
       completed: false,
     }));
 
