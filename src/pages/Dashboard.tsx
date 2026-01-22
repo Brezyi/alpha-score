@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useStreak } from "@/hooks/useStreak";
+import { useProfile } from "@/hooks/useProfile";
 import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
@@ -75,6 +76,7 @@ const quickActions = [
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
+  const { profile } = useProfile();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [analysesLoading, setAnalysesLoading] = useState(true);
   const navigate = useNavigate();
@@ -195,7 +197,7 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">
-            Hey, {user?.user_metadata?.full_name?.split(" ")[0] || "Champ"} 👋
+            Hey, {profile?.display_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Champ"} 👋
           </h1>
           <p className="text-muted-foreground">
             Bereit, heute besser zu werden?
