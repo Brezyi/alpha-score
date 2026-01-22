@@ -12,7 +12,8 @@ import {
   MessageSquare,
   Shield,
   Crown,
-  Activity
+  Activity,
+  History
 } from "lucide-react";
 
 interface DashboardStat {
@@ -188,6 +189,21 @@ export default function AdminDashboard() {
               <div>
                 <p className="font-semibold">Support</p>
                 <p className="text-sm text-muted-foreground">Tickets & Anfragen</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="bg-card border-border hover:border-primary/50 transition-colors cursor-pointer"
+            onClick={() => navigate("/admin/audit")}
+          >
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <History className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold">Audit-Logs</p>
+                <p className="text-sm text-muted-foreground">Aktivitätsprotokoll</p>
               </div>
             </CardContent>
           </Card>
