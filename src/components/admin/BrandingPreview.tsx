@@ -6,9 +6,10 @@ interface BrandingPreviewProps {
   appName: string;
   logoUrl: string;
   faviconUrl: string;
+  accentColor: string;
 }
 
-export function BrandingPreview({ appName, logoUrl, faviconUrl }: BrandingPreviewProps) {
+export function BrandingPreview({ appName, logoUrl, faviconUrl, accentColor }: BrandingPreviewProps) {
   const [previewTheme, setPreviewTheme] = useState<"dark" | "light">("dark");
 
   const isDark = previewTheme === "dark";
@@ -126,8 +127,11 @@ export function BrandingPreview({ appName, logoUrl, faviconUrl }: BrandingPrevie
                       className="w-8 h-8 rounded-lg object-contain"
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                      <Zap className="w-4 h-4 text-primary-foreground" />
+                    <div 
+                      className="w-8 h-8 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: accentColor || "#00FF88" }}
+                    >
+                      <Zap className="w-4 h-4 text-black" />
                     </div>
                   )}
                   <span className={`font-bold text-sm ${colors.text}`}>{appName || "App Name"}</span>
@@ -137,7 +141,10 @@ export function BrandingPreview({ appName, logoUrl, faviconUrl }: BrandingPrevie
                 <div className="flex items-center gap-4">
                   <div className={`h-2 w-12 ${colors.bgMuted} rounded`} />
                   <div className={`h-2 w-16 ${colors.bgMuted} rounded`} />
-                  <div className="h-6 w-20 bg-primary/20 rounded" />
+                  <div 
+                    className="h-6 w-20 rounded opacity-20"
+                    style={{ backgroundColor: accentColor || "#00FF88" }}
+                  />
                 </div>
               </div>
             </div>
