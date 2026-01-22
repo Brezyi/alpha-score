@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -16,7 +17,9 @@ import {
   RefreshCw,
   AlertTriangle,
   Camera,
-  User
+  ChevronLeft,
+  ChevronRight,
+  X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +31,8 @@ export default function AnalysisResults() {
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
   const { isPremium, loading: subscriptionLoading } = useSubscription();
 
   // Redirect to login if not authenticated
@@ -213,20 +218,75 @@ export default function AnalysisResults() {
           <div className="mb-8">
             <div className="flex gap-4 justify-center flex-wrap">
               {photoUrls.map((url, index) => (
-                <div 
+                <button 
                   key={index} 
-                  className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl bg-card"
+                  onClick={() => {
+                    setLightboxIndex(index);
+                    setLightboxOpen(true);
+                  }}
+                  className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl bg-card cursor-pointer transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
                 >
                   <img 
                     src={url} 
                     alt={`Foto ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
-                </div>
+                  <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
+                </button>
               ))}
             </div>
+            <p className="text-center text-xs text-muted-foreground mt-2">Tippe auf ein Foto zum Vergrößern</p>
           </div>
         )}
+
+        {/* Lightbox Dialog */}
+        <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
+          <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+            <div className="relative w-full h-full flex items-center justify-center min-h-[50vh]">
+              {/* Close button */}
+              <button
+                onClick={() => setLightboxOpen(false)}
+                className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+
+              {/* Navigation - Previous */}
+              {photoUrls.length > 1 && (
+                <button
+                  onClick={() => setLightboxIndex((prev) => (prev === 0 ? photoUrls.length - 1 : prev - 1))}
+                  className="absolute left-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
+
+              {/* Image */}
+              <img
+                src={photoUrls[lightboxIndex]}
+                alt={`Foto ${lightboxIndex + 1}`}
+                className="max-w-full max-h-[85vh] object-contain rounded-lg"
+              />
+
+              {/* Navigation - Next */}
+              {photoUrls.length > 1 && (
+                <button
+                  onClick={() => setLightboxIndex((prev) => (prev === photoUrls.length - 1 ? 0 : prev + 1))}
+                  className="absolute right-4 z-50 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-colors"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              )}
+
+              {/* Counter */}
+              {photoUrls.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 text-white text-sm">
+                  {lightboxIndex + 1} / {photoUrls.length}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Score Card */}
         <Card className="bg-gradient-to-br from-card to-primary/5 border-primary/20 mb-6 overflow-hidden">
