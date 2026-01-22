@@ -15,13 +15,15 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Minus,
-  Loader2
+  Loader2,
+  Shield
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useUserRole } from "@/hooks/useUserRole";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
 type Analysis = {
@@ -76,6 +78,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium } = useSubscription();
+  const { isAdminOrOwner, role } = useUserRole();
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -186,6 +189,14 @@ const Dashboard = () => {
             </Link>
 
             <div className="flex items-center gap-4">
+              {isAdminOrOwner && (
+                <Link to="/admin">
+                  <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
+                    <Shield className="w-4 h-4" />
+                    Admin
+                  </Button>
+                </Link>
+              )}
               {!isPremiumUser && (
                 <Link to="/pricing">
                   <Button variant="premium" size="sm" className="hidden sm:flex">
