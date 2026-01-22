@@ -45,11 +45,18 @@ const ACCENT_COLORS = [
   { value: "#F472B6", label: "Pink" },
 ];
 
-const BACKGROUND_STYLES = [
+const BACKGROUND_STYLES_DARK = [
   { value: "default", label: "Standard", color: "hsl(0 0% 4%)" },
   { value: "charcoal", label: "Kohle", color: "hsl(0 0% 8%)" },
   { value: "midnight", label: "Mitternacht", color: "hsl(220 20% 6%)" },
   { value: "forest", label: "Wald", color: "hsl(150 15% 5%)" },
+];
+
+const BACKGROUND_STYLES_LIGHT = [
+  { value: "default", label: "Weiß", color: "hsl(0 0% 100%)" },
+  { value: "charcoal", label: "Warm Grau", color: "hsl(0 0% 96%)" },
+  { value: "midnight", label: "Blau-Grau", color: "hsl(220 20% 98%)" },
+  { value: "forest", label: "Mint", color: "hsl(150 15% 97%)" },
 ];
 
 export function ProfileMenu() {
@@ -274,7 +281,7 @@ export function ProfileMenu() {
             <div className="space-y-2">
               <Label>Hintergrund</Label>
               <div className="grid grid-cols-2 gap-2">
-                {BACKGROUND_STYLES.map((bg) => (
+                {(theme === "dark" ? BACKGROUND_STYLES_DARK : BACKGROUND_STYLES_LIGHT).map((bg) => (
                   <button
                     key={bg.value}
                     onClick={() => setBackgroundStyle(bg.value)}
