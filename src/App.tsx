@@ -27,6 +27,7 @@ import NotFound from "./pages/NotFound";
 import CookieConsent from "./components/CookieConsent";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DocumentTitleUpdater } from "./components/DocumentTitleUpdater";
+import { FaviconUpdater } from "./components/FaviconUpdater";
 import AdminDashboard from "./pages/AdminDashboard";
 import UserManagement from "./pages/admin/UserManagement";
 import AuditLogs from "./pages/admin/AuditLogs";
@@ -44,6 +45,7 @@ const App = () => (
         <SystemSettingsProvider>
           <TooltipProvider>
             <DocumentTitleUpdater />
+            <FaviconUpdater />
             <Toaster />
             <Sonner />
             <BrowserRouter>

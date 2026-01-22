@@ -22,6 +22,7 @@ import { ProfileMenu } from "@/components/ProfileMenu";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Shield, Settings, Palette, Bell, Brain, Loader2, Save, RefreshCw, AlertTriangle } from "lucide-react";
 import { LogoUpload } from "@/components/admin/LogoUpload";
+import { FaviconUpload } from "@/components/admin/FaviconUpload";
 
 export default function SystemSettings() {
   const navigate = useNavigate();
@@ -174,6 +175,11 @@ export default function SystemSettings() {
             <LogoUpload
               currentLogoUrl={localSettings.app_logo_url}
               onLogoChange={(url) => setLocalSettings((s) => ({ ...s, app_logo_url: url }))}
+            />
+            <Separator />
+            <FaviconUpload
+              currentFaviconUrl={localSettings.favicon_url}
+              onFaviconChange={(url) => setLocalSettings((s) => ({ ...s, favicon_url: url }))}
             />
             <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
