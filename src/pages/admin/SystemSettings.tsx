@@ -192,32 +192,64 @@ export default function SystemSettings() {
                       <span>Standard</span>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className={`grid grid-cols-3 gap-2 items-center rounded px-1.5 py-1 -mx-1.5 ${
+                      localSettings.app_name !== defaultBrandingSettings.app_name 
+                        ? "bg-destructive/10 border border-destructive/20" 
+                        : ""
+                    }`}>
                       <span className="text-foreground">App-Name</span>
-                      <span className="truncate text-muted-foreground">{localSettings.app_name || "—"}</span>
+                      <span className={`truncate ${
+                        localSettings.app_name !== defaultBrandingSettings.app_name 
+                          ? "text-destructive font-medium" 
+                          : "text-muted-foreground"
+                      }`}>{localSettings.app_name || "—"}</span>
                       <span className="text-primary">{defaultBrandingSettings.app_name}</span>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className={`grid grid-cols-3 gap-2 items-center rounded px-1.5 py-1 -mx-1.5 ${
+                      localSettings.app_logo_url !== defaultBrandingSettings.app_logo_url 
+                        ? "bg-destructive/10 border border-destructive/20" 
+                        : ""
+                    }`}>
                       <span className="text-foreground">Logo</span>
-                      <span className="text-muted-foreground">{localSettings.app_logo_url ? "✓ Gesetzt" : "—"}</span>
+                      <span className={`${
+                        localSettings.app_logo_url !== defaultBrandingSettings.app_logo_url 
+                          ? "text-destructive font-medium" 
+                          : "text-muted-foreground"
+                      }`}>{localSettings.app_logo_url ? "✓ Gesetzt" : "—"}</span>
                       <span className="text-primary">Standard</span>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className={`grid grid-cols-3 gap-2 items-center rounded px-1.5 py-1 -mx-1.5 ${
+                      localSettings.favicon_url !== defaultBrandingSettings.favicon_url 
+                        ? "bg-destructive/10 border border-destructive/20" 
+                        : ""
+                    }`}>
                       <span className="text-foreground">Favicon</span>
-                      <span className="text-muted-foreground">{localSettings.favicon_url ? "✓ Gesetzt" : "—"}</span>
+                      <span className={`${
+                        localSettings.favicon_url !== defaultBrandingSettings.favicon_url 
+                          ? "text-destructive font-medium" 
+                          : "text-muted-foreground"
+                      }`}>{localSettings.favicon_url ? "✓ Gesetzt" : "—"}</span>
                       <span className="text-primary">Standard</span>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className={`grid grid-cols-3 gap-2 items-center rounded px-1.5 py-1 -mx-1.5 ${
+                      localSettings.accent_color !== defaultBrandingSettings.accent_color 
+                        ? "bg-destructive/10 border border-destructive/20" 
+                        : ""
+                    }`}>
                       <span className="text-foreground">Akzentfarbe</span>
                       <div className="flex items-center gap-1.5">
                         <div 
                           className="w-4 h-4 rounded border border-border" 
                           style={{ backgroundColor: localSettings.accent_color }}
                         />
-                        <span className="text-muted-foreground text-xs">{localSettings.accent_color}</span>
+                        <span className={`text-xs ${
+                          localSettings.accent_color !== defaultBrandingSettings.accent_color 
+                            ? "text-destructive font-medium" 
+                            : "text-muted-foreground"
+                        }`}>{localSettings.accent_color}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div 
@@ -228,9 +260,17 @@ export default function SystemSettings() {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-2 items-center">
+                    <div className={`grid grid-cols-3 gap-2 items-center rounded px-1.5 py-1 -mx-1.5 ${
+                      localSettings.default_theme !== defaultBrandingSettings.default_theme 
+                        ? "bg-destructive/10 border border-destructive/20" 
+                        : ""
+                    }`}>
                       <span className="text-foreground">Theme</span>
-                      <span className="text-muted-foreground">{localSettings.default_theme === "dark" ? "Dunkel" : "Hell"}</span>
+                      <span className={`${
+                        localSettings.default_theme !== defaultBrandingSettings.default_theme 
+                          ? "text-destructive font-medium" 
+                          : "text-muted-foreground"
+                      }`}>{localSettings.default_theme === "dark" ? "Dunkel" : "Hell"}</span>
                       <span className="text-primary">{defaultBrandingSettings.default_theme === "dark" ? "Dunkel" : "Hell"}</span>
                     </div>
                   </div>
