@@ -212,14 +212,17 @@ Wichtig: Sei streng bei der Bewertung. Das Foto muss für eine professionelle Ge
 
       logStep("Face validation failed", { errorMessage });
 
-      return new Response(JSON.stringify({ 
-        success: false, 
+      // NOTE: Return 200 for domain validation failures so supabase-js `invoke()` doesn't throw
+      // and potentially surface this as a runtime error in the client.
+      // The authoritative state is persisted in the DB via `status = validation_failed`.
+      return new Response(JSON.stringify({
+        success: false,
         error: "FACE_VALIDATION_FAILED",
         message: errorMessage,
-        validation: validationResult
+        validation: validationResult,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 400,
+        status: 200,
       });
     }
 
