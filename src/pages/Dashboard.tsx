@@ -26,7 +26,6 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useStreak } from "@/hooks/useStreak";
 import { useProfile } from "@/hooks/useProfile";
-import { PushNotificationToggle } from "@/components/PushNotificationToggle";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -336,10 +335,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Push Notification Toggle */}
-        <div className="mb-8">
-          <PushNotificationToggle />
-        </div>
+        {/* Quick Actions */}
 
         {/* Quick Actions */}
         <div className="mb-8">

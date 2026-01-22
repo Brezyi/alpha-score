@@ -7,7 +7,6 @@ export interface SystemSettings {
   maintenance_mode: boolean;
   auto_confirm_email: boolean;
   max_upload_size_mb: number;
-  streak_reminder_enabled: boolean;
   analytics_enabled: boolean;
   ai_analysis_intensity: "light" | "standard" | "deep";
   default_theme: "dark" | "light";
@@ -27,7 +26,6 @@ const defaultSettings: SystemSettings = {
   maintenance_mode: false,
   auto_confirm_email: true,
   max_upload_size_mb: 10,
-  streak_reminder_enabled: true,
   analytics_enabled: true,
   ai_analysis_intensity: "standard",
   default_theme: "dark",
@@ -72,7 +70,6 @@ export function useSystemSettings() {
           maintenance_mode: typeof parsed.maintenance_mode === "boolean" ? parsed.maintenance_mode : defaultSettings.maintenance_mode,
           auto_confirm_email: typeof parsed.auto_confirm_email === "boolean" ? parsed.auto_confirm_email : defaultSettings.auto_confirm_email,
           max_upload_size_mb: typeof parsed.max_upload_size_mb === "number" ? parsed.max_upload_size_mb : defaultSettings.max_upload_size_mb,
-          streak_reminder_enabled: typeof parsed.streak_reminder_enabled === "boolean" ? parsed.streak_reminder_enabled : defaultSettings.streak_reminder_enabled,
           analytics_enabled: typeof parsed.analytics_enabled === "boolean" ? parsed.analytics_enabled : defaultSettings.analytics_enabled,
           ai_analysis_intensity: ["light", "standard", "deep"].includes(parsed.ai_analysis_intensity as string)
             ? (parsed.ai_analysis_intensity as SystemSettings["ai_analysis_intensity"])

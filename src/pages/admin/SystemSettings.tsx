@@ -281,16 +281,6 @@ export default function SystemSettings() {
           <CardContent className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base">Streak-Erinnerungen</Label>
-              </div>
-              <Switch 
-                checked={localSettings.streak_reminder_enabled} 
-                onCheckedChange={(c) => setLocalSettings((s) => ({ ...s, streak_reminder_enabled: c }))} 
-              />
-            </div>
-            <Separator />
-            <div className="flex items-center justify-between">
-              <div>
                 <Label className="text-base">Analytics aktivieren</Label>
               </div>
               <Switch 
