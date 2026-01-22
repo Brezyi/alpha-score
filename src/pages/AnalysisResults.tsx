@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscription } from "@/hooks/useSubscription";
 import { 
   ArrowLeft, 
   Sparkles, 
@@ -10,7 +11,8 @@ import {
   Crown,
   TrendingUp,
   TrendingDown,
-  Target
+  Target,
+  RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,57 +21,90 @@ export default function AnalysisResults() {
   const navigate = useNavigate();
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [isPremium, setIsPremium] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const { isPremium, loading: subscriptionLoading } = useSubscription();
 
-  useEffect(() => {
-    const fetchAnalysis = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        navigate("/login");
-        return;
-      }
+  const fetchAnalysis = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      navigate("/login");
+      return;
+    }
 
-      // TODO: Check premium status from profiles table
-      setIsPremium(false);
+    const { data, error } = await supabase
+      .from('analyses')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
 
-      const { data, error } = await supabase
-        .from('analyses')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+    if (error || !data) {
+      navigate("/dashboard");
+      return;
+    }
 
-      if (error || !data) {
-        navigate("/dashboard");
-        return;
-      }
-
-      // Simulate analysis results for demo
-      if (data.status === 'pending') {
-        // In production, this would trigger an edge function
-        setAnalysis({
-          ...data,
-          status: 'completed',
-          looks_score: 7.2,
-          strengths: ['Symmetrisches Gesicht', 'Starke Augenbrauen', 'Gute Kieferpartie'],
-          weaknesses: ['Hautbild', 'Augenringe', 'Haarstyling'],
-          priorities: ['Skincare Routine starten', 'Mehr Schlaf', 'Friseur-Beratung']
-        });
-      } else {
-        setAnalysis(data);
-      }
-
-      setLoading(false);
-    };
-
-    fetchAnalysis();
+    setAnalysis(data);
+    setIsProcessing(data.status === 'pending' || data.status === 'processing');
+    setLoading(false);
   }, [id, navigate]);
 
-  if (loading) {
+  useEffect(() => {
+    fetchAnalysis();
+  }, [fetchAnalysis]);
+
+  // Poll for updates while processing
+  useEffect(() => {
+    if (!isProcessing) return;
+
+    const interval = setInterval(() => {
+      fetchAnalysis();
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [isProcessing, fetchAnalysis]);
+
+  if (loading || subscriptionLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Analyse wird verarbeitet...</p>
+          <p className="text-muted-foreground">Analyse wird geladen...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isProcessing) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-sm px-4">
+          <div className="w-20 h-20 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-6" />
+          <h2 className="text-xl font-bold mb-2">KI analysiert deine Fotos</h2>
+          <p className="text-muted-foreground mb-4">
+            Dies kann bis zu 30 Sekunden dauern. Bitte warte...
+          </p>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <RefreshCw className="w-4 h-4 animate-spin" />
+            <span>Automatische Aktualisierung</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (analysis?.status === 'failed') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-sm px-4">
+          <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+            <Target className="w-8 h-8 text-destructive" />
+          </div>
+          <h2 className="text-xl font-bold mb-2">Analyse fehlgeschlagen</h2>
+          <p className="text-muted-foreground mb-6">
+            Leider konnte die Analyse nicht abgeschlossen werden. Bitte versuche es erneut.
+          </p>
+          <Button onClick={() => navigate("/upload")} variant="hero">
+            Erneut versuchen
+          </Button>
         </div>
       </div>
     );
