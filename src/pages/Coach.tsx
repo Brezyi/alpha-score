@@ -77,11 +77,14 @@ export default function Coach() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [speechPreview, setSpeechPreview] = useState("");
   const { user, loading } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const speechHeardRef = useRef(false);
+  const speechPreviewRef = useRef("");
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
@@ -101,6 +104,7 @@ export default function Coach() {
     recognition.lang = 'de-DE';
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
+      speechHeardRef.current = true;
       let finalTranscript = '';
       let interimTranscript = '';
 
@@ -115,24 +119,45 @@ export default function Coach() {
 
       // Update input with transcript
       if (finalTranscript) {
-        setInput(prev => prev + finalTranscript);
+        setSpeechPreview("");
+        speechPreviewRef.current = "";
+        const cleaned = finalTranscript.trim();
+        if (!cleaned) return;
+        setInput(prev => (prev.trim().length ? `${prev.trimEnd()} ` : "") + cleaned);
       } else if (interimTranscript) {
-        // Show interim results in a temporary way
-        setInput(prev => {
-          // Remove previous interim and add new
-          const baseText = prev.replace(/\[.*\]$/, '');
-          return baseText + interimTranscript;
-        });
+        const preview = interimTranscript.trim();
+        speechPreviewRef.current = preview;
+        setSpeechPreview(preview);
       }
     };
 
     recognition.onerror = (event: any) => {
       console.error('Speech recognition error:', event.error);
       setIsListening(false);
-      if (event.error === 'not-allowed') {
+      setSpeechPreview("");
+
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         toast({
           title: "Mikrofon blockiert",
-          description: "Bitte erlaube den Zugriff auf dein Mikrofon in den Browser-Einstellungen.",
+          description: "Bitte erlaube den Zugriff auf dein Mikrofon (Browser-Popup oder Mikrofon-Symbol in der Adressleiste).",
+          variant: "destructive",
+        });
+      } else if (event.error === 'no-speech') {
+        toast({
+          title: "Keine Sprache erkannt",
+          description: "Bitte sprich lauter / näher ans Mikrofon und versuche es erneut.",
+          variant: "destructive",
+        });
+      } else if (event.error === 'audio-capture') {
+        toast({
+          title: "Mikrofon nicht verfügbar",
+          description: "Kein Audio-Eingang gefunden oder von einer anderen App belegt.",
+          variant: "destructive",
+        });
+      } else if (event.error === 'network') {
+        toast({
+          title: "Spracherkennung-Problem",
+          description: "Netzwerk-/Service-Fehler. Bitte kurz warten und erneut versuchen.",
           variant: "destructive",
         });
       }
@@ -140,6 +165,21 @@ export default function Coach() {
 
     recognition.onend = () => {
       setIsListening(false);
+      // If we only got interim results, commit them when the user stops recording
+      const preview = speechPreviewRef.current.trim();
+      if (preview) {
+        setInput(prev => (prev.trim().length ? `${prev.trimEnd()} ` : "") + preview);
+      }
+      speechPreviewRef.current = "";
+      setSpeechPreview("");
+
+      if (!speechHeardRef.current && !preview) {
+        toast({
+          title: "Keine Transkription",
+          description: "Wenn nichts passiert: nutze Chrome/Edge (Firefox/iOS kann Probleme machen).",
+          variant: "destructive",
+        });
+      }
     };
 
     recognitionRef.current = recognition;
@@ -151,7 +191,7 @@ export default function Coach() {
     };
   }, [isSpeechSupported, toast]);
 
-  const toggleListening = useCallback(async () => {
+  const toggleListening = useCallback(() => {
     if (!recognitionRef.current) {
       toast({
         title: "Nicht unterstützt",
@@ -164,43 +204,55 @@ export default function Coach() {
     if (isListening) {
       recognitionRef.current.stop();
       setIsListening(false);
+      setSpeechPreview("");
     } else {
-      // First request microphone permission explicitly
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // Stop the stream immediately - we just needed permission
-        stream.getTracks().forEach(track => track.stop());
-        
-        // Now start speech recognition
+        // IMPORTANT: start() should happen directly in the click handler (user gesture)
+        speechHeardRef.current = false;
+        setSpeechPreview("");
         recognitionRef.current.start();
         setIsListening(true);
-        
-        toast({
-          title: "🎤 Mikrofon aktiv",
-          description: "Sprich jetzt - ich höre zu!",
-        });
-      } catch (error: any) {
-        console.error('Microphone permission error:', error);
-        
-        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-          toast({
-            title: "Mikrofon-Zugriff benötigt",
-            description: "Bitte klicke auf das Mikrofon-Symbol in der Adressleiste deines Browsers und erlaube den Zugriff.",
-            variant: "destructive",
-          });
-        } else if (error.name === 'NotFoundError') {
-          toast({
-            title: "Kein Mikrofon gefunden",
-            description: "Bitte schließe ein Mikrofon an oder prüfe deine Geräteeinstellungen.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Fehler",
-            description: "Mikrofon konnte nicht aktiviert werden. Bitte prüfe deine Browser-Einstellungen.",
-            variant: "destructive",
-          });
+
+        // Also trigger mic permission prompt when needed
+        if (navigator.mediaDevices?.getUserMedia) {
+          void navigator.mediaDevices
+            .getUserMedia({ audio: true })
+            .then((stream) => {
+              stream.getTracks().forEach((track) => track.stop());
+            })
+            .catch((error: any) => {
+              console.error('Microphone permission error:', error);
+              recognitionRef.current?.stop();
+              setIsListening(false);
+
+              if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {
+                toast({
+                  title: "Mikrofon-Zugriff benötigt",
+                  description: "Bitte erlaube Mikrofonzugriff (Browser-Popup oder Mikrofon-Symbol in der Adressleiste).",
+                  variant: "destructive",
+                });
+              } else if (error?.name === 'NotFoundError') {
+                toast({
+                  title: "Kein Mikrofon gefunden",
+                  description: "Bitte schließe ein Mikrofon an oder prüfe deine Geräteeinstellungen.",
+                  variant: "destructive",
+                });
+              } else {
+                toast({
+                  title: "Fehler",
+                  description: "Mikrofon konnte nicht aktiviert werden. Bitte prüfe deine Browser-Einstellungen.",
+                  variant: "destructive",
+                });
+              }
+            });
         }
+      } catch (error) {
+        console.error('Failed to start speech recognition:', error);
+        toast({
+          title: "Fehler",
+          description: "Spracherkennung konnte nicht gestartet werden.",
+          variant: "destructive",
+        });
       }
     }
   }, [isListening, toast]);
@@ -596,9 +648,16 @@ export default function Coach() {
             )}
           </div>
           {isListening && (
-            <p className="text-xs text-destructive mt-2 text-center animate-pulse">
-              🎤 Sprich jetzt... Tippe auf das Mikrofon zum Beenden
-            </p>
+            <div className="mt-2 text-center">
+              <p className="text-xs text-destructive animate-pulse">
+                Sprich jetzt… Tippe auf das Mikrofon zum Beenden
+              </p>
+              {speechPreview && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {speechPreview}
+                </p>
+              )}
+            </div>
           )}
         </form>
       </div>
