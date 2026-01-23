@@ -34,7 +34,7 @@ const Hero = () => {
           </p>
 
           <p className="text-lg text-muted-foreground/80 max-w-xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            Die erste KI, die dein Aussehen objektiv analysiert und dir einen personalisierten Plan zur Optimierung erstellt.
+            Deine KI für objektive Analyse und einen personalisierten Plan zur Optimierung deines Aussehens.
           </p>
 
           {/* CTA Buttons */}

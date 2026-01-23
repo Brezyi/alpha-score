@@ -24,7 +24,7 @@ const CTA = () => {
 
           {/* Subheadline */}
           <p className="text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
-            Schließe dich tausenden Männern an, die bereits ihr volles Potenzial entfaltet haben.
+            Starte jetzt und entfalte dein volles Potenzial.
           </p>
 
           {/* CTA Button */}
