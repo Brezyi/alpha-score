@@ -72,12 +72,24 @@ declare global {
   }
 }
 
+interface UserAnalysis {
+  looks_score: number | null;
+  weaknesses: string[] | null;
+  priorities: string[] | null;
+}
+
 export default function Coach() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [speechPreview, setSpeechPreview] = useState("");
+  const [userAnalysis, setUserAnalysis] = useState<UserAnalysis | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([
+    "Was sollte ich zuerst verbessern?",
+    "Skincare Routine für Anfänger",
+    "Wie verbessere ich meine Jawline?",
+  ]);
   const { user, loading } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -85,6 +97,7 @@ export default function Coach() {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const speechHeardRef = useRef(false);
   const speechPreviewRef = useRef("");
+  const hasLoadedAnalysis = useRef(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
@@ -263,6 +276,46 @@ export default function Coach() {
       navigate("/login");
     }
   }, [user, loading, navigate]);
+
+  // Load user analysis and create personalized greeting
+  useEffect(() => {
+    if (!user || !isPremium || hasLoadedAnalysis.current) return;
+    
+    const loadAnalysisAndGreet = async () => {
+      hasLoadedAnalysis.current = true;
+      
+      const { data: analysis } = await supabase
+        .from('analyses')
+        .select('looks_score, weaknesses, priorities')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (analysis) {
+        setUserAnalysis(analysis);
+        
+        // Generate personalized suggestions from weaknesses
+        if (analysis.weaknesses?.length) {
+          const personalSuggestions = analysis.weaknesses.slice(0, 3).map(
+            (weakness: string) => `Wie verbessere ich ${weakness}?`
+          );
+          setSuggestions(personalSuggestions);
+        }
+        
+        // Set personalized greeting
+        const topWeakness = analysis.weaknesses?.[0];
+        const greeting = topWeakness 
+          ? `Score: ${analysis.looks_score}/10. Dein größtes Potenzial: **${topWeakness}**. Was willst du wissen?`
+          : `Score: ${analysis.looks_score}/10. Frag mich, was du verbessern kannst.`;
+        
+        setMessages([{ role: "assistant", content: greeting }]);
+      }
+    };
+    
+    loadAnalysisAndGreet();
+  }, [user, isPremium]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -508,14 +561,13 @@ export default function Coach() {
               </div>
               <h2 className="text-xl font-bold mb-2">Dein Looksmaxing Coach</h2>
               <p className="text-muted-foreground max-w-sm mx-auto">
-                Ich kenne deine Analyse und gebe dir ehrliche, personalisierte Tipps. Frag mich alles!
+                {userAnalysis 
+                  ? `Score: ${userAnalysis.looks_score}/10 • Ich kenne deine Schwächen und helfe dir konkret.`
+                  : "Lade deine Analyse..."
+                }
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-2">
-                {[
-                  "Was sollte ich zuerst verbessern?",
-                  "Skincare Routine für Anfänger",
-                  "Wie verbessere ich meine Jawline?",
-                ].map((suggestion) => (
+                {suggestions.map((suggestion) => (
                   <button
                     key={suggestion}
                     onClick={() => {
