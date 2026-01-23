@@ -24,6 +24,7 @@ import {
 import { ArrowLeft, Check, X, Star, Eye, EyeOff, Trash2, RotateCcw } from "lucide-react";
 import { useAdminTestimonials } from "@/hooks/useTestimonials";
 import { useToast } from "@/hooks/use-toast";
+import { StarRating } from "@/components/StarRating";
 
 export default function TestimonialsManagement() {
   const { testimonials, loading, approveTestimonial, featureTestimonial, restoreTestimonial, permanentlyDeleteTestimonial } = useAdminTestimonials();
@@ -226,6 +227,7 @@ export default function TestimonialsManagement() {
                 <TableRow>
                   <TableHead>Nutzer</TableHead>
                   <TableHead>Bewertung</TableHead>
+                  <TableHead>Sterne</TableHead>
                   <TableHead>Score</TableHead>
                   <TableHead>Datum</TableHead>
                   <TableHead>Status</TableHead>
@@ -249,6 +251,13 @@ export default function TestimonialsManagement() {
                       <p className="truncate text-sm text-muted-foreground">
                         "{testimonial.testimonial_text}"
                       </p>
+                    </TableCell>
+                    <TableCell>
+                      {testimonial.star_rating ? (
+                        <StarRating rating={testimonial.star_rating} size="sm" />
+                      ) : (
+                        <span className="text-muted-foreground text-sm">—</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {testimonial.score_before && testimonial.score_after ? (
