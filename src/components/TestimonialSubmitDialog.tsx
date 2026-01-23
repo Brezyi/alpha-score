@@ -69,6 +69,16 @@ export function TestimonialSubmitDialog() {
       return;
     }
 
+    // Validate age is at least 18
+    if (formData.age && parseInt(formData.age) < 18) {
+      toast({
+        title: "Fehler",
+        description: "Du musst mindestens 18 Jahre alt sein, um eine Bewertung abzugeben.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Get score data from selected analysis
@@ -192,9 +202,16 @@ export function TestimonialSubmitDialog() {
           <DialogTitle>Teile deine Erfahrung</DialogTitle>
           <DialogDescription>
             Erzähle anderen, wie dir die App geholfen hat. Deine Bewertung wird nach
-            Prüfung veröffentlicht.
+            Prüfung auf unserer Startseite veröffentlicht.
           </DialogDescription>
         </DialogHeader>
+        
+        <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-sm">
+          <p className="text-foreground">
+            <strong>Hinweis:</strong> Mit dem Einreichen stimmst du zu, dass dein Anzeigename, 
+            Alter und deine Bewertung öffentlich auf unserer Startseite angezeigt werden können.
+          </p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -208,16 +225,18 @@ export function TestimonialSubmitDialog() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="age">Alter (optional)</Label>
+              <Label htmlFor="age">Alter *</Label>
               <Input
                 id="age"
                 type="number"
                 placeholder="z.B. 24"
-                min={13}
+                min={18}
                 max={99}
                 value={formData.age}
                 onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                required
               />
+              <p className="text-xs text-muted-foreground">Mindestalter: 18 Jahre</p>
             </div>
           </div>
 
