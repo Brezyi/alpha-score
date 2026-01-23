@@ -647,22 +647,24 @@ export default function Coach() {
       <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
           {messages.length <= 1 && (
-            <div className="text-center py-6">
+            <div className="text-center py-8">
               {messages.length === 0 && (
-                <>
-                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                    <Bot className="w-10 h-10 text-primary" />
+                <div className="glass-card p-8 rounded-2xl max-w-md mx-auto">
+                  {/* Gradient Avatar like Showcase */}
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/25">
+                    <Bot className="w-8 h-8 text-primary-foreground" />
                   </div>
-                  <h2 className="text-xl font-bold mb-2">Dein Looksmaxing Coach</h2>
-                  <p className="text-muted-foreground max-w-sm mx-auto">
+                  <h2 className="text-xl font-bold mb-2">AI Looksmax Coach</h2>
+                  <p className="text-sm text-muted-foreground mb-1">24/7 für deine Fragen da</p>
+                  <p className="text-muted-foreground max-w-sm mx-auto text-sm">
                     {userAnalysis 
                       ? `Score: ${userAnalysis.looks_score}/10 • Ich kenne deine Schwächen und helfe dir konkret.`
                       : "Lade deine Analyse..."
                     }
                   </p>
-                </>
+                </div>
               )}
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
                 {suggestions.map((suggestion) => (
                   <button
                     key={suggestion}
@@ -670,7 +672,7 @@ export default function Coach() {
                       setInput(suggestion);
                       textareaRef.current?.focus();
                     }}
-                    className="px-3 py-2 text-sm rounded-full bg-card border border-border hover:border-primary/50 transition-colors"
+                    className="px-4 py-2.5 text-sm rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
                   >
                     {suggestion}
                   </button>
@@ -688,16 +690,16 @@ export default function Coach() {
               )}
             >
               {message.role === "assistant" && (
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-primary" />
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md">
+                  <Bot className="w-5 h-5 text-primary-foreground" />
                 </div>
               )}
               <div
                 className={cn(
-                  "max-w-[80%] rounded-2xl px-4 py-3",
+                  "max-w-[85%] px-4 py-3 shadow-sm",
                   message.role === "user"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-card border border-border"
+                    ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
+                    : "bg-muted rounded-2xl rounded-bl-md"
                 )}
               >
                 {message.role === "assistant" ? (
@@ -726,8 +728,8 @@ export default function Coach() {
                 )}
               </div>
               {message.role === "user" && (
-                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                  <User className="w-4 h-4 text-muted-foreground" />
+                <div className="w-9 h-9 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                  <User className="w-5 h-5 text-secondary-foreground" />
                 </div>
               )}
             </div>
