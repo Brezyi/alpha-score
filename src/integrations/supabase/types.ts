@@ -680,6 +680,7 @@ export type Database = {
           age: number | null
           analysis_id: string | null
           created_at: string
+          deleted_at: string | null
           display_name: string
           id: string
           is_approved: boolean
@@ -694,6 +695,7 @@ export type Database = {
           age?: number | null
           analysis_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name: string
           id?: string
           is_approved?: boolean
@@ -708,6 +710,7 @@ export type Database = {
           age?: number | null
           analysis_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           display_name?: string
           id?: string
           is_approved?: boolean
