@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SystemSettingsProvider } from "./contexts/SystemSettingsContext";
+import { MaintenanceGate } from "./components/MaintenanceGate";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -44,91 +45,93 @@ const App = () => (
       <ThemeProvider>
         <SystemSettingsProvider>
           <TooltipProvider>
-            <DocumentTitleUpdater />
-            <FaviconUpdater />
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/upload" element={<AnalysisUpload />} />
-              <Route path="/analysis/:id" element={<AnalysisResults />} />
-              <Route path="/payment-success" element={<PaymentSuccess />} />
-              <Route path="/coach" element={<Coach />} />
-              <Route path="/plan" element={<Plan />} />
-              <Route path="/progress" element={<Progress />} />
-              <Route path="/support" element={<Support />} />
-              <Route path="/features" element={<Features />} />
-              <Route path="/pricing" element={<PricingPage />} />
-              <Route path="/datenschutz" element={<Datenschutz />} />
-              <Route path="/impressum" element={<Impressum />} />
-              <Route path="/agb" element={<AGB />} />
-              
-              {/* Admin Routes - Protected by role */}
-              <Route 
-                path="/admin" 
-                element={
-                  <ProtectedRoute requiredRole={["admin", "owner"]}>
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin/users" 
-                element={
-                  <ProtectedRoute requiredRole={["admin", "owner"]}>
-                    <UserManagement />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin/audit" 
-                element={
-                  <ProtectedRoute requiredRole={["admin", "owner"]}>
-                    <AuditLogs />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin/support" 
-                element={
-                  <ProtectedRoute requiredRole={["admin", "owner"]}>
-                    <SupportManagement />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin/settings" 
-                element={
-                  <ProtectedRoute requiredRole={["owner"]}>
-                    <SystemSettings />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin/billing" 
-                element={
-                  <ProtectedRoute requiredRole={["owner"]}>
-                    <RevenueOverview />
-                  </ProtectedRoute>
-                } 
-              />
-              
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <CookieConsent />
-          </BrowserRouter>
-        </TooltipProvider>
-      </SystemSettingsProvider>
-    </ThemeProvider>
-  </AuthProvider>
-</QueryClientProvider>
+            <MaintenanceGate>
+              <DocumentTitleUpdater />
+              <FaviconUpdater />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/upload" element={<AnalysisUpload />} />
+                  <Route path="/analysis/:id" element={<AnalysisResults />} />
+                  <Route path="/payment-success" element={<PaymentSuccess />} />
+                  <Route path="/coach" element={<Coach />} />
+                  <Route path="/plan" element={<Plan />} />
+                  <Route path="/progress" element={<Progress />} />
+                  <Route path="/support" element={<Support />} />
+                  <Route path="/features" element={<Features />} />
+                  <Route path="/pricing" element={<PricingPage />} />
+                  <Route path="/datenschutz" element={<Datenschutz />} />
+                  <Route path="/impressum" element={<Impressum />} />
+                  <Route path="/agb" element={<AGB />} />
+                  
+                  {/* Admin Routes - Protected by role */}
+                  <Route 
+                    path="/admin" 
+                    element={
+                      <ProtectedRoute requiredRole={["admin", "owner"]}>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/users" 
+                    element={
+                      <ProtectedRoute requiredRole={["admin", "owner"]}>
+                        <UserManagement />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/audit" 
+                    element={
+                      <ProtectedRoute requiredRole={["admin", "owner"]}>
+                        <AuditLogs />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/support" 
+                    element={
+                      <ProtectedRoute requiredRole={["admin", "owner"]}>
+                        <SupportManagement />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/settings" 
+                    element={
+                      <ProtectedRoute requiredRole={["owner"]}>
+                        <SystemSettings />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  <Route 
+                    path="/admin/billing" 
+                    element={
+                      <ProtectedRoute requiredRole={["owner"]}>
+                        <RevenueOverview />
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+                <CookieConsent />
+              </BrowserRouter>
+            </MaintenanceGate>
+          </TooltipProvider>
+        </SystemSettingsProvider>
+      </ThemeProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;
