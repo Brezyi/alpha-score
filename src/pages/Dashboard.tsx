@@ -316,16 +316,16 @@ const Dashboard = () => {
           <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
             <div className="text-sm text-muted-foreground mb-1">Aktueller Score</div>
             <div className="flex items-end gap-2">
-              <div className="text-3xl font-bold text-gradient animate-number-pop" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
+              <div className="text-3xl font-bold text-gradient">
                 {latestScore !== null ? (
                   hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
                 ) : "—"}
               </div>
               {scoreDiff !== null && (
-                <div className={`flex items-center text-sm mb-1 opacity-0 animate-fade-in-left ${
+                <div className={`flex items-center text-sm mb-1 ${
                   parseFloat(scoreDiff) > 0 ? "text-green-500" : 
                   parseFloat(scoreDiff) < 0 ? "text-red-500" : "text-muted-foreground"
-                }`} style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
+                }`}>
                   {parseFloat(scoreDiff) > 0 ? (
                     <ArrowUpRight className="w-4 h-4 animate-bounce-subtle" />
                   ) : parseFloat(scoreDiff) < 0 ? (
@@ -340,11 +340,11 @@ const Dashboard = () => {
           </div>
           <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
             <div className="text-sm text-muted-foreground mb-1">Analysen</div>
-            <div className="text-3xl font-bold opacity-0 animate-number-pop" style={{ animationDelay: "500ms", animationFillMode: "forwards" }}>{completedAnalyses.length}</div>
+            <div className="text-3xl font-bold">{completedAnalyses.length}</div>
           </div>
           <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
             <div className="text-sm text-muted-foreground mb-1">Streak</div>
-            <div className="text-3xl font-bold flex items-center gap-2 opacity-0 animate-number-pop" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
+            <div className="text-3xl font-bold flex items-center gap-2">
               {streakLoading ? (
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               ) : (
@@ -355,7 +355,7 @@ const Dashboard = () => {
               )}
             </div>
             {!streakLoading && longestStreak > 0 && (
-              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground opacity-0 animate-fade-in" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>
+              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                 <Trophy className="w-3 h-3" />
                 Best: {longestStreak}
               </div>
@@ -368,7 +368,7 @@ const Dashboard = () => {
           </div>
           <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
             <div className="text-sm text-muted-foreground mb-1">Tasks heute</div>
-            <div className="text-3xl font-bold opacity-0 animate-number-pop" style={{ animationDelay: "700ms", animationFillMode: "forwards" }}>0/5</div>
+            <div className="text-3xl font-bold">0/5</div>
           </div>
         </div>
 
