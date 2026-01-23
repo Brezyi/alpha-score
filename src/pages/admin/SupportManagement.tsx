@@ -80,6 +80,7 @@ const SupportManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [adminNotes, setAdminNotes] = useState("");
   const [newStatus, setNewStatus] = useState<string>("");
@@ -190,7 +191,11 @@ const SupportManagement = () => {
         ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
       const matchesCategory = categoryFilter === "all" || ticket.category === categoryFilter;
-      return matchesSearch && matchesStatus && matchesCategory;
+      const isPriority = (ticket as any).is_priority === true;
+      const matchesPriority = priorityFilter === "all" || 
+        (priorityFilter === "priority" && isPriority) || 
+        (priorityFilter === "normal" && !isPriority);
+      return matchesSearch && matchesStatus && matchesCategory && matchesPriority;
     })
     // Sort: Priority tickets first, then by created_at descending
     .sort((a, b) => {
@@ -317,6 +322,21 @@ const SupportManagement = () => {
               <SelectItem value="payment">Zahlung</SelectItem>
               <SelectItem value="account">Account</SelectItem>
               <SelectItem value="other">Sonstiges</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectValue placeholder="Priorität" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Alle Tickets</SelectItem>
+              <SelectItem value="priority">
+                <span className="flex items-center gap-1.5">
+                  <Zap className="w-3 h-3 text-amber-400" />
+                  Priorität
+                </span>
+              </SelectItem>
+              <SelectItem value="normal">Normal</SelectItem>
             </SelectContent>
           </Select>
         </div>
