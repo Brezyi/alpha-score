@@ -146,12 +146,23 @@ export function useAdminTestimonials() {
   }, [fetchAllTestimonials]);
 
   const approveTestimonial = async (id: string, approved: boolean) => {
-    const { error } = await supabase
-      .from("user_testimonials")
-      .update({ is_approved: approved })
-      .eq("id", id);
+    if (approved) {
+      // Approve: update is_approved to true
+      const { error } = await supabase
+        .from("user_testimonials")
+        .update({ is_approved: true })
+        .eq("id", id);
 
-    if (error) throw error;
+      if (error) throw error;
+    } else {
+      // Reject: delete the testimonial
+      const { error } = await supabase
+        .from("user_testimonials")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    }
     await fetchAllTestimonials();
   };
 
