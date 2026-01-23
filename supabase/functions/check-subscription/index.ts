@@ -83,8 +83,9 @@ serve(async (req) => {
       .eq('status', 'active')
       .maybeSingle();
 
-    // Check if this is an admin-granted subscription (stripe_customer_id starts with 'admin_granted_')
-    const isAdminGranted = dbSubscription?.stripe_customer_id?.startsWith('admin_granted_') || false;
+    // Check if this is an admin-granted or promo code subscription (not a real Stripe subscription)
+    const isAdminGranted = dbSubscription?.stripe_customer_id?.startsWith('admin_granted_') || 
+                           dbSubscription?.stripe_customer_id?.startsWith('promo_') || false;
 
     if (dbSubscription && dbSubscription.plan_type && isAdminGranted) {
       logStep("Found admin-granted subscription", { 
