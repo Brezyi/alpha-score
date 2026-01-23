@@ -1,12 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Wrench, Lock } from "lucide-react";
 import { useLocation } from "react-router-dom";
-
-interface MaintenanceGateProps {
-  children: React.ReactNode;
-}
 
 // Public routes that should always be accessible
 const PUBLIC_ROUTES = [
@@ -22,7 +18,27 @@ const PUBLIC_ROUTES = [
   "/agb",
 ];
 
-export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) => {
+interface MaintenanceContextType {
+  maintenanceMode: boolean;
+  isOwner: boolean;
+  isLoggedIn: boolean;
+  loading: boolean;
+}
+
+const MaintenanceContext = createContext<MaintenanceContextType>({
+  maintenanceMode: false,
+  isOwner: false,
+  isLoggedIn: false,
+  loading: true,
+});
+
+export const useMaintenanceContext = () => useContext(MaintenanceContext);
+
+interface MaintenanceProviderProps {
+  children: React.ReactNode;
+}
+
+export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ children }) => {
   const { settings, loading: settingsLoading } = useGlobalSettings();
   const [isOwner, setIsOwner] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -62,6 +78,7 @@ export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) =>
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      setRoleLoading(true);
       checkOwnerRole();
     });
 
@@ -72,8 +89,27 @@ export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) =>
     };
   }, []);
 
+  const loading = settingsLoading || roleLoading;
+
+  return (
+    <MaintenanceContext.Provider value={{
+      maintenanceMode: settings.maintenance_mode,
+      isOwner,
+      isLoggedIn,
+      loading,
+    }}>
+      {children}
+    </MaintenanceContext.Provider>
+  );
+};
+
+// Component that checks maintenance and shows the screen if needed
+export const MaintenanceCheck: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const location = useLocation();
+  const { maintenanceMode, isOwner, isLoggedIn, loading } = useMaintenanceContext();
+  
   // Show loading state while checking
-  if (settingsLoading || roleLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Laden...</div>
@@ -81,32 +117,6 @@ export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) =>
     );
   }
 
-  // Render children - the actual route check happens inside with MaintenanceCheck
-  return (
-    <>
-      {React.Children.map(children, child => {
-        if (React.isValidElement(child)) {
-          return React.cloneElement(child as React.ReactElement<any>, {
-            maintenanceMode: settings.maintenance_mode,
-            isOwner,
-            isLoggedIn,
-          });
-        }
-        return child;
-      })}
-    </>
-  );
-};
-
-// Inner component that has access to router context
-export const MaintenanceCheck: React.FC<{
-  children: React.ReactNode;
-  maintenanceMode?: boolean;
-  isOwner?: boolean;
-  isLoggedIn?: boolean;
-}> = ({ children, maintenanceMode = false, isOwner = false, isLoggedIn = false }) => {
-  const location = useLocation();
-  
   // Check if current route is public
   const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname);
 
