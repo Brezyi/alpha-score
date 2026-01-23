@@ -35,6 +35,7 @@ import { de } from "date-fns/locale";
 interface Analysis {
   id: string;
   looks_score: number | null;
+  potential_score: number | null;
   created_at: string;
   status: string;
   strengths: string[] | null;
@@ -70,7 +71,7 @@ export default function Progress() {
     try {
       const { data, error: fetchError } = await supabase
         .from("analyses")
-        .select("id, looks_score, created_at, status, strengths, weaknesses, priorities, photo_urls")
+        .select("id, looks_score, potential_score, created_at, status, strengths, weaknesses, priorities, photo_urls")
         .eq("user_id", user.id)
         .eq("status", "completed")
         .order("created_at", { ascending: false });
@@ -171,6 +172,7 @@ export default function Progress() {
   // Calculate statistics
   const completedAnalyses = analyses.filter(a => a.looks_score !== null);
   const latestScore = completedAnalyses[0]?.looks_score ?? null;
+  const latestPotential = completedAnalyses[0]?.potential_score ?? null;
   const oldestScore = completedAnalyses[completedAnalyses.length - 1]?.looks_score ?? null;
   const totalImprovement = latestScore !== null && oldestScore !== null 
     ? (latestScore - oldestScore).toFixed(1) 
@@ -184,6 +186,11 @@ export default function Progress() {
     ? Math.max(...completedAnalyses.map(a => a.looks_score || 0)).toFixed(1)
     : null;
 
+  // Potential progress calculation
+  const potentialGap = latestScore !== null && latestPotential !== null 
+    ? (latestPotential - latestScore).toFixed(1)
+    : null;
+
   // Chart data (chronological order)
   const chartData = completedAnalyses
     .slice()
@@ -191,6 +198,7 @@ export default function Progress() {
     .map((a, index) => ({
       date: format(new Date(a.created_at), "dd.MM", { locale: de }),
       score: a.looks_score,
+      potential: a.potential_score,
       index: index + 1,
     }));
 
@@ -297,13 +305,24 @@ export default function Progress() {
         ) : (
           <>
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
               <Card className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   <Target className="w-4 h-4" />
                   <span className="text-xs">Aktuell</span>
                 </div>
                 <div className="text-2xl font-bold">{latestScore?.toFixed(1) || "-"}</div>
+              </Card>
+              
+              <Card className="p-4 border-primary/30 bg-primary/5">
+                <div className="flex items-center gap-2 text-primary mb-2">
+                  <Zap className="w-4 h-4" />
+                  <span className="text-xs">Potenzial</span>
+                </div>
+                <div className="text-2xl font-bold text-primary">{latestPotential?.toFixed(1) || "-"}</div>
+                {potentialGap && (
+                  <span className="text-xs text-muted-foreground">+{potentialGap} möglich</span>
+                )}
               </Card>
               
               <Card className="p-4">
@@ -325,9 +344,9 @@ export default function Progress() {
               <Card className="p-4">
                 <div className="flex items-center gap-2 text-muted-foreground mb-2">
                   {totalImprovement && parseFloat(totalImprovement) > 0 ? (
-                    <TrendingUp className="w-4 h-4 text-green-500" />
+                    <TrendingUp className="w-4 h-4 text-primary" />
                   ) : totalImprovement && parseFloat(totalImprovement) < 0 ? (
-                    <TrendingDown className="w-4 h-4 text-red-500" />
+                    <TrendingDown className="w-4 h-4 text-destructive" />
                   ) : (
                     <Minus className="w-4 h-4" />
                   )}
@@ -335,8 +354,8 @@ export default function Progress() {
                 </div>
                 <div className={cn(
                   "text-2xl font-bold",
-                  totalImprovement && parseFloat(totalImprovement) > 0 && "text-green-500",
-                  totalImprovement && parseFloat(totalImprovement) < 0 && "text-red-500"
+                  totalImprovement && parseFloat(totalImprovement) > 0 && "text-primary",
+                  totalImprovement && parseFloat(totalImprovement) < 0 && "text-destructive"
                 )}>
                   {totalImprovement ? (parseFloat(totalImprovement) > 0 ? "+" : "") + totalImprovement : "-"}
                 </div>

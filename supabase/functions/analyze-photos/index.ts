@@ -577,6 +577,10 @@ DENKE DRAN: Du bist STRENGER als der Durchschnitt. Ein normales Gesicht = Score 
                     type: "number", 
                     description: "Overall looks score from 1.0 to 10.0 (streng kalibriert, Durchschnitt ist 5)" 
                   },
+                  potential_score: {
+                    type: "number",
+                    description: "Erreichbares Potenzial-Score (1.0-10.0) wenn alle Verbesserungen umgesetzt werden. Realistisch, meist 0.5-2.0 Punkte höher als aktuell."
+                  },
                   strengths: { 
                     type: "array", 
                     items: { type: "string" }, 
@@ -591,6 +595,10 @@ DENKE DRAN: Du bist STRENGER als der Durchschnitt. Ein normales Gesicht = Score 
                     type: "array", 
                     items: { type: "string" }, 
                     description: "Top 3 Verbesserungen priorisiert nach Impact mit konkreten Maßnahmen" 
+                  },
+                  potential_improvements: {
+                    type: "string",
+                    description: "Kurze Beschreibung (1-2 Sätze) was sich am Aussehen verbessern würde wenn alle Maßnahmen umgesetzt werden. Z.B. 'Definiertere Jawline durch weniger Körperfett, klarere Haut ohne Akne, volleres Haar.'"
                   },
                   detailed_analysis: {
                     type: "object",
@@ -648,7 +656,7 @@ DENKE DRAN: Du bist STRENGER als der Durchschnitt. Ein normales Gesicht = Score 
                     description: "Detaillierte Analyse mit Teil-Scores für jeden Bereich"
                   }
                 },
-                required: ["looks_score", "strengths", "weaknesses", "priorities", "detailed_analysis"]
+                required: ["looks_score", "potential_score", "strengths", "weaknesses", "priorities", "potential_improvements", "detailed_analysis"]
               }
             }
           }
@@ -672,7 +680,72 @@ DENKE DRAN: Du bist STRENGER als der Durchschnitt. Ein normales Gesicht = Score 
     }
 
     const analysisResult = JSON.parse(toolCall.function.arguments);
-    logStep("Analysis result parsed", { score: analysisResult.looks_score });
+    logStep("Analysis result parsed", { score: analysisResult.looks_score, potential: analysisResult.potential_score });
+
+    // ====== STEP 3: Generate Potential Image ======
+    let potentialImageUrl: string | null = null;
+    
+    try {
+      logStep("Starting potential image generation");
+      
+      const potentialImprovements = analysisResult.potential_improvements || "bessere Haut, definiertere Gesichtszüge";
+      const imagePrompt = `Edit this photo to show the person's potential: ${potentialImprovements}. Make subtle, realistic improvements: clearer skin, better lighting, slightly more defined features. Keep the same person recognizable. Do NOT change clothing or background. Subtle enhancement only.`;
+      
+      const imageResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash-image-preview",
+          messages: [
+            {
+              role: "user",
+              content: [
+                { type: "text", text: imagePrompt },
+                { type: "image_url", image_url: { url: photoDataUrls[0] } }
+              ]
+            }
+          ],
+          modalities: ["image", "text"]
+        }),
+      });
+
+      if (imageResponse.ok) {
+        const imageData = await imageResponse.json();
+        const generatedImage = imageData.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+        
+        if (generatedImage) {
+          // Upload to Supabase Storage
+          const base64Data = generatedImage.replace(/^data:image\/\w+;base64,/, '');
+          const imageBuffer = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          
+          const fileName = `${user.id}/potential-${analysisId}.webp`;
+          const { error: uploadError } = await supabaseClient.storage
+            .from('analysis-photos')
+            .upload(fileName, imageBuffer, {
+              contentType: 'image/webp',
+              upsert: true
+            });
+          
+          if (!uploadError) {
+            const { data: publicUrlData } = supabaseClient.storage
+              .from('analysis-photos')
+              .getPublicUrl(fileName);
+            potentialImageUrl = publicUrlData.publicUrl;
+            logStep("Potential image uploaded", { url: potentialImageUrl });
+          } else {
+            logStep("Potential image upload error", { error: uploadError.message });
+          }
+        }
+      } else {
+        logStep("Potential image generation failed", { status: imageResponse.status });
+      }
+    } catch (imageError) {
+      logStep("Potential image generation error", { error: String(imageError) });
+      // Continue without the image - not critical
+    }
 
     // Update the analysis record with results
     const { error: updateError } = await supabaseClient
@@ -680,10 +753,15 @@ DENKE DRAN: Du bist STRENGER als der Durchschnitt. Ein normales Gesicht = Score 
       .update({
         status: 'completed',
         looks_score: analysisResult.looks_score,
+        potential_score: analysisResult.potential_score,
         strengths: analysisResult.strengths,
         weaknesses: analysisResult.weaknesses,
         priorities: analysisResult.priorities,
-        detailed_results: analysisResult.detailed_analysis || null,
+        detailed_results: {
+          ...analysisResult.detailed_analysis,
+          potential_improvements: analysisResult.potential_improvements
+        },
+        potential_image_url: potentialImageUrl,
         updated_at: new Date().toISOString()
       })
       .eq('id', analysisId);
@@ -696,7 +774,8 @@ DENKE DRAN: Du bist STRENGER als der Durchschnitt. Ein normales Gesicht = Score 
     return new Response(JSON.stringify({ 
       success: true, 
       analysisId,
-      looks_score: analysisResult.looks_score 
+      looks_score: analysisResult.looks_score,
+      potential_score: analysisResult.potential_score
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
