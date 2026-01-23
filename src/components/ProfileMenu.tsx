@@ -402,7 +402,7 @@ export function ProfileMenu() {
                     className="flex-1"
                     variant="outline"
                   >
-                    Lifetime (50€)
+                    Lifetime (49,99€)
                   </Button>
                 </div>
               </div>
