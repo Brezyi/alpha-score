@@ -861,6 +861,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_promo_code_usage: {
+        Args: { promo_code_id: string }
+        Returns: undefined
+      }
       log_security_event: {
         Args: { _details?: Json; _event_type: string }
         Returns: undefined
