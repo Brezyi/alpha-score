@@ -118,6 +118,16 @@ export default {
           "0%, 100%": { boxShadow: "0 0 20px hsl(153, 100%, 50%, 0.2)" },
           "50%": { boxShadow: "0 0 40px hsl(153, 100%, 50%, 0.4)" },
         },
+        "progress-glow": {
+          "0%, 100%": { 
+            boxShadow: "0 0 8px hsl(var(--primary) / 0.4), inset 0 0 4px hsl(var(--primary) / 0.2)",
+            filter: "brightness(1)"
+          },
+          "50%": { 
+            boxShadow: "0 0 20px hsl(var(--primary) / 0.6), inset 0 0 8px hsl(var(--primary) / 0.3)",
+            filter: "brightness(1.15)"
+          },
+        },
         "scan-line": {
           "0%": { top: "0%" },
           "50%": { top: "100%" },
@@ -142,6 +152,7 @@ export default {
         "scale-in": "scale-in 0.4s ease-out forwards",
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "progress-glow": "progress-glow 1.5s ease-in-out infinite",
         "scan-line": "scan-line 2.5s ease-in-out infinite",
         "subtle-shake": "subtle-shake 2s ease-in-out infinite",
       },

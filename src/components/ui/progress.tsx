@@ -7,13 +7,15 @@ interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPr
   animated?: boolean;
   animationDuration?: number;
   animationDelay?: number;
+  glowOnComplete?: boolean;
 }
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
->(({ className, value, animated = false, animationDuration = 2200, animationDelay = 300, ...props }, ref) => {
+>(({ className, value, animated = false, animationDuration = 2200, animationDelay = 300, glowOnComplete = false, ...props }, ref) => {
   const [displayValue, setDisplayValue] = React.useState(0);
+  const [isComplete, setIsComplete] = React.useState(false);
   const hasAnimatedRef = React.useRef(false);
 
   React.useEffect(() => {
@@ -22,6 +24,7 @@ const Progress = React.forwardRef<
     if (!animated) {
       hasAnimatedRef.current = false;
       setDisplayValue(targetValue);
+      setIsComplete(true);
       return;
     }
 
@@ -32,6 +35,7 @@ const Progress = React.forwardRef<
     }
 
     hasAnimatedRef.current = true;
+    setIsComplete(false);
     
     // Start at 0, then after delay trigger the CSS transition
     setDisplayValue(0);
@@ -39,8 +43,16 @@ const Progress = React.forwardRef<
       setDisplayValue(targetValue);
     }, animationDelay);
 
-    return () => clearTimeout(timeoutId);
-  }, [value, animated, animationDelay]);
+    // Trigger glow after animation completes
+    const glowTimeoutId = setTimeout(() => {
+      setIsComplete(true);
+    }, animationDelay + animationDuration);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearTimeout(glowTimeoutId);
+    };
+  }, [value, animated, animationDelay, animationDuration]);
 
   return (
     <ProgressPrimitive.Root
@@ -49,7 +61,10 @@ const Progress = React.forwardRef<
       {...props}
     >
       <ProgressPrimitive.Indicator
-        className="h-full w-full flex-1 bg-primary will-change-transform"
+        className={cn(
+          "h-full w-full flex-1 bg-primary will-change-transform rounded-full",
+          glowOnComplete && isComplete && "animate-progress-glow"
+        )}
         style={{ 
           transform: `translateX(-${100 - displayValue}%)`,
           transition: animated

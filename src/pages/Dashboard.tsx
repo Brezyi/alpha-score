@@ -387,7 +387,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="relative">
-              <Progress value={potentialProgress} animated={hasAnimated} animationDuration={1200} className="h-4" />
+              <Progress value={potentialProgress} animated={hasAnimated} animationDuration={2200} glowOnComplete className="h-4" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xs font-medium text-primary-foreground drop-shadow-sm">
                   {hasAnimated ? <AnimatedNumber value={potentialProgress} decimals={0} /> : potentialProgress}%
