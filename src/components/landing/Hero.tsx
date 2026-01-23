@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, TrendingUp, Star } from "lucide-react";
+import { ArrowRight, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Hero = () => {
@@ -52,25 +52,6 @@ const Hero = () => {
             </Link>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 max-w-lg mx-auto animate-fade-in" style={{ animationDelay: "0.5s" }}>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-1">10K+</div>
-              <div className="text-sm text-muted-foreground">Nutzer</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-1">4.9</div>
-              <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
-                <Star className="w-3 h-3 fill-primary text-primary" /> Rating
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold text-gradient mb-1">+2.3</div>
-              <div className="text-sm text-muted-foreground flex items-center justify-center gap-1">
-                <TrendingUp className="w-3 h-3 text-primary" /> Avg. Score
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
