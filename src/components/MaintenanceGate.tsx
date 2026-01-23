@@ -2,14 +2,30 @@ import React, { useEffect, useState } from "react";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Wrench, Lock } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 interface MaintenanceGateProps {
   children: React.ReactNode;
 }
 
+// Public routes that should always be accessible
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+  "/features",
+  "/pricing",
+  "/datenschutz",
+  "/impressum",
+  "/agb",
+];
+
 export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) => {
   const { settings, loading: settingsLoading } = useGlobalSettings();
   const [isOwner, setIsOwner] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [roleLoading, setRoleLoading] = useState(true);
 
   useEffect(() => {
@@ -19,9 +35,12 @@ export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) =>
         
         if (!session?.user) {
           setIsOwner(false);
+          setIsLoggedIn(false);
           setRoleLoading(false);
           return;
         }
+
+        setIsLoggedIn(true);
 
         const { data, error } = await supabase.rpc('get_user_role', {
           _user_id: session.user.id
@@ -62,10 +81,43 @@ export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) =>
     );
   }
 
-  // If maintenance mode is active and user is NOT owner (including not logged in), show maintenance page
-  if (settings.maintenance_mode && !isOwner) {
+  // Render children - the actual route check happens inside with MaintenanceCheck
+  return (
+    <>
+      {React.Children.map(children, child => {
+        if (React.isValidElement(child)) {
+          return React.cloneElement(child as React.ReactElement<any>, {
+            maintenanceMode: settings.maintenance_mode,
+            isOwner,
+            isLoggedIn,
+          });
+        }
+        return child;
+      })}
+    </>
+  );
+};
+
+// Inner component that has access to router context
+export const MaintenanceCheck: React.FC<{
+  children: React.ReactNode;
+  maintenanceMode?: boolean;
+  isOwner?: boolean;
+  isLoggedIn?: boolean;
+}> = ({ children, maintenanceMode = false, isOwner = false, isLoggedIn = false }) => {
+  const location = useLocation();
+  
+  // Check if current route is public
+  const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname);
+
+  // Show maintenance page if:
+  // - Maintenance mode is active
+  // - User is logged in (so they passed the public pages)
+  // - User is NOT an owner
+  // - Current route is NOT a public route
+  if (maintenanceMode && isLoggedIn && !isOwner && !isPublicRoute) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6 dark"  data-theme="dark">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center space-y-6">
           <div className="relative mx-auto w-24 h-24">
             <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
@@ -79,7 +131,7 @@ export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) =>
               Wartungsmodus
             </h1>
             <p className="text-muted-foreground text-lg">
-              {settings.app_name} wird gerade gewartet.
+              Die App wird gerade gewartet.
             </p>
             <p className="text-muted-foreground">
               Wir arbeiten daran, die Seite so schnell wie möglich wieder verfügbar zu machen.
@@ -96,6 +148,5 @@ export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) =>
     );
   }
 
-  // Not in maintenance mode or user is owner - render children
   return <>{children}</>;
 };
