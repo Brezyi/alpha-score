@@ -81,11 +81,23 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       root.style.setProperty("--muted", "0 0% 15%");
       root.style.setProperty("--popover", bg.card);
       root.style.setProperty("--popover-foreground", bg.foreground);
+      root.style.setProperty("--card-foreground", "0 0% 98%");
+      root.style.setProperty("--secondary", "0 0% 12%");
+      root.style.setProperty("--secondary-foreground", "0 0% 98%");
+      root.style.setProperty("--accent", "0 0% 15%");
+      root.style.setProperty("--accent-foreground", "0 0% 98%");
+      root.style.setProperty("--input", "0 0% 15%");
     } else {
-      root.style.setProperty("--border", "0 0% 90%");
+      root.style.setProperty("--border", "0 0% 85%");
       root.style.setProperty("--muted", "0 0% 96%");
       root.style.setProperty("--popover", bg.card);
       root.style.setProperty("--popover-foreground", bg.foreground);
+      root.style.setProperty("--card-foreground", "0 0% 10%");
+      root.style.setProperty("--secondary", "0 0% 94%");
+      root.style.setProperty("--secondary-foreground", "0 0% 10%");
+      root.style.setProperty("--accent", "0 0% 94%");
+      root.style.setProperty("--accent-foreground", "0 0% 10%");
+      root.style.setProperty("--input", "0 0% 90%");
     }
   }, [theme, accentColor, backgroundStyle]);
 
