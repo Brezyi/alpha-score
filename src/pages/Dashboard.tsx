@@ -302,7 +302,7 @@ const Dashboard = () => {
       {/* Main Content */}
       <main className="container px-4 py-8">
         {/* Welcome Section */}
-        <div className="mb-8">
+        <div className="mb-8 animate-fade-in" style={{ animationDelay: "0ms" }}>
           <h1 className="text-3xl font-bold mb-2">
             Hey, {profile?.display_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Champ"} 👋
           </h1>
@@ -313,7 +313,7 @@ const Dashboard = () => {
 
         {/* Stats Overview */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="p-4 rounded-2xl glass-card">
+          <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
             <div className="text-sm text-muted-foreground mb-1">Aktueller Score</div>
             <div className="flex items-end gap-2">
               <div className="text-3xl font-bold text-gradient">
@@ -327,7 +327,7 @@ const Dashboard = () => {
                   parseFloat(scoreDiff) < 0 ? "text-red-500" : "text-muted-foreground"
                 }`}>
                   {parseFloat(scoreDiff) > 0 ? (
-                    <ArrowUpRight className="w-4 h-4" />
+                    <ArrowUpRight className="w-4 h-4 animate-bounce-subtle" />
                   ) : parseFloat(scoreDiff) < 0 ? (
                     <ArrowDownRight className="w-4 h-4" />
                   ) : (
@@ -338,11 +338,11 @@ const Dashboard = () => {
               )}
             </div>
           </div>
-          <div className="p-4 rounded-2xl glass-card">
+          <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
             <div className="text-sm text-muted-foreground mb-1">Analysen</div>
             <div className="text-3xl font-bold">{completedAnalyses.length}</div>
           </div>
-          <div className="p-4 rounded-2xl glass-card">
+          <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
             <div className="text-sm text-muted-foreground mb-1">Streak</div>
             <div className="text-3xl font-bold flex items-center gap-2">
               {streakLoading ? (
@@ -350,7 +350,7 @@ const Dashboard = () => {
               ) : (
                 <>
                   {currentStreak}
-                  <Flame className={`w-6 h-6 ${currentStreak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+                  <Flame className={`w-6 h-6 ${currentStreak > 0 ? "text-orange-500 animate-wiggle" : "text-muted-foreground"}`} />
                 </>
               )}
             </div>
@@ -361,12 +361,12 @@ const Dashboard = () => {
               </div>
             )}
             {!streakLoading && !isActiveToday && currentStreak > 0 && (
-              <div className="text-xs text-orange-400 mt-1">
+              <div className="text-xs text-orange-400 mt-1 animate-pulse">
                 Heute noch aktiv werden!
               </div>
             )}
           </div>
-          <div className="p-4 rounded-2xl glass-card">
+          <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
             <div className="text-sm text-muted-foreground mb-1">Tasks heute</div>
             <div className="text-3xl font-bold">0/5</div>
           </div>
@@ -374,10 +374,10 @@ const Dashboard = () => {
 
         {/* Potential Progress Bar */}
         {potentialProgress !== null && latestPotential !== null && (
-          <div className="mb-8 p-6 rounded-2xl glass-card">
+          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "500ms", animationFillMode: "forwards" }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
+                <Sparkles className="w-5 h-5 text-primary animate-pulse" />
                 <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
               </div>
               <div className="text-sm text-muted-foreground">
@@ -398,9 +398,9 @@ const Dashboard = () => {
               <span className="text-muted-foreground">
                 Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> möglich
               </span>
-              <Link to="/plan" className="text-primary hover:underline flex items-center gap-1">
+              <Link to="/plan" className="text-primary hover:underline flex items-center gap-1 group">
                 Plan ansehen
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>
           </div>
@@ -408,7 +408,7 @@ const Dashboard = () => {
 
         {/* Score Chart */}
         {chartData.length >= 2 && (
-          <div className="mb-8 p-6 rounded-2xl glass-card">
+          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-scale-in" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Score-Verlauf</h2>
               <div className="flex items-center gap-4 text-sm">
@@ -480,10 +480,10 @@ const Dashboard = () => {
 
         {/* Premium Banner (for free users) */}
         {!isPremiumUser && (
-          <div className="relative overflow-hidden rounded-2xl p-6 mb-8 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/30">
+          <div className="relative overflow-hidden rounded-2xl p-6 mb-8 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/30 opacity-0 animate-fade-in-up" style={{ animationDelay: "700ms", animationFillMode: "forwards" }}>
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-2">
-                <Crown className="w-5 h-5 text-primary" />
+                <Crown className="w-5 h-5 text-primary animate-float" />
                 <span className="text-sm font-medium text-primary">Premium Feature</span>
               </div>
               <h3 className="text-xl font-bold mb-2">Schalte alle Features frei</h3>
@@ -491,13 +491,13 @@ const Dashboard = () => {
                 Erhalte detaillierte Analysen, deinen personalisierten Plan und Zugang zum AI Coach.
               </p>
               <Link to="/pricing">
-                <Button variant="hero">
+                <Button variant="hero" className="group">
                   Premium werden
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             </div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" />
           </div>
         )}
 
@@ -505,22 +505,23 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="mb-8">
-          <h2 className="text-xl font-bold mb-4">Schnellzugriff</h2>
+          <h2 className="text-xl font-bold mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>Schnellzugriff</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {quickActions.map((action) => {
+            {quickActions.map((action, index) => {
               const isLocked = action.premium && !isPremiumUser;
               return (
                 <Link 
                   key={action.title}
                   to={isLocked ? "/pricing" : action.href}
-                  className="group relative p-6 rounded-2xl glass-card hover:border-primary/50 transition-all duration-300"
+                  className="group relative p-6 rounded-2xl glass-card hover:border-primary/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-primary/5"
+                  style={{ animationDelay: `${850 + index * 100}ms`, animationFillMode: "forwards" }}
                 >
                   {isLocked && (
                     <div className="absolute top-3 right-3">
                       <Lock className="w-4 h-4 text-muted-foreground" />
                     </div>
                   )}
-                  <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                  <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
                     <action.icon className="w-6 h-6" />
                   </div>
                   <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
@@ -537,12 +538,12 @@ const Dashboard = () => {
 
         {/* Analysis History - Show last 5 */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "1200ms", animationFillMode: "forwards" }}>
             <h2 className="text-xl font-bold">Letzte Analysen</h2>
             {analyses.length > 5 && (
-              <Link to="/progress" className="text-sm text-primary hover:underline flex items-center gap-1">
+              <Link to="/progress" className="text-sm text-primary hover:underline flex items-center gap-1 group">
                 Alle {analyses.length} anzeigen
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             )}
           </div>
@@ -552,14 +553,14 @@ const Dashboard = () => {
               <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
             </div>
           ) : analyses.length === 0 ? (
-            <div className="text-center p-8 rounded-2xl glass-card">
-              <Camera className="w-12 h-12 text-primary mx-auto mb-4" />
+            <div className="text-center p-8 rounded-2xl glass-card opacity-0 animate-scale-in" style={{ animationDelay: "1300ms", animationFillMode: "forwards" }}>
+              <Camera className="w-12 h-12 text-primary mx-auto mb-4 animate-bounce-subtle" />
               <h3 className="text-xl font-bold mb-2">Noch keine Analysen</h3>
               <p className="text-muted-foreground mb-4 max-w-md mx-auto">
                 Lade ein Foto hoch und erhalte in wenigen Sekunden deinen Looks Score.
               </p>
               <Link to="/upload">
-                <Button variant="hero" size="lg">
+                <Button variant="hero" size="lg" className="group">
                   <Camera className="w-5 h-5" />
                   Erste Analyse starten
                 </Button>
@@ -567,7 +568,7 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {analyses.slice(0, 5).map((analysis) => {
+              {analyses.slice(0, 5).map((analysis, index) => {
                 const isPending = analysis.status === "pending" || analysis.status === "processing";
                 const isFailed = analysis.status === "failed" || analysis.status === "validation_failed";
                 const canDelete = isPending || isFailed;
@@ -582,7 +583,8 @@ const Dashboard = () => {
                 return (
                   <div
                     key={analysis.id}
-                    className="flex items-center gap-4 p-4 rounded-xl glass-card hover:border-primary/50 transition-all group"
+                    className="flex items-center gap-4 p-4 rounded-xl glass-card hover:border-primary/50 transition-all group opacity-0 animate-slide-in-right hover:translate-x-1"
+                    style={{ animationDelay: `${1300 + index * 100}ms`, animationFillMode: "forwards" }}
                   >
                     {/* Clickable area for navigation */}
                     <Link
@@ -684,14 +686,14 @@ const Dashboard = () => {
 
         {/* CTA for more analyses */}
         {analyses.length > 0 && (
-          <div className="text-center p-6 rounded-2xl glass-card">
+          <div className="text-center p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "1800ms", animationFillMode: "forwards" }}>
             <h3 className="text-lg font-bold mb-2">Neue Analyse starten</h3>
             <p className="text-muted-foreground mb-4 text-sm">
               Tracke deinen Fortschritt mit regelmäßigen Analysen.
             </p>
             <Link to="/upload">
-              <Button variant="hero">
-                <Camera className="w-5 h-5" />
+              <Button variant="hero" className="group">
+                <Camera className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 Foto analysieren
               </Button>
             </Link>
