@@ -11,19 +11,23 @@ import {
   Star,
   Droplets,
   Scissors,
-  Dumbbell
+  Dumbbell,
+  Eye
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import beforeImage from "@/assets/transformation-before.jpg";
+import afterImage from "@/assets/transformation-after.jpg";
 
-type FeatureTab = "analysis" | "plan" | "progress" | "coach";
+type FeatureTab = "potential" | "analysis" | "plan" | "progress" | "coach";
 
 const FeatureShowcase = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [activeTab, setActiveTab] = useState<FeatureTab>("analysis");
+  const [activeTab, setActiveTab] = useState<FeatureTab>("potential");
 
   const tabs = [
+    { id: "potential" as const, label: "Dein Potenzial", icon: Eye },
     { id: "analysis" as const, label: "KI-Analyse", icon: Camera },
     { id: "plan" as const, label: "Dein Plan", icon: CheckCircle2 },
     { id: "progress" as const, label: "Fortschritt", icon: TrendingUp },
@@ -102,6 +106,7 @@ const FeatureShowcase = () => {
           className="max-w-5xl mx-auto"
         >
           <AnimatePresence mode="wait">
+            {activeTab === "potential" && <PotentialPreview key="potential" />}
             {activeTab === "analysis" && <AnalysisPreview key="analysis" />}
             {activeTab === "plan" && <PlanPreview key="plan" />}
             {activeTab === "progress" && <ProgressPreview key="progress" />}
@@ -125,6 +130,129 @@ const FeatureShowcase = () => {
         </motion.div>
       </div>
     </section>
+  );
+};
+
+// Potential Preview Component (Before/After Slider)
+const PotentialPreview = () => {
+  const [sliderPosition, setSliderPosition] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMove = (clientX: number) => {
+    if (!containerRef.current || !isDragging) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const percent = Math.max(0, Math.min((x / rect.width) * 100, 100));
+    setSliderPosition(percent);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: -20 }}
+      transition={{ duration: 0.4 }}
+      className="grid md:grid-cols-2 gap-8 items-center"
+    >
+      {/* Before/After Slider */}
+      <div
+        ref={containerRef}
+        className="relative aspect-[3/4] max-w-sm mx-auto rounded-2xl overflow-hidden cursor-ew-resize select-none glow-box"
+        onMouseMove={(e) => handleMove(e.clientX)}
+        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+        onMouseDown={() => setIsDragging(true)}
+        onTouchStart={() => setIsDragging(true)}
+        onMouseUp={() => setIsDragging(false)}
+        onMouseLeave={() => setIsDragging(false)}
+        onTouchEnd={() => setIsDragging(false)}
+      >
+        {/* Before Image */}
+        <div className="absolute inset-0">
+          <img 
+            src={beforeImage} 
+            alt="Vorher" 
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+          <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
+            <span className="text-orange-400 text-sm font-bold">Score: 5.2</span>
+          </div>
+        </div>
+
+        {/* After Image */}
+        <div
+          className="absolute inset-0"
+          style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+        >
+          <img 
+            src={afterImage} 
+            alt="Nachher" 
+            className="w-full h-full object-cover"
+            draggable={false}
+          />
+          <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm">
+            <span className="text-primary-foreground text-sm font-bold">Score: 7.4</span>
+          </div>
+        </div>
+
+        {/* Slider Line */}
+        <div
+          className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+          style={{ left: `${sliderPosition}%`, transform: "translateX(-50%)" }}
+        >
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
+            <div className="flex gap-0.5">
+              <div className="w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-600" />
+              <div className="w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Labels */}
+        <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white text-sm font-medium">
+          Vorher
+        </div>
+        <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm text-primary-foreground text-sm font-medium">
+          Nachher
+        </div>
+      </div>
+
+      {/* Score Improvement Info */}
+      <div className="space-y-6">
+        <div className="p-6 rounded-2xl glass-card">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+              <TrendingUp className="w-7 h-7 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">+2.2 Punkte</h3>
+              <p className="text-muted-foreground text-sm">Durchschnittliche Verbesserung</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {[
+              { label: "Skincare Routine", value: "+0.8" },
+              { label: "Hairstyle Optimierung", value: "+0.6" },
+              { label: "Fitness & Body", value: "+0.5" },
+              { label: "Style & Grooming", value: "+0.3" },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
+              >
+                <span className="text-sm text-muted-foreground">{item.label}</span>
+                <span className="text-sm font-semibold text-primary">{item.value}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Unsere KI zeigt dir, wie du mit den richtigen Verbesserungen aussehen könntest.
+        </p>
+      </div>
+    </motion.div>
   );
 };
 
