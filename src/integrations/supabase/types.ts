@@ -535,6 +535,59 @@ export type Database = {
         }
         Relationships: []
       }
+      user_testimonials: {
+        Row: {
+          age: number | null
+          analysis_id: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_approved: boolean
+          is_featured: boolean
+          score_after: number | null
+          score_before: number | null
+          testimonial_text: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          age?: number | null
+          analysis_id?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          is_approved?: boolean
+          is_featured?: boolean
+          score_after?: number | null
+          score_before?: number | null
+          testimonial_text: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          age?: number | null
+          analysis_id?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_approved?: boolean
+          is_featured?: boolean
+          score_after?: number | null
+          score_before?: number | null
+          testimonial_text?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_testimonials_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

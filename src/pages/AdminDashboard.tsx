@@ -13,7 +13,8 @@ import {
   Shield,
   Crown,
   History,
-  HelpCircle
+  HelpCircle,
+  Star
 } from "lucide-react";
 
 interface DashboardStat {
@@ -197,6 +198,21 @@ export default function AdminDashboard() {
               <div>
                 <p className="font-semibold">Audit-Logs</p>
                 <p className="text-sm text-muted-foreground">Aktivitätsprotokoll</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card 
+            className="bg-card border-border hover:border-primary/50 transition-colors cursor-pointer"
+            onClick={() => navigate("/admin/testimonials")}
+          >
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Star className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="font-semibold">Bewertungen</p>
+                <p className="text-sm text-muted-foreground">Testimonials verwalten</p>
               </div>
             </CardContent>
           </Card>

@@ -31,6 +31,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import { TestimonialSubmitDialog } from "@/components/TestimonialSubmitDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -185,6 +186,9 @@ const Dashboard = () => {
             </Link>
 
             <div className="flex items-center gap-4">
+              <div className="hidden sm:block">
+                <TestimonialSubmitDialog />
+              </div>
               {isAdminOrOwner && (
                 <Link to="/admin">
                   <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
