@@ -98,6 +98,30 @@ export type Database = {
         }
         Relationships: []
       }
+      failed_login_attempts: {
+        Row: {
+          attempted_at: string
+          created_at: string
+          email: string
+          id: string
+          ip_address: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          created_at?: string
+          email: string
+          id?: string
+          ip_address?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          created_at?: string
+          email?: string
+          id?: string
+          ip_address?: string | null
+        }
+        Relationships: []
+      }
       mfa_backup_codes: {
         Row: {
           code_hash: string
@@ -620,6 +644,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_account_lockout: {
+        Args: { _email: string }
+        Returns: {
+          failed_attempts: number
+          is_locked: boolean
+          remaining_seconds: number
+        }[]
+      }
       check_rate_limit: {
         Args: {
           _action_type: string
@@ -629,6 +661,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      cleanup_old_login_attempts: { Args: never; Returns: number }
+      clear_failed_logins: { Args: { _email: string }; Returns: undefined }
       create_audit_log: {
         Args: {
           _action_type: string
@@ -661,6 +695,14 @@ export type Database = {
       log_security_event: {
         Args: { _details?: Json; _event_type: string }
         Returns: undefined
+      }
+      record_failed_login: {
+        Args: { _email: string; _ip_address?: string }
+        Returns: {
+          failed_attempts: number
+          is_locked: boolean
+          remaining_seconds: number
+        }[]
       }
       update_user_streak: {
         Args: { p_user_id: string }
