@@ -16,8 +16,6 @@ import {
   Lock,
   Target,
   AlertCircle,
-  Clock,
-  Calendar,
   Flame
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -27,9 +25,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Progress } from "@/components/ui/progress";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Task = {
   id: string;
@@ -57,6 +56,25 @@ const CATEGORIES = [
   { id: "teeth", name: "Zähne & Lächeln", icon: SmilePlus, color: "bg-emerald-500/20 text-emerald-400" },
   { id: "mindset", name: "Mindset & Haltung", icon: Brain, color: "bg-blue-500/20 text-blue-400" },
 ];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 300, damping: 24 }
+  }
+};
 
 const Plan = () => {
   const { user, loading } = useAuth();
@@ -211,7 +229,13 @@ const Plan = () => {
   if (loading || subLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.3 }}
+        >
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </motion.div>
       </div>
     );
   }
@@ -236,10 +260,20 @@ const Plan = () => {
         </header>
 
         <main className="container px-4 py-16 text-center">
-          <div className="max-w-md mx-auto">
-            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+          <motion.div 
+            className="max-w-md mx-auto"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <motion.div 
+              className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+            >
               <Lock className="w-10 h-10 text-primary" />
-            </div>
+            </motion.div>
             <h1 className="text-3xl font-bold mb-4">Premium Feature</h1>
             <p className="text-muted-foreground mb-8">
               Der personalisierte Looksmax-Plan ist nur für Premium-Mitglieder verfügbar. 
@@ -251,7 +285,7 @@ const Plan = () => {
                 Premium werden
               </Button>
             </Link>
-          </div>
+          </motion.div>
         </main>
       </div>
     );
@@ -280,24 +314,39 @@ const Plan = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+      <motion.header 
+        className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border"
+        initial={{ y: -100 }}
+        animate={{ y: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      >
         <div className="container px-4">
           <div className="flex items-center justify-between h-16">
             <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
               <span>Dashboard</span>
             </Link>
-            <div className="flex items-center gap-2">
+            <motion.div 
+              className="flex items-center gap-2"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
               <Sparkles className="w-5 h-5 text-primary" />
               <span className="font-bold">Looksmax Plan</span>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </header>
+      </motion.header>
 
       <main className="container px-4 py-8">
         {/* Title & Analysis Info */}
-        <div className="mb-6">
+        <motion.div 
+          className="mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+        >
           <h1 className="text-3xl font-bold mb-2">Dein Looksmax-Plan</h1>
           <p className="text-muted-foreground">
             {latestAnalysis ? (
@@ -306,85 +355,191 @@ const Plan = () => {
               <>Starte eine Analyse für einen personalisierten Plan.</>
             )}
           </p>
-        </div>
+        </motion.div>
 
         {/* Sub-Scores from Analysis */}
         {subScores.length > 0 && (
-          <div className="mb-6">
+          <motion.div 
+            className="mb-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
             <h3 className="text-sm font-medium text-muted-foreground mb-3">Deine Teil-Scores</h3>
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-              {subScores.map((item) => (
-                <Card key={item.name} className={cn(
-                  "p-3 text-center",
-                  item.score >= 7 ? "border-green-500/30 bg-green-500/5" :
-                  item.score >= 5 ? "border-yellow-500/30 bg-yellow-500/5" :
-                  "border-red-500/30 bg-red-500/5"
-                )}>
-                  <item.icon className={cn(
-                    "w-4 h-4 mx-auto mb-1",
-                    item.score >= 7 ? "text-green-500" :
-                    item.score >= 5 ? "text-yellow-500" :
-                    "text-red-500"
-                  )} />
-                  <div className="text-xs text-muted-foreground">{item.name}</div>
-                  <div className={cn(
-                    "text-lg font-bold",
-                    item.score >= 7 ? "text-green-500" :
-                    item.score >= 5 ? "text-yellow-500" :
-                    "text-red-500"
-                  )}>{item.score.toFixed(1)}</div>
-                </Card>
+            <motion.div 
+              className="grid grid-cols-3 md:grid-cols-6 gap-2"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+              {subScores.map((item, index) => (
+                <motion.div
+                  key={item.name}
+                  variants={itemVariants}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Card className={cn(
+                    "p-3 text-center cursor-pointer transition-shadow hover:shadow-lg",
+                    item.score >= 7 ? "border-green-500/30 bg-green-500/5" :
+                    item.score >= 5 ? "border-yellow-500/30 bg-yellow-500/5" :
+                    "border-red-500/30 bg-red-500/5"
+                  )}>
+                    <motion.div
+                      initial={{ rotate: 0 }}
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                    >
+                      <item.icon className={cn(
+                        "w-4 h-4 mx-auto mb-1",
+                        item.score >= 7 ? "text-green-500" :
+                        item.score >= 5 ? "text-yellow-500" :
+                        "text-red-500"
+                      )} />
+                    </motion.div>
+                    <div className="text-xs text-muted-foreground">{item.name}</div>
+                    <motion.div 
+                      className={cn(
+                        "text-lg font-bold",
+                        item.score >= 7 ? "text-green-500" :
+                        item.score >= 5 ? "text-yellow-500" :
+                        "text-red-500"
+                      )}
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.3 + index * 0.1, type: "spring", stiffness: 300 }}
+                    >
+                      {item.score.toFixed(1)}
+                    </motion.div>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
         )}
 
         {/* Focus Areas / Priorities */}
-        {(focusAreas.length > 0 || (latestAnalysis?.priorities && latestAnalysis.priorities.length > 0)) && (
-          <Card className="p-4 bg-primary/5 border-primary/20 mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Deine Top-Prioritäten</span>
-            </div>
-            <div className="space-y-2">
-              {(focusAreas.length > 0 ? focusAreas : latestAnalysis?.priorities || []).slice(0, 3).map((item, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
-                    {i + 1}
-                  </div>
-                  <span className="text-sm">{item}</span>
+        <AnimatePresence>
+          {(focusAreas.length > 0 || (latestAnalysis?.priorities && latestAnalysis.priorities.length > 0)) && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -20, height: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="p-4 bg-primary/5 border-primary/20 mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <motion.div
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Target className="w-4 h-4 text-primary" />
+                  </motion.div>
+                  <span className="text-sm font-medium text-primary">Deine Top-Prioritäten</span>
                 </div>
-              ))}
-            </div>
-          </Card>
-        )}
+                <motion.div 
+                  className="space-y-2"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {(focusAreas.length > 0 ? focusAreas : latestAnalysis?.priorities || []).slice(0, 3).map((item, i) => (
+                    <motion.div 
+                      key={i} 
+                      className="flex items-start gap-3"
+                      variants={itemVariants}
+                    >
+                      <motion.div 
+                        className="w-6 h-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold flex-shrink-0"
+                        whileHover={{ scale: 1.2 }}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: 0.4 + i * 0.1, type: "spring" }}
+                      >
+                        {i + 1}
+                      </motion.div>
+                      <span className="text-sm">{item}</span>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Overall Progress */}
         {tasks.length > 0 && (
-          <div className="p-6 rounded-2xl glass-card mb-6">
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-semibold">Gesamtfortschritt</span>
-              <span className="text-sm text-muted-foreground">
-                {overallCompleted} / {overallTotal} Aufgaben
-              </span>
+          <motion.div 
+            className="p-6 rounded-2xl glass-card mb-6 overflow-hidden relative"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            {/* Animated background glow */}
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"
+              animate={{ x: ["-100%", "100%"] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-semibold">Gesamtfortschritt</span>
+                <motion.span 
+                  className="text-sm text-muted-foreground"
+                  key={overallCompleted}
+                  initial={{ scale: 1.2, color: "hsl(var(--primary))" }}
+                  animate={{ scale: 1, color: "hsl(var(--muted-foreground))" }}
+                >
+                  {overallCompleted} / {overallTotal} Aufgaben
+                </motion.span>
+              </div>
+              <div className="relative">
+                <Progress value={overallProgress} className="h-3" />
+                <motion.div
+                  className="absolute top-0 left-0 h-full w-full pointer-events-none"
+                  initial={false}
+                >
+                  <motion.div
+                    className="absolute top-0 h-full w-4 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                    animate={{ left: ["0%", "100%"] }}
+                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                  />
+                </motion.div>
+              </div>
+              <motion.p 
+                className="text-sm text-muted-foreground mt-2"
+                key={Math.floor(overallProgress / 25)}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {overallProgress >= 100 ? "🎉 Alles erledigt! Großartige Arbeit." :
+                 overallProgress >= 75 ? "💪 Fast geschafft! Bleib dran." :
+                 overallProgress >= 50 ? "👍 Gute Fortschritte! Weiter so." :
+                 overallProgress >= 25 ? "🚀 Guter Start! Jeden Tag ein bisschen besser." :
+                 "📋 Beginne mit deinem Plan!"}
+              </motion.p>
             </div>
-            <Progress value={overallProgress} className="h-3" />
-            <p className="text-sm text-muted-foreground mt-2">
-              {overallProgress >= 100 ? "🎉 Alles erledigt! Großartige Arbeit." :
-               overallProgress >= 75 ? "💪 Fast geschafft! Bleib dran." :
-               overallProgress >= 50 ? "👍 Gute Fortschritte! Weiter so." :
-               overallProgress >= 25 ? "🚀 Guter Start! Jeden Tag ein bisschen besser." :
-               "📋 Beginne mit deinem Plan!"}
-            </p>
-          </div>
+          </motion.div>
         )}
 
         {/* Empty State / Generate Button */}
         {tasks.length === 0 && !tasksLoading && (
-          <div className="text-center py-12 rounded-2xl glass-card mb-8">
+          <motion.div 
+            className="text-center py-12 rounded-2xl glass-card mb-8"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+          >
             {!latestAnalysis ? (
               <>
-                <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                >
+                  <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+                </motion.div>
                 <h3 className="text-xl font-bold mb-2">Zuerst Analyse durchführen</h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   Für einen personalisierten Plan brauchen wir deine Analyse-Ergebnisse.
@@ -398,34 +553,49 @@ const Plan = () => {
               </>
             ) : (
               <>
-                <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
+                <motion.div
+                  animate={{ 
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
+                </motion.div>
                 <h3 className="text-xl font-bold mb-2">Personalisierter Plan bereit</h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   Basierend auf deiner Analyse erstellen wir einen Plan, der genau auf deine Schwächen abzielt.
                 </p>
-                <Button variant="hero" size="lg" onClick={generatePersonalizedPlan} disabled={generating}>
-                  {generating ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      KI erstellt Plan...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-5 h-5" />
-                      Plan generieren
-                    </>
-                  )}
-                </Button>
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button variant="hero" size="lg" onClick={generatePersonalizedPlan} disabled={generating}>
+                    {generating ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        KI erstellt Plan...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        Plan generieren
+                      </>
+                    )}
+                  </Button>
+                </motion.div>
               </>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Category Tabs */}
         {tasks.length > 0 && (
           <>
-            <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
-              {CATEGORIES.map((cat) => {
+            <motion.div 
+              className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              {CATEGORIES.map((cat, index) => {
                 const catTasks = tasks.filter(t => t.category === cat.id);
                 if (catTasks.length === 0) return null;
                 
@@ -433,7 +603,7 @@ const Plan = () => {
                 const isActive = activeCategory === cat.id;
                 
                 return (
-                  <button
+                  <motion.button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
                     className={`flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all ${
@@ -441,97 +611,188 @@ const Plan = () => {
                         ? "bg-primary text-primary-foreground" 
                         : "bg-card border border-border hover:border-primary/50"
                     }`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 + index * 0.05 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <cat.icon className="w-4 h-4" />
+                    <motion.div
+                      animate={isActive ? { rotate: [0, 360] } : {}}
+                      transition={{ duration: 0.5 }}
+                    >
+                      <cat.icon className="w-4 h-4" />
+                    </motion.div>
                     <span className="text-sm font-medium">{cat.name}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                       isActive ? "bg-primary-foreground/20" : "bg-muted"
                     }`}>
                       {catCompleted}/{catTasks.length}
                     </span>
-                  </button>
+                  </motion.button>
                 );
               })}
-            </div>
+            </motion.div>
 
             {/* Category Progress */}
-            <div className="mb-6">
+            <motion.div 
+              className="mb-6"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6 }}
+              key={activeCategory}
+            >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">
+                <motion.span 
+                  className="text-sm text-muted-foreground"
+                  initial={{ x: -10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                >
                   {CATEGORIES.find(c => c.id === activeCategory)?.name}
-                </span>
-                <span className="text-sm font-medium">{completedCount}/{totalCount}</span>
+                </motion.span>
+                <motion.span 
+                  className="text-sm font-medium"
+                  initial={{ x: 10, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                >
+                  {completedCount}/{totalCount}
+                </motion.span>
               </div>
-              <Progress value={progress} className="h-2" />
-            </div>
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.5 }}
+                style={{ originX: 0 }}
+              >
+                <Progress value={progress} className="h-2" />
+              </motion.div>
+            </motion.div>
 
             {/* Tasks List */}
-            <div className="space-y-3 mb-8">
-              {categoryTasks.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">
-                  Keine Aufgaben in dieser Kategorie.
-                </p>
-              ) : (
-                categoryTasks.map((task) => (
-                  <div
-                    key={task.id}
-                    onClick={() => toggleTask(task.id, task.completed)}
-                    className={cn(
-                      "flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all",
-                      task.completed 
-                        ? "bg-muted/30 opacity-60" 
-                        : "glass-card hover:border-primary/50"
-                    )}
+            <motion.div 
+              className="space-y-3 mb-8"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+              key={activeCategory}
+            >
+              <AnimatePresence mode="popLayout">
+                {categoryTasks.length === 0 ? (
+                  <motion.p 
+                    className="text-center text-muted-foreground py-8"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                   >
-                    <div className={cn(
-                      "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                      task.completed 
-                        ? "bg-primary border-primary" 
-                        : "border-muted-foreground/50 hover:border-primary"
-                    )}>
-                      {task.completed && <Check className="w-4 h-4 text-primary-foreground" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className={cn("font-medium", task.completed && "line-through")}>
-                          {task.title}
-                        </p>
-                        {task.priority === 1 && (
-                          <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs font-medium">
-                            Priorität
-                          </span>
+                    Keine Aufgaben in dieser Kategorie.
+                  </motion.p>
+                ) : (
+                  categoryTasks.map((task, index) => (
+                    <motion.div
+                      key={task.id}
+                      layout
+                      variants={itemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      exit={{ opacity: 0, x: -100, scale: 0.8 }}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => toggleTask(task.id, task.completed)}
+                      className={cn(
+                        "flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all",
+                        task.completed 
+                          ? "bg-muted/30 opacity-60" 
+                          : "glass-card hover:border-primary/50"
+                      )}
+                    >
+                      <motion.div 
+                        className={cn(
+                          "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
+                          task.completed 
+                            ? "bg-primary border-primary" 
+                            : "border-muted-foreground/50 hover:border-primary"
+                        )}
+                        whileTap={{ scale: 0.8 }}
+                        animate={task.completed ? { scale: [1, 1.2, 1] } : {}}
+                      >
+                        <AnimatePresence>
+                          {task.completed && (
+                            <motion.div
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              exit={{ scale: 0, rotate: 180 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            >
+                              <Check className="w-4 h-4 text-primary-foreground" />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <motion.p 
+                            className={cn("font-medium", task.completed && "line-through")}
+                            animate={{ opacity: task.completed ? 0.6 : 1 }}
+                          >
+                            {task.title}
+                          </motion.p>
+                          {task.priority === 1 && (
+                            <motion.span 
+                              className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs font-medium"
+                              animate={{ scale: [1, 1.1, 1] }}
+                              transition={{ duration: 2, repeat: Infinity }}
+                            >
+                              Priorität
+                            </motion.span>
+                          )}
+                        </div>
+                        {task.description && (
+                          <motion.p 
+                            className="text-sm text-muted-foreground mt-1 whitespace-pre-line"
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                          >
+                            {task.description}
+                          </motion.p>
                         )}
                       </div>
-                      {task.description && (
-                        <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">
-                          {task.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+                    </motion.div>
+                  ))
+                )}
+              </AnimatePresence>
+            </motion.div>
 
             {/* Regenerate Button */}
-            <div className="text-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={generatePersonalizedPlan}
-                disabled={generating || !latestAnalysis}
-              >
-                {generating ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                )}
-                Plan neu generieren
-              </Button>
+            <motion.div 
+              className="text-center"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+            >
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={generatePersonalizedPlan}
+                  disabled={generating || !latestAnalysis}
+                >
+                  {generating ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                  ) : (
+                    <motion.div
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                    </motion.div>
+                  )}
+                  Plan neu generieren
+                </Button>
+              </motion.div>
               <p className="text-xs text-muted-foreground mt-2">
                 Basierend auf deiner aktuellen Analyse
               </p>
-            </div>
+            </motion.div>
           </>
         )}
       </main>
