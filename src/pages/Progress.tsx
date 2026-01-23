@@ -796,63 +796,50 @@ export default function Progress() {
                 transition={{ delay: 0.7 }}
               >
                 <Card className="p-6 mb-8 glass-card">
-                  <div className="flex items-center gap-2 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                      <Crown className="w-5 h-5 text-amber-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-bold">Meilensteine</h3>
-                      <p className="text-xs text-muted-foreground">Sammle Achievements auf deiner Reise</p>
-                    </div>
-                  </div>
+                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                    <motion.div
+                      animate={shouldReduce ? {} : { rotate: [0, 10, -10, 0] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      <Crown className="w-5 h-5 text-primary" />
+                    </motion.div>
+                    Meilensteine
+                  </h3>
                   <motion.div 
                     className="space-y-3"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
                   >
-                    {/* Analysis Milestones */}
                     {[
                       { emoji: "🎯", title: "Erste Analyse", achieved: completedAnalyses.length >= 1 },
                       { emoji: "📈", title: "+0.5 Score erreicht", achieved: totalImprovement && parseFloat(totalImprovement) >= 0.5 },
                       { emoji: "🔥", title: "7-Tage Streak", achieved: false },
                       { emoji: "⭐", title: "Score 7.0 erreicht", achieved: highestScore && parseFloat(highestScore) >= 7.0 },
                       { emoji: "🏆", title: "Top 10% erreicht", achieved: highestScore && parseFloat(highestScore) >= 8.5 },
-                    ].map((milestone, i) => (
+                    ].map((milestone) => (
                       <motion.div 
                         key={milestone.title}
                         variants={cardVariants}
-                        whileHover={{ scale: 1.02, x: 5 }}
+                        whileHover={{ scale: 1.01, x: 3 }}
                         className={cn(
-                          "flex items-center gap-3 p-3 rounded-xl transition-all",
+                          "flex items-center gap-3 p-3 rounded-xl",
                           milestone.achieved ? "bg-primary/10" : "bg-muted/30 opacity-60"
                         )}
                       >
-                        <motion.span 
-                          className="text-2xl"
-                          animate={milestone.achieved ? { scale: [1, 1.1, 1] } : {}}
-                          transition={{ duration: 0.5, delay: i * 0.1 }}
-                        >
-                          {milestone.emoji}
-                        </motion.span>
-                        <span className={cn(
-                          "font-medium flex-1",
-                          !milestone.achieved && "text-muted-foreground"
-                        )}>
+                        <span className="text-2xl">{milestone.emoji}</span>
+                        <span className={cn("font-medium", !milestone.achieved && "text-muted-foreground")}>
                           {milestone.title}
                         </span>
-                        {milestone.achieved ? (
+                        {milestone.achieved && (
                           <motion.div
+                            className="ml-auto"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: "spring", stiffness: 300 }}
                           >
-                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
-                              <Target className="w-3.5 h-3.5 text-primary-foreground" />
-                            </div>
+                            <Target className="w-5 h-5 text-primary" />
                           </motion.div>
-                        ) : (
-                          <span className="text-muted-foreground">🔒</span>
                         )}
                       </motion.div>
                     ))}

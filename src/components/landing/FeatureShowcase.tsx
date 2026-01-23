@@ -50,9 +50,25 @@ const FeatureShowcase = () => {
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
             Alles auf einen <span className="text-gradient">Blick</span>
           </h2>
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-muted-foreground mb-6">
             Entdecke alle Features, bevor du startest – von der KI-Analyse bis zum persönlichen Coach.
           </p>
+          
+          {/* Potential Teaser Stats */}
+          <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+            <div className="glass-card px-5 py-3 rounded-xl">
+              <div className="text-2xl font-black text-primary">+1.4</div>
+              <div className="text-xs text-muted-foreground">Ø Potenzial</div>
+            </div>
+            <div className="glass-card px-5 py-3 rounded-xl">
+              <div className="text-2xl font-black text-foreground">Top 25%</div>
+              <div className="text-xs text-muted-foreground">Erreichbar</div>
+            </div>
+            <div className="glass-card px-5 py-3 rounded-xl">
+              <div className="text-2xl font-black text-primary">8.2</div>
+              <div className="text-xs text-muted-foreground">Max Score</div>
+            </div>
+          </div>
         </motion.div>
 
         {/* Tab Navigation */}
