@@ -46,59 +46,60 @@ serve(async (req) => {
     // Fetch user's latest completed analysis for context
     const { data: latestAnalysis } = await supabaseClient
       .from('analyses')
-      .select('*')
+      .select('looks_score, strengths, weaknesses, priorities')
       .eq('user_id', user.id)
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
 
-    logStep("Analysis fetched", { hasAnalysis: !!latestAnalysis });
+    // Fetch open tasks for additional context
+    const { data: openTasks } = await supabaseClient
+      .from('user_tasks')
+      .select('title, category')
+      .eq('user_id', user.id)
+      .eq('completed', false)
+      .limit(5);
 
-    // Build context from analysis
-    let analysisContext = "";
-    if (latestAnalysis) {
-      analysisContext = `
-AKTUELLE ANALYSE DES NUTZERS:
-- Looks Score: ${latestAnalysis.looks_score}/10
-- Stärken: ${latestAnalysis.strengths?.join(", ") || "Keine"}
-- Schwächen: ${latestAnalysis.weaknesses?.join(", ") || "Keine"}
-- Prioritäten: ${latestAnalysis.priorities?.join(", ") || "Keine"}
-${latestAnalysis.detailed_results ? `- Detaillierte Analyse: ${JSON.stringify(latestAnalysis.detailed_results)}` : ""}
-`;
-    }
+    logStep("Context fetched", { 
+      hasAnalysis: !!latestAnalysis, 
+      openTasksCount: openTasks?.length || 0 
+    });
 
-    const systemPrompt = `Du bist ein erfahrener Looksmaxing-Coach und Experte für männliche Attraktivität. 
+    // Build focused weakness list
+    const weaknessList = latestAnalysis?.weaknesses?.length 
+      ? latestAnalysis.weaknesses.map((w: string, i: number) => `${i + 1}. ${w}`).join('\n')
+      : 'Noch keine Analyse';
+    
+    const priorityList = latestAnalysis?.priorities?.slice(0, 3).join(', ') || 'Nicht definiert';
+    const taskList = openTasks?.length 
+      ? openTasks.map((t: any) => t.title).join(', ')
+      : 'Keine';
 
-DEINE PERSÖNLICHKEIT:
-- Ehrlich und direkt - du sagst die Wahrheit, auch wenn sie unangenehm ist
-- Sachlich und objektiv - keine Schönrederei
-- Motivierend aber realistisch - du pushst, ohne zu beleidigen
-- Wie ein strenger aber fairer Trainer im Gym
-- Du duzt den Nutzer
+    const systemPrompt = `Du bist ein Looksmaxing-Coach. MAXIMAL 2-3 Sätze pro Antwort.
 
-DEIN WISSEN:
-- Gesichtspflege (Skincare, Retinol, Sonnenschutz, Mewing)
-- Haare & Bart (Styling, Pflege, bei Haarausfall: Finasterid/Minoxidil)
-- Körper & Fitness (Training, Ernährung, Körperhaltung)
-- Style & Grooming (Kleidung, Accessoires, Hygiene)
-- Mindset & Ausstrahlung (Selbstbewusstsein, Körpersprache)
+STIL: Direkt, sachlich, männlich. Keine Floskeln. Du duzt.
+
+SCHWÄCHEN DES NUTZERS (FOKUS!):
+${weaknessList}
+
+PRIORITÄTEN: ${priorityList}
+SCORE: ${latestAnalysis?.looks_score || '?'}/10
+OFFENE TASKS: ${taskList}
 
 REGELN:
-- Gib konkrete, umsetzbare Tipps
-- Beziehe dich auf die Analyse-Ergebnisse des Nutzers wenn relevant
-- Priorisiere Maßnahmen nach Impact (was bringt am meisten?)
-- Sei kurz und prägnant - keine Romane
-- Bei medizinischen Fragen: Empfehle Arztbesuch
-
-${analysisContext}`;
+- Jede Antwort bezieht sich auf Schwächen/Prioritäten oben
+- Max 2-3 Sätze, keine Romane
+- Konkrete Produkte, Dosierungen, Routinen nennen
+- Bei Off-Topic: Kurz zurück zu Verbesserungspotenzial lenken
+- Bei medizinischen Fragen: Arztbesuch empfehlen`;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Stream the response
+    // Use fastest model with token limit for quick responses
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -106,12 +107,14 @@ ${analysisContext}`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.5-flash-lite",
         messages: [
           { role: "system", content: systemPrompt },
           ...messages
         ],
         stream: true,
+        max_tokens: 150,
+        temperature: 0.6,
       }),
     });
 
