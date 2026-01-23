@@ -30,6 +30,13 @@ export default function TestimonialsManagement() {
   const { toast } = useToast();
   const [selectedTestimonial, setSelectedTestimonial] = useState<string | null>(null);
   const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
+  const [filter, setFilter] = useState<"all" | "pending" | "approved">("all");
+
+  const filteredTestimonials = testimonials.filter((t) => {
+    if (filter === "pending") return !t.is_approved;
+    if (filter === "approved") return t.is_approved;
+    return true;
+  });
 
   const handleAction = async () => {
     if (!selectedTestimonial || !actionType) return;
@@ -94,6 +101,31 @@ export default function TestimonialsManagement() {
       </header>
 
       <main className="container px-4 py-8">
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={filter === "all" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("all")}
+          >
+            Alle ({testimonials.length})
+          </Button>
+          <Button
+            variant={filter === "pending" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("pending")}
+          >
+            Ausstehend ({testimonials.filter((t) => !t.is_approved).length})
+          </Button>
+          <Button
+            variant={filter === "approved" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("approved")}
+          >
+            Freigegeben ({testimonials.filter((t) => t.is_approved).length})
+          </Button>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="p-4 rounded-2xl glass-card">
@@ -128,9 +160,13 @@ export default function TestimonialsManagement() {
                 <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
-          ) : testimonials.length === 0 ? (
+          ) : filteredTestimonials.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground">
-              Noch keine Bewertungen vorhanden.
+              {filter === "all" 
+                ? "Noch keine Bewertungen vorhanden."
+                : filter === "pending"
+                  ? "Keine ausstehenden Bewertungen."
+                  : "Keine freigegebenen Bewertungen."}
             </div>
           ) : (
             <Table>
@@ -145,7 +181,7 @@ export default function TestimonialsManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {testimonials.map((testimonial) => (
+                {filteredTestimonials.map((testimonial) => (
                   <TableRow key={testimonial.id}>
                     <TableCell>
                       <div>
