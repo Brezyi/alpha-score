@@ -11,7 +11,9 @@ import {
   Star,
   Droplets,
   Scissors,
-  Dumbbell
+  Dumbbell,
+  Flame,
+  Shirt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -291,10 +293,10 @@ const ProgressPreview = () => (
     animate={{ opacity: 1, x: 0 }}
     exit={{ opacity: 0, x: -20 }}
     transition={{ duration: 0.4 }}
-    className="grid md:grid-cols-2 gap-8"
+    className="grid md:grid-cols-3 gap-6"
   >
     {/* Chart */}
-    <div className="glass-card p-6 rounded-2xl">
+    <div className="glass-card p-6 rounded-2xl md:col-span-2">
       <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
         <BarChart3 className="w-5 h-5 text-primary" />
         Score-Entwicklung
@@ -355,32 +357,82 @@ const ProgressPreview = () => (
       </div>
     </div>
 
-    {/* Milestones */}
-    <div className="glass-card p-6 rounded-2xl">
+    {/* Streak & Stats */}
+    <div className="space-y-4">
+      {/* Streak Card */}
+      <div className="glass-card p-5 rounded-2xl">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+            <Flame className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <div className="text-3xl font-black">12</div>
+            <div className="text-xs text-muted-foreground">Tage Streak</div>
+          </div>
+        </div>
+        <div className="flex gap-1">
+          {[...Array(7)].map((_, i) => (
+            <div 
+              key={i} 
+              className={`flex-1 h-2 rounded-full ${i < 5 ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-muted/50'}`} 
+            />
+          ))}
+        </div>
+        <div className="text-xs text-muted-foreground mt-2 text-center">5/7 Tage diese Woche</div>
+      </div>
+
+      {/* Improvement Card */}
+      <div className="glass-card p-5 rounded-2xl">
+        <div className="text-center mb-4">
+          <div className="text-3xl font-black text-primary">+2.2</div>
+          <div className="text-xs text-muted-foreground">Durchschnittliche Verbesserung</div>
+        </div>
+        
+        <div className="space-y-2">
+          {[
+            { icon: Droplets, label: "Skincare Routine", value: "+0.8", color: "text-cyan-500" },
+            { icon: Scissors, label: "Hairstyle Optimierung", value: "+0.6", color: "text-purple-500" },
+            { icon: Dumbbell, label: "Fitness & Body", value: "+0.5", color: "text-orange-500" },
+            { icon: Shirt, label: "Style & Grooming", value: "+0.3", color: "text-pink-500" },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <item.icon className={`w-4 h-4 ${item.color}`} />
+                <span className="text-muted-foreground">{item.label}</span>
+              </div>
+              <span className="font-bold text-primary">{item.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* Milestones - Full Width */}
+    <div className="glass-card p-6 rounded-2xl md:col-span-3">
       <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
         <Star className="w-5 h-5 text-primary" />
         Meilensteine
       </h3>
       
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {[
           { emoji: "🎯", title: "Erste Analyse", unlocked: true },
-          { emoji: "📈", title: "+0.5 Score erreicht", unlocked: true },
+          { emoji: "📈", title: "+0.5 Score", unlocked: true },
           { emoji: "🔥", title: "7-Tage Streak", unlocked: true },
-          { emoji: "⭐", title: "Score 7.0 erreicht", unlocked: false },
-          { emoji: "🏆", title: "Top 10% erreicht", unlocked: false },
+          { emoji: "⭐", title: "Score 7.0", unlocked: false },
+          { emoji: "🏆", title: "Top 10%", unlocked: false },
         ].map((milestone) => (
           <div 
             key={milestone.title}
-            className={`flex items-center gap-3 p-3 rounded-xl ${
+            className={`flex flex-col items-center gap-2 p-4 rounded-xl text-center ${
               milestone.unlocked ? "bg-primary/10" : "bg-muted/30 opacity-60"
             }`}
           >
-            <span className="text-2xl">{milestone.emoji}</span>
-            <span className={`font-medium ${milestone.unlocked ? "" : "text-muted-foreground"}`}>
+            <span className="text-3xl">{milestone.emoji}</span>
+            <span className={`text-xs font-medium ${milestone.unlocked ? "" : "text-muted-foreground"}`}>
               {milestone.title}
             </span>
-            {milestone.unlocked && <CheckCircle2 className="w-5 h-5 text-primary ml-auto" />}
+            {milestone.unlocked && <CheckCircle2 className="w-4 h-4 text-primary" />}
           </div>
         ))}
       </div>
