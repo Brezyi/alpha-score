@@ -3,6 +3,8 @@ import { motion, useInView } from "framer-motion";
 import { Sparkles, ArrowRight, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import beforeImage from "@/assets/transformation-before.jpg";
+import afterImage from "@/assets/transformation-after.jpg";
 
 const BeforeAfter = () => {
   const [sliderPosition, setSliderPosition] = useState(50);
@@ -72,35 +74,33 @@ const BeforeAfter = () => {
             onTouchStart={() => setIsDragging(true)}
           >
             {/* Before Image (Background) */}
-            <div className="absolute inset-0 bg-gradient-to-br from-gray-600 to-gray-800">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-32 h-32 rounded-full bg-gray-500/50 mx-auto mb-4 flex items-center justify-center">
-                    <span className="text-6xl opacity-50">👤</span>
-                  </div>
-                  <span className="text-white/60 text-sm">Vorher</span>
-                  <div className="mt-2 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-sm font-medium">
-                    Score: 5.2
-                  </div>
-                </div>
+            <div className="absolute inset-0">
+              <img 
+                src={beforeImage} 
+                alt="Vorher" 
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+              {/* Score Badge */}
+              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
+                <span className="text-orange-400 text-sm font-bold">Score: 5.2</span>
               </div>
             </div>
 
             {/* After Image (Overlay with clip) */}
             <div
-              className="absolute inset-0 bg-gradient-to-br from-primary/30 via-emerald-600/40 to-cyan-600/30"
+              className="absolute inset-0"
               style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
             >
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-32 h-32 rounded-full bg-primary/30 mx-auto mb-4 flex items-center justify-center border-2 border-primary/50">
-                    <span className="text-6xl">✨</span>
-                  </div>
-                  <span className="text-white/90 text-sm font-medium">Nachher</span>
-                  <div className="mt-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-sm font-bold">
-                    Score: 7.4
-                  </div>
-                </div>
+              <img 
+                src={afterImage} 
+                alt="Nachher" 
+                className="w-full h-full object-cover"
+                draggable={false}
+              />
+              {/* Score Badge */}
+              <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm">
+                <span className="text-primary-foreground text-sm font-bold">Score: 7.4</span>
               </div>
             </div>
 
