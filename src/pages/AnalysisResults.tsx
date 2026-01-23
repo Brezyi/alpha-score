@@ -338,7 +338,7 @@ export default function AnalysisResults() {
               <div className="text-muted-foreground text-sm">/10</div>
             </div>
             <p className="text-muted-foreground mt-4">
-              Top 28% der analysierten Nutzer
+              Dein persönlicher Ausgangswert
             </p>
           </CardContent>
         </Card>
