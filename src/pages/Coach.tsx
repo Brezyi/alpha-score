@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useCoachHistory } from "@/hooks/useCoachHistory";
+import { ConversationSidebar } from "@/components/coach/ConversationSidebar";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -19,7 +21,8 @@ import {
   Lock,
   Square,
   Mic,
-  MicOff
+  MicOff,
+  Plus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +104,17 @@ export default function Coach() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
+  
+  // Chat history
+  const {
+    conversations,
+    currentConversationId,
+    setCurrentConversationId,
+    loadMessages,
+    createConversation,
+    saveMessage,
+    deleteConversation
+  } = useCoachHistory();
 
   // Check if speech recognition is supported
   const isSpeechSupported = typeof window !== 'undefined' && 
@@ -304,18 +318,56 @@ export default function Coach() {
           setSuggestions(personalSuggestions);
         }
         
-        // Set personalized greeting
-        const topWeakness = analysis.weaknesses?.[0];
-        const greeting = topWeakness 
-          ? `Score: ${analysis.looks_score}/10. Dein größtes Potenzial: **${topWeakness}**. Was willst du wissen?`
-          : `Score: ${analysis.looks_score}/10. Frag mich, was du verbessern kannst.`;
-        
-        setMessages([{ role: "assistant", content: greeting }]);
+        // Only set greeting if no conversation is loaded
+        if (!currentConversationId) {
+          const topWeakness = analysis.weaknesses?.[0];
+          const greeting = topWeakness 
+            ? `Score: ${analysis.looks_score}/10. Dein größtes Potenzial: **${topWeakness}**. Was willst du wissen?`
+            : `Score: ${analysis.looks_score}/10. Frag mich, was du verbessern kannst.`;
+          
+          setMessages([{ role: "assistant", content: greeting }]);
+        }
       }
     };
     
     loadAnalysisAndGreet();
-  }, [user, isPremium]);
+  }, [user, isPremium, currentConversationId]);
+
+  // Load conversation when selected
+  useEffect(() => {
+    if (currentConversationId) {
+      loadMessages(currentConversationId).then((msgs) => {
+        setMessages(msgs);
+      });
+    }
+  }, [currentConversationId, loadMessages]);
+
+  // Handle new conversation
+  const handleNewConversation = useCallback(async () => {
+    setCurrentConversationId(null);
+    
+    // Reset to greeting
+    if (userAnalysis) {
+      const topWeakness = userAnalysis.weaknesses?.[0];
+      const greeting = topWeakness 
+        ? `Score: ${userAnalysis.looks_score}/10. Dein größtes Potenzial: **${topWeakness}**. Was willst du wissen?`
+        : `Score: ${userAnalysis.looks_score}/10. Frag mich, was du verbessern kannst.`;
+      setMessages([{ role: "assistant", content: greeting }]);
+    } else {
+      setMessages([]);
+    }
+  }, [setCurrentConversationId, userAnalysis]);
+
+  // Handle conversation selection
+  const handleSelectConversation = useCallback(async (id: string) => {
+    setCurrentConversationId(id);
+  }, [setCurrentConversationId]);
+
+  // Handle conversation deletion
+  const handleDeleteConversation = useCallback(async (id: string) => {
+    await deleteConversation(id);
+    toast({ title: "Gespräch gelöscht" });
+  }, [deleteConversation, toast]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -341,6 +393,20 @@ export default function Coach() {
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
+
+    // Create or get conversation ID
+    let convId = currentConversationId;
+    if (!convId) {
+      convId = await createConversation();
+      if (convId) {
+        setCurrentConversationId(convId);
+      }
+    }
+
+    // Save user message
+    if (convId) {
+      await saveMessage(convId, "user", userMessage);
+    }
 
     // Create abort controller for this request
     abortControllerRef.current = new AbortController();
@@ -434,7 +500,7 @@ export default function Coach() {
         }
       }
 
-      // Ensure streaming is marked as complete
+      // Ensure streaming is marked as complete and save assistant message
       setMessages(prev => {
         const updated = [...prev];
         if (updated.length > 0 && updated[updated.length - 1].role === "assistant") {
@@ -443,9 +509,17 @@ export default function Coach() {
         return updated;
       });
 
+      // Save assistant message after streaming complete
+      if (convId && assistantContent) {
+        await saveMessage(convId, "assistant", assistantContent);
+      }
+
     } catch (error: any) {
       if (error.name === "AbortError") {
-        // User cancelled, don't show error
+        // User cancelled, still save partial response if any
+        if (convId && assistantContent) {
+          await saveMessage(convId, "assistant", assistantContent);
+        }
         return;
       }
       console.error("Chat error:", error);
@@ -460,7 +534,7 @@ export default function Coach() {
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages, toast]);
+  }, [messages, toast, currentConversationId, createConversation, setCurrentConversationId, saveMessage]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -536,18 +610,36 @@ export default function Coach() {
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <button 
-            onClick={() => navigate("/dashboard")}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span>Zurück</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="hidden sm:inline">Zurück</span>
+            </button>
+          </div>
           <h1 className="text-lg font-bold flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
             AI Coach
           </h1>
-          <div className="w-20" />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNewConversation}
+              title="Neues Gespräch"
+            >
+              <Plus className="w-5 h-5" />
+            </Button>
+            <ConversationSidebar
+              conversations={conversations}
+              currentConversationId={currentConversationId}
+              onSelectConversation={handleSelectConversation}
+              onNewConversation={handleNewConversation}
+              onDeleteConversation={handleDeleteConversation}
+            />
+          </div>
         </div>
       </header>
 
