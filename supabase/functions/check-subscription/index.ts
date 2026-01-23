@@ -75,6 +75,31 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
+    // First check for admin-granted subscriptions in the database
+    const { data: dbSubscription } = await supabaseClient
+      .from('subscriptions')
+      .select('status, plan_type, current_period_end')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    if (dbSubscription && dbSubscription.plan_type) {
+      logStep("Found admin-granted subscription", { 
+        planType: dbSubscription.plan_type,
+        endDate: dbSubscription.current_period_end 
+      });
+      
+      return new Response(JSON.stringify({
+        subscribed: true,
+        is_premium: true,
+        subscription_type: dbSubscription.plan_type,
+        subscription_end: dbSubscription.current_period_end
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
 
