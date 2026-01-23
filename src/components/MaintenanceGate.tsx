@@ -62,10 +62,10 @@ export const MaintenanceGate: React.FC<MaintenanceGateProps> = ({ children }) =>
     );
   }
 
-  // If maintenance mode is active and user is NOT owner, show maintenance page
+  // If maintenance mode is active and user is NOT owner (including not logged in), show maintenance page
   if (settings.maintenance_mode && !isOwner) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6 dark"  data-theme="dark">
         <div className="max-w-md w-full text-center space-y-6">
           <div className="relative mx-auto w-24 h-24">
             <div className="absolute inset-0 bg-primary/20 rounded-full animate-pulse" />
