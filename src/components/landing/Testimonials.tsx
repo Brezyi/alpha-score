@@ -49,11 +49,12 @@ const Testimonials = () => {
         {!loading && testimonials.length > 0 && (
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {testimonials.map((testimonial) => {
+              // Calculate score improvement if both values exist and there's an actual improvement
+              const hasScoreData = testimonial.score_after != null;
               const scoreDiff = testimonial.score_before && testimonial.score_after
                 ? testimonial.score_after - testimonial.score_before
                 : null;
-              // Only show score improvement if it's actually positive
-              const scoreImprovement = scoreDiff && scoreDiff > 0 ? scoreDiff.toFixed(1) : null;
+              const hasPositiveImprovement = scoreDiff && scoreDiff > 0;
 
               return (
                 <div
@@ -91,12 +92,23 @@ const Testimonials = () => {
                         )}
                       </div>
                     </div>
-                    {scoreImprovement && (
+                    {hasScoreData && (
                       <div className="text-right">
-                        <div className="text-xl font-bold text-gradient">
-                          +{scoreImprovement}
-                        </div>
-                        <div className="text-xs text-muted-foreground">Score</div>
+                        {hasPositiveImprovement ? (
+                          <>
+                            <div className="text-xl font-bold text-gradient">
+                              +{scoreDiff.toFixed(1)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Score</div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="text-xl font-bold text-gradient">
+                              {testimonial.score_after!.toFixed(1)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">Score</div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
