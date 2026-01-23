@@ -1,14 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, ArrowLeft, Mail, Lock, Loader2 } from "lucide-react";
+import { Zap, ArrowLeft, Mail, Lock, Loader2, AlertTriangle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { MFAVerification } from "@/components/MFAVerification";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -25,6 +26,9 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showMFADialog, setShowMFADialog] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const [failedAttempts, setFailedAttempts] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
@@ -36,6 +40,42 @@ const Login = () => {
       navigate("/dashboard");
     }
   }, [user, authLoading, navigate]);
+
+  // Countdown timer for lockout
+  useEffect(() => {
+    if (lockoutSeconds > 0) {
+      const timer = setInterval(() => {
+        setLockoutSeconds((prev) => {
+          if (prev <= 1) {
+            setIsLocked(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [lockoutSeconds]);
+
+  // Check lockout status when email changes
+  const checkLockout = useCallback(async (emailToCheck: string) => {
+    if (!emailToCheck) return;
+    
+    try {
+      const { data, error } = await supabase.rpc('check_account_lockout', {
+        _email: emailToCheck
+      });
+      
+      if (!error && data && data.length > 0) {
+        const lockoutData = data[0];
+        setIsLocked(lockoutData.is_locked);
+        setLockoutSeconds(lockoutData.remaining_seconds);
+        setFailedAttempts(lockoutData.failed_attempts);
+      }
+    } catch (err) {
+      console.error('Error checking lockout:', err);
+    }
+  }, []);
 
   // Check MFA requirement after login
   const checkMFARequired = async () => {
@@ -49,8 +89,47 @@ const Login = () => {
     return false;
   };
 
+  // Clear failed attempts on successful login
+  const clearFailedAttempts = async (userEmail: string) => {
+    try {
+      await supabase.rpc('clear_failed_logins', { _email: userEmail });
+    } catch (err) {
+      console.error('Error clearing failed logins:', err);
+    }
+  };
+
+  // Record failed login attempt
+  const recordFailedAttempt = async (userEmail: string) => {
+    try {
+      const { data, error } = await supabase.rpc('record_failed_login', {
+        _email: userEmail,
+        _ip_address: null
+      });
+      
+      if (!error && data && data.length > 0) {
+        const result = data[0];
+        setIsLocked(result.is_locked);
+        setLockoutSeconds(result.remaining_seconds);
+        setFailedAttempts(result.failed_attempts);
+      }
+    } catch (err) {
+      console.error('Error recording failed login:', err);
+    }
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Check if account is locked
+    if (isLocked) {
+      toast({
+        title: "Konto gesperrt",
+        description: `Zu viele Fehlversuche. Bitte warte ${formatTime(lockoutSeconds)}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -59,7 +138,14 @@ const Login = () => {
         password,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Record the failed attempt
+        await recordFailedAttempt(email);
+        throw error;
+      }
+
+      // Clear failed attempts on success
+      await clearFailedAttempts(email);
 
       // Check if MFA is required
       const mfaRequired = await checkMFARequired();
@@ -72,14 +158,24 @@ const Login = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
+      const message = isLocked 
+        ? `Konto für ${formatTime(lockoutSeconds)} gesperrt.`
+        : error.message || "Bitte überprüfe deine Eingaben.";
+      
       toast({
         title: "Anmeldung fehlgeschlagen",
-        description: error.message || "Bitte überprüfe deine Eingaben.",
+        description: message,
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   const handleGoogleLogin = async () => {
@@ -133,6 +229,27 @@ const Login = () => {
             </p>
           </div>
 
+          {/* Lockout Warning */}
+          {isLocked && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                Dein Konto ist vorübergehend gesperrt. Bitte warte{" "}
+                <span className="font-bold">{formatTime(lockoutSeconds)}</span> bevor du es erneut versuchst.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Failed Attempts Warning */}
+          {!isLocked && failedAttempts > 0 && failedAttempts < 5 && (
+            <Alert variant="default" className="mb-6 border-yellow-500/50 bg-yellow-500/10">
+              <AlertTriangle className="h-4 w-4 text-yellow-500" />
+              <AlertDescription className="text-yellow-500">
+                {5 - failedAttempts} Versuche verbleibend bevor dein Konto gesperrt wird.
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
@@ -145,7 +262,9 @@ const Login = () => {
                   placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  onBlur={() => checkLockout(email)}
                   className="pl-10 h-12 bg-card border-border"
+                  disabled={isLocked}
                   required
                 />
               </div>
@@ -167,6 +286,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 h-12 bg-card border-border"
+                  disabled={isLocked}
                   required
                 />
               </div>
@@ -177,7 +297,7 @@ const Login = () => {
               variant="hero" 
               size="lg" 
               className="w-full"
-              disabled={loading || googleLoading}
+              disabled={loading || googleLoading || isLocked}
             >
               {loading ? (
                 <>
