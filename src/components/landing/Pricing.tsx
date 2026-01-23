@@ -49,7 +49,7 @@ const plans = [
   },
   {
     name: "Lifetime",
-    price: "50€",
+    price: "49,99€",
     period: "einmalig",
     description: "Einmal zahlen, für immer nutzen.",
     features: [
