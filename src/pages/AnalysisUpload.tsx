@@ -1,11 +1,12 @@
 import { useState, useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useStreak } from "@/hooks/useStreak";
+import { useSubscription } from "@/hooks/useSubscription";
 import { 
   Upload, 
   X, 
@@ -15,7 +16,9 @@ import {
   Sparkles,
   Image as ImageIcon,
   Check,
-  HelpCircle
+  HelpCircle,
+  Crown,
+  Lock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PhotoGuidelinesModal } from "@/components/PhotoGuidelinesModal";
@@ -32,15 +35,19 @@ const photoTypes = [
   { id: "body" as const, label: "Körper", icon: User, description: "Ganzkörper (optional)" },
 ];
 
+const FREE_ANALYSIS_LIMIT = 1;
+
 export default function AnalysisUpload() {
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [activeType, setActiveType] = useState<"front" | "side" | "body">("front");
+  const [completedAnalysesCount, setCompletedAnalysesCount] = useState<number | null>(null);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { recordActivity } = useStreak();
+  const { isPremium, loading: subscriptionLoading } = useSubscription();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -48,6 +55,27 @@ export default function AnalysisUpload() {
       navigate("/login");
     }
   }, [user, loading, navigate]);
+
+  // Check how many completed analyses user has
+  useEffect(() => {
+    const fetchAnalysesCount = async () => {
+      if (!user) return;
+      
+      const { count, error } = await supabase
+        .from("analyses")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("status", "completed");
+      
+      if (!error) {
+        setCompletedAnalysesCount(count ?? 0);
+      }
+    };
+    
+    fetchAnalysesCount();
+  }, [user]);
+
+  const hasReachedFreeLimit = !isPremium && completedAnalysesCount !== null && completedAnalysesCount >= FREE_ANALYSIS_LIMIT;
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -197,6 +225,81 @@ export default function AnalysisUpload() {
     return photos.find(p => p.type === type);
   };
 
+  // Show loading while checking subscription and analysis count
+  if (subscriptionLoading || completedAnalysesCount === null) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Wird geladen...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show upgrade screen if free user has reached limit
+  if (hasReachedFreeLimit) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Zurück</span>
+            </button>
+            <h1 className="text-lg font-bold">KI-Analyse</h1>
+            <div className="w-5" />
+          </div>
+        </header>
+        
+        <main className="container mx-auto px-4 py-16 max-w-md text-center">
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <Lock className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">Kostenlose Analyse genutzt</h2>
+          <p className="text-muted-foreground mb-8">
+            Du hast deine kostenlose Analyse bereits verwendet. Werde Premium für unbegrenzte Analysen mit detaillierten Ergebnissen.
+          </p>
+          
+          <Card className="bg-gradient-to-br from-primary/20 via-primary/10 to-card border-primary/30 mb-6">
+            <CardContent className="p-6">
+              <Crown className="w-10 h-10 text-primary mx-auto mb-4" />
+              <h3 className="font-bold text-lg mb-2">Premium Features</h3>
+              <ul className="text-sm text-muted-foreground space-y-2 text-left">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-primary" />
+                  Unbegrenzte Foto-Analysen
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-primary" />
+                  Detaillierter Looks Score
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-primary" />
+                  Personalisierter Looksmax-Plan
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-primary" />
+                  AI Coach 24/7
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Link to="/pricing">
+            <Button variant="hero" size="lg" className="w-full">
+              <Crown className="w-5 h-5" />
+              Premium werden
+            </Button>
+          </Link>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -219,6 +322,19 @@ export default function AnalysisUpload() {
           />
         </div>
       </header>
+
+      {/* Free user info banner */}
+      {!isPremium && (
+        <div className="container mx-auto px-4 pt-4 max-w-2xl">
+          <div className="p-3 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-primary flex-shrink-0" />
+            <p className="text-sm">
+              <span className="font-medium">Kostenlose Analyse:</span>{" "}
+              Du erhältst deinen Looks Score (ohne Details).
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Progress indicator */}
