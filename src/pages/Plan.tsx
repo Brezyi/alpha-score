@@ -575,11 +575,28 @@ const Plan = () => {
           </motion.div>
         )}
 
-        {/* Category Cards Grid - Showcase Style */}
+        {/* Category Cards Grid - Showcase Style with Tasks */}
         {tasks.length > 0 && (
           <>
+            {/* Header */}
             <motion.div 
-              className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"
+              className="flex items-center gap-3 mb-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Check className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold">Dein persönlicher Plan</h3>
+                <p className="text-sm text-muted-foreground">Basierend auf deiner Analyse</p>
+              </div>
+            </motion.div>
+
+            {/* Category Cards - Showcase Style 3-Column */}
+            <motion.div 
+              className="grid md:grid-cols-3 gap-4 mb-6"
               variants={containerVariants}
               initial="hidden"
               animate="visible"
@@ -590,34 +607,55 @@ const Plan = () => {
                 
                 const catCompleted = catTasks.filter(t => t.completed).length;
                 const catProgress = (catCompleted / catTasks.length) * 100;
-                const isActive = activeCategory === cat.id;
                 
                 return (
-                  <motion.button
+                  <motion.div
                     key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className={cn(
-                      "p-4 rounded-xl text-left transition-all border",
-                      isActive 
-                        ? `${cat.color} ${cat.borderColor} border-2 shadow-lg` 
-                        : "bg-muted/30 border-border/50 hover:border-primary/30"
-                    )}
+                    className="p-4 rounded-xl bg-muted/30 border border-border/50"
                     variants={itemVariants}
                     whileHover={hoverScaleSmall}
-                    whileTap={tapScale}
                   >
+                    {/* Category Header */}
                     <div className="flex items-center gap-2 mb-3">
-                      <div className={cn(
-                        "w-8 h-8 rounded-lg flex items-center justify-center",
-                        isActive ? cat.color : "bg-muted"
-                      )}>
+                      <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", cat.color)}>
                         <cat.icon className="w-4 h-4" />
                       </div>
-                      <span className="font-semibold text-sm">{cat.name}</span>
+                      <span className="font-semibold">{cat.name}</span>
+                    </div>
+                    
+                    {/* Tasks List - Showcase Style */}
+                    <div className="space-y-2 mb-4">
+                      {catTasks.slice(0, 3).map((task, i) => (
+                        <div 
+                          key={task.id} 
+                          className="flex items-center gap-2 text-sm cursor-pointer"
+                          onClick={() => toggleTask(task.id, task.completed)}
+                        >
+                          <div className={cn(
+                            "w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0",
+                            task.completed 
+                              ? "bg-primary border-primary" 
+                              : "border-muted-foreground/30"
+                          )}>
+                            {task.completed && <Check className="w-3 h-3 text-primary-foreground" />}
+                          </div>
+                          <span className={task.completed ? "line-through text-muted-foreground" : ""}>
+                            {task.title}
+                          </span>
+                        </div>
+                      ))}
+                      {catTasks.length > 3 && (
+                        <button
+                          onClick={() => setActiveCategory(cat.id)}
+                          className="text-xs text-primary hover:underline pl-6"
+                        >
+                          +{catTasks.length - 3} weitere
+                        </button>
+                      )}
                     </div>
                     
                     {/* Progress Bar */}
-                    <div className="h-2 rounded-full bg-muted/50 overflow-hidden mb-2">
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
                       <motion.div 
                         className="h-full rounded-full bg-primary"
                         initial={{ width: 0 }}
@@ -625,116 +663,83 @@ const Plan = () => {
                         transition={{ duration: 0.5, delay: index * 0.1 }}
                       />
                     </div>
-                    <div className="text-xs text-muted-foreground text-right">{Math.round(catProgress)}%</div>
-                  </motion.button>
+                    <div className="text-xs text-muted-foreground mt-1 text-right">{Math.round(catProgress)}%</div>
+                  </motion.div>
                 );
               })}
             </motion.div>
 
-            {/* Category Progress */}
-            <motion.div 
-              className="mb-6"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.6 }}
+            {/* Active Category Detail View */}
+            <motion.div
               key={activeCategory}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="glass-card p-6 rounded-2xl mb-6"
             >
-              <div className="flex items-center justify-between mb-2">
-                <motion.span 
-                  className="text-sm text-muted-foreground"
-                  initial={{ x: -10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                >
-                  {CATEGORIES.find(c => c.id === activeCategory)?.name}
-                </motion.span>
-                <motion.span 
-                  className="text-sm font-medium"
-                  initial={{ x: 10, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                >
-                  {completedCount}/{totalCount}
-                </motion.span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  {(() => {
+                    const cat = CATEGORIES.find(c => c.id === activeCategory);
+                    if (!cat) return null;
+                    return (
+                      <>
+                        <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", cat.color)}>
+                          <cat.icon className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold">{cat.name}</h4>
+                          <p className="text-sm text-muted-foreground">{completedCount} von {totalCount} erledigt</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                <div className="text-2xl font-bold text-primary">{Math.round(progress)}%</div>
               </div>
-              <motion.div
-                initial={{ scaleX: 0 }}
-                animate={{ scaleX: 1 }}
-                transition={{ duration: 0.5 }}
-                style={{ originX: 0 }}
-              >
-                <Progress value={progress} className="h-2" />
-              </motion.div>
-            </motion.div>
 
-            {/* Tasks List */}
-            <motion.div 
-              className="space-y-3 mb-8"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              key={activeCategory}
-            >
-              <AnimatePresence mode="popLayout">
-                {categoryTasks.length === 0 ? (
-                  <motion.p 
-                    className="text-center text-muted-foreground py-8"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    Keine Aufgaben in dieser Kategorie.
-                  </motion.p>
-                ) : (
-                  categoryTasks.map((task) => (
+              {/* Full Task List */}
+              <div className="space-y-2">
+                <AnimatePresence mode="popLayout">
+                  {categoryTasks.map((task) => (
                     <motion.div
                       key={task.id}
                       layout={!shouldReduce}
-                      variants={itemVariants}
-                      initial="hidden"
-                      animate="visible"
-                      exit={shouldReduce ? { opacity: 0 } : { opacity: 0, x: -100, scale: 0.8 }}
-                      whileHover={hoverScaleSmall}
-                      whileTap={tapScale}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -100 }}
                       onClick={() => toggleTask(task.id, task.completed)}
                       className={cn(
-                        "flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all",
+                        "flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all",
                         task.completed 
-                          ? "bg-muted/30 opacity-60" 
-                          : "glass-card hover:border-primary/50"
+                          ? "bg-muted/20 opacity-60" 
+                          : "bg-muted/30 hover:bg-muted/50"
                       )}
                     >
-                      <div 
-                        className={cn(
-                          "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
-                          task.completed 
-                            ? "bg-primary border-primary" 
-                            : "border-muted-foreground/50 hover:border-primary"
-                        )}
-                      >
-                        {task.completed && (
-                          <Check className="w-4 h-4 text-primary-foreground" />
-                        )}
+                      <div className={cn(
+                        "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5",
+                        task.completed 
+                          ? "bg-primary border-primary" 
+                          : "border-muted-foreground/50 hover:border-primary"
+                      )}>
+                        {task.completed && <Check className="w-3 h-3 text-primary-foreground" />}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <p className={cn("font-medium", task.completed && "line-through opacity-60")}>
-                            {task.title}
-                          </p>
-                          {task.priority === 1 && (
-                            <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs font-medium">
-                              Priorität
-                            </span>
-                          )}
-                        </div>
+                      <div className="flex-1">
+                        <p className={cn("font-medium text-sm", task.completed && "line-through")}>
+                          {task.title}
+                        </p>
                         {task.description && (
-                          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">
-                            {task.description}
-                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">{task.description}</p>
                         )}
                       </div>
+                      {task.priority === 1 && !task.completed && (
+                        <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs">
+                          Priorität
+                        </span>
+                      )}
                     </motion.div>
-                  ))
-                )}
-              </AnimatePresence>
+                  ))}
+                </AnimatePresence>
+              </div>
             </motion.div>
 
             {/* Regenerate Button */}
