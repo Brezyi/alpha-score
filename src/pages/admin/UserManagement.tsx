@@ -230,7 +230,7 @@ export default function UserManagement() {
           plan_type: subType,
           status: 'active',
           stripe_customer_id: `admin_granted_${userId}`,
-          amount: subType === 'lifetime' ? 5000 : 999,
+          amount: subType === 'lifetime' ? 4999 : 999,
           currency: 'eur',
           current_period_start: now.toISOString(),
           current_period_end: periodEnd.toISOString(),

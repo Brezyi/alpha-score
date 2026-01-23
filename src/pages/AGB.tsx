@@ -145,7 +145,7 @@ export default function AGB() {
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4 mt-2">
               <li><strong className="text-foreground">Premium-Abonnement:</strong> 9,99 € pro Monat, automatisch verlängernd</li>
-              <li><strong className="text-foreground">Lifetime-Zugang:</strong> 50,00 € einmalig, unbegrenzte Nutzungsdauer</li>
+              <li><strong className="text-foreground">Lifetime-Zugang:</strong> 49,99 € einmalig, unbegrenzte Nutzungsdauer</li>
             </ul>
             <p className="text-muted-foreground leading-relaxed mt-4">
               (3) Die Zahlung erfolgt über den externen Zahlungsdienstleister Stripe Payments Europe Ltd. ("Stripe"). Mit der Nutzung von Stripe akzeptiert der Nutzer zusätzlich die Nutzungsbedingungen und Datenschutzrichtlinien von Stripe.
