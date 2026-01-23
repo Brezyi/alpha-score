@@ -21,7 +21,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -93,30 +93,34 @@ const quickActions = [
   },
 ];
 
-// Animated number component
-const AnimatedNumber = ({ value, duration = 1000, decimals = 1 }: { value: number; duration?: number; decimals?: number }) => {
+// Animated number component using CSS counter animation
+const AnimatedNumber = ({ value, duration = 1.2, decimals = 1 }: { value: number; duration?: number; decimals?: number }) => {
   const [displayValue, setDisplayValue] = useState(0);
+  const hasAnimatedRef = useRef(false);
   
   useEffect(() => {
-    const startTime = Date.now();
-    const startValue = 0;
+    if (hasAnimatedRef.current) return;
+    hasAnimatedRef.current = true;
     
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Easing function (ease-out-cubic)
+    // Simple stepped animation with fewer updates
+    const steps = 20;
+    const stepDuration = (duration * 1000) / steps;
+    let currentStep = 0;
+    
+    const interval = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps;
+      // Ease-out cubic
       const eased = 1 - Math.pow(1 - progress, 3);
-      const currentValue = startValue + eased * (value - startValue);
+      setDisplayValue(eased * value);
       
-      setDisplayValue(currentValue);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
+      if (currentStep >= steps) {
+        clearInterval(interval);
+        setDisplayValue(value);
       }
-    };
-
-    requestAnimationFrame(animate);
+    }, stepDuration);
+    
+    return () => clearInterval(interval);
   }, [value, duration]);
 
   return <>{displayValue.toFixed(decimals)}</>;
