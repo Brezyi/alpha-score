@@ -370,7 +370,7 @@ const Plan = () => {
             </div>
             <Progress value={overallProgress} className="h-3" />
             <p className="text-sm text-muted-foreground mt-2">
-              {overallProgress >= 100 ? "🎉 Alles erledigt! Du bist auf dem besten Weg." :
+              {overallProgress >= 100 ? "🎉 Alles erledigt! Großartige Arbeit." :
                overallProgress >= 75 ? "💪 Fast geschafft! Bleib dran." :
                overallProgress >= 50 ? "👍 Gute Fortschritte! Weiter so." :
                overallProgress >= 25 ? "🚀 Guter Start! Jeden Tag ein bisschen besser." :
