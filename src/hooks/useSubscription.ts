@@ -6,6 +6,7 @@ export interface SubscriptionState {
   isPremium: boolean;
   subscriptionType: "premium" | "lifetime" | "owner" | null;
   subscriptionEnd: string | null;
+  isAdminGranted: boolean; // True if subscription was granted by admin (not via Stripe)
   loading: boolean;
   error: string | null;
 }
@@ -35,6 +36,7 @@ export function useSubscription() {
     isPremium: false,
     subscriptionType: null,
     subscriptionEnd: null,
+    isAdminGranted: false,
     loading: true,
     error: null,
   });
@@ -48,6 +50,7 @@ export function useSubscription() {
           isPremium: false,
           subscriptionType: null,
           subscriptionEnd: null,
+          isAdminGranted: false,
           loading: false,
           error: null,
         });
@@ -64,6 +67,7 @@ export function useSubscription() {
           isPremium: true,
           subscriptionType: "owner",
           subscriptionEnd: null, // Never expires
+          isAdminGranted: false,
           loading: false,
           error: null,
         });
@@ -82,6 +86,7 @@ export function useSubscription() {
         isPremium: data.is_premium || false,
         subscriptionType: data.subscription_type || null,
         subscriptionEnd: data.subscription_end || null,
+        isAdminGranted: data.is_admin_granted || false,
         loading: false,
         error: null,
       });

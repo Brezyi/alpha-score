@@ -78,12 +78,15 @@ serve(async (req) => {
     // First check for admin-granted subscriptions in the database
     const { data: dbSubscription } = await supabaseClient
       .from('subscriptions')
-      .select('status, plan_type, current_period_end')
+      .select('status, plan_type, current_period_end, stripe_customer_id')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .maybeSingle();
 
-    if (dbSubscription && dbSubscription.plan_type) {
+    // Check if this is an admin-granted subscription (stripe_customer_id starts with 'admin_granted_')
+    const isAdminGranted = dbSubscription?.stripe_customer_id?.startsWith('admin_granted_') || false;
+
+    if (dbSubscription && dbSubscription.plan_type && isAdminGranted) {
       logStep("Found admin-granted subscription", { 
         planType: dbSubscription.plan_type,
         endDate: dbSubscription.current_period_end 
@@ -93,7 +96,8 @@ serve(async (req) => {
         subscribed: true,
         is_premium: true,
         subscription_type: dbSubscription.plan_type,
-        subscription_end: dbSubscription.current_period_end
+        subscription_end: dbSubscription.current_period_end,
+        is_admin_granted: true
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 200,

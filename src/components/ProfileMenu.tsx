@@ -96,7 +96,7 @@ export function ProfileMenu() {
   const { profile, updateProfile, uploadAvatar } = useProfile();
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
-  const { isPremium, subscriptionType, subscriptionEnd, openCustomerPortal, createCheckout } = useSubscription();
+  const { isPremium, subscriptionType, subscriptionEnd, isAdminGranted, openCustomerPortal, createCheckout } = useSubscription();
   const expirationInfo = getExpirationWarning(subscriptionEnd);
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -408,7 +408,7 @@ export function ProfileMenu() {
             </Button>
 
             {/* Subscription Management - only show for premium users */}
-            {isPremium && subscriptionType === "premium" && (
+            {isPremium && subscriptionType === "premium" && !isAdminGranted && (
               <Button
                 variant="outline"
                 size="sm"
