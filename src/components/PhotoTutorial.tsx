@@ -177,17 +177,24 @@ export function PhotoTutorial({ onComplete, className }: PhotoTutorialProps) {
         {/* Content */}
         <div className="p-4">
           <div className="flex gap-4">
-            {/* Image */}
+            {/* Image - preload all images and use opacity for smooth transitions */}
             <div className="relative flex-shrink-0">
               <div className={cn(
-                "w-24 h-32 rounded-lg overflow-hidden border-2",
+                "w-24 h-32 rounded-lg overflow-hidden border-2 relative",
                 step.isGood ? "border-primary" : "border-destructive"
               )}>
-                <img 
-                  src={step.image} 
-                  alt={step.title}
-                  className="w-full h-full object-cover"
-                />
+                {/* Preload all images, show only current */}
+                {tutorialSteps.map((s, idx) => (
+                  <img 
+                    key={s.id}
+                    src={s.image} 
+                    alt={s.title}
+                    className={cn(
+                      "absolute inset-0 w-full h-full object-cover transition-opacity duration-300",
+                      idx === currentStep ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                ))}
               </div>
               <div className={cn(
                 "absolute -bottom-2 -right-2 w-6 h-6 rounded-full flex items-center justify-center",
