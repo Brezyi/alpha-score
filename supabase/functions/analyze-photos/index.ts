@@ -401,16 +401,45 @@ Wichtig: Sei streng bei der Bewertung. Das Foto muss für eine professionelle Ge
 
     // ====== STEP 2: Main AI Analysis (Critical & Detailed) ======
     
-    // Build gender-specific context
+    // Build gender-specific context with detailed criteria
     const genderContext = userGender === 'male' 
-      ? 'MÄNNLICH - Fokus auf maskuline Merkmale: starke Jawline, kantiges Gesicht, hohe Wangenknochen, maskuline Augenbrauenwölbung'
+      ? `MÄNNLICH - Bewertungsfokus:
+   • Jawline: Stark definiert, kantiger Unterkiefer, ausgeprägte Masseter
+   • Gesichtsform: Markant, hohe Wangenknochen, prominente Stirn
+   • Augenbrauen: Gerade/leicht gewölbt, dicht, tief sitzend
+   • Hals: Breiter Nacken, sichtbarer Adamsapfel
+   • Ausstrahlung: Dominanz, Selbstsicherheit, maskuline Präsenz`
       : userGender === 'female'
-      ? 'WEIBLICH - Fokus auf feminine Merkmale: harmonische Proportionen, weiche Gesichtszüge, volle Lippen, symmetrische Features'
-      : 'GESCHLECHT UNBEKANNT - allgemeine Kriterien anwenden';
+      ? `WEIBLICH - Bewertungsfokus:
+   • Gesichtsform: Herzförmig/oval, weiche Konturen, zierliches Kinn
+   • Lippen: Voll, definierter Amorbogen, harmonische Proportionen
+   • Augen: Groß, positiver Kanthalwinkel, volle Wimpern
+   • Haut: Gleichmäßiger Teint, natürliches Glow
+   • Ausstrahlung: Feminine Harmonie, Symmetrie, Eleganz`
+      : 'GESCHLECHT UNBEKANNT - allgemeine Attraktivitätskriterien anwenden';
 
-    // Build ethnicity-aware context
+    // Build ethnicity-aware context with region-specific beauty standards
+    const ethnicityMap: Record<string, string> = {
+      'Westeuropa': 'Europäische Standards: Definierte Gesichtszüge, hohe Nasenbrücke, ausgeprägte Jawline. Bewerte nach zentraleuropäischen Normen.',
+      'Osteuropa': 'Osteuropäische Standards: Slawische Merkmale wie hohe Wangenknochen, markante Kieferpartie. Helle Haut/Augen positiv.',
+      'Nordeuropa': 'Skandinavische Standards: Markante aber harmonische Züge, heller Hauttyp, definierte Strukturen.',
+      'Südeuropa': 'Mediterrane Standards: Olivfarbene Haut, dunkle Features, markante Nase und Augenbrauen sind typisch und positiv.',
+      'Naher Osten': 'Nahöstliche Standards: Starke Augenbrauen, markante Nase, dunkle Augen. Bewerte im Kontext arabischer/persischer Schönheitsideale.',
+      'Südasien': 'Südasiatische Standards: Dunkler Teint, volle Lippen, große Augen. Bewerte nach indisch/pakistanischen Normen.',
+      'Südostasien': 'Südostasiatische Standards: Harmonische Gesichtszüge, mandelförmige Augen, flachere Nasenbrücke ist normal. K-Beauty Einflüsse berücksichtigen.',
+      'Ostasien': 'Ostasiatische Standards: V-förmiges Gesicht, helle Haut, subtile Features. Bewerte nach koreanischen/japanischen/chinesischen Idealen.',
+      'Zentralasien': 'Zentralasiatische Standards: Mix aus europäischen und asiatischen Merkmalen, breite Wangenknochen, mandelförmige Augen.',
+      'Nordafrika': 'Nordafrikanische Standards: Mediterraner/arabischer Mix, definierte Züge, olivfarbener bis hellbrauner Teint.',
+      'Subsahara-Afrika': 'Afrikanische Standards: Vollere Lippen, breitere Nase sind ethnisch normal - NICHT als Schwäche werten. Fokus auf Hautgesundheit und Symmetrie.',
+      'Nordamerika': 'Nordamerikanische Standards: Diverse ethnische Hintergründe - frage nach spezifischerer Herkunft für präzisere Bewertung.',
+      'Lateinamerika': 'Lateinamerikanische Standards: Mix aus indigenen/europäischen/afrikanischen Merkmalen. Warme Hauttöne, expressive Features.',
+      'Ozeanien': 'Ozeanische Standards: Kräftige Gesichtszüge, vollere Lippen, breitere Nase sind ethnisch typisch und positiv zu werten.'
+    };
+
     const ethnicityContext = userCountry 
-      ? `HERKUNFT/ETHNIE: ${userCountry} - Berücksichtige ethnische Normen und Standards. Bewerte nicht nach westlichen/europäischen Standards, sondern kontextbezogen.`
+      ? `HERKUNFT: ${userCountry}
+${ethnicityMap[userCountry] || 'Bewerte im Kontext der angegebenen Herkunft. Nicht nach rein westlichen Standards urteilen.'}
+WICHTIG: Ethnische Merkmale sind KEINE Schwächen! Bewerte Attraktivität relativ zur Ethnie.`
       : '';
 
     const systemPrompt = `Du bist ein KRITISCHER Experte für Attraktivität und Looksmaxing.
