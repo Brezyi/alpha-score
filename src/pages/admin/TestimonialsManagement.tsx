@@ -266,7 +266,8 @@ export default function TestimonialsManagement() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {testimonial.score_before && testimonial.score_after ? (
+                      {testimonial.score_before && testimonial.score_after && 
+                       (testimonial.score_after - testimonial.score_before) > 0 ? (
                         <span className="text-gradient font-bold">
                           +{(testimonial.score_after - testimonial.score_before).toFixed(1)}
                         </span>
