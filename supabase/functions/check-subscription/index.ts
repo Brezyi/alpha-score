@@ -14,7 +14,7 @@ const logStep = (step: string, details?: any) => {
 
 // Product IDs
 const PREMIUM_PRODUCT_ID = "prod_Tq71rp1Davc358";
-const LIFETIME_PRODUCT_ID = "prod_Tq71yPs5xPnuYv";
+const LIFETIME_PRODUCT_ID = "prod_TqTrabrYDObhr0";
 
 // Retry helper for transient network errors
 async function withRetry<T>(
