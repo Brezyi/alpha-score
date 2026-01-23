@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
-import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Wrench, Lock } from "lucide-react";
 import { useLocation } from "react-router-dom";
@@ -38,79 +37,117 @@ interface MaintenanceProviderProps {
   children: React.ReactNode;
 }
 
+// Parse setting value - handles both raw values and strings
+const parseSettingValue = (value: unknown): boolean => {
+  if (typeof value === "boolean") return value;
+  if (value === "true" || value === true) return true;
+  if (value === "false" || value === false) return false;
+  return false;
+};
+
 export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ children }) => {
-  const { settings, loading: settingsLoading } = useGlobalSettings();
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [roleLoading, setRoleLoading] = useState(true);
-  const hasCheckedRef = useRef(false);
+  const [loading, setLoading] = useState(true);
+
+  const checkMaintenanceAndRole = useCallback(async () => {
+    setLoading(true);
+    
+    try {
+      // Fetch maintenance mode directly
+      const { data: settingsData, error: settingsError } = await supabase
+        .from("system_settings")
+        .select("value")
+        .eq("key", "maintenance_mode")
+        .single();
+
+      if (!settingsError && settingsData) {
+        const maintenanceValue = parseSettingValue(settingsData.value);
+        console.log("[MaintenanceGate] Maintenance mode:", maintenanceValue, "raw:", settingsData.value);
+        setMaintenanceMode(maintenanceValue);
+      }
+
+      // Check user session and role
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        setIsOwner(false);
+        setIsLoggedIn(false);
+        setLoading(false);
+        return;
+      }
+
+      setIsLoggedIn(true);
+
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+        _user_id: session.user.id
+      });
+
+      if (roleError) {
+        console.error("Error checking owner role:", roleError);
+        setIsOwner(false);
+      } else {
+        const ownerStatus = roleData === "owner";
+        setIsOwner(ownerStatus);
+        console.log("[MaintenanceGate] Role check complete:", { role: roleData, isOwner: ownerStatus });
+      }
+    } catch (err) {
+      console.error("Maintenance/Role check error:", err);
+      setIsOwner(false);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const checkOwnerRole = async () => {
-      setRoleLoading(true);
-      
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session?.user) {
-          setIsOwner(false);
-          setIsLoggedIn(false);
-          setRoleLoading(false);
-          hasCheckedRef.current = true;
-          return;
-        }
-
-        setIsLoggedIn(true);
-
-        const { data, error } = await supabase.rpc('get_user_role', {
-          _user_id: session.user.id
-        });
-
-        if (error) {
-          console.error("Error checking owner role:", error);
-          setIsOwner(false);
-        } else {
-          const ownerStatus = data === "owner";
-          setIsOwner(ownerStatus);
-          console.log("[MaintenanceGate] Role check complete:", { role: data, isOwner: ownerStatus });
-        }
-      } catch (err) {
-        console.error("Role check error:", err);
-        setIsOwner(false);
-      } finally {
-        setRoleLoading(false);
-        hasCheckedRef.current = true;
-      }
-    };
-
     // Initial check
-    checkOwnerRole();
+    checkMaintenanceAndRole();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       console.log("[MaintenanceGate] Auth state changed:", event);
       
-      // Always recheck on auth state changes
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-        checkOwnerRole();
+        checkMaintenanceAndRole();
       } else if (event === 'SIGNED_OUT') {
         setIsOwner(false);
         setIsLoggedIn(false);
-        setRoleLoading(false);
+        // Still check maintenance mode for logged-out state
+        checkMaintenanceAndRole();
       }
     });
 
+    // Subscribe to maintenance mode changes in realtime
+    const channel = supabase
+      .channel("maintenance_mode_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "system_settings",
+          filter: "key=eq.maintenance_mode",
+        },
+        (payload) => {
+          console.log("[MaintenanceGate] Maintenance mode changed:", payload);
+          if (payload.new && 'value' in payload.new) {
+            const newValue = parseSettingValue(payload.new.value);
+            setMaintenanceMode(newValue);
+          }
+        }
+      )
+      .subscribe();
+
     return () => {
       subscription.unsubscribe();
+      supabase.removeChannel(channel);
     };
-  }, []);
-
-  // Don't render children until we've done at least one check
-  const loading = settingsLoading || roleLoading || !hasCheckedRef.current;
+  }, [checkMaintenanceAndRole]);
 
   return (
     <MaintenanceContext.Provider value={{
-      maintenanceMode: settings.maintenance_mode,
+      maintenanceMode,
       isOwner,
       isLoggedIn,
       loading,
