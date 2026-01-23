@@ -136,36 +136,234 @@ export default function AnalysisResults() {
   }
 
   if (isProcessing) {
+    const analysisSteps = [
+      { label: "Gesichtserkennung", icon: "👁️" },
+      { label: "Symmetrie-Analyse", icon: "📐" },
+      { label: "Proportionen messen", icon: "📏" },
+      { label: "Merkmale bewerten", icon: "✨" },
+      { label: "Potenzial berechnen", icon: "🎯" },
+    ];
+
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center max-w-sm px-4">
-          {/* Scanning Image Preview */}
-          <div className="relative w-32 h-32 mx-auto mb-6 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-lg animate-subtle-shake">
-            {/* Placeholder or first photo */}
-            <div className="w-full h-full bg-gradient-to-br from-card to-primary/10 flex items-center justify-center">
-              <Camera className="w-10 h-10 text-primary/50" />
-            </div>
-            {/* Scan Line */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden">
-              <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-scan-line shadow-[0_0_15px_hsl(var(--primary)),0_0_30px_hsl(var(--primary)/0.5)]" />
-            </div>
-            {/* Corner Brackets */}
-            <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-primary/60" />
-            <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-primary/60" />
-            <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-primary/60" />
-            <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-primary/60" />
-            {/* Glow Effect */}
-            <div className="absolute inset-0 bg-primary/5 animate-pulse" />
+      <div className="min-h-screen bg-background flex items-center justify-center overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Floating particles */}
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-primary/30 rounded-full"
+              initial={{ 
+                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 400), 
+                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
+                scale: Math.random() * 0.5 + 0.5
+              }}
+              animate={{ 
+                y: [null, Math.random() * -200 - 100],
+                opacity: [0.3, 0.8, 0.3]
+              }}
+              transition={{ 
+                duration: Math.random() * 3 + 2, 
+                repeat: Infinity, 
+                ease: "linear" 
+              }}
+            />
+          ))}
+          
+          {/* Radial glow */}
+          <motion.div 
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl"
+            animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
+
+        <div className="text-center max-w-sm px-4 relative z-10">
+          {/* Main scanning container */}
+          <div className="relative mb-8">
+            {/* Outer rotating ring */}
+            <motion.div 
+              className="absolute -inset-4 rounded-3xl border-2 border-dashed border-primary/30"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            />
+            
+            {/* Middle pulsing ring */}
+            <motion.div 
+              className="absolute -inset-2 rounded-2xl border border-primary/40"
+              animate={{ scale: [1, 1.05, 1], opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            />
+
+            {/* Scanning Image Preview */}
+            <motion.div 
+              className="relative w-36 h-36 mx-auto rounded-2xl overflow-hidden border-2 border-primary/60 shadow-2xl"
+              animate={{ boxShadow: [
+                "0 0 20px hsl(var(--primary) / 0.3)",
+                "0 0 40px hsl(var(--primary) / 0.5)",
+                "0 0 20px hsl(var(--primary) / 0.3)"
+              ]}}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              {/* Photo placeholder with gradient */}
+              <div className="w-full h-full bg-gradient-to-br from-card via-primary/10 to-card flex items-center justify-center">
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1], rotate: [0, 5, -5, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <Camera className="w-12 h-12 text-primary/60" />
+                </motion.div>
+              </div>
+              
+              {/* Multiple scan lines */}
+              <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                <motion.div 
+                  className="absolute left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-primary to-transparent shadow-[0_0_20px_hsl(var(--primary)),0_0_40px_hsl(var(--primary)/0.5)]"
+                  animate={{ top: ["0%", "100%", "0%"] }}
+                  transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <motion.div 
+                  className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/50 to-transparent"
+                  animate={{ top: ["100%", "0%", "100%"] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+              
+              {/* Animated corner brackets */}
+              <motion.div 
+                className="absolute top-2 left-2 w-5 h-5 border-l-2 border-t-2 border-primary"
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+              <motion.div 
+                className="absolute top-2 right-2 w-5 h-5 border-r-2 border-t-2 border-primary"
+                animate={{ opacity: [1, 0.6, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+              <motion.div 
+                className="absolute bottom-2 left-2 w-5 h-5 border-l-2 border-b-2 border-primary"
+                animate={{ opacity: [1, 0.6, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+              <motion.div 
+                className="absolute bottom-2 right-2 w-5 h-5 border-r-2 border-b-2 border-primary"
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+              
+              {/* Grid overlay */}
+              <div className="absolute inset-0 opacity-20" style={{
+                backgroundImage: `
+                  linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px),
+                  linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)
+                `,
+                backgroundSize: '20px 20px'
+              }} />
+              
+              {/* Shimmer effect */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              />
+            </motion.div>
+            
+            {/* Orbiting dots */}
+            {[0, 1, 2, 3].map((i) => (
+              <motion.div
+                key={i}
+                className="absolute w-2 h-2 bg-primary rounded-full shadow-lg shadow-primary/50"
+                style={{ top: "50%", left: "50%" }}
+                animate={{
+                  x: [
+                    Math.cos((i * Math.PI) / 2) * 80,
+                    Math.cos((i * Math.PI) / 2 + Math.PI) * 80,
+                    Math.cos((i * Math.PI) / 2) * 80
+                  ],
+                  y: [
+                    Math.sin((i * Math.PI) / 2) * 80,
+                    Math.sin((i * Math.PI) / 2 + Math.PI) * 80,
+                    Math.sin((i * Math.PI) / 2) * 80
+                  ],
+                  scale: [1, 1.5, 1]
+                }}
+                transition={{ duration: 4, repeat: Infinity, delay: i * 0.25 }}
+              />
+            ))}
           </div>
           
-          <h2 className="text-xl font-bold mb-2">KI analysiert deine Fotos</h2>
-          <p className="text-muted-foreground mb-4">
-            Dies kann bis zu 30 Sekunden dauern. Bitte warte...
-          </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <RefreshCw className="w-4 h-4 animate-spin" />
-            <span>Automatische Aktualisierung</span>
+          {/* Title with typing effect */}
+          <motion.h2 
+            className="text-2xl font-bold mb-3 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent bg-[length:200%_auto]"
+            animate={{ backgroundPosition: ["0%", "200%"] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+          >
+            KI analysiert deine Fotos
+          </motion.h2>
+          
+          {/* Analysis steps */}
+          <div className="space-y-2 mb-6">
+            {analysisSteps.map((step, index) => (
+              <motion.div
+                key={step.label}
+                className="flex items-center gap-3 px-4 py-2 rounded-lg bg-card/50 border border-border/50"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.3 }}
+              >
+                <motion.span 
+                  className="text-lg"
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Infinity, delay: index * 0.2 }}
+                >
+                  {step.icon}
+                </motion.span>
+                <span className="text-sm text-muted-foreground flex-1 text-left">{step.label}</span>
+                <motion.div
+                  className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                />
+              </motion.div>
+            ))}
           </div>
+          
+          {/* Progress bar */}
+          <div className="relative h-2 bg-card rounded-full overflow-hidden mb-4">
+            <motion.div 
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary/80 to-primary rounded-full"
+              animate={{ width: ["0%", "90%", "95%", "90%"] }}
+              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <motion.div 
+              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+              animate={{ x: ["-100%", "200%"] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            />
+          </div>
+          
+          <motion.p 
+            className="text-muted-foreground text-sm mb-4"
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            Dies kann bis zu 30 Sekunden dauern...
+          </motion.p>
+          
+          <motion.div 
+            className="flex items-center justify-center gap-2 text-xs text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+          >
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <RefreshCw className="w-3 h-3" />
+            </motion.div>
+            <span>Automatische Aktualisierung aktiv</span>
+          </motion.div>
         </div>
       </div>
     );
