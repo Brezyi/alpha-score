@@ -112,6 +112,7 @@ const Support = () => {
       subject: subject.trim() || `${CATEGORIES.find(c => c.value === category)?.label} Anfrage`,
       description: description.trim(),
       attachments: files.length > 0 ? files : undefined,
+      isPriority: isPremium,
     });
 
     if (result) {

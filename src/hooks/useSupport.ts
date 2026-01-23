@@ -25,6 +25,7 @@ export interface CreateTicketData {
   subject: string;
   description: string;
   attachments?: File[];
+  isPriority?: boolean;
 }
 
 export const useSupport = () => {
@@ -90,6 +91,7 @@ export const useSupport = () => {
           subject: ticketData.subject,
           description: ticketData.description,
           attachment_urls: attachmentUrls,
+          is_priority: ticketData.isPriority || false,
         })
         .select()
         .single();
