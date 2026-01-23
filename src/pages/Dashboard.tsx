@@ -473,14 +473,15 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Analysis History */}
+        {/* Analysis History - Show last 5 */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold">Analyse-Historie</h2>
-            {analyses.length > 0 && (
-              <span className="text-sm text-muted-foreground">
-                {analyses.length} {analyses.length === 1 ? "Analyse" : "Analysen"}
-              </span>
+            <h2 className="text-xl font-bold">Letzte Analysen</h2>
+            {analyses.length > 5 && (
+              <Link to="/progress" className="text-sm text-primary hover:underline flex items-center gap-1">
+                Alle {analyses.length} anzeigen
+                <ChevronRight className="w-4 h-4" />
+              </Link>
             )}
           </div>
 
@@ -504,7 +505,7 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {analyses.map((analysis) => {
+              {analyses.slice(0, 5).map((analysis) => {
                 const isPending = analysis.status === "pending" || analysis.status === "processing";
                 const isFailed = analysis.status === "failed" || analysis.status === "validation_failed";
                 const canDelete = isPending || isFailed;
