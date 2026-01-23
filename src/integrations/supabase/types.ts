@@ -344,6 +344,7 @@ export type Database = {
           created_at: string
           description: string
           id: string
+          is_priority: boolean
           status: string
           subject: string
           updated_at: string
@@ -357,6 +358,7 @@ export type Database = {
           created_at?: string
           description: string
           id?: string
+          is_priority?: boolean
           status?: string
           subject: string
           updated_at?: string
@@ -370,6 +372,7 @@ export type Database = {
           created_at?: string
           description?: string
           id?: string
+          is_priority?: boolean
           status?: string
           subject?: string
           updated_at?: string
