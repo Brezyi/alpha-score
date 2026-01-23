@@ -57,7 +57,12 @@ export const useGlobalSettings = () => {
 
 // Parse value from JSONB - handles both raw values and JSON strings
 const parseSettingValue = (value: unknown): unknown => {
+  // Handle string values that might be JSON or boolean strings
   if (typeof value === "string") {
+    // Handle boolean strings explicitly
+    if (value === "true") return true;
+    if (value === "false") return false;
+    
     try {
       return JSON.parse(value);
     } catch {
