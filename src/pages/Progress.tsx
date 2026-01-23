@@ -602,41 +602,118 @@ export default function Progress() {
                   <h3 className="font-bold">Meilensteine</h3>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {/* Analysis Count Milestones */}
                   <div className={cn(
-                    "p-3 rounded-lg text-center border",
+                    "p-3 rounded-lg text-center border transition-all",
                     completedAnalyses.length >= 1 
                       ? "bg-amber-500/10 border-amber-500/30" 
-                      : "bg-muted/30 border-border"
+                      : "bg-muted/30 border-border opacity-50"
                   )}>
                     <div className="text-2xl mb-1">{completedAnalyses.length >= 1 ? "🎯" : "🔒"}</div>
                     <div className="text-xs font-medium">Erste Analyse</div>
                   </div>
                   <div className={cn(
-                    "p-3 rounded-lg text-center border",
+                    "p-3 rounded-lg text-center border transition-all",
                     completedAnalyses.length >= 3 
                       ? "bg-amber-500/10 border-amber-500/30" 
-                      : "bg-muted/30 border-border"
+                      : "bg-muted/30 border-border opacity-50"
                   )}>
                     <div className="text-2xl mb-1">{completedAnalyses.length >= 3 ? "📊" : "🔒"}</div>
                     <div className="text-xs font-medium">3 Analysen</div>
                   </div>
                   <div className={cn(
-                    "p-3 rounded-lg text-center border",
-                    totalImprovement && parseFloat(totalImprovement) >= 0.5 
+                    "p-3 rounded-lg text-center border transition-all",
+                    completedAnalyses.length >= 5 
                       ? "bg-amber-500/10 border-amber-500/30" 
-                      : "bg-muted/30 border-border"
+                      : "bg-muted/30 border-border opacity-50"
+                  )}>
+                    <div className="text-2xl mb-1">{completedAnalyses.length >= 5 ? "🔥" : "🔒"}</div>
+                    <div className="text-xs font-medium">5 Analysen</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border transition-all",
+                    completedAnalyses.length >= 10 
+                      ? "bg-amber-500/10 border-amber-500/30" 
+                      : "bg-muted/30 border-border opacity-50"
+                  )}>
+                    <div className="text-2xl mb-1">{completedAnalyses.length >= 10 ? "💎" : "🔒"}</div>
+                    <div className="text-xs font-medium">10 Analysen</div>
+                  </div>
+
+                  {/* Score Improvement Milestones */}
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border transition-all",
+                    totalImprovement && parseFloat(totalImprovement) >= 0.5 
+                      ? "bg-green-500/10 border-green-500/30" 
+                      : "bg-muted/30 border-border opacity-50"
                   )}>
                     <div className="text-2xl mb-1">{totalImprovement && parseFloat(totalImprovement) >= 0.5 ? "📈" : "🔒"}</div>
                     <div className="text-xs font-medium">+0.5 Punkte</div>
                   </div>
                   <div className={cn(
-                    "p-3 rounded-lg text-center border",
+                    "p-3 rounded-lg text-center border transition-all",
                     totalImprovement && parseFloat(totalImprovement) >= 1.0 
-                      ? "bg-amber-500/10 border-amber-500/30" 
-                      : "bg-muted/30 border-border"
+                      ? "bg-green-500/10 border-green-500/30" 
+                      : "bg-muted/30 border-border opacity-50"
                   )}>
-                    <div className="text-2xl mb-1">{totalImprovement && parseFloat(totalImprovement) >= 1.0 ? "🏆" : "🔒"}</div>
+                    <div className="text-2xl mb-1">{totalImprovement && parseFloat(totalImprovement) >= 1.0 ? "🚀" : "🔒"}</div>
                     <div className="text-xs font-medium">+1.0 Punkte</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border transition-all",
+                    totalImprovement && parseFloat(totalImprovement) >= 2.0 
+                      ? "bg-green-500/10 border-green-500/30" 
+                      : "bg-muted/30 border-border opacity-50"
+                  )}>
+                    <div className="text-2xl mb-1">{totalImprovement && parseFloat(totalImprovement) >= 2.0 ? "⭐" : "🔒"}</div>
+                    <div className="text-xs font-medium">+2.0 Punkte</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border transition-all",
+                    totalImprovement && parseFloat(totalImprovement) >= 3.0 
+                      ? "bg-green-500/10 border-green-500/30" 
+                      : "bg-muted/30 border-border opacity-50"
+                  )}>
+                    <div className="text-2xl mb-1">{totalImprovement && parseFloat(totalImprovement) >= 3.0 ? "🏆" : "🔒"}</div>
+                    <div className="text-xs font-medium">+3.0 Punkte</div>
+                  </div>
+
+                  {/* Score Level Milestones */}
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border transition-all",
+                    highestScore && parseFloat(highestScore) >= 5.0 
+                      ? "bg-blue-500/10 border-blue-500/30" 
+                      : "bg-muted/30 border-border opacity-50"
+                  )}>
+                    <div className="text-2xl mb-1">{highestScore && parseFloat(highestScore) >= 5.0 ? "✨" : "🔒"}</div>
+                    <div className="text-xs font-medium">Score 5+</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border transition-all",
+                    highestScore && parseFloat(highestScore) >= 6.0 
+                      ? "bg-blue-500/10 border-blue-500/30" 
+                      : "bg-muted/30 border-border opacity-50"
+                  )}>
+                    <div className="text-2xl mb-1">{highestScore && parseFloat(highestScore) >= 6.0 ? "🌟" : "🔒"}</div>
+                    <div className="text-xs font-medium">Score 6+</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border transition-all",
+                    highestScore && parseFloat(highestScore) >= 7.0 
+                      ? "bg-blue-500/10 border-blue-500/30" 
+                      : "bg-muted/30 border-border opacity-50"
+                  )}>
+                    <div className="text-2xl mb-1">{highestScore && parseFloat(highestScore) >= 7.0 ? "💫" : "🔒"}</div>
+                    <div className="text-xs font-medium">Score 7+</div>
+                  </div>
+                  <div className={cn(
+                    "p-3 rounded-lg text-center border transition-all",
+                    highestScore && parseFloat(highestScore) >= 8.0 
+                      ? "bg-gradient-to-br from-amber-500/20 to-primary/20 border-amber-500/50" 
+                      : "bg-muted/30 border-border opacity-50"
+                  )}>
+                    <div className="text-2xl mb-1">{highestScore && parseFloat(highestScore) >= 8.0 ? "👑" : "🔒"}</div>
+                    <div className="text-xs font-medium">Score 8+</div>
                   </div>
                 </div>
               </Card>
