@@ -15,7 +15,8 @@ import {
   Loader2,
   Shield,
   Trophy,
-  Calendar
+  Calendar,
+  X
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -402,75 +403,131 @@ const Dashboard = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              {analyses.map((analysis) => (
-                <Link
-                  key={analysis.id}
-                  to={`/analysis/${analysis.id}`}
-                  className="flex items-center gap-4 p-4 rounded-xl glass-card hover:border-primary/50 transition-all group"
-                >
-                  {/* Score Circle */}
-                  <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    analysis.status === "completed" && analysis.looks_score !== null
-                      ? "bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30"
-                      : "bg-muted"
-                  }`}>
-                    {analysis.status === "completed" && analysis.looks_score !== null ? (
-                      <span className="text-lg font-bold text-gradient">
-                        {analysis.looks_score.toFixed(1)}
-                      </span>
-                    ) : analysis.status === "processing" ? (
-                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                    ) : (
-                      <span className="text-sm text-muted-foreground">—</span>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">
-                        {analysis.status === "completed" ? "Analyse abgeschlossen" : 
-                         analysis.status === "processing" ? "Wird analysiert..." : 
-                         "Ausstehend"}
-                      </span>
-                      {analysis.status === "completed" && (
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${
-                          analysis.looks_score && analysis.looks_score >= 7 
-                            ? "bg-green-500/20 text-green-400"
-                            : analysis.looks_score && analysis.looks_score >= 5
-                            ? "bg-yellow-500/20 text-yellow-400"
-                            : "bg-red-500/20 text-red-400"
-                        }`}>
-                          {analysis.looks_score && analysis.looks_score >= 7 ? "Top" : 
-                           analysis.looks_score && analysis.looks_score >= 5 ? "Durchschnitt" : 
-                           "Potenzial"}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
-                      {formatDate(analysis.created_at)}
-                    </div>
-                    {analysis.strengths && analysis.strengths.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {analysis.strengths.slice(0, 3).map((strength, i) => (
-                          <span key={i} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs">
-                            {strength}
+              {analyses.map((analysis) => {
+                const isPending = analysis.status === "pending" || analysis.status === "processing";
+                
+                const handleCancelAnalysis = async (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  try {
+                    const { error } = await supabase
+                      .from("analyses")
+                      .delete()
+                      .eq("id", analysis.id);
+                    
+                    if (error) throw error;
+                    
+                    setAnalyses(prev => prev.filter(a => a.id !== analysis.id));
+                    toast({
+                      title: "Analyse abgebrochen",
+                      description: "Die ausstehende Analyse wurde gelöscht.",
+                    });
+                  } catch (err) {
+                    console.error("Error canceling analysis:", err);
+                    toast({
+                      title: "Fehler",
+                      description: "Die Analyse konnte nicht abgebrochen werden.",
+                      variant: "destructive",
+                    });
+                  }
+                };
+                
+                return (
+                  <div
+                    key={analysis.id}
+                    className="flex items-center gap-4 p-4 rounded-xl glass-card hover:border-primary/50 transition-all group"
+                  >
+                    {/* Clickable area for navigation */}
+                    <Link
+                      to={`/analysis/${analysis.id}`}
+                      className="flex items-center gap-4 flex-1 min-w-0"
+                    >
+                      {/* Score Circle */}
+                      <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        analysis.status === "completed" && analysis.looks_score !== null
+                          ? "bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30"
+                          : "bg-muted"
+                      }`}>
+                        {analysis.status === "completed" && analysis.looks_score !== null ? (
+                          <span className="text-lg font-bold text-gradient">
+                            {analysis.looks_score.toFixed(1)}
                           </span>
-                        ))}
-                        {analysis.strengths.length > 3 && (
-                          <span className="text-xs text-muted-foreground">
-                            +{analysis.strengths.length - 3} mehr
-                          </span>
+                        ) : analysis.status === "processing" ? (
+                          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                        ) : (
+                          <span className="text-sm text-muted-foreground">—</span>
                         )}
                       </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">
+                            {analysis.status === "completed" ? "Analyse abgeschlossen" : 
+                             analysis.status === "processing" ? "Wird analysiert..." : 
+                             analysis.status === "validation_failed" ? "Validierung fehlgeschlagen" :
+                             analysis.status === "failed" ? "Fehlgeschlagen" :
+                             "Ausstehend"}
+                          </span>
+                          {analysis.status === "completed" && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${
+                              analysis.looks_score && analysis.looks_score >= 7 
+                                ? "bg-green-500/20 text-green-400"
+                                : analysis.looks_score && analysis.looks_score >= 5
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}>
+                              {analysis.looks_score && analysis.looks_score >= 7 ? "Top" : 
+                               analysis.looks_score && analysis.looks_score >= 5 ? "Durchschnitt" : 
+                               "Potenzial"}
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+                              In Bearbeitung
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(analysis.created_at)}
+                        </div>
+                        {analysis.strengths && analysis.strengths.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {analysis.strengths.slice(0, 3).map((strength, i) => (
+                              <span key={i} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs">
+                                {strength}
+                              </span>
+                            ))}
+                            {analysis.strengths.length > 3 && (
+                              <span className="text-xs text-muted-foreground">
+                                +{analysis.strengths.length - 3} mehr
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Arrow */}
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    </Link>
+                    
+                    {/* Cancel button for pending analyses */}
+                    {isPending && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="flex-shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={handleCancelAnalysis}
+                        title="Analyse abbrechen"
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
                     )}
                   </div>
-
-                  {/* Arrow */}
-                  <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
-                </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
