@@ -29,6 +29,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOptimizedAnimations } from "@/hooks/useReducedMotion";
 
 type Task = {
   id: string;
@@ -57,25 +58,6 @@ const CATEGORIES = [
   { id: "mindset", name: "Mindset & Haltung", icon: Brain, color: "bg-blue-500/20 text-blue-400" },
 ];
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { type: "spring" as const, stiffness: 300, damping: 24 }
-  }
-};
-
 const Plan = () => {
   const { user, loading } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -88,7 +70,7 @@ const Plan = () => {
   const { toast } = useToast();
   const { isPremium, loading: subLoading } = useSubscription();
   const { settings } = useGlobalSettings();
-
+  const { shouldReduce, containerVariants, itemVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
@@ -376,8 +358,8 @@ const Plan = () => {
                 <motion.div
                   key={item.name}
                   variants={itemVariants}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={hoverScale}
+                  whileTap={tapScale}
                 >
                   <Card className={cn(
                     "p-3 text-center cursor-pointer transition-shadow hover:shadow-lg",
@@ -385,32 +367,37 @@ const Plan = () => {
                     item.score >= 5 ? "border-yellow-500/30 bg-yellow-500/5" :
                     "border-red-500/30 bg-red-500/5"
                   )}>
-                    <motion.div
-                      initial={{ rotate: 0 }}
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
-                    >
+                    {!shouldReduce && (
+                      <motion.div
+                        initial={{ rotate: 0 }}
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ delay: 0.5 + index * 0.1, duration: 0.5 }}
+                      >
+                        <item.icon className={cn(
+                          "w-4 h-4 mx-auto mb-1",
+                          item.score >= 7 ? "text-green-500" :
+                          item.score >= 5 ? "text-yellow-500" :
+                          "text-red-500"
+                        )} />
+                      </motion.div>
+                    )}
+                    {shouldReduce && (
                       <item.icon className={cn(
                         "w-4 h-4 mx-auto mb-1",
                         item.score >= 7 ? "text-green-500" :
                         item.score >= 5 ? "text-yellow-500" :
                         "text-red-500"
                       )} />
-                    </motion.div>
+                    )}
                     <div className="text-xs text-muted-foreground">{item.name}</div>
-                    <motion.div 
-                      className={cn(
-                        "text-lg font-bold",
-                        item.score >= 7 ? "text-green-500" :
-                        item.score >= 5 ? "text-yellow-500" :
-                        "text-red-500"
-                      )}
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ delay: 0.3 + index * 0.1, type: "spring", stiffness: 300 }}
-                    >
+                    <div className={cn(
+                      "text-lg font-bold",
+                      item.score >= 7 ? "text-green-500" :
+                      item.score >= 5 ? "text-yellow-500" :
+                      "text-red-500"
+                    )}>
                       {item.score.toFixed(1)}
-                    </motion.div>
+                    </div>
                   </Card>
                 </motion.div>
               ))}
@@ -429,12 +416,16 @@ const Plan = () => {
             >
               <Card className="p-4 bg-primary/5 border-primary/20 mb-6">
                 <div className="flex items-center gap-2 mb-3">
-                  <motion.div
-                    animate={{ rotate: [0, 360] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  >
+                  {!shouldReduce ? (
+                    <motion.div
+                      animate={{ rotate: [0, 360] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Target className="w-4 h-4 text-primary" />
+                    </motion.div>
+                  ) : (
                     <Target className="w-4 h-4 text-primary" />
-                  </motion.div>
+                  )}
                   <span className="text-sm font-medium text-primary">Deine Top-Prioritäten</span>
                 </div>
                 <motion.div 
@@ -475,50 +466,44 @@ const Plan = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            {/* Animated background glow */}
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"
-              animate={{ x: ["-100%", "100%"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            />
+            {/* Animated background glow - only on desktop */}
+            {!shouldReduce && (
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+              />
+            )}
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3">
                 <span className="font-semibold">Gesamtfortschritt</span>
-                <motion.span 
-                  className="text-sm text-muted-foreground"
-                  key={overallCompleted}
-                  initial={{ scale: 1.2, color: "hsl(var(--primary))" }}
-                  animate={{ scale: 1, color: "hsl(var(--muted-foreground))" }}
-                >
+                <span className="text-sm text-muted-foreground">
                   {overallCompleted} / {overallTotal} Aufgaben
-                </motion.span>
+                </span>
               </div>
               <div className="relative">
                 <Progress value={overallProgress} className="h-3" />
-                <motion.div
-                  className="absolute top-0 left-0 h-full w-full pointer-events-none"
-                  initial={false}
-                >
+                {!shouldReduce && (
                   <motion.div
-                    className="absolute top-0 h-full w-4 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                    animate={{ left: ["0%", "100%"] }}
-                    transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                  />
-                </motion.div>
+                    className="absolute top-0 left-0 h-full w-full pointer-events-none"
+                    initial={false}
+                  >
+                    <motion.div
+                      className="absolute top-0 h-full w-4 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                      animate={{ left: ["0%", "100%"] }}
+                      transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
+                    />
+                  </motion.div>
+                )}
               </div>
-              <motion.p 
-                className="text-sm text-muted-foreground mt-2"
-                key={Math.floor(overallProgress / 25)}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
+              <p className="text-sm text-muted-foreground mt-2">
                 {overallProgress >= 100 ? "🎉 Alles erledigt! Großartige Arbeit." :
                  overallProgress >= 75 ? "💪 Fast geschafft! Bleib dran." :
                  overallProgress >= 50 ? "👍 Gute Fortschritte! Weiter so." :
                  overallProgress >= 25 ? "🚀 Guter Start! Jeden Tag ein bisschen besser." :
                  "📋 Beginne mit deinem Plan!"}
-              </motion.p>
+              </p>
             </div>
           </motion.div>
         )}
@@ -553,20 +538,24 @@ const Plan = () => {
               </>
             ) : (
               <>
-                <motion.div
-                  animate={{ 
-                    rotate: [0, 10, -10, 0],
-                    scale: [1, 1.1, 1]
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
+                {!shouldReduce ? (
+                  <motion.div
+                    animate={{ 
+                      rotate: [0, 10, -10, 0],
+                      scale: [1, 1.1, 1]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
+                  </motion.div>
+                ) : (
                   <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
-                </motion.div>
+                )}
                 <h3 className="text-xl font-bold mb-2">Personalisierter Plan bereit</h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                   Basierend auf deiner Analyse erstellen wir einen Plan, der genau auf deine Schwächen abzielt.
                 </p>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <motion.div whileHover={hoverScale} whileTap={tapScale}>
                   <Button variant="hero" size="lg" onClick={generatePersonalizedPlan} disabled={generating}>
                     {generating ? (
                       <>
@@ -611,18 +600,13 @@ const Plan = () => {
                         ? "bg-primary text-primary-foreground" 
                         : "bg-card border border-border hover:border-primary/50"
                     }`}
-                    initial={{ opacity: 0, y: 20 }}
+                    initial={shouldReduce ? false : { opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 + index * 0.05 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    transition={shouldReduce ? { duration: 0.15 } : { delay: 0.5 + index * 0.05 }}
+                    whileHover={hoverScaleSmall}
+                    whileTap={tapScale}
                   >
-                    <motion.div
-                      animate={isActive ? { rotate: [0, 360] } : {}}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <cat.icon className="w-4 h-4" />
-                    </motion.div>
+                    <cat.icon className="w-4 h-4" />
                     <span className="text-sm font-medium">{cat.name}</span>
                     <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                       isActive ? "bg-primary-foreground/20" : "bg-muted"
@@ -687,16 +671,16 @@ const Plan = () => {
                     Keine Aufgaben in dieser Kategorie.
                   </motion.p>
                 ) : (
-                  categoryTasks.map((task, index) => (
+                  categoryTasks.map((task) => (
                     <motion.div
                       key={task.id}
-                      layout
+                      layout={!shouldReduce}
                       variants={itemVariants}
                       initial="hidden"
                       animate="visible"
-                      exit={{ opacity: 0, x: -100, scale: 0.8 }}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      exit={shouldReduce ? { opacity: 0 } : { opacity: 0, x: -100, scale: 0.8 }}
+                      whileHover={hoverScaleSmall}
+                      whileTap={tapScale}
                       onClick={() => toggleTask(task.id, task.completed)}
                       className={cn(
                         "flex items-start gap-4 p-4 rounded-xl cursor-pointer transition-all",
@@ -705,55 +689,33 @@ const Plan = () => {
                           : "glass-card hover:border-primary/50"
                       )}
                     >
-                      <motion.div 
+                      <div 
                         className={cn(
                           "w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all",
                           task.completed 
                             ? "bg-primary border-primary" 
                             : "border-muted-foreground/50 hover:border-primary"
                         )}
-                        whileTap={{ scale: 0.8 }}
-                        animate={task.completed ? { scale: [1, 1.2, 1] } : {}}
                       >
-                        <AnimatePresence>
-                          {task.completed && (
-                            <motion.div
-                              initial={{ scale: 0, rotate: -180 }}
-                              animate={{ scale: 1, rotate: 0 }}
-                              exit={{ scale: 0, rotate: 180 }}
-                              transition={{ type: "spring", stiffness: 300 }}
-                            >
-                              <Check className="w-4 h-4 text-primary-foreground" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </motion.div>
+                        {task.completed && (
+                          <Check className="w-4 h-4 text-primary-foreground" />
+                        )}
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <motion.p 
-                            className={cn("font-medium", task.completed && "line-through")}
-                            animate={{ opacity: task.completed ? 0.6 : 1 }}
-                          >
+                          <p className={cn("font-medium", task.completed && "line-through opacity-60")}>
                             {task.title}
-                          </motion.p>
+                          </p>
                           {task.priority === 1 && (
-                            <motion.span 
-                              className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs font-medium"
-                              animate={{ scale: [1, 1.1, 1] }}
-                              transition={{ duration: 2, repeat: Infinity }}
-                            >
+                            <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs font-medium">
                               Priorität
-                            </motion.span>
+                            </span>
                           )}
                         </div>
                         {task.description && (
-                          <motion.p 
-                            className="text-sm text-muted-foreground mt-1 whitespace-pre-line"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: "auto" }}
-                          >
+                          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">
                             {task.description}
-                          </motion.p>
+                          </p>
                         )}
                       </div>
                     </motion.div>
@@ -763,13 +725,8 @@ const Plan = () => {
             </motion.div>
 
             {/* Regenerate Button */}
-            <motion.div 
-              className="text-center"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8 }}
-            >
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <div className="text-center">
+              <motion.div whileHover={hoverScale} whileTap={tapScale}>
                 <Button
                   variant="outline"
                   size="sm"
@@ -779,12 +736,7 @@ const Plan = () => {
                   {generating ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
                   ) : (
-                    <motion.div
-                      animate={{ rotate: [0, 360] }}
-                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    >
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                    </motion.div>
+                    <RefreshCw className="w-4 h-4 mr-2" />
                   )}
                   Plan neu generieren
                 </Button>
@@ -792,7 +744,7 @@ const Plan = () => {
               <p className="text-xs text-muted-foreground mt-2">
                 Basierend auf deiner aktuellen Analyse
               </p>
-            </motion.div>
+            </div>
           </>
         )}
       </main>
