@@ -17,7 +17,8 @@ import {
   Trophy,
   Calendar,
   X,
-  AlertTriangle
+  AlertTriangle,
+  Sparkles
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -33,6 +34,7 @@ import { ProfileOnboardingModal } from "@/components/ProfileOnboardingModal";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { TestimonialSubmitDialog } from "@/components/TestimonialSubmitDialog";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,6 +49,7 @@ import {
 type Analysis = {
   id: string;
   looks_score: number | null;
+  potential_score: number | null;
   created_at: string;
   status: string;
   strengths: string[] | null;
@@ -125,7 +128,7 @@ const Dashboard = () => {
       try {
         const { data, error } = await supabase
           .from("analyses")
-          .select("id, looks_score, created_at, status, strengths, weaknesses")
+          .select("id, looks_score, potential_score, created_at, status, strengths, weaknesses")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
@@ -156,9 +159,18 @@ const Dashboard = () => {
   // Calculate stats
   const completedAnalyses = analyses.filter(a => a.status === "completed" && a.looks_score !== null);
   const latestScore = completedAnalyses[0]?.looks_score ?? null;
+  const latestPotential = completedAnalyses[0]?.potential_score ?? null;
   const previousScore = completedAnalyses[1]?.looks_score ?? null;
   const scoreDiff = latestScore !== null && previousScore !== null 
     ? (latestScore - previousScore).toFixed(1) 
+    : null;
+  
+  // Calculate progress to potential (percentage)
+  const potentialProgress = latestScore !== null && latestPotential !== null 
+    ? Math.round((latestScore / latestPotential) * 100)
+    : null;
+  const pointsToGo = latestScore !== null && latestPotential !== null
+    ? (latestPotential - latestScore).toFixed(1)
     : null;
 
   // Chart data (last 10 analyses, reversed for chronological order)
@@ -296,6 +308,40 @@ const Dashboard = () => {
             <div className="text-3xl font-bold">0/5</div>
           </div>
         </div>
+
+        {/* Potential Progress Bar */}
+        {potentialProgress !== null && latestPotential !== null && (
+          <div className="mb-8 p-6 rounded-2xl glass-card">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                <span className="text-foreground font-bold">{latestScore?.toFixed(1)}</span>
+                <span className="mx-1">/</span>
+                <span className="text-primary font-bold">{latestPotential.toFixed(1)}</span>
+              </div>
+            </div>
+            <div className="relative">
+              <Progress value={potentialProgress} className="h-4" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xs font-medium text-primary-foreground drop-shadow-sm">
+                  {potentialProgress}%
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-2 text-sm">
+              <span className="text-muted-foreground">
+                Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> möglich
+              </span>
+              <Link to="/plan" className="text-primary hover:underline flex items-center gap-1">
+                Plan ansehen
+                <ChevronRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Score Chart */}
         {chartData.length >= 2 && (
