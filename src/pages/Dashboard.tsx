@@ -153,10 +153,38 @@ const Dashboard = () => {
   const [hasAnimated, setHasAnimated] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isPremium } = useSubscription();
+  const { isPremium, subscriptionType, subscriptionEnd } = useSubscription();
   const { isAdminOrOwner, role } = useUserRole();
   const { currentStreak, longestStreak, isActiveToday, loading: streakLoading } = useStreak();
   const { settings } = useGlobalSettings();
+
+  // Format subscription badge
+  const getSubscriptionBadge = () => {
+    if (!isPremium) return null;
+    
+    const formatEndDate = (dateStr: string | null) => {
+      if (!dateStr) return null;
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+    };
+
+    switch (subscriptionType) {
+      case "owner":
+        return { label: "Owner", icon: Crown, className: "bg-amber-500/20 text-amber-500 border-amber-500/30" };
+      case "lifetime":
+        return { label: "Lifetime", icon: Sparkles, className: "bg-primary/20 text-primary border-primary/30" };
+      case "premium":
+        return { 
+          label: `Premium${subscriptionEnd ? ` bis ${formatEndDate(subscriptionEnd)}` : ""}`, 
+          icon: Crown, 
+          className: "bg-primary/20 text-primary border-primary/30" 
+        };
+      default:
+        return null;
+    }
+  };
+
+  const subscriptionBadge = getSubscriptionBadge();
 
   // Trigger animation once analyses are loaded
   useEffect(() => {
@@ -273,7 +301,13 @@ const Dashboard = () => {
               <span className="text-xl font-bold">{settings.app_name}</span>
             </Link>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              {subscriptionBadge && (
+                <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${subscriptionBadge.className}`}>
+                  <subscriptionBadge.icon className="w-3.5 h-3.5" />
+                  {subscriptionBadge.label}
+                </div>
+              )}
               <div className="hidden sm:block">
                 <TestimonialSubmitDialog />
               </div>
@@ -285,7 +319,7 @@ const Dashboard = () => {
                   </Button>
                 </Link>
               )}
-              {!isPremiumUser && (
+              {!isPremium && (
                 <Link to="/pricing">
                   <Button variant="premium" size="sm" className="hidden sm:flex">
                     <Crown className="w-4 h-4" />
