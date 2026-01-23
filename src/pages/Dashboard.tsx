@@ -16,7 +16,8 @@ import {
   Shield,
   Trophy,
   Calendar,
-  X
+  X,
+  AlertTriangle
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -30,6 +31,16 @@ import { useProfile } from "@/hooks/useProfile";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type Analysis = {
   id: string;
@@ -80,6 +91,8 @@ const Dashboard = () => {
   const { profile } = useProfile();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [analysesLoading, setAnalysesLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [analysisToDelete, setAnalysisToDelete] = useState<Analysis | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium } = useSubscription();
@@ -408,31 +421,11 @@ const Dashboard = () => {
                 const isFailed = analysis.status === "failed" || analysis.status === "validation_failed";
                 const canDelete = isPending || isFailed;
                 
-                const handleCancelAnalysis = async (e: React.MouseEvent) => {
+                const handleOpenDeleteDialog = (e: React.MouseEvent) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  
-                  try {
-                    const { error } = await supabase
-                      .from("analyses")
-                      .delete()
-                      .eq("id", analysis.id);
-                    
-                    if (error) throw error;
-                    
-                    setAnalyses(prev => prev.filter(a => a.id !== analysis.id));
-                    toast({
-                      title: "Analyse abgebrochen",
-                      description: "Die ausstehende Analyse wurde gelöscht.",
-                    });
-                  } catch (err) {
-                    console.error("Error canceling analysis:", err);
-                    toast({
-                      title: "Fehler",
-                      description: "Die Analyse konnte nicht abgebrochen werden.",
-                      variant: "destructive",
-                    });
-                  }
+                  setAnalysisToDelete(analysis);
+                  setDeleteDialogOpen(true);
                 };
                 
                 return (
@@ -521,7 +514,7 @@ const Dashboard = () => {
                         variant="ghost"
                         size="icon"
                         className="flex-shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                        onClick={handleCancelAnalysis}
+                        onClick={handleOpenDeleteDialog}
                         title={isFailed ? "Analyse entfernen" : "Analyse abbrechen"}
                       >
                         <X className="w-5 h-5" />
@@ -549,6 +542,71 @@ const Dashboard = () => {
             </Link>
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                </div>
+                <AlertDialogTitle>
+                  {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
+                    ? "Analyse abbrechen?"
+                    : "Analyse entfernen?"}
+                </AlertDialogTitle>
+              </div>
+              <AlertDialogDescription>
+                {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
+                  ? "Diese laufende Analyse wird abgebrochen und gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
+                  : "Diese fehlgeschlagene Analyse wird aus deiner Historie entfernt. Diese Aktion kann nicht rückgängig gemacht werden."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
+                Abbrechen
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  if (!analysisToDelete) return;
+                  
+                  try {
+                    const { error } = await supabase
+                      .from("analyses")
+                      .delete()
+                      .eq("id", analysisToDelete.id);
+                    
+                    if (error) throw error;
+                    
+                    setAnalyses(prev => prev.filter(a => a.id !== analysisToDelete.id));
+                    toast({
+                      title: analysisToDelete.status === "pending" || analysisToDelete.status === "processing"
+                        ? "Analyse abgebrochen"
+                        : "Analyse entfernt",
+                      description: "Die Analyse wurde erfolgreich gelöscht.",
+                    });
+                  } catch (err) {
+                    console.error("Error deleting analysis:", err);
+                    toast({
+                      title: "Fehler",
+                      description: "Die Analyse konnte nicht gelöscht werden.",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setDeleteDialogOpen(false);
+                    setAnalysisToDelete(null);
+                  }
+                }}
+              >
+                {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
+                  ? "Analyse abbrechen"
+                  : "Analyse entfernen"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );
