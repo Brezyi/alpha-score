@@ -10,6 +10,7 @@ export interface Testimonial {
   testimonial_text: string;
   score_before: number | null;
   score_after: number | null;
+  star_rating: number | null;
   is_approved: boolean;
   is_featured: boolean;
   created_at: string;
@@ -83,6 +84,7 @@ export function useUserTestimonial(userId: string | undefined) {
     analysis_id?: string;
     score_before?: number;
     score_after?: number;
+    star_rating?: number;
   }) => {
     if (!userId) throw new Error("User not authenticated");
 
@@ -94,6 +96,7 @@ export function useUserTestimonial(userId: string | undefined) {
       analysis_id: data.analysis_id || null,
       score_before: data.score_before || null,
       score_after: data.score_after || null,
+      star_rating: data.star_rating || null,
     });
 
     if (error) throw error;

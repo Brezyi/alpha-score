@@ -1,7 +1,8 @@
-import { Star, Quote, MessageSquare } from "lucide-react";
+import { Quote, MessageSquare } from "lucide-react";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { useTestimonials } from "@/hooks/useTestimonials";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StarRating } from "@/components/StarRating";
 
 const Testimonials = () => {
   const { settings } = useGlobalSettings();
@@ -61,11 +62,12 @@ const Testimonials = () => {
                   {/* Quote Icon */}
                   <Quote className="absolute top-6 right-6 w-8 h-8 text-primary/20" />
 
-                  {/* Rating (5 stars for approved testimonials) */}
-                  <div className="flex gap-1 mb-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Star key={i} className="w-4 h-4 fill-primary text-primary" />
-                    ))}
+                  {/* Rating */}
+                  <div className="mb-4">
+                    <StarRating 
+                      rating={testimonial.star_rating ?? 5} 
+                      size="sm" 
+                    />
                   </div>
 
                   {/* Text */}
