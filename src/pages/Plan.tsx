@@ -50,12 +50,12 @@ type Analysis = {
 };
 
 const CATEGORIES = [
-  { id: "skincare", name: "Skincare", icon: Droplets, color: "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400" },
-  { id: "hair", name: "Haare & Bart", icon: Scissors, color: "bg-amber-500/20 text-amber-600 dark:text-amber-400" },
-  { id: "body", name: "Körper & Gym", icon: Dumbbell, color: "bg-red-500/20 text-red-600 dark:text-red-400" },
-  { id: "style", name: "Style & Kleidung", icon: Shirt, color: "bg-purple-500/20 text-purple-600 dark:text-purple-400" },
-  { id: "teeth", name: "Zähne & Lächeln", icon: SmilePlus, color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" },
-  { id: "mindset", name: "Mindset & Haltung", icon: Brain, color: "bg-blue-500/20 text-blue-600 dark:text-blue-400" },
+  { id: "skincare", name: "Skincare", icon: Droplets, color: "bg-cyan-500/10 text-cyan-500", borderColor: "border-cyan-500/20" },
+  { id: "hair", name: "Haare & Bart", icon: Scissors, color: "bg-purple-500/10 text-purple-500", borderColor: "border-purple-500/20" },
+  { id: "body", name: "Körper & Gym", icon: Dumbbell, color: "bg-orange-500/10 text-orange-500", borderColor: "border-orange-500/20" },
+  { id: "style", name: "Style & Kleidung", icon: Shirt, color: "bg-pink-500/10 text-pink-500", borderColor: "border-pink-500/20" },
+  { id: "teeth", name: "Zähne & Lächeln", icon: SmilePlus, color: "bg-emerald-500/10 text-emerald-500", borderColor: "border-emerald-500/20" },
+  { id: "mindset", name: "Mindset & Haltung", icon: Brain, color: "bg-blue-500/10 text-blue-500", borderColor: "border-blue-500/20" },
 ];
 
 const Plan = () => {
@@ -575,44 +575,57 @@ const Plan = () => {
           </motion.div>
         )}
 
-        {/* Category Tabs */}
+        {/* Category Cards Grid - Showcase Style */}
         {tasks.length > 0 && (
           <>
             <motion.div 
-              className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
+              className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
             >
               {CATEGORIES.map((cat, index) => {
                 const catTasks = tasks.filter(t => t.category === cat.id);
                 if (catTasks.length === 0) return null;
                 
                 const catCompleted = catTasks.filter(t => t.completed).length;
+                const catProgress = (catCompleted / catTasks.length) * 100;
                 const isActive = activeCategory === cat.id;
                 
                 return (
                   <motion.button
                     key={cat.id}
                     onClick={() => setActiveCategory(cat.id)}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-xl whitespace-nowrap transition-all ${
+                    className={cn(
+                      "p-4 rounded-xl text-left transition-all border",
                       isActive 
-                        ? "bg-primary text-primary-foreground" 
-                        : "bg-card border border-border hover:border-primary/50"
-                    }`}
-                    initial={shouldReduce ? false : { opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={shouldReduce ? { duration: 0.15 } : { delay: 0.5 + index * 0.05 }}
+                        ? `${cat.color} ${cat.borderColor} border-2 shadow-lg` 
+                        : "bg-muted/30 border-border/50 hover:border-primary/30"
+                    )}
+                    variants={itemVariants}
                     whileHover={hoverScaleSmall}
                     whileTap={tapScale}
                   >
-                    <cat.icon className="w-4 h-4" />
-                    <span className="text-sm font-medium">{cat.name}</span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                      isActive ? "bg-primary-foreground/20" : "bg-muted"
-                    }`}>
-                      {catCompleted}/{catTasks.length}
-                    </span>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center",
+                        isActive ? cat.color : "bg-muted"
+                      )}>
+                        <cat.icon className="w-4 h-4" />
+                      </div>
+                      <span className="font-semibold text-sm">{cat.name}</span>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="h-2 rounded-full bg-muted/50 overflow-hidden mb-2">
+                      <motion.div 
+                        className="h-full rounded-full bg-primary"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${catProgress}%` }}
+                        transition={{ duration: 0.5, delay: index * 0.1 }}
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground text-right">{Math.round(catProgress)}%</div>
                   </motion.button>
                 );
               })}

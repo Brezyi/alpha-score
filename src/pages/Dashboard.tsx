@@ -345,64 +345,116 @@ const Dashboard = () => {
           </p>
         </div>
 
-        {/* Stats Overview */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
-            <div className="text-sm text-muted-foreground mb-1">Aktueller Score</div>
-            <div className="flex items-end gap-2">
-              <div className="text-3xl font-bold text-gradient">
-                {latestScore !== null ? (
-                  hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
-                ) : "—"}
+        {/* Stats Overview - Showcase Style */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Main Score Card with Circle */}
+          <div className="md:col-span-1 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
+            <div className="text-center">
+              <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
+              <div className="relative inline-flex items-center justify-center">
+                <svg className="w-32 h-32 transform -rotate-90">
+                  <circle
+                    cx="64"
+                    cy="64"
+                    r="56"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="none"
+                    className="text-muted/30"
+                  />
+                  <circle
+                    cx="64"
+                    cy="64"
+                    r="56"
+                    stroke="url(#dashboardScoreGradient)"
+                    strokeWidth="8"
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={352}
+                    strokeDashoffset={352 - (352 * (latestScore || 0)) / 10}
+                    className="transition-all duration-1000 ease-out"
+                  />
+                  <defs>
+                    <linearGradient id="dashboardScoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" />
+                      <stop offset="100%" stopColor="hsl(153, 100%, 60%)" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-4xl font-black text-primary">
+                    {latestScore !== null ? (
+                      hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
+                    ) : "—"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">von 10</span>
+                </div>
               </div>
+              
+              {/* Score Change Indicator */}
               {scoreDiff !== null && (
-                <div className={`flex items-center text-sm mb-1 ${
-                  parseFloat(scoreDiff) > 0 ? "text-green-500" : 
-                  parseFloat(scoreDiff) < 0 ? "text-red-500" : "text-muted-foreground"
+                <div className={`mt-3 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
+                  parseFloat(scoreDiff) > 0 ? "bg-green-500/10 text-green-500" : 
+                  parseFloat(scoreDiff) < 0 ? "bg-red-500/10 text-red-500" : "bg-muted text-muted-foreground"
                 }`}>
                   {parseFloat(scoreDiff) > 0 ? (
-                    <ArrowUpRight className="w-4 h-4 animate-bounce-subtle" />
+                    <ArrowUpRight className="w-4 h-4" />
                   ) : parseFloat(scoreDiff) < 0 ? (
                     <ArrowDownRight className="w-4 h-4" />
                   ) : (
                     <Minus className="w-4 h-4" />
                   )}
-                  {Math.abs(parseFloat(scoreDiff))}
+                  {parseFloat(scoreDiff) > 0 ? "+" : ""}{scoreDiff} seit letzter Analyse
                 </div>
               )}
             </div>
           </div>
-          <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
-            <div className="text-sm text-muted-foreground mb-1">Analysen</div>
-            <div className="text-3xl font-bold">{completedAnalyses.length}</div>
-          </div>
-          <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
-            <div className="text-sm text-muted-foreground mb-1">Streak</div>
-            <div className="text-3xl font-bold flex items-center gap-2">
-              {streakLoading ? (
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              ) : (
-                <>
-                  {currentStreak}
-                  <Flame className={`w-6 h-6 ${currentStreak > 0 ? "text-orange-500 animate-wiggle" : "text-muted-foreground"}`} />
-                </>
-              )}
+
+          {/* Potential & Stats */}
+          <div className="md:col-span-2 space-y-4">
+            {/* Potential Card */}
+            {latestPotential !== null && (
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary" />
+                    <span className="font-medium">Dein Potenzial</span>
+                  </div>
+                  <span className="text-2xl font-bold text-primary">{latestPotential.toFixed(1)}</span>
+                </div>
+                {pointsToGo && (
+                  <div className="mt-2 text-sm text-muted-foreground">
+                    Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> erreichbar
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Mini Stats Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "250ms", animationFillMode: "forwards" }}>
+                <div className="text-2xl font-bold">{completedAnalyses.length}</div>
+                <div className="text-xs text-muted-foreground">Analysen</div>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
+                <div className="flex items-center justify-center gap-1">
+                  <span className="text-2xl font-bold">
+                    {streakLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    ) : currentStreak}
+                  </span>
+                  {!streakLoading && currentStreak > 0 && <Flame className="w-5 h-5 text-orange-500" />}
+                </div>
+                <div className="text-xs text-muted-foreground">Streak</div>
+                {!streakLoading && !isActiveToday && currentStreak > 0 && (
+                  <div className="text-[10px] text-orange-400 mt-1 animate-pulse">Heute aktiv werden!</div>
+                )}
+              </div>
+              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "350ms", animationFillMode: "forwards" }}>
+                <div className="text-2xl font-bold text-primary">{latestPotential ? `Top ${Math.round((1 - (latestScore || 0) / 10) * 100)}%` : "—"}</div>
+                <div className="text-xs text-muted-foreground">Ranking</div>
+              </div>
             </div>
-            {!streakLoading && longestStreak > 0 && (
-              <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
-                <Trophy className="w-3 h-3" />
-                Best: {longestStreak}
-              </div>
-            )}
-            {!streakLoading && !isActiveToday && currentStreak > 0 && (
-              <div className="text-xs text-orange-400 mt-1 animate-pulse">
-                Heute noch aktiv werden!
-              </div>
-            )}
-          </div>
-          <div className="p-4 rounded-2xl glass-card opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform duration-300" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
-            <div className="text-sm text-muted-foreground mb-1">Tasks heute</div>
-            <div className="text-3xl font-bold">0/5</div>
           </div>
         </div>
 

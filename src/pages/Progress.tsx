@@ -463,15 +463,15 @@ export default function Progress() {
               </motion.div>
             </motion.div>
 
-            {/* Score Chart */}
+            {/* Score Chart - Showcase Style with Custom SVG */}
             {chartData.length >= 2 && (
               <motion.div
                 initial={shouldReduce ? false : { opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={shouldReduce ? { duration: 0.2 } : { delay: 0.4 }}
               >
-                <Card className="p-6 mb-8 overflow-hidden relative">
-                  {/* Animated background shimmer - only on desktop */}
+                <Card className="p-6 mb-8 glass-card overflow-hidden relative">
+                  {/* Animated background shimmer */}
                   {!shouldReduce && (
                     <motion.div
                       className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent"
@@ -480,18 +480,23 @@ export default function Progress() {
                     />
                   )}
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-bold">Score-Entwicklung</h2>
-                      <span className="text-sm text-muted-foreground">
-                        {completedAnalyses.length} Analysen
-                      </span>
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <BarChart3 className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <h2 className="text-lg font-bold">Score-Entwicklung</h2>
+                          <p className="text-xs text-muted-foreground">{completedAnalyses.length} Analysen total</p>
+                        </div>
+                      </div>
                     </div>
                     <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={chartData}>
                           <defs>
-                            <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                            <linearGradient id="progressScoreGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
                               <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                             </linearGradient>
                           </defs>
@@ -514,7 +519,8 @@ export default function Progress() {
                             contentStyle={{
                               backgroundColor: "hsl(var(--card))",
                               border: "1px solid hsl(var(--border))",
-                              borderRadius: "8px",
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                             }}
                             labelStyle={{ color: "hsl(var(--foreground))" }}
                             formatter={(value: number) => [value.toFixed(1), "Score"]}
@@ -524,7 +530,9 @@ export default function Progress() {
                             dataKey="score"
                             stroke="hsl(var(--primary))"
                             strokeWidth={3}
-                            fill="url(#scoreGradient)"
+                            fill="url(#progressScoreGradient)"
+                            dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
+                            activeDot={{ r: 6, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
                           />
                         </AreaChart>
                       </ResponsiveContainer>
@@ -780,115 +788,72 @@ export default function Progress() {
               </motion.div>
             )}
 
-            {/* Milestones */}
+            {/* Milestones - Showcase Style */}
             {completedAnalyses.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
               >
-                <Card className="p-6 mb-8">
-                  <div className="flex items-center gap-2 mb-4">
-                    <motion.div
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
+                <Card className="p-6 mb-8 glass-card">
+                  <div className="flex items-center gap-2 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
                       <Crown className="w-5 h-5 text-amber-500" />
-                    </motion.div>
-                    <h3 className="font-bold">Meilensteine</h3>
+                    </div>
+                    <div>
+                      <h3 className="font-bold">Meilensteine</h3>
+                      <p className="text-xs text-muted-foreground">Sammle Achievements auf deiner Reise</p>
+                    </div>
                   </div>
                   <motion.div 
-                    className="grid grid-cols-2 md:grid-cols-4 gap-3"
+                    className="space-y-3"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
                   >
-                    {/* Analysis Count Milestones */}
+                    {/* Analysis Milestones */}
                     {[
-                      { count: 1, emoji: "🎯", locked: "🔒", label: "Erste Analyse", achieved: completedAnalyses.length >= 1 },
-                      { count: 3, emoji: "📊", locked: "🔒", label: "3 Analysen", achieved: completedAnalyses.length >= 3 },
-                      { count: 5, emoji: "🔥", locked: "🔒", label: "5 Analysen", achieved: completedAnalyses.length >= 5 },
-                      { count: 10, emoji: "💎", locked: "🔒", label: "10 Analysen", achieved: completedAnalyses.length >= 10 },
+                      { emoji: "🎯", title: "Erste Analyse", achieved: completedAnalyses.length >= 1 },
+                      { emoji: "📈", title: "+0.5 Score erreicht", achieved: totalImprovement && parseFloat(totalImprovement) >= 0.5 },
+                      { emoji: "🔥", title: "7-Tage Streak", achieved: false },
+                      { emoji: "⭐", title: "Score 7.0 erreicht", achieved: highestScore && parseFloat(highestScore) >= 7.0 },
+                      { emoji: "🏆", title: "Top 10% erreicht", achieved: highestScore && parseFloat(highestScore) >= 8.5 },
                     ].map((milestone, i) => (
-                      <motion.div
-                        key={i}
+                      <motion.div 
+                        key={milestone.title}
                         variants={cardVariants}
-                        whileHover={{ scale: 1.05 }}
+                        whileHover={{ scale: 1.02, x: 5 }}
                         className={cn(
-                          "p-3 rounded-lg text-center border transition-all cursor-pointer",
-                          milestone.achieved 
-                            ? "bg-amber-500/10 border-amber-500/30" 
-                            : "bg-muted/30 border-border opacity-50"
+                          "flex items-center gap-3 p-3 rounded-xl transition-all",
+                          milestone.achieved ? "bg-primary/10" : "bg-muted/30 opacity-60"
                         )}
                       >
-                        <motion.div 
-                          className="text-2xl mb-1"
-                          animate={milestone.achieved ? { scale: [1, 1.2, 1] } : {}}
-                          transition={{ duration: 0.5 }}
+                        <motion.span 
+                          className="text-2xl"
+                          animate={milestone.achieved ? { scale: [1, 1.1, 1] } : {}}
+                          transition={{ duration: 0.5, delay: i * 0.1 }}
                         >
-                          {milestone.achieved ? milestone.emoji : milestone.locked}
-                        </motion.div>
-                        <div className="text-xs font-medium">{milestone.label}</div>
-                      </motion.div>
-                    ))}
-
-                    {/* Score Improvement Milestones */}
-                    {[
-                      { points: 0.5, emoji: "📈", label: "+0.5 Punkte", achieved: totalImprovement && parseFloat(totalImprovement) >= 0.5, color: "green" },
-                      { points: 1.0, emoji: "🚀", label: "+1.0 Punkte", achieved: totalImprovement && parseFloat(totalImprovement) >= 1.0, color: "green" },
-                      { points: 2.0, emoji: "⭐", label: "+2.0 Punkte", achieved: totalImprovement && parseFloat(totalImprovement) >= 2.0, color: "green" },
-                      { points: 3.0, emoji: "🏆", label: "+3.0 Punkte", achieved: totalImprovement && parseFloat(totalImprovement) >= 3.0, color: "green" },
-                    ].map((milestone, i) => (
-                      <motion.div
-                        key={`score-${i}`}
-                        variants={cardVariants}
-                        whileHover={{ scale: 1.05 }}
-                        className={cn(
-                          "p-3 rounded-lg text-center border transition-all cursor-pointer",
-                          milestone.achieved 
-                            ? "bg-green-500/10 border-green-500/30" 
-                            : "bg-muted/30 border-border opacity-50"
+                          {milestone.emoji}
+                        </motion.span>
+                        <span className={cn(
+                          "font-medium flex-1",
+                          !milestone.achieved && "text-muted-foreground"
+                        )}>
+                          {milestone.title}
+                        </span>
+                        {milestone.achieved ? (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 300 }}
+                          >
+                            <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
+                              <Target className="w-3.5 h-3.5 text-primary-foreground" />
+                            </div>
+                          </motion.div>
+                        ) : (
+                          <span className="text-muted-foreground">🔒</span>
                         )}
-                      >
-                        <motion.div 
-                          className="text-2xl mb-1"
-                          animate={milestone.achieved ? { scale: [1, 1.2, 1] } : {}}
-                          transition={{ duration: 0.5 }}
-                        >
-                          {milestone.achieved ? milestone.emoji : "🔒"}
-                        </motion.div>
-                        <div className="text-xs font-medium">{milestone.label}</div>
-                      </motion.div>
-                    ))}
-
-                    {/* Score Level Milestones */}
-                    {[
-                      { score: 5.0, emoji: "✨", label: "Score 5+", achieved: highestScore && parseFloat(highestScore) >= 5.0 },
-                      { score: 6.0, emoji: "🌟", label: "Score 6+", achieved: highestScore && parseFloat(highestScore) >= 6.0 },
-                      { score: 7.0, emoji: "💫", label: "Score 7+", achieved: highestScore && parseFloat(highestScore) >= 7.0 },
-                      { score: 8.0, emoji: "👑", label: "Score 8+", achieved: highestScore && parseFloat(highestScore) >= 8.0, special: true },
-                    ].map((milestone, i) => (
-                      <motion.div
-                        key={`level-${i}`}
-                        variants={cardVariants}
-                        whileHover={{ scale: 1.05 }}
-                        className={cn(
-                          "p-3 rounded-lg text-center border transition-all cursor-pointer",
-                          milestone.achieved 
-                            ? milestone.special
-                              ? "bg-gradient-to-br from-amber-500/20 to-primary/20 border-amber-500/50"
-                              : "bg-blue-500/10 border-blue-500/30" 
-                            : "bg-muted/30 border-border opacity-50"
-                        )}
-                      >
-                        <motion.div 
-                          className="text-2xl mb-1"
-                          animate={milestone.achieved ? { scale: [1, 1.2, 1], rotate: milestone.special ? [0, 10, -10, 0] : 0 } : {}}
-                          transition={{ duration: milestone.special ? 2 : 0.5, repeat: milestone.special ? Infinity : 0 }}
-                        >
-                          {milestone.achieved ? milestone.emoji : "🔒"}
-                        </motion.div>
-                        <div className="text-xs font-medium">{milestone.label}</div>
                       </motion.div>
                     ))}
                   </motion.div>

@@ -537,7 +537,7 @@ export default function AnalysisResults() {
           </DialogContent>
         </Dialog>
 
-        {/* Score Card with Potential */}
+        {/* Score Card with Circular Display - Showcase Style */}
         <motion.div
           initial={{ opacity: 0, y: 30, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -547,7 +547,7 @@ export default function AnalysisResults() {
             {/* Animated background glow */}
             <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 animate-gradient-shift pointer-events-none" />
             
-            <CardContent className="p-6 relative">
+            <CardContent className="p-6 md:p-8 relative">
               <motion.div 
                 className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50"
                 initial={{ scaleX: 0 }}
@@ -555,95 +555,123 @@ export default function AnalysisResults() {
                 transition={{ delay: 0.5, duration: 0.8 }}
               />
               
-              <div className="flex items-center justify-center gap-6 md:gap-10">
-                {/* Current Score */}
-                <motion.div 
-                  className="text-center"
-                  initial={{ opacity: 0, x: -30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4, type: "spring" }}
-                >
-                  <p className="text-muted-foreground text-xs mb-1">Aktuell</p>
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                {/* Circular Score Display */}
+                <div className="text-center">
+                  <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
+                  <div className="relative inline-flex items-center justify-center">
+                    <svg className="w-40 h-40 transform -rotate-90">
+                      <circle
+                        cx="80"
+                        cy="80"
+                        r="70"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        className="text-muted/30"
+                      />
+                      <motion.circle
+                        cx="80"
+                        cy="80"
+                        r="70"
+                        stroke="url(#analysisScoreGradient)"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={440}
+                        initial={{ strokeDashoffset: 440 }}
+                        animate={{ strokeDashoffset: 440 - (440 * (analysis?.looks_score || 0)) / 10 }}
+                        transition={{ duration: 1.5, delay: 0.5, ease: "easeOut" }}
+                      />
+                      <defs>
+                        <linearGradient id="analysisScoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" />
+                          <stop offset="100%" stopColor="hsl(153, 100%, 60%)" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <motion.span 
+                        className="text-5xl font-black text-primary"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                      >
+                        {analysis?.looks_score?.toFixed(1) || "?"}
+                      </motion.span>
+                      <span className="text-xs text-muted-foreground">von 10</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Potential & Stats */}
+                <div className="space-y-4">
+                  {/* Potential Card */}
                   <motion.div 
-                    className="text-5xl md:text-6xl font-bold text-foreground"
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+                    className="p-4 rounded-xl bg-primary/10 border border-primary/20"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.6 }}
                   >
-                    {analysis?.looks_score?.toFixed(1) || "?"}
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <motion.div
+                          animate={{ rotate: [0, 10, -10, 0] }}
+                          transition={{ repeat: Infinity, duration: 2 }}
+                        >
+                          <Zap className="w-5 h-5 text-primary" />
+                        </motion.div>
+                        <span className="font-medium">Dein Potenzial</span>
+                      </div>
+                      <span className="text-2xl font-bold text-primary">
+                        {analysis?.potential_score?.toFixed(1) || (analysis?.looks_score ? (Math.min(10, analysis.looks_score + 1.5)).toFixed(1) : "?")}
+                      </span>
+                    </div>
+                    {analysis?.looks_score && analysis?.potential_score && (
+                      <motion.div 
+                        className="flex items-center gap-2 text-sm text-primary"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 1 }}
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                        <span>+{(analysis.potential_score - analysis.looks_score).toFixed(1)} Punkte möglich</span>
+                      </motion.div>
+                    )}
                   </motion.div>
-                </motion.div>
-                
-                {/* Arrow */}
-                <motion.div 
-                  className="flex flex-col items-center gap-1"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.7, type: "spring" }}
-                >
-                  <motion.div
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                  >
-                    <ArrowRight className="w-6 h-6 text-primary" />
-                  </motion.div>
-                  <span className="text-xs text-muted-foreground">Potenzial</span>
-                </motion.div>
-                
-                {/* Potential Score */}
-                <motion.div 
-                  className="text-center"
-                  initial={{ opacity: 0, x: 30 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.5, type: "spring" }}
-                >
-                  <p className="text-primary text-xs mb-1 flex items-center justify-center gap-1">
-                    <motion.div
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ repeat: Infinity, duration: 2 }}
+
+                  {/* Mini Stats */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <motion.div 
+                      className="p-3 rounded-xl bg-muted/50 text-center"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7 }}
                     >
-                      <Zap className="w-3 h-3" />
+                      <div className="text-lg font-bold text-foreground">
+                        Top {Math.round((1 - (analysis?.looks_score || 0) / 10) * 100)}%
+                      </div>
+                      <div className="text-xs text-muted-foreground">Ranking</div>
                     </motion.div>
-                    Erreichbar
-                  </p>
-                  <motion.div 
-                    className="text-5xl md:text-6xl font-bold text-primary"
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
-                  >
-                    {analysis?.potential_score?.toFixed(1) || (analysis?.looks_score ? (Math.min(10, analysis.looks_score + 1.5)).toFixed(1) : "?")}
-                  </motion.div>
-                  {/* Pulse ring behind potential score */}
-                  <div className="absolute -z-10 animate-pulse-ring rounded-full w-20 h-20 border-2 border-primary/30" style={{ top: '50%', right: '15%', transform: 'translate(50%, -50%)' }} />
-                </motion.div>
+                    <motion.div 
+                      className="p-3 rounded-xl bg-muted/50 text-center"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.8 }}
+                    >
+                      <div className="text-lg font-bold text-primary">
+                        +{analysis?.potential_score && analysis?.looks_score 
+                          ? (analysis.potential_score - analysis.looks_score).toFixed(1) 
+                          : "1.5"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">Potenzial</div>
+                    </motion.div>
+                  </div>
+                </div>
               </div>
               
-              {/* Improvement indicator */}
-              {analysis?.looks_score && analysis?.potential_score && (
-                <motion.div 
-                  className="mt-4 text-center"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1 }}
-                >
-                  <motion.span 
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium"
-                    whileHover={{ scale: 1.05 }}
-                  >
-                    <motion.div
-                      animate={{ y: [0, -2, 0] }}
-                      transition={{ repeat: Infinity, duration: 1 }}
-                    >
-                      <TrendingUp className="w-4 h-4" />
-                    </motion.div>
-                    +{(analysis.potential_score - analysis.looks_score).toFixed(1)} Punkte möglich
-                  </motion.span>
-                </motion.div>
-              )}
-              
               <motion.p 
-                className="text-muted-foreground text-center mt-4 text-sm"
+                className="text-muted-foreground text-center mt-6 text-sm"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.1 }}
