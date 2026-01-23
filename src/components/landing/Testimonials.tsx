@@ -49,10 +49,11 @@ const Testimonials = () => {
         {!loading && testimonials.length > 0 && (
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {testimonials.map((testimonial) => {
-              const scoreImprovement =
-                testimonial.score_before && testimonial.score_after
-                  ? (testimonial.score_after - testimonial.score_before).toFixed(1)
-                  : null;
+              const scoreDiff = testimonial.score_before && testimonial.score_after
+                ? testimonial.score_after - testimonial.score_before
+                : null;
+              // Only show score improvement if it's actually positive
+              const scoreImprovement = scoreDiff && scoreDiff > 0 ? scoreDiff.toFixed(1) : null;
 
               return (
                 <div
