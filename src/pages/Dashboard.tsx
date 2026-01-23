@@ -93,37 +93,38 @@ const quickActions = [
   },
 ];
 
-// Animated number component using CSS counter animation
-const AnimatedNumber = ({ value, duration = 1.2, decimals = 1 }: { value: number; duration?: number; decimals?: number }) => {
+// Animated number component - simple and performant
+const AnimatedNumber = ({ value, decimals = 1 }: { value: number; decimals?: number }) => {
   const [displayValue, setDisplayValue] = useState(0);
-  const hasAnimatedRef = useRef(false);
+  const animatedRef = useRef(false);
   
   useEffect(() => {
-    if (hasAnimatedRef.current) return;
-    hasAnimatedRef.current = true;
+    if (animatedRef.current || value === 0) {
+      setDisplayValue(value);
+      return;
+    }
     
-    // Simple stepped animation with fewer updates
-    const steps = 20;
-    const stepDuration = (duration * 1000) / steps;
-    let currentStep = 0;
+    animatedRef.current = true;
+    let frame = 0;
+    const totalFrames = 30;
     
-    const interval = setInterval(() => {
-      currentStep++;
-      const progress = currentStep / steps;
-      // Ease-out cubic
-      const eased = 1 - Math.pow(1 - progress, 3);
+    const animate = () => {
+      frame++;
+      const progress = frame / totalFrames;
+      const eased = 1 - Math.pow(1 - progress, 2);
       setDisplayValue(eased * value);
       
-      if (currentStep >= steps) {
-        clearInterval(interval);
+      if (frame < totalFrames) {
+        setTimeout(animate, 40);
+      } else {
         setDisplayValue(value);
       }
-    }, stepDuration);
+    };
     
-    return () => clearInterval(interval);
-  }, [value, duration]);
+    setTimeout(animate, 100);
+  }, [value]);
 
-  return <>{displayValue.toFixed(decimals)}</>;
+  return <span>{displayValue.toFixed(decimals)}</span>;
 };
 
 const Dashboard = () => {
@@ -301,7 +302,7 @@ const Dashboard = () => {
             <div className="flex items-end gap-2">
               <div className="text-3xl font-bold text-gradient">
                 {latestScore !== null ? (
-                  hasAnimated ? <AnimatedNumber value={latestScore} duration={1200} /> : latestScore.toFixed(1)
+                  hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
                 ) : "—"}
               </div>
               {scoreDiff !== null && (
@@ -373,7 +374,7 @@ const Dashboard = () => {
               <Progress value={potentialProgress} animated={hasAnimated} animationDuration={1200} className="h-4" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xs font-medium text-primary-foreground drop-shadow-sm">
-                  {hasAnimated ? <AnimatedNumber value={potentialProgress} duration={1200} decimals={0} /> : potentialProgress}%
+                  {hasAnimated ? <AnimatedNumber value={potentialProgress} decimals={0} /> : potentialProgress}%
                 </span>
               </div>
             </div>
