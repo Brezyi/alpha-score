@@ -554,19 +554,23 @@ export default function Coach() {
       {/* Messages */}
       <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
-          {messages.length === 0 && (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                <Bot className="w-10 h-10 text-primary" />
-              </div>
-              <h2 className="text-xl font-bold mb-2">Dein Looksmaxing Coach</h2>
-              <p className="text-muted-foreground max-w-sm mx-auto">
-                {userAnalysis 
-                  ? `Score: ${userAnalysis.looks_score}/10 • Ich kenne deine Schwächen und helfe dir konkret.`
-                  : "Lade deine Analyse..."
-                }
-              </p>
-              <div className="mt-6 flex flex-wrap justify-center gap-2">
+          {messages.length <= 1 && (
+            <div className="text-center py-6">
+              {messages.length === 0 && (
+                <>
+                  <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <Bot className="w-10 h-10 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-bold mb-2">Dein Looksmaxing Coach</h2>
+                  <p className="text-muted-foreground max-w-sm mx-auto">
+                    {userAnalysis 
+                      ? `Score: ${userAnalysis.looks_score}/10 • Ich kenne deine Schwächen und helfe dir konkret.`
+                      : "Lade deine Analyse..."
+                    }
+                  </p>
+                </>
+              )}
+              <div className="mt-4 flex flex-wrap justify-center gap-2">
                 {suggestions.map((suggestion) => (
                   <button
                     key={suggestion}
