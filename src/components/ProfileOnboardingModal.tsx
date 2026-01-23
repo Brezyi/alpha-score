@@ -1,16 +1,23 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { User, MapPin, ArrowRight } from "lucide-react";
+import { User, MapPin, ArrowRight, Sparkles } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
-interface CoachOnboardingProps {
+interface ProfileOnboardingModalProps {
+  open: boolean;
   onComplete: (data: { gender: "male" | "female"; country: string }) => void;
 }
 
-export function CoachOnboarding({ onComplete }: CoachOnboardingProps) {
+export function ProfileOnboardingModal({ open, onComplete }: ProfileOnboardingModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [country, setCountry] = useState("");
@@ -27,15 +34,25 @@ export function CoachOnboarding({ onComplete }: CoachOnboardingProps) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] p-4">
-      <Card className="w-full max-w-md p-6 space-y-6 bg-card/80 backdrop-blur border-border">
+    <Dialog open={open} onOpenChange={() => {}}>
+      <DialogContent className="sm:max-w-md" hideCloseButton>
+        <DialogHeader>
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles className="w-5 h-5 text-primary" />
+            <DialogTitle>Kurze Fragen für bessere Ergebnisse</DialogTitle>
+          </div>
+          <DialogDescription>
+            Diese Infos helfen uns, deine Analyse präziser zu gestalten.
+          </DialogDescription>
+        </DialogHeader>
+
         {step === 1 ? (
-          <>
+          <div className="space-y-6 py-4">
             <div className="text-center space-y-2">
               <User className="w-12 h-12 mx-auto text-primary" />
-              <h2 className="text-xl font-bold">Geschlecht</h2>
+              <h3 className="text-lg font-semibold">Geschlecht</h3>
               <p className="text-sm text-muted-foreground">
-                Für eine präzisere Bewertung brauche ich diese Info.
+                Bewertungskriterien unterscheiden sich je nach Geschlecht.
               </p>
             </div>
 
@@ -65,12 +82,12 @@ export function CoachOnboarding({ onComplete }: CoachOnboardingProps) {
                 <span>Frau</span>
               </Button>
             </div>
-          </>
+          </div>
         ) : (
-          <>
+          <div className="space-y-6 py-4">
             <div className="text-center space-y-2">
               <MapPin className="w-12 h-12 mx-auto text-primary" />
-              <h2 className="text-xl font-bold">Herkunft</h2>
+              <h3 className="text-lg font-semibold">Herkunft</h3>
               <p className="text-sm text-muted-foreground">
                 Ethnische Merkmale beeinflussen die optimale Strategie.
               </p>
@@ -78,10 +95,10 @@ export function CoachOnboarding({ onComplete }: CoachOnboardingProps) {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="country">Land / Region</Label>
+                <Label htmlFor="country">Land / Region / Ethnie</Label>
                 <Input
                   id="country"
-                  placeholder="z.B. Deutschland, Türkei, Korea..."
+                  placeholder="z.B. Deutschland, Türkei, Korea, Arabisch..."
                   value={country}
                   onChange={(e) => setCountry(e.target.value)}
                   onKeyDown={(e) => {
@@ -106,14 +123,14 @@ export function CoachOnboarding({ onComplete }: CoachOnboardingProps) {
                   disabled={!country.trim()}
                   className="flex-1 gap-2"
                 >
-                  Weiter
+                  Fertig
                   <ArrowRight className="w-4 h-4" />
                 </Button>
               </div>
             </div>
-          </>
+          </div>
         )}
-      </Card>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
