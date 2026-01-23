@@ -143,10 +143,11 @@ export function RedeemCodeDialog({ open, onOpenChange, onSuccess }: RedeemCodeDi
 
       // Show success
       setSuccess(true);
+      const days = promoCode.duration_days || 30;
       setSuccessMessage(
         promoCode.plan_type === 'lifetime' 
           ? "Du hast jetzt Lifetime-Zugang!" 
-          : `Du hast jetzt ${promoCode.duration_days} Tage Premium!`
+          : `Du hast jetzt ${days} ${days === 1 ? 'Tag' : 'Tage'} Premium!`
       );
 
       toast({
