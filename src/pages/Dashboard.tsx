@@ -405,6 +405,8 @@ const Dashboard = () => {
             <div className="space-y-3">
               {analyses.map((analysis) => {
                 const isPending = analysis.status === "pending" || analysis.status === "processing";
+                const isFailed = analysis.status === "failed" || analysis.status === "validation_failed";
+                const canDelete = isPending || isFailed;
                 
                 const handleCancelAnalysis = async (e: React.MouseEvent) => {
                   e.preventDefault();
@@ -513,14 +515,14 @@ const Dashboard = () => {
                       <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
                     </Link>
                     
-                    {/* Cancel button for pending analyses */}
-                    {isPending && (
+                    {/* Cancel/Delete button for pending or failed analyses */}
+                    {canDelete && (
                       <Button
                         variant="ghost"
                         size="icon"
                         className="flex-shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         onClick={handleCancelAnalysis}
-                        title="Analyse abbrechen"
+                        title={isFailed ? "Analyse entfernen" : "Analyse abbrechen"}
                       >
                         <X className="w-5 h-5" />
                       </Button>
