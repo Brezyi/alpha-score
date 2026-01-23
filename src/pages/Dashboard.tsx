@@ -93,6 +93,35 @@ const quickActions = [
   },
 ];
 
+// Animated number component
+const AnimatedNumber = ({ value, duration = 1000, decimals = 1 }: { value: number; duration?: number; decimals?: number }) => {
+  const [displayValue, setDisplayValue] = useState(0);
+  
+  useEffect(() => {
+    const startTime = Date.now();
+    const startValue = 0;
+    
+    const animate = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Easing function (ease-out-cubic)
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const currentValue = startValue + eased * (value - startValue);
+      
+      setDisplayValue(currentValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [value, duration]);
+
+  return <>{displayValue.toFixed(decimals)}</>;
+};
+
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const { profile, updateProfile, loading: profileLoading } = useProfile();
@@ -100,12 +129,20 @@ const Dashboard = () => {
   const [analysesLoading, setAnalysesLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [analysisToDelete, setAnalysisToDelete] = useState<Analysis | null>(null);
+  const [hasAnimated, setHasAnimated] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium } = useSubscription();
   const { isAdminOrOwner, role } = useUserRole();
   const { currentStreak, longestStreak, isActiveToday, loading: streakLoading } = useStreak();
   const { settings } = useGlobalSettings();
+
+  // Trigger animation once analyses are loaded
+  useEffect(() => {
+    if (!analysesLoading && analyses.length > 0 && !hasAnimated) {
+      setHasAnimated(true);
+    }
+  }, [analysesLoading, analyses, hasAnimated]);
 
   // Check if onboarding is needed (profile loaded but no gender set)
   const needsOnboarding = !profileLoading && profile && !profile.gender;
@@ -259,7 +296,9 @@ const Dashboard = () => {
             <div className="text-sm text-muted-foreground mb-1">Aktueller Score</div>
             <div className="flex items-end gap-2">
               <div className="text-3xl font-bold text-gradient">
-                {latestScore !== null ? latestScore.toFixed(1) : "—"}
+                {latestScore !== null ? (
+                  hasAnimated ? <AnimatedNumber value={latestScore} duration={1200} /> : latestScore.toFixed(1)
+                ) : "—"}
               </div>
               {scoreDiff !== null && (
                 <div className={`flex items-center text-sm mb-1 ${
@@ -327,10 +366,10 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="relative">
-              <Progress value={potentialProgress} className="h-4" />
+              <Progress value={potentialProgress} animated={hasAnimated} animationDuration={1200} className="h-4" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xs font-medium text-primary-foreground drop-shadow-sm">
-                  {potentialProgress}%
+                  {hasAnimated ? <AnimatedNumber value={potentialProgress} duration={1200} decimals={0} /> : potentialProgress}%
                 </span>
               </div>
             </div>
