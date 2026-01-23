@@ -44,6 +44,13 @@ export default function SystemSettings() {
     default_theme: "dark" as const,
   };
 
+  const isBrandingDefault = 
+    localSettings.app_name === defaultBrandingSettings.app_name &&
+    localSettings.app_logo_url === defaultBrandingSettings.app_logo_url &&
+    localSettings.favicon_url === defaultBrandingSettings.favicon_url &&
+    localSettings.accent_color === defaultBrandingSettings.accent_color &&
+    localSettings.default_theme === defaultBrandingSettings.default_theme;
+
   const resetBrandingSettings = () => {
     setLocalSettings((s) => ({
       ...s,
@@ -301,7 +308,9 @@ export default function SystemSettings() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+              <AlertDialogCancel onClick={() => setShowResetBrandingDialog(false)}>
+                Abbrechen
+              </AlertDialogCancel>
               <AlertDialogAction onClick={resetBrandingSettings}>
                 Zurücksetzen
               </AlertDialogAction>
@@ -379,6 +388,7 @@ export default function SystemSettings() {
                 variant="outline" 
                 size="sm" 
                 onClick={() => setShowResetBrandingDialog(true)}
+                disabled={isBrandingDefault}
                 className="gap-2 text-muted-foreground hover:text-foreground"
               >
                 <RotateCcw className="w-4 h-4" />
