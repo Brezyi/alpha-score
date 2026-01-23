@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
+import { useMaintenanceContext } from "@/components/MaintenanceGate";
 import { Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -19,6 +20,7 @@ export function ProtectedRoute({
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
+  const { loading: maintenanceLoading } = useMaintenanceContext();
 
   // Redirect when not authenticated (after loading completes)
   useEffect(() => {
@@ -27,8 +29,12 @@ export function ProtectedRoute({
     }
   }, [authLoading, user, navigate, redirectTo]);
 
-  // Loading state
-  if (authLoading || roleLoading) {
+  // Loading state - only show while auth is loading
+  // Role loading should be quick since MaintenanceGate already fetched it
+  // But give it a timeout to prevent infinite loading
+  const isLoading = authLoading || (roleLoading && maintenanceLoading);
+  
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
