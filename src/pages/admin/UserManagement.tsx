@@ -30,7 +30,9 @@ import {
   RefreshCw,
   Search,
   Copy,
-  Check
+  Check,
+  Sparkles,
+  Star
 } from "lucide-react";
 
 interface UserWithRole {
@@ -40,7 +42,11 @@ interface UserWithRole {
   created_at: string;
   display_name?: string;
   email?: string;
+  subscription_status?: string;
+  plan_type?: string;
 }
+
+type SubscriptionType = "none" | "premium" | "lifetime";
 
 export default function UserManagement() {
   const navigate = useNavigate();
@@ -49,6 +55,7 @@ export default function UserManagement() {
   const [users, setUsers] = useState<UserWithRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [updatingSub, setUpdatingSub] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -70,10 +77,10 @@ export default function UserManagement() {
 
       if (profilesError) throw profilesError;
 
-      // Fetch subscriptions for emails
+      // Fetch subscriptions for emails and status
       const { data: subsData } = await supabase
         .from('subscriptions')
-        .select('user_id, customer_email');
+        .select('user_id, customer_email, status, plan_type');
 
       // Merge data
       const usersWithDetails = (rolesData || []).map(role => {
@@ -83,6 +90,8 @@ export default function UserManagement() {
           ...role,
           display_name: profile?.display_name || undefined,
           email: sub?.customer_email || undefined,
+          subscription_status: sub?.status || undefined,
+          plan_type: sub?.plan_type || undefined,
         };
       });
 
@@ -106,7 +115,8 @@ export default function UserManagement() {
       user.user_id.toLowerCase().includes(query) ||
       user.display_name?.toLowerCase().includes(query) ||
       user.email?.toLowerCase().includes(query) ||
-      user.role.toLowerCase().includes(query)
+      user.role.toLowerCase().includes(query) ||
+      user.plan_type?.toLowerCase().includes(query)
     );
   }, [users, searchQuery]);
 
@@ -161,6 +171,107 @@ export default function UserManagement() {
     }
   };
 
+  const updateSubscription = async (userId: string, subType: SubscriptionType) => {
+    if (!isOwner) {
+      toast({
+        title: "Keine Berechtigung",
+        description: "Nur Owner können Abos ändern",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUpdatingSub(userId);
+    try {
+      // Check if user has an existing subscription
+      const { data: existingSub } = await supabase
+        .from('subscriptions')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (subType === "none") {
+        // Remove subscription
+        if (existingSub) {
+          const { error } = await supabase
+            .from('subscriptions')
+            .delete()
+            .eq('user_id', userId);
+          if (error) throw error;
+        }
+        
+        setUsers(prev => 
+          prev.map(u => 
+            u.user_id === userId 
+              ? { ...u, subscription_status: undefined, plan_type: undefined } 
+              : u
+          )
+        );
+        
+        toast({
+          title: "Abo entfernt",
+          description: "Nutzer ist jetzt Free-User",
+        });
+      } else {
+        // Create or update subscription
+        const subscriptionData = {
+          user_id: userId,
+          plan_type: subType,
+          status: 'active',
+          stripe_customer_id: `admin_granted_${userId}`,
+          amount: subType === 'lifetime' ? 5000 : 999,
+          currency: 'eur',
+          current_period_start: new Date().toISOString(),
+          current_period_end: subType === 'lifetime' 
+            ? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString() // 100 years
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+        };
+
+        if (existingSub) {
+          const { error } = await supabase
+            .from('subscriptions')
+            .update(subscriptionData)
+            .eq('user_id', userId);
+          if (error) throw error;
+        } else {
+          const { error } = await supabase
+            .from('subscriptions')
+            .insert(subscriptionData);
+          if (error) throw error;
+        }
+
+        setUsers(prev => 
+          prev.map(u => 
+            u.user_id === userId 
+              ? { ...u, subscription_status: 'active', plan_type: subType } 
+              : u
+          )
+        );
+
+        toast({
+          title: "Abo aktualisiert",
+          description: `Nutzer hat jetzt ${subType === 'lifetime' ? 'Lifetime' : 'Premium'}-Zugang`,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating subscription:", error);
+      toast({
+        title: "Fehler",
+        description: "Abo konnte nicht geändert werden",
+        variant: "destructive",
+      });
+    } finally {
+      setUpdatingSub(null);
+    }
+  };
+
+  const getUserSubscriptionType = (user: UserWithRole): SubscriptionType => {
+    if (!user.subscription_status || user.subscription_status !== 'active') return "none";
+    if (user.plan_type === 'lifetime') return "lifetime";
+    if (user.plan_type === 'premium') return "premium";
+    return "none";
+  };
+
   const getRoleIcon = (role: AppRole) => {
     switch (role) {
       case "owner":
@@ -180,6 +291,32 @@ export default function UserManagement() {
         return "bg-secondary text-secondary-foreground";
       default:
         return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const getSubBadge = (user: UserWithRole) => {
+    const subType = getUserSubscriptionType(user);
+    switch (subType) {
+      case "lifetime":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-500">
+            <Star className="w-3 h-3" />
+            Lifetime
+          </span>
+        );
+      case "premium":
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary">
+            <Sparkles className="w-3 h-3" />
+            Premium
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-muted text-muted-foreground">
+            Free
+          </span>
+        );
     }
   };
 
@@ -204,7 +341,7 @@ export default function UserManagement() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-5xl">
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         <Card className="border-border">
           <CardHeader>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -240,8 +377,10 @@ export default function UserManagement() {
                       <TableHead>Benutzer</TableHead>
                       <TableHead>User ID</TableHead>
                       <TableHead>Rolle</TableHead>
+                      <TableHead>Abo-Status</TableHead>
                       <TableHead>Erstellt</TableHead>
-                      {isOwner && <TableHead>Aktionen</TableHead>}
+                      {isOwner && <TableHead>Rolle ändern</TableHead>}
+                      {isOwner && <TableHead>Abo ändern</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -261,8 +400,8 @@ export default function UserManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all max-w-[200px]">
-                              {user.user_id}
+                            <code className="text-xs bg-muted px-2 py-1 rounded font-mono break-all max-w-[150px]">
+                              {user.user_id.slice(0, 8)}...
                             </code>
                             <Button
                               variant="ghost"
@@ -284,6 +423,9 @@ export default function UserManagement() {
                             {user.role}
                           </span>
                         </TableCell>
+                        <TableCell>
+                          {getSubBadge(user)}
+                        </TableCell>
                         <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                           {new Date(user.created_at).toLocaleDateString('de-DE')}
                         </TableCell>
@@ -294,13 +436,31 @@ export default function UserManagement() {
                               onValueChange={(value) => updateUserRole(user.user_id, value as AppRole)}
                               disabled={updating === user.user_id}
                             >
-                              <SelectTrigger className="w-28">
+                              <SelectTrigger className="w-24">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
                                 <SelectItem value="user">User</SelectItem>
                                 <SelectItem value="admin">Admin</SelectItem>
                                 <SelectItem value="owner">Owner</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </TableCell>
+                        )}
+                        {isOwner && (
+                          <TableCell>
+                            <Select
+                              value={getUserSubscriptionType(user)}
+                              onValueChange={(value) => updateSubscription(user.user_id, value as SubscriptionType)}
+                              disabled={updatingSub === user.user_id}
+                            >
+                              <SelectTrigger className="w-28">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">Free</SelectItem>
+                                <SelectItem value="premium">Premium</SelectItem>
+                                <SelectItem value="lifetime">Lifetime</SelectItem>
                               </SelectContent>
                             </Select>
                           </TableCell>
@@ -316,7 +476,7 @@ export default function UserManagement() {
 
         {!isOwner && (
           <p className="text-center text-sm text-muted-foreground mt-4">
-            Nur Owner können Nutzerrollen ändern
+            Nur Owner können Nutzerrollen und Abos ändern
           </p>
         )}
       </main>
