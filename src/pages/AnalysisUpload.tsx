@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PhotoGuidelinesModal } from "@/components/PhotoGuidelinesModal";
+import { PhotoTutorial } from "@/components/PhotoTutorial";
 
 interface UploadedPhoto {
   file: File;
@@ -337,6 +338,9 @@ export default function AnalysisUpload() {
       )}
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
+        {/* Photo Tutorial */}
+        <PhotoTutorial className="mb-6" />
+
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-8">
           {photoTypes.map((type, index) => {
