@@ -72,7 +72,7 @@ const quickActions = [
     title: "Mein Plan",
     description: "Dein personalisierter Looksmax-Plan",
     href: "/plan",
-    color: "bg-blue-500/10 text-blue-400",
+    color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
     premium: true,
   },
   {
@@ -80,7 +80,7 @@ const quickActions = [
     title: "Fortschritt",
     description: "Verfolge deine Entwicklung",
     href: "/progress",
-    color: "bg-orange-500/10 text-orange-400",
+    color: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
     premium: true,
   },
   {
@@ -88,7 +88,7 @@ const quickActions = [
     title: "AI Coach",
     description: "Stelle Fragen an deinen Coach",
     href: "/coach",
-    color: "bg-purple-500/10 text-purple-400",
+    color: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
     premium: true,
   },
 ];
