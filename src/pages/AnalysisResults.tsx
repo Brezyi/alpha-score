@@ -267,29 +267,6 @@ export default function AnalysisResults() {
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               />
             </motion.div>
-            
-            {/* Orbiting dots */}
-            {[0, 1, 2, 3].map((i) => (
-              <motion.div
-                key={i}
-                className="absolute w-2 h-2 bg-primary rounded-full shadow-lg shadow-primary/50"
-                style={{ top: "50%", left: "50%" }}
-                animate={{
-                  x: [
-                    Math.cos((i * Math.PI) / 2) * 80,
-                    Math.cos((i * Math.PI) / 2 + Math.PI) * 80,
-                    Math.cos((i * Math.PI) / 2) * 80
-                  ],
-                  y: [
-                    Math.sin((i * Math.PI) / 2) * 80,
-                    Math.sin((i * Math.PI) / 2 + Math.PI) * 80,
-                    Math.sin((i * Math.PI) / 2) * 80
-                  ],
-                  scale: [1, 1.5, 1]
-                }}
-                transition={{ duration: 4, repeat: Infinity, delay: i * 0.25 }}
-              />
-            ))}
           </div>
           
           {/* Title with typing effect */}
