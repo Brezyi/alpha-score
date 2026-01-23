@@ -214,6 +214,17 @@ export default function UserManagement() {
         });
       } else {
         // Create or update subscription
+        // Calculate dates properly - use end of day for period end
+        const now = new Date();
+        const periodEnd = new Date();
+        if (subType === 'lifetime') {
+          periodEnd.setFullYear(periodEnd.getFullYear() + 100);
+        } else {
+          periodEnd.setDate(periodEnd.getDate() + 30);
+        }
+        // Set to end of day in local timezone
+        periodEnd.setHours(23, 59, 59, 999);
+
         const subscriptionData = {
           user_id: userId,
           plan_type: subType,
@@ -221,10 +232,8 @@ export default function UserManagement() {
           stripe_customer_id: `admin_granted_${userId}`,
           amount: subType === 'lifetime' ? 5000 : 999,
           currency: 'eur',
-          current_period_start: new Date().toISOString(),
-          current_period_end: subType === 'lifetime' 
-            ? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString() // 100 years
-            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          current_period_start: now.toISOString(),
+          current_period_end: periodEnd.toISOString(),
         };
 
         if (existingSub) {
