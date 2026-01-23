@@ -31,7 +31,7 @@ import { useStreak } from "@/hooks/useStreak";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { ProfileOnboardingModal } from "@/components/ProfileOnboardingModal";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { TestimonialSubmitDialog } from "@/components/TestimonialSubmitDialog";
 import { Progress } from "@/components/ui/progress";
@@ -93,39 +93,55 @@ const quickActions = [
   },
 ];
 
-// Animated number component - simple and performant
-const AnimatedNumber = ({ value, decimals = 1 }: { value: number; decimals?: number }) => {
-  const [displayValue, setDisplayValue] = useState(0);
-  const animatedRef = useRef(false);
-  
+// Animated number (60fps) without React re-renders
+const AnimatedNumber = React.forwardRef<
+  HTMLSpanElement,
+  { value: number; decimals?: number; durationMs?: number; className?: string }
+>(({ value, decimals = 1, durationMs = 1800, className }, forwardedRef) => {
+  const localRef = useRef<HTMLSpanElement | null>(null);
+  const animatedOnceRef = useRef(false);
+
+  const setRefs = (node: HTMLSpanElement | null) => {
+    localRef.current = node;
+    if (!forwardedRef) return;
+    if (typeof forwardedRef === "function") forwardedRef(node);
+    else (forwardedRef as React.MutableRefObject<HTMLSpanElement | null>).current = node;
+  };
+
   useEffect(() => {
-    if (animatedRef.current || value === 0) {
-      setDisplayValue(value);
+    const el = localRef.current;
+    if (!el) return;
+
+    const target = Number.isFinite(value) ? value : 0;
+
+    // If we've already animated once, just set the final value (no re-animation)
+    if (animatedOnceRef.current) {
+      el.textContent = target.toFixed(decimals);
       return;
     }
-    
-    animatedRef.current = true;
-    let frame = 0;
-    const totalFrames = 30;
-    
-    const animate = () => {
-      frame++;
-      const progress = frame / totalFrames;
-      const eased = 1 - Math.pow(1 - progress, 2);
-      setDisplayValue(eased * value);
-      
-      if (frame < totalFrames) {
-        setTimeout(animate, 40);
-      } else {
-        setDisplayValue(value);
-      }
-    };
-    
-    setTimeout(animate, 100);
-  }, [value]);
 
-  return <span>{displayValue.toFixed(decimals)}</span>;
-};
+    animatedOnceRef.current = true;
+    const start = 0;
+    const startTime = performance.now();
+    el.textContent = start.toFixed(decimals);
+
+    let rafId = 0;
+    const tick = (now: number) => {
+      const t = Math.min((now - startTime) / durationMs, 1);
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - t, 3);
+      const current = start + eased * (target - start);
+      el.textContent = current.toFixed(decimals);
+      if (t < 1) rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [value, decimals, durationMs]);
+
+  return <span ref={setRefs} className={className} />;
+});
+AnimatedNumber.displayName = "AnimatedNumber";
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
