@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Star, Users, TrendingUp } from "lucide-react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 const Hero = () => {
   return (
@@ -10,6 +11,31 @@ const Hero = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       
+      {/* Animated Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-2 h-2 bg-primary/30 rounded-full"
+            initial={{ 
+              x: Math.random() * 100 + "%", 
+              y: "110%",
+              opacity: 0 
+            }}
+            animate={{ 
+              y: "-10%",
+              opacity: [0, 1, 1, 0]
+            }}
+            transition={{ 
+              duration: 8 + Math.random() * 4,
+              repeat: Infinity,
+              delay: i * 1.5,
+              ease: "linear"
+            }}
+          />
+        ))}
+      </div>
+      
       {/* Grid Pattern - Dark Mode */}
       <div className="absolute inset-0 dark:block hidden bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]" />
       {/* Grid Pattern - Light Mode */}
@@ -18,33 +44,80 @@ const Hero = () => {
       <div className="container relative z-10 px-4 pt-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 animate-fade-in">
-            <Zap className="w-4 h-4 text-primary" />
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8"
+          >
+            <Zap className="w-4 h-4 text-primary animate-pulse" />
             <span className="text-sm text-muted-foreground">KI-gestützte Looksmaxing Analyse</span>
-          </div>
+          </motion.div>
 
-          {/* Main Headline */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-            <span className="text-gradient glow-text">Maximiere</span>
+          {/* Main Headline with staggered animation */}
+          <motion.h1 
+            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <motion.span 
+              className="text-gradient glow-text inline-block"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              Maximiere
+            </motion.span>
             <br />
-            <span className="text-foreground">dein Aussehen.</span>
-          </h1>
+            <motion.span 
+              className="text-foreground inline-block"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.35 }}
+            >
+              dein Aussehen.
+            </motion.span>
+          </motion.h1>
 
           {/* Subheadline */}
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-4 animate-fade-in" style={{ animationDelay: "0.2s" }}>
+          <motion.p 
+            className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+          >
             Systematisch. Messbar. Wissenschaftlich.
-          </p>
+          </motion.p>
 
-          <p className="text-lg text-muted-foreground/80 max-w-xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: "0.3s" }}>
+          <motion.p 
+            className="text-lg text-muted-foreground/80 max-w-xl mx-auto mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
             Deine KI für objektive Analyse und einen personalisierten Plan zur Optimierung deines Aussehens.
-          </p>
+          </motion.p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 animate-fade-in" style={{ animationDelay: "0.4s" }}>
+          <motion.div 
+            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.7 }}
+          >
             <Link to="/register">
-              <Button variant="hero" size="xl" className="group">
-                Kostenlos starten
-                <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+              <Button variant="hero" size="xl" className="group relative overflow-hidden">
+                <span className="relative z-10 flex items-center gap-2">
+                  Kostenlos starten
+                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                </span>
+                <motion.div 
+                  className="absolute inset-0 bg-white/20"
+                  initial={{ x: "-100%" }}
+                  whileHover={{ x: "100%" }}
+                  transition={{ duration: 0.5 }}
+                />
               </Button>
             </Link>
             <Link to="/login">
@@ -52,17 +125,57 @@ const Hero = () => {
                 Anmelden
               </Button>
             </Link>
-          </div>
+          </motion.div>
 
+          {/* Social Proof Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
+            className="flex flex-wrap items-center justify-center gap-8 md:gap-12"
+          >
+            {[
+              { icon: Users, value: "10k+", label: "Nutzer" },
+              { icon: Star, value: "4.9", label: "Bewertung" },
+              { icon: TrendingUp, value: "+2.1", label: "Ø Verbesserung" },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 1 + index * 0.1 }}
+                className="flex items-center gap-3 px-4 py-2 rounded-xl glass"
+              >
+                <stat.icon className="w-5 h-5 text-primary" />
+                <div className="text-left">
+                  <div className="text-lg font-bold text-foreground">{stat.value}</div>
+                  <div className="text-xs text-muted-foreground">{stat.label}</div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
       </div>
 
       {/* Scroll Indicator */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
-        <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-        </div>
-      </div>
+      <motion.div 
+        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+      >
+        <motion.div
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2"
+        >
+          <motion.div 
+            className="w-1.5 h-1.5 rounded-full bg-primary"
+            animate={{ opacity: [1, 0.5, 1] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+        </motion.div>
+      </motion.div>
     </section>
   );
 };
