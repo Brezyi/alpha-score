@@ -321,33 +321,30 @@ export default function AnalysisResults() {
             <TrendingUp className="w-5 h-5 text-primary" />
             <h2 className="font-semibold">Stärken</h2>
           </div>
-          <div className="space-y-2">
-            {(isPremium ? analysis?.strengths : analysis?.strengths?.slice(0, 1))?.map((strength: string, i: number) => (
-              <Card key={i} className="bg-primary/5 border-primary/20">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                  </div>
-                  <span>{strength}</span>
-                </CardContent>
-              </Card>
-            ))}
-            {!isPremium && analysis?.strengths?.length > 1 && (
-              <Card className="bg-card border-border relative overflow-hidden">
-                <CardContent className="p-3 flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <Lock className="w-4 h-4 text-muted-foreground" />
-                  </div>
-                  <span className="text-muted-foreground blur-sm">
-                    +{analysis.strengths.length - 1} weitere Stärken
-                  </span>
-                </CardContent>
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/50 to-background flex items-center justify-end pr-4">
-                  <Lock className="w-4 h-4 text-muted-foreground" />
-                </div>
-              </Card>
-            )}
-          </div>
+          {isPremium ? (
+            <div className="space-y-2">
+              {analysis?.strengths?.map((strength: string, i: number) => (
+                <Card key={i} className="bg-primary/5 border-primary/20">
+                  <CardContent className="p-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-primary" />
+                    </div>
+                    <span>{strength}</span>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-card border-border relative overflow-hidden">
+              <CardContent className="p-8 text-center">
+                <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
+                <p className="text-muted-foreground mb-1">Premium-Feature</p>
+                <p className="text-sm text-muted-foreground">
+                  Entsperre deine detaillierten Stärken
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Weaknesses */}
