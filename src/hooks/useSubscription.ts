@@ -21,10 +21,10 @@ export const STRIPE_PRICES = {
     mode: "subscription" as const,
   },
   lifetime: {
-    priceId: "price_1SsQnE3ow7tNlFpfMzBTVPrm",
-    productId: "prod_Tq71yPs5xPnuYv",
+    priceId: "price_1Ssmu33ow7tNlFpfi3uGPwq0",
+    productId: "prod_TqTrabrYDObhr0",
     name: "Lifetime",
-    price: "19,99€",
+    price: "50€",
     interval: "einmalig",
     mode: "payment" as const,
   },
