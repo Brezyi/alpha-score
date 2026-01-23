@@ -21,32 +21,67 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Check, X, Star, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Check, X, Star, Eye, EyeOff, Trash2, RotateCcw } from "lucide-react";
 import { useAdminTestimonials } from "@/hooks/useTestimonials";
 import { useToast } from "@/hooks/use-toast";
 
 export default function TestimonialsManagement() {
-  const { testimonials, loading, approveTestimonial, featureTestimonial } = useAdminTestimonials();
+  const { testimonials, loading, approveTestimonial, featureTestimonial, restoreTestimonial, permanentlyDeleteTestimonial } = useAdminTestimonials();
   const { toast } = useToast();
   const [selectedTestimonial, setSelectedTestimonial] = useState<string | null>(null);
-  const [actionType, setActionType] = useState<"approve" | "reject" | null>(null);
-  const [filter, setFilter] = useState<"all" | "pending" | "approved">("all");
+  const [actionType, setActionType] = useState<"approve" | "reject" | "restore" | "delete" | null>(null);
+  const [filter, setFilter] = useState<"all" | "pending" | "approved" | "trash">("all");
 
-  const filteredTestimonials = testimonials.filter((t) => {
-    if (filter === "pending") return !t.is_approved;
-    if (filter === "approved") return t.is_approved;
-    return true;
-  });
+  // Filter out deleted testimonials for non-trash views
+  const activeTestimonials = testimonials.filter((t) => !t.deleted_at);
+  const trashedTestimonials = testimonials.filter((t) => t.deleted_at);
+
+  const filteredTestimonials = filter === "trash" 
+    ? trashedTestimonials
+    : activeTestimonials.filter((t) => {
+        if (filter === "pending") return !t.is_approved;
+        if (filter === "approved") return t.is_approved;
+        return true;
+      });
+
+  // Calculate days until permanent deletion for trashed items
+  const getDaysRemaining = (deletedAt: string) => {
+    const deletedDate = new Date(deletedAt);
+    const expiryDate = new Date(deletedDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const now = new Date();
+    const daysRemaining = Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, daysRemaining);
+  };
 
   const handleAction = async () => {
     if (!selectedTestimonial || !actionType) return;
 
     try {
-      await approveTestimonial(selectedTestimonial, actionType === "approve");
-      toast({
-        title: actionType === "approve" ? "Freigegeben" : "Abgelehnt",
-        description: `Bewertung wurde ${actionType === "approve" ? "freigegeben" : "abgelehnt"}.`,
-      });
+      if (actionType === "approve") {
+        await approveTestimonial(selectedTestimonial, true);
+        toast({
+          title: "Freigegeben",
+          description: "Bewertung wurde freigegeben.",
+        });
+      } else if (actionType === "reject") {
+        await approveTestimonial(selectedTestimonial, false);
+        toast({
+          title: "In Papierkorb verschoben",
+          description: "Bewertung wurde abgelehnt und in den Papierkorb verschoben.",
+        });
+      } else if (actionType === "restore") {
+        await restoreTestimonial(selectedTestimonial);
+        toast({
+          title: "Wiederhergestellt",
+          description: "Bewertung wurde wiederhergestellt.",
+        });
+      } else if (actionType === "delete") {
+        await permanentlyDeleteTestimonial(selectedTestimonial);
+        toast({
+          title: "Endgültig gelöscht",
+          description: "Bewertung wurde unwiderruflich gelöscht.",
+        });
+      }
     } catch (error) {
       toast({
         title: "Fehler",
@@ -102,52 +137,67 @@ export default function TestimonialsManagement() {
 
       <main className="container px-4 py-8">
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6">
+        <div className="flex flex-wrap gap-2 mb-6">
           <Button
             variant={filter === "all" ? "default" : "outline"}
             size="sm"
             onClick={() => setFilter("all")}
           >
-            Alle ({testimonials.length})
+            Alle ({activeTestimonials.length})
           </Button>
           <Button
             variant={filter === "pending" ? "default" : "outline"}
             size="sm"
             onClick={() => setFilter("pending")}
           >
-            Ausstehend ({testimonials.filter((t) => !t.is_approved).length})
+            Ausstehend ({activeTestimonials.filter((t) => !t.is_approved).length})
           </Button>
           <Button
             variant={filter === "approved" ? "default" : "outline"}
             size="sm"
             onClick={() => setFilter("approved")}
           >
-            Freigegeben ({testimonials.filter((t) => t.is_approved).length})
+            Freigegeben ({activeTestimonials.filter((t) => t.is_approved).length})
+          </Button>
+          <Button
+            variant={filter === "trash" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setFilter("trash")}
+            className="gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Papierkorb ({trashedTestimonials.length})
           </Button>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
           <div className="p-4 rounded-2xl glass-card">
             <div className="text-sm text-muted-foreground">Gesamt</div>
-            <div className="text-2xl font-bold">{testimonials.length}</div>
+            <div className="text-2xl font-bold">{activeTestimonials.length}</div>
           </div>
           <div className="p-4 rounded-2xl glass-card">
             <div className="text-sm text-muted-foreground">Ausstehend</div>
             <div className="text-2xl font-bold text-yellow-500">
-              {testimonials.filter((t) => !t.is_approved).length}
+              {activeTestimonials.filter((t) => !t.is_approved).length}
             </div>
           </div>
           <div className="p-4 rounded-2xl glass-card">
             <div className="text-sm text-muted-foreground">Freigegeben</div>
             <div className="text-2xl font-bold text-green-500">
-              {testimonials.filter((t) => t.is_approved).length}
+              {activeTestimonials.filter((t) => t.is_approved).length}
             </div>
           </div>
           <div className="p-4 rounded-2xl glass-card">
             <div className="text-sm text-muted-foreground">Hervorgehoben</div>
             <div className="text-2xl font-bold text-primary">
-              {testimonials.filter((t) => t.is_featured).length}
+              {activeTestimonials.filter((t) => t.is_featured).length}
+            </div>
+          </div>
+          <div className="p-4 rounded-2xl glass-card">
+            <div className="text-sm text-muted-foreground">Im Papierkorb</div>
+            <div className="text-2xl font-bold text-destructive">
+              {trashedTestimonials.length}
             </div>
           </div>
         </div>
@@ -166,7 +216,9 @@ export default function TestimonialsManagement() {
                 ? "Noch keine Bewertungen vorhanden."
                 : filter === "pending"
                   ? "Keine ausstehenden Bewertungen."
-                  : "Keine freigegebenen Bewertungen."}
+                  : filter === "approved"
+                    ? "Keine freigegebenen Bewertungen."
+                    : "Papierkorb ist leer."}
             </div>
           ) : (
             <Table>
@@ -211,21 +263,30 @@ export default function TestimonialsManagement() {
                       {formatDate(testimonial.created_at)}
                     </TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Badge variant={testimonial.is_approved ? "default" : "secondary"}>
-                          {testimonial.is_approved ? "Freigegeben" : "Ausstehend"}
-                        </Badge>
-                        {testimonial.is_featured && (
-                          <Badge variant="outline" className="border-primary text-primary">
-                            <Star className="w-3 h-3 mr-1" />
-                            Featured
+                      <div className="flex flex-wrap gap-1">
+                        {testimonial.deleted_at ? (
+                          <Badge variant="destructive">
+                            Gelöscht ({getDaysRemaining(testimonial.deleted_at)} Tage)
                           </Badge>
+                        ) : (
+                          <>
+                            <Badge variant={testimonial.is_approved ? "default" : "secondary"}>
+                              {testimonial.is_approved ? "Freigegeben" : "Ausstehend"}
+                            </Badge>
+                            {testimonial.is_featured && (
+                              <Badge variant="outline" className="border-primary text-primary">
+                                <Star className="w-3 h-3 mr-1" />
+                                Featured
+                              </Badge>
+                            )}
+                          </>
                         )}
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        {!testimonial.is_approved && (
+                        {testimonial.deleted_at ? (
+                          // Trash view actions
                           <>
                             <Button
                               size="sm"
@@ -233,38 +294,70 @@ export default function TestimonialsManagement() {
                               className="text-green-500 hover:text-green-600"
                               onClick={() => {
                                 setSelectedTestimonial(testimonial.id);
-                                setActionType("approve");
+                                setActionType("restore");
                               }}
+                              title="Wiederherstellen"
                             >
-                              <Check className="w-4 h-4" />
+                              <RotateCcw className="w-4 h-4" />
                             </Button>
                             <Button
                               size="sm"
                               variant="ghost"
-                              className="text-red-500 hover:text-red-600"
+                              className="text-destructive hover:text-destructive/80"
                               onClick={() => {
                                 setSelectedTestimonial(testimonial.id);
-                                setActionType("reject");
+                                setActionType("delete");
                               }}
+                              title="Endgültig löschen"
                             >
-                              <X className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </>
-                        )}
-                        {testimonial.is_approved && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              handleToggleFeatured(testimonial.id, testimonial.is_featured)
-                            }
-                          >
-                            {testimonial.is_featured ? (
-                              <EyeOff className="w-4 h-4" />
-                            ) : (
-                              <Eye className="w-4 h-4" />
+                        ) : (
+                          // Normal view actions
+                          <>
+                            {!testimonial.is_approved && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-green-500 hover:text-green-600"
+                                  onClick={() => {
+                                    setSelectedTestimonial(testimonial.id);
+                                    setActionType("approve");
+                                  }}
+                                >
+                                  <Check className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-red-500 hover:text-red-600"
+                                  onClick={() => {
+                                    setSelectedTestimonial(testimonial.id);
+                                    setActionType("reject");
+                                  }}
+                                >
+                                  <X className="w-4 h-4" />
+                                </Button>
+                              </>
                             )}
-                          </Button>
+                            {testimonial.is_approved && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  handleToggleFeatured(testimonial.id, testimonial.is_featured)
+                                }
+                              >
+                                {testimonial.is_featured ? (
+                                  <EyeOff className="w-4 h-4" />
+                                ) : (
+                                  <Eye className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
+                          </>
                         )}
                       </div>
                     </TableCell>
@@ -287,18 +380,28 @@ export default function TestimonialsManagement() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {actionType === "approve" ? "Bewertung freigeben?" : "Bewertung ablehnen?"}
+              {actionType === "approve" && "Bewertung freigeben?"}
+              {actionType === "reject" && "Bewertung ablehnen?"}
+              {actionType === "restore" && "Bewertung wiederherstellen?"}
+              {actionType === "delete" && "Endgültig löschen?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {actionType === "approve"
-                ? "Die Bewertung wird auf der Landingpage angezeigt."
-                : "Die Bewertung bleibt gespeichert, wird aber nicht angezeigt."}
+              {actionType === "approve" && "Die Bewertung wird auf der Landingpage angezeigt."}
+              {actionType === "reject" && "Die Bewertung wird in den Papierkorb verschoben und kann 30 Tage lang wiederhergestellt werden."}
+              {actionType === "restore" && "Die Bewertung wird wiederhergestellt und erscheint wieder als 'Ausstehend'."}
+              {actionType === "delete" && "Diese Aktion kann nicht rückgängig gemacht werden. Die Bewertung wird unwiderruflich gelöscht."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={handleAction}>
-              {actionType === "approve" ? "Freigeben" : "Ablehnen"}
+            <AlertDialogAction 
+              onClick={handleAction}
+              className={actionType === "delete" ? "bg-destructive hover:bg-destructive/90" : ""}
+            >
+              {actionType === "approve" && "Freigeben"}
+              {actionType === "reject" && "Ablehnen"}
+              {actionType === "restore" && "Wiederherstellen"}
+              {actionType === "delete" && "Endgültig löschen"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -13,6 +13,7 @@ export interface Testimonial {
   is_approved: boolean;
   is_featured: boolean;
   created_at: string;
+  deleted_at: string | null;
 }
 
 export function useTestimonials() {
@@ -155,14 +156,34 @@ export function useAdminTestimonials() {
 
       if (error) throw error;
     } else {
-      // Reject: delete the testimonial
+      // Reject: soft delete by setting deleted_at
       const { error } = await supabase
         .from("user_testimonials")
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", id);
 
       if (error) throw error;
     }
+    await fetchAllTestimonials();
+  };
+
+  const restoreTestimonial = async (id: string) => {
+    const { error } = await supabase
+      .from("user_testimonials")
+      .update({ deleted_at: null })
+      .eq("id", id);
+
+    if (error) throw error;
+    await fetchAllTestimonials();
+  };
+
+  const permanentlyDeleteTestimonial = async (id: string) => {
+    const { error } = await supabase
+      .from("user_testimonials")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
     await fetchAllTestimonials();
   };
 
@@ -181,6 +202,8 @@ export function useAdminTestimonials() {
     loading,
     approveTestimonial,
     featureTestimonial,
+    restoreTestimonial,
+    permanentlyDeleteTestimonial,
     refetch: fetchAllTestimonials,
   };
 }
