@@ -200,6 +200,17 @@ export function useAdminTestimonials() {
     await fetchAllTestimonials();
   };
 
+  const revokeTestimonial = async (id: string) => {
+    // Revoke approval: set is_approved to false (moves back to pending)
+    const { error } = await supabase
+      .from("user_testimonials")
+      .update({ is_approved: false, is_featured: false })
+      .eq("id", id);
+
+    if (error) throw error;
+    await fetchAllTestimonials();
+  };
+
   return {
     testimonials,
     loading,
@@ -207,6 +218,7 @@ export function useAdminTestimonials() {
     featureTestimonial,
     restoreTestimonial,
     permanentlyDeleteTestimonial,
+    revokeTestimonial,
     refetch: fetchAllTestimonials,
   };
 }

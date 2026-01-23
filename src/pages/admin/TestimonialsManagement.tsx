@@ -21,16 +21,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, Check, X, Star, Eye, EyeOff, Trash2, RotateCcw } from "lucide-react";
+import { ArrowLeft, Check, X, Star, Eye, EyeOff, Trash2, RotateCcw, Undo2 } from "lucide-react";
 import { useAdminTestimonials } from "@/hooks/useTestimonials";
 import { useToast } from "@/hooks/use-toast";
 import { StarRating } from "@/components/StarRating";
 
 export default function TestimonialsManagement() {
-  const { testimonials, loading, approveTestimonial, featureTestimonial, restoreTestimonial, permanentlyDeleteTestimonial } = useAdminTestimonials();
+  const { testimonials, loading, approveTestimonial, featureTestimonial, restoreTestimonial, permanentlyDeleteTestimonial, revokeTestimonial } = useAdminTestimonials();
   const { toast } = useToast();
   const [selectedTestimonial, setSelectedTestimonial] = useState<string | null>(null);
-  const [actionType, setActionType] = useState<"approve" | "reject" | "restore" | "delete" | null>(null);
+  const [actionType, setActionType] = useState<"approve" | "reject" | "restore" | "delete" | "revoke" | null>(null);
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "trash">("all");
 
   // Filter out deleted testimonials for non-trash views
@@ -81,6 +81,12 @@ export default function TestimonialsManagement() {
         toast({
           title: "Endgültig gelöscht",
           description: "Bewertung wurde unwiderruflich gelöscht.",
+        });
+      } else if (actionType === "revoke") {
+        await revokeTestimonial(selectedTestimonial);
+        toast({
+          title: "Zurückgezogen",
+          description: "Bewertung wurde von der Startseite entfernt und ist wieder ausstehend.",
         });
       }
     } catch (error) {
@@ -352,19 +358,34 @@ export default function TestimonialsManagement() {
                               </>
                             )}
                             {testimonial.is_approved && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() =>
-                                  handleToggleFeatured(testimonial.id, testimonial.is_featured)
-                                }
-                              >
-                                {testimonial.is_featured ? (
-                                  <EyeOff className="w-4 h-4" />
-                                ) : (
-                                  <Eye className="w-4 h-4" />
-                                )}
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-orange-500 hover:text-orange-600"
+                                  onClick={() => {
+                                    setSelectedTestimonial(testimonial.id);
+                                    setActionType("revoke");
+                                  }}
+                                  title="Zurückziehen"
+                                >
+                                  <Undo2 className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() =>
+                                    handleToggleFeatured(testimonial.id, testimonial.is_featured)
+                                  }
+                                  title={testimonial.is_featured ? "Hervorhebung entfernen" : "Hervorheben"}
+                                >
+                                  {testimonial.is_featured ? (
+                                    <EyeOff className="w-4 h-4" />
+                                  ) : (
+                                    <Eye className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              </>
                             )}
                           </>
                         )}
@@ -393,12 +414,14 @@ export default function TestimonialsManagement() {
               {actionType === "reject" && "Bewertung ablehnen?"}
               {actionType === "restore" && "Bewertung wiederherstellen?"}
               {actionType === "delete" && "Endgültig löschen?"}
+              {actionType === "revoke" && "Bewertung zurückziehen?"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {actionType === "approve" && "Die Bewertung wird auf der Landingpage angezeigt."}
               {actionType === "reject" && "Die Bewertung wird in den Papierkorb verschoben und kann 30 Tage lang wiederhergestellt werden."}
               {actionType === "restore" && "Die Bewertung wird wiederhergestellt und erscheint wieder als 'Ausstehend'."}
               {actionType === "delete" && "Diese Aktion kann nicht rückgängig gemacht werden. Die Bewertung wird unwiderruflich gelöscht."}
+              {actionType === "revoke" && "Die Bewertung wird von der Startseite entfernt und erscheint wieder als 'Ausstehend'."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -411,6 +434,7 @@ export default function TestimonialsManagement() {
               {actionType === "reject" && "Ablehnen"}
               {actionType === "restore" && "Wiederherstellen"}
               {actionType === "delete" && "Endgültig löschen"}
+              {actionType === "revoke" && "Zurückziehen"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
