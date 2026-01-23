@@ -20,7 +20,9 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
-  X
+  X,
+  Zap,
+  ArrowRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -309,22 +311,116 @@ export default function AnalysisResults() {
           </DialogContent>
         </Dialog>
 
-        {/* Score Card */}
+        {/* Score Card with Potential */}
         <Card className="bg-gradient-to-br from-card to-primary/5 border-primary/20 mb-6 overflow-hidden">
-          <CardContent className="p-6 text-center relative">
+          <CardContent className="p-6 relative">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
-            <p className="text-muted-foreground text-sm mb-2">Dein Looks Score</p>
-            <div className="relative inline-block">
-              <div className="text-7xl font-bold text-primary mb-2">
-                {analysis?.looks_score?.toFixed(1) || "?"}
+            
+            <div className="flex items-center justify-center gap-6 md:gap-10">
+              {/* Current Score */}
+              <div className="text-center">
+                <p className="text-muted-foreground text-xs mb-1">Aktuell</p>
+                <div className="text-5xl md:text-6xl font-bold text-foreground">
+                  {analysis?.looks_score?.toFixed(1) || "?"}
+                </div>
               </div>
-              <div className="text-muted-foreground text-sm">/10</div>
+              
+              {/* Arrow */}
+              <div className="flex flex-col items-center gap-1">
+                <ArrowRight className="w-6 h-6 text-primary" />
+                <span className="text-xs text-muted-foreground">Potenzial</span>
+              </div>
+              
+              {/* Potential Score */}
+              <div className="text-center">
+                <p className="text-primary text-xs mb-1 flex items-center justify-center gap-1">
+                  <Zap className="w-3 h-3" />
+                  Erreichbar
+                </p>
+                <div className="text-5xl md:text-6xl font-bold text-primary">
+                  {analysis?.potential_score?.toFixed(1) || (analysis?.looks_score ? (Math.min(10, analysis.looks_score + 1.5)).toFixed(1) : "?")}
+                </div>
+              </div>
             </div>
-            <p className="text-muted-foreground mt-4">
-              Dein persönlicher Ausgangswert
+            
+            {/* Improvement indicator */}
+            {analysis?.looks_score && analysis?.potential_score && (
+              <div className="mt-4 text-center">
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+                  <TrendingUp className="w-4 h-4" />
+                  +{(analysis.potential_score - analysis.looks_score).toFixed(1)} Punkte möglich
+                </span>
+              </div>
+            )}
+            
+            <p className="text-muted-foreground text-center mt-4 text-sm">
+              Dein persönlicher Ausgangswert und erreichbares Potenzial
             </p>
           </CardContent>
         </Card>
+
+        {/* Potential Image Preview */}
+        {analysis?.potential_image_url && isPremium && (
+          <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 mb-6 overflow-hidden">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Zap className="w-5 h-5 text-primary" />
+                <h2 className="font-semibold">Dein Potenzial</h2>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Current Photo */}
+                <div>
+                  <p className="text-xs text-muted-foreground mb-2 text-center">Aktuell</p>
+                  <div className="aspect-square rounded-xl overflow-hidden border border-border">
+                    {photoUrls[0] && (
+                      <img 
+                        src={photoUrls[0]} 
+                        alt="Aktuell"
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
+                </div>
+                {/* Potential Photo */}
+                <div>
+                  <p className="text-xs text-primary mb-2 text-center flex items-center justify-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Potenzial
+                  </p>
+                  <div className="aspect-square rounded-xl overflow-hidden border-2 border-primary/40 relative">
+                    <img 
+                      src={analysis.potential_image_url} 
+                      alt="Potenzial"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-primary/20 to-transparent" />
+                  </div>
+                </div>
+              </div>
+              {(analysis.detailed_results as any)?.potential_improvements && (
+                <p className="text-sm text-muted-foreground mt-3 text-center">
+                  {(analysis.detailed_results as any).potential_improvements}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Potential Image - Locked for free users */}
+        {!isPremium && (
+          <Card className="bg-card border-border mb-6 relative overflow-hidden">
+            <CardContent className="p-8 text-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+              <Zap className="w-10 h-10 text-primary mx-auto mb-3" />
+              <h3 className="font-semibold mb-2">KI-Potenzial-Vorschau</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Sieh, wie du mit optimaler Pflege und Styling aussehen könntest
+              </p>
+              <Lock className="w-6 h-6 text-muted-foreground mx-auto" />
+              <p className="text-xs text-muted-foreground mt-2">Premium-Feature</p>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Strengths */}
         <div className="mb-6">

@@ -48,6 +48,8 @@ export type Database = {
           id: string
           looks_score: number | null
           photo_urls: string[]
+          potential_image_url: string | null
+          potential_score: number | null
           priorities: string[] | null
           status: string
           strengths: string[] | null
@@ -61,6 +63,8 @@ export type Database = {
           id?: string
           looks_score?: number | null
           photo_urls: string[]
+          potential_image_url?: string | null
+          potential_score?: number | null
           priorities?: string[] | null
           status?: string
           strengths?: string[] | null
@@ -74,6 +78,8 @@ export type Database = {
           id?: string
           looks_score?: number | null
           photo_urls?: string[]
+          potential_image_url?: string | null
+          potential_score?: number | null
           priorities?: string[] | null
           status?: string
           strengths?: string[] | null
