@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import { MFAVerification } from "@/components/MFAVerification";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -23,6 +24,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showMFADialog, setShowMFADialog] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
@@ -34,6 +36,18 @@ const Login = () => {
       navigate("/dashboard");
     }
   }, [user, authLoading, navigate]);
+
+  // Check MFA requirement after login
+  const checkMFARequired = async () => {
+    const { data: aalData } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    const { data: factorData } = await supabase.auth.mfa.listFactors();
+    
+    if (factorData?.totp?.some(f => f.status === "verified") && aalData?.currentLevel !== "aal2") {
+      setShowMFADialog(true);
+      return true;
+    }
+    return false;
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,11 +61,16 @@ const Login = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Willkommen zurück!",
-        description: "Du wirst zum Dashboard weitergeleitet.",
-      });
-      navigate("/dashboard");
+      // Check if MFA is required
+      const mfaRequired = await checkMFARequired();
+      
+      if (!mfaRequired) {
+        toast({
+          title: "Willkommen zurück!",
+          description: "Du wirst zum Dashboard weitergeleitet.",
+        });
+        navigate("/dashboard");
+      }
     } catch (error: any) {
       toast({
         title: "Anmeldung fehlgeschlagen",
@@ -232,6 +251,23 @@ const Login = () => {
           </div>
         </div>
       </div>
+
+      {/* MFA Verification Dialog */}
+      <MFAVerification 
+        open={showMFADialog}
+        onVerified={() => {
+          setShowMFADialog(false);
+          toast({
+            title: "Willkommen zurück!",
+            description: "Du wirst zum Dashboard weitergeleitet.",
+          });
+          navigate("/dashboard");
+        }}
+        onCancel={() => {
+          setShowMFADialog(false);
+          navigate("/");
+        }}
+      />
     </div>
   );
 };
