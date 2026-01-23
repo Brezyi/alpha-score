@@ -34,6 +34,7 @@ export default function AnalysisResults() {
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [potentialImageUrl, setPotentialImageUrl] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const { isPremium, loading: subscriptionLoading } = useSubscription();
@@ -82,6 +83,23 @@ export default function AnalysisResults() {
         })
       );
       setPhotoUrls(urls.filter(Boolean) as string[]);
+    }
+    
+    // Generate signed URL for potential image if exists
+    if (data.potential_image_url) {
+      const bucketPath = data.potential_image_url.includes('/analysis-photos/')
+        ? data.potential_image_url.split('/analysis-photos/')[1]
+        : null;
+      
+      if (bucketPath) {
+        const { data: signedData, error } = await supabase.storage
+          .from("analysis-photos")
+          .createSignedUrl(bucketPath, 3600);
+        
+        if (!error && signedData?.signedUrl) {
+          setPotentialImageUrl(signedData.signedUrl);
+        }
+      }
     }
     
     // Only continue processing if status is pending/processing - stop polling for all other states
@@ -360,7 +378,7 @@ export default function AnalysisResults() {
         </Card>
 
         {/* Potential Image Preview */}
-        {analysis?.potential_image_url && isPremium && (
+        {potentialImageUrl && isPremium && (
           <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 mb-6 overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
@@ -389,7 +407,7 @@ export default function AnalysisResults() {
                   </p>
                   <div className="aspect-square rounded-xl overflow-hidden border-2 border-primary/40 relative">
                     <img 
-                      src={analysis.potential_image_url} 
+                      src={potentialImageUrl} 
                       alt="Potenzial"
                       className="w-full h-full object-cover"
                     />

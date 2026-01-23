@@ -173,13 +173,14 @@ const Dashboard = () => {
     ? (latestPotential - latestScore).toFixed(1)
     : null;
 
-  // Chart data (last 10 analyses, reversed for chronological order)
+  // Chart data (last 10 analyses, reversed for chronological order) with potential
   const chartData = completedAnalyses
     .slice(0, 10)
     .reverse()
     .map((a) => ({
       date: new Date(a.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
       score: a.looks_score,
+      potential: a.potential_score,
     }));
 
   const formatDate = (dateStr: string) => {
@@ -348,8 +349,15 @@ const Dashboard = () => {
           <div className="mb-8 p-6 rounded-2xl glass-card">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold">Score-Verlauf</h2>
-              <div className="text-sm text-muted-foreground">
-                Letzte {chartData.length} Analysen
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-0.5 rounded-full bg-primary" />
+                  <span className="text-muted-foreground">Aktuell</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3 h-0.5 rounded-full bg-primary/40 border-dashed border border-primary" />
+                  <span className="text-muted-foreground">Potenzial</span>
+                </div>
               </div>
             </div>
             <div className="h-48">
@@ -377,8 +385,23 @@ const Dashboard = () => {
                       borderRadius: "8px",
                     }}
                     labelStyle={{ color: "hsl(var(--foreground))" }}
-                    formatter={(value: number) => [value.toFixed(1), "Score"]}
+                    formatter={(value: number, name: string) => [
+                      value?.toFixed(1) || "—", 
+                      name === "score" ? "Aktuell" : "Potenzial"
+                    ]}
                   />
+                  {/* Potential Line (dashed, behind) */}
+                  <Line
+                    type="monotone"
+                    dataKey="potential"
+                    stroke="hsl(var(--primary) / 0.4)"
+                    strokeWidth={2}
+                    strokeDasharray="6 4"
+                    dot={{ fill: "hsl(var(--primary) / 0.4)", strokeWidth: 0, r: 3 }}
+                    activeDot={{ r: 5, fill: "hsl(var(--primary) / 0.6)" }}
+                    connectNulls
+                  />
+                  {/* Current Score Line (solid, front) */}
                   <Line
                     type="monotone"
                     dataKey="score"
