@@ -30,18 +30,12 @@ interface GenderStat {
   count: number;
 }
 
-interface RegionStat {
-  region: string;
-  count: number;
-}
-
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { role, isOwner } = useUserRole();
   const [stats, setStats] = useState<DashboardStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [genderStats, setGenderStats] = useState<GenderStat[]>([]);
-  const [regionStats, setRegionStats] = useState<RegionStat[]>([]);
   
 
   const [openTickets, setOpenTickets] = useState(0);
