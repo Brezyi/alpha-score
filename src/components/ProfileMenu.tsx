@@ -18,12 +18,25 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUserRole } from "@/hooks/useUserRole";
-import { ReportModal } from "@/components/ReportModal";
+import { useSubscription } from "@/hooks/useSubscription";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   User,
   Settings,
@@ -35,7 +48,8 @@ import {
   Moon,
   Sun,
   HelpCircle,
-  Flag,
+  Trash2,
+  CreditCard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -68,9 +82,11 @@ export function ProfileMenu() {
   const { profile, updateProfile, uploadAvatar } = useProfile();
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
+  const { isPremium, subscriptionType, openCustomerPortal } = useSubscription();
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -99,6 +115,54 @@ export function ProfileMenu() {
   const handleLogout = async () => {
     await signOut();
     navigate("/");
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      // Delete user data first
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("user_id", user.id);
+      
+      if (profileError) throw profileError;
+
+      // Delete analyses
+      const { error: analysesError } = await supabase
+        .from("analyses")
+        .delete()
+        .eq("user_id", user.id);
+      
+      if (analysesError) throw analysesError;
+
+      // Delete tasks
+      const { error: tasksError } = await supabase
+        .from("user_tasks")
+        .delete()
+        .eq("user_id", user.id);
+      
+      if (tasksError) throw tasksError;
+
+      // Sign out - account deletion requires admin SDK
+      await signOut();
+      toast.success("Deine Daten wurden gelöscht. Für vollständige Kontolöschung kontaktiere den Support.");
+      navigate("/");
+    } catch (error: any) {
+      console.error("Delete account error:", error);
+      toast.error("Fehler beim Löschen: " + error.message);
+    } finally {
+      setIsDeleting(false);
+      setDeleteAccountOpen(false);
+    }
+  };
+
+  const handleManageSubscription = async () => {
+    try {
+      await openCustomerPortal();
+    } catch (error: any) {
+      toast.error("Fehler beim Öffnen des Kundenportals");
+    }
   };
 
   const initials = profile?.display_name
@@ -222,29 +286,65 @@ export function ProfileMenu() {
               Speichern
             </Button>
 
+            {/* Subscription Management - only show for premium users */}
+            {isPremium && subscriptionType === "premium" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setProfileOpen(false);
+                  handleManageSubscription();
+                }}
+                className="w-full"
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Abo verwalten
+              </Button>
+            )}
+
             <Button
               variant="ghost"
               size="sm"
               onClick={() => {
                 setProfileOpen(false);
-                setReportModalOpen(true);
+                setDeleteAccountOpen(true);
               }}
               className="w-full text-muted-foreground hover:text-destructive"
             >
-              <Flag className="w-4 h-4 mr-2" />
-              Eigenes Profil melden
+              <Trash2 className="w-4 h-4 mr-2" />
+              Konto löschen
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Report Modal */}
-      <ReportModal
-        open={reportModalOpen}
-        onOpenChange={setReportModalOpen}
-        contentType="user"
-        contentId={user.id}
-      />
+      {/* Delete Account Confirmation */}
+      <AlertDialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konto wirklich löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten, 
+              Analysen und Fortschritte werden unwiderruflich gelöscht.
+              {isPremium && subscriptionType === "premium" && (
+                <span className="block mt-2 text-destructive font-medium">
+                  Hinweis: Dein aktives Abo wird separat über Stripe gekündigt.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Wird gelöscht..." : "Ja, Konto löschen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Design Settings Dialog */}
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
