@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, Loader2 } from "lucide-react";
+import { Shield, Loader2, Key } from "lucide-react";
 
 interface MFAVerificationProps {
   open: boolean;
@@ -28,22 +29,34 @@ export function MFAVerification({ open, onVerified, onCancel }: MFAVerificationP
   const [loading, setLoading] = useState(false);
   const [factorId, setFactorId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [useBackupCode, setUseBackupCode] = useState(false);
+  const [backupCode, setBackupCode] = useState("");
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (open) {
       loadFactor();
+      setUseBackupCode(false);
+      setBackupCode("");
+      setCode("");
+      setError(null);
     }
   }, [open]);
 
   useEffect(() => {
-    // Auto-submit when 6 digits entered
-    if (code.length === 6 && factorId) {
+    // Auto-submit when 6 digits entered (TOTP mode only)
+    if (code.length === 6 && factorId && !useBackupCode) {
       handleVerify();
     }
   }, [code]);
 
   const loadFactor = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+
       const { data, error } = await supabase.auth.mfa.listFactors();
       if (error) throw error;
 
@@ -91,6 +104,36 @@ export function MFAVerification({ open, onVerified, onCancel }: MFAVerificationP
     }
   };
 
+  const handleBackupCodeVerify = async () => {
+    if (!userId || !backupCode.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Verify backup code via RPC
+      const { data: isValid, error } = await supabase.rpc('verify_backup_code', {
+        _user_id: userId,
+        _code: backupCode.trim().toUpperCase()
+      });
+
+      if (error) throw error;
+
+      if (isValid) {
+        toast.success("Backup-Code akzeptiert!");
+        onVerified();
+      } else {
+        setError("Ungültiger Backup-Code. Bitte versuche es erneut.");
+        setBackupCode("");
+      }
+    } catch (err: any) {
+      console.error("Backup code verification error:", err);
+      setError("Fehler bei der Verifizierung. Bitte versuche es erneut.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCancel = async () => {
     // Sign out if user cancels MFA
     await supabase.auth.signOut();
@@ -106,33 +149,56 @@ export function MFAVerification({ open, onVerified, onCancel }: MFAVerificationP
             Zwei-Faktor-Authentifizierung
           </DialogTitle>
           <DialogDescription>
-            Gib den 6-stelligen Code aus deiner Authenticator-App ein
+            {useBackupCode 
+              ? "Gib einen deiner Backup-Codes ein"
+              : "Gib den 6-stelligen Code aus deiner Authenticator-App ein"
+            }
           </DialogDescription>
         </DialogHeader>
 
         <div className="py-6 space-y-6">
-          <div className="flex flex-col items-center space-y-4">
-            <Label className="text-center">Verifizierungscode</Label>
-            <InputOTP 
-              maxLength={6} 
-              value={code}
-              onChange={setCode}
-              disabled={loading}
-            >
-              <InputOTPGroup>
-                <InputOTPSlot index={0} />
-                <InputOTPSlot index={1} />
-                <InputOTPSlot index={2} />
-                <InputOTPSlot index={3} />
-                <InputOTPSlot index={4} />
-                <InputOTPSlot index={5} />
-              </InputOTPGroup>
-            </InputOTP>
+          {!useBackupCode ? (
+            <div className="flex flex-col items-center space-y-4">
+              <Label className="text-center">Verifizierungscode</Label>
+              <InputOTP 
+                maxLength={6} 
+                value={code}
+                onChange={setCode}
+                disabled={loading}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
 
-            {error && (
-              <p className="text-sm text-destructive">{error}</p>
-            )}
-          </div>
+              {error && (
+                <p className="text-sm text-destructive">{error}</p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="backupCode">Backup-Code</Label>
+                <Input
+                  id="backupCode"
+                  value={backupCode}
+                  onChange={(e) => setBackupCode(e.target.value.toUpperCase())}
+                  placeholder="XXXX-XXXX"
+                  className="font-mono text-center text-lg tracking-wider"
+                  disabled={loading}
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-destructive text-center">{error}</p>
+              )}
+            </div>
+          )}
 
           <div className="flex gap-2">
             <Button
@@ -145,8 +211,8 @@ export function MFAVerification({ open, onVerified, onCancel }: MFAVerificationP
             </Button>
             <Button
               className="flex-1"
-              onClick={handleVerify}
-              disabled={code.length !== 6 || loading}
+              onClick={useBackupCode ? handleBackupCodeVerify : handleVerify}
+              disabled={(useBackupCode ? !backupCode.trim() : code.length !== 6) || loading}
             >
               {loading ? (
                 <>
@@ -159,9 +225,31 @@ export function MFAVerification({ open, onVerified, onCancel }: MFAVerificationP
             </Button>
           </div>
 
+          {/* Toggle between TOTP and Backup Code */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-muted-foreground"
+            onClick={() => {
+              setUseBackupCode(!useBackupCode);
+              setError(null);
+              setCode("");
+              setBackupCode("");
+            }}
+            disabled={loading}
+          >
+            <Key className="w-4 h-4 mr-2" />
+            {useBackupCode 
+              ? "Authenticator-App verwenden"
+              : "Backup-Code verwenden"
+            }
+          </Button>
+
           <p className="text-xs text-muted-foreground text-center">
-            Öffne deine Authenticator-App (z.B. Google Authenticator) 
-            und gib den aktuellen Code ein.
+            {useBackupCode 
+              ? "Backup-Codes können nur einmal verwendet werden."
+              : "Öffne deine Authenticator-App (z.B. Google Authenticator) und gib den aktuellen Code ein."
+            }
           </p>
         </div>
       </DialogContent>
