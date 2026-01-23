@@ -6,35 +6,41 @@ import { cn } from "@/lib/utils";
 interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPrimitive.Root> {
   animated?: boolean;
   animationDuration?: number;
+  animationDelay?: number;
 }
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
->(({ className, value, animated = false, animationDuration = 1200, ...props }, ref) => {
-  const [displayValue, setDisplayValue] = React.useState(animated ? 0 : (value || 0));
-  const animatedRef = React.useRef(false);
+>(({ className, value, animated = false, animationDuration = 2200, animationDelay = 300, ...props }, ref) => {
+  const [displayValue, setDisplayValue] = React.useState(0);
+  const hasAnimatedRef = React.useRef(false);
 
   React.useEffect(() => {
     const targetValue = value || 0;
 
     if (!animated) {
-      animatedRef.current = false;
+      hasAnimatedRef.current = false;
       setDisplayValue(targetValue);
       return;
     }
 
-    // Animate only once (on first mount / first load)
-    if (animatedRef.current) {
+    // Only animate once on initial mount
+    if (hasAnimatedRef.current) {
       setDisplayValue(targetValue);
       return;
     }
 
-    animatedRef.current = true;
+    hasAnimatedRef.current = true;
+    
+    // Start at 0, then after delay trigger the CSS transition
     setDisplayValue(0);
-    const raf = requestAnimationFrame(() => setDisplayValue(targetValue));
-    return () => cancelAnimationFrame(raf);
-  }, [value, animated]);
+    const timeoutId = setTimeout(() => {
+      setDisplayValue(targetValue);
+    }, animationDelay);
+
+    return () => clearTimeout(timeoutId);
+  }, [value, animated, animationDelay]);
 
   return (
     <ProgressPrimitive.Root
@@ -43,11 +49,11 @@ const Progress = React.forwardRef<
       {...props}
     >
       <ProgressPrimitive.Indicator
-        className={cn("h-full w-full flex-1 bg-primary", animated && "will-change-transform")}
+        className="h-full w-full flex-1 bg-primary will-change-transform"
         style={{ 
           transform: `translateX(-${100 - displayValue}%)`,
           transition: animated
-            ? `transform ${animationDuration}ms cubic-bezier(0.16, 1, 0.3, 1)`
+            ? `transform ${animationDuration}ms cubic-bezier(0.22, 1, 0.36, 1)`
             : undefined,
         }}
       />
