@@ -14,7 +14,9 @@ import {
 import { cn } from "@/lib/utils";
 import tutorialFrontGood from "@/assets/tutorial-front-good.jpg";
 import tutorialSideGood from "@/assets/tutorial-side-good.jpg";
+import tutorialBodyGood from "@/assets/tutorial-body-good.jpg";
 import tutorialBadSunglasses from "@/assets/tutorial-bad-sunglasses.jpg";
+import tutorialBadLighting from "@/assets/tutorial-bad-lighting.jpg";
 
 interface TutorialStep {
   id: string;
@@ -53,8 +55,21 @@ const tutorialSteps: TutorialStep[] = [
     ]
   },
   {
-    id: "bad",
-    title: "So nicht!",
+    id: "body",
+    title: "Körperfoto",
+    description: "Ganzkörperaufnahme für vollständige Analyse",
+    image: tutorialBodyGood,
+    isGood: true,
+    tips: [
+      "Gesamten Körper im Bild",
+      "Aufrechte, natürliche Haltung",
+      "Arme locker an der Seite",
+      "Kamera auf Brusthöhe"
+    ]
+  },
+  {
+    id: "bad-accessories",
+    title: "Keine Accessoires",
     description: "Diese Fotos können nicht analysiert werden",
     image: tutorialBadSunglasses,
     isGood: false,
@@ -63,6 +78,19 @@ const tutorialSteps: TutorialStep[] = [
       "Keine starken Filter",
       "Keine Gruppenfotos",
       "Keine unscharfen Bilder"
+    ]
+  },
+  {
+    id: "bad-lighting",
+    title: "Schlechte Beleuchtung",
+    description: "Vermeide harte Schatten und dunkle Aufnahmen",
+    image: tutorialBadLighting,
+    isGood: false,
+    tips: [
+      "Kein direktes Sonnenlicht",
+      "Keine harten Schatten",
+      "Nicht zu dunkel",
+      "Gleichmäßiges Licht bevorzugen"
     ]
   }
 ];
