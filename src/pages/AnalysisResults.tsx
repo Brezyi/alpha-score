@@ -120,7 +120,25 @@ export default function AnalysisResults() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-sm px-4">
-          <div className="w-20 h-20 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-6" />
+          {/* Scanning Image Preview */}
+          <div className="relative w-32 h-32 mx-auto mb-6 rounded-2xl overflow-hidden border-2 border-primary/40 shadow-lg animate-subtle-shake">
+            {/* Placeholder or first photo */}
+            <div className="w-full h-full bg-gradient-to-br from-card to-primary/10 flex items-center justify-center">
+              <Camera className="w-10 h-10 text-primary/50" />
+            </div>
+            {/* Scan Line */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+              <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-scan-line shadow-[0_0_15px_hsl(var(--primary)),0_0_30px_hsl(var(--primary)/0.5)]" />
+            </div>
+            {/* Corner Brackets */}
+            <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-primary/60" />
+            <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-primary/60" />
+            <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-primary/60" />
+            <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-primary/60" />
+            {/* Glow Effect */}
+            <div className="absolute inset-0 bg-primary/5 animate-pulse" />
+          </div>
+          
           <h2 className="text-xl font-bold mb-2">KI analysiert deine Fotos</h2>
           <p className="text-muted-foreground mb-4">
             Dies kann bis zu 30 Sekunden dauern. Bitte warte...

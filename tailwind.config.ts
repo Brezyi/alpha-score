@@ -123,6 +123,16 @@ export default {
           "50%": { top: "100%" },
           "100%": { top: "0%" },
         },
+        "subtle-shake": {
+          "0%, 100%": { transform: "translateX(0)" },
+          "10%": { transform: "translateX(-1px)" },
+          "20%": { transform: "translateX(1px)" },
+          "30%": { transform: "translateX(-1px)" },
+          "40%": { transform: "translateX(1px)" },
+          "50%": { transform: "translateX(-1px)" },
+          "60%": { transform: "translateX(1px)" },
+          "70%": { transform: "translateX(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -133,6 +143,7 @@ export default {
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "scan-line": "scan-line 2.5s ease-in-out infinite",
+        "subtle-shake": "subtle-shake 2s ease-in-out infinite",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
