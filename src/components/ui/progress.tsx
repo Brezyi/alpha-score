@@ -11,8 +11,9 @@ interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPr
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
->(({ className, value, animated = false, animationDuration = 1000, ...props }, ref) => {
+>(({ className, value, animated = false, animationDuration = 1200, ...props }, ref) => {
   const [displayValue, setDisplayValue] = React.useState(animated ? 0 : (value || 0));
+  const hasAnimatedRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!animated) {
@@ -20,27 +21,33 @@ const Progress = React.forwardRef<
       return;
     }
 
-    // Start from 0 and animate to target value
-    setDisplayValue(0);
+    if (hasAnimatedRef.current) {
+      setDisplayValue(value || 0);
+      return;
+    }
+    
+    hasAnimatedRef.current = true;
     const targetValue = value || 0;
-    const startTime = Date.now();
-
-    const animate = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / animationDuration, 1);
-      
-      // Easing function (ease-out-cubic)
+    
+    // Simple stepped animation - fewer updates = smoother performance
+    const steps = 20;
+    const stepDuration = animationDuration / steps;
+    let currentStep = 0;
+    
+    const interval = setInterval(() => {
+      currentStep++;
+      const progress = currentStep / steps;
+      // Ease-out cubic for smooth deceleration
       const eased = 1 - Math.pow(1 - progress, 3);
-      const currentValue = eased * targetValue;
+      setDisplayValue(eased * targetValue);
       
-      setDisplayValue(currentValue);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
+      if (currentStep >= steps) {
+        clearInterval(interval);
+        setDisplayValue(targetValue);
       }
-    };
-
-    requestAnimationFrame(animate);
+    }, stepDuration);
+    
+    return () => clearInterval(interval);
   }, [value, animated, animationDuration]);
 
   return (
@@ -50,8 +57,11 @@ const Progress = React.forwardRef<
       {...props}
     >
       <ProgressPrimitive.Indicator
-        className="h-full w-full flex-1 bg-primary transition-all"
-        style={{ transform: `translateX(-${100 - displayValue}%)` }}
+        className="h-full w-full flex-1 bg-primary"
+        style={{ 
+          transform: `translateX(-${100 - displayValue}%)`,
+          transition: animated ? 'none' : 'transform 150ms ease'
+        }}
       />
     </ProgressPrimitive.Root>
   );
