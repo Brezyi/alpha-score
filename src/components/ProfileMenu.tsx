@@ -52,8 +52,20 @@ import {
   Trash2,
   CreditCard,
   Key,
+  AlertTriangle,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Helper to check if subscription expires within days
+const getExpirationWarning = (subscriptionEnd: string | null): { warning: boolean; daysLeft: number } => {
+  if (!subscriptionEnd) return { warning: false, daysLeft: 0 };
+  const endDate = new Date(subscriptionEnd);
+  const now = new Date();
+  const diffTime = endDate.getTime() - now.getTime();
+  const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return { warning: daysLeft <= 7 && daysLeft > 0, daysLeft };
+};
 
 const ACCENT_COLORS = [
   { value: "#00FF88", label: "Neon Grün" },
@@ -84,7 +96,8 @@ export function ProfileMenu() {
   const { profile, updateProfile, uploadAvatar } = useProfile();
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
-  const { isPremium, subscriptionType, subscriptionEnd, openCustomerPortal } = useSubscription();
+  const { isPremium, subscriptionType, subscriptionEnd, openCustomerPortal, createCheckout } = useSubscription();
+  const expirationInfo = getExpirationWarning(subscriptionEnd);
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
@@ -294,9 +307,11 @@ export function ProfileMenu() {
               <Label>Abo-Status</Label>
               <div className={cn(
                 "p-3 rounded-lg border",
-                isPremium 
-                  ? "bg-primary/10 border-primary/30" 
-                  : "bg-muted/50 border-border"
+                expirationInfo.warning 
+                  ? "bg-destructive/10 border-destructive/30"
+                  : isPremium 
+                    ? "bg-primary/10 border-primary/30" 
+                    : "bg-muted/50 border-border"
               )}>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">
@@ -304,13 +319,25 @@ export function ProfileMenu() {
                      subscriptionType === "lifetime" ? "Lifetime" :
                      subscriptionType === "premium" ? "Premium" : "Free"}
                   </span>
-                  {isPremium && (
+                  {isPremium && !expirationInfo.warning && (
                     <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary">
                       Aktiv
                     </span>
                   )}
+                  {expirationInfo.warning && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-destructive/20 text-destructive flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Läuft bald ab
+                    </span>
+                  )}
                 </div>
-                {subscriptionEnd && subscriptionType === "premium" && (
+                {expirationInfo.warning && subscriptionType === "premium" && (
+                  <p className="text-sm text-destructive mt-2 flex items-center gap-1">
+                    <AlertTriangle className="w-4 h-4" />
+                    Dein Abo läuft in {expirationInfo.daysLeft} {expirationInfo.daysLeft === 1 ? "Tag" : "Tagen"} ab!
+                  </p>
+                )}
+                {subscriptionEnd && subscriptionType === "premium" && !expirationInfo.warning && (
                   <p className="text-sm text-muted-foreground mt-1">
                     Verlängert am: {new Date(subscriptionEnd).toLocaleDateString("de-DE", {
                       day: "2-digit",
@@ -326,11 +353,38 @@ export function ProfileMenu() {
                 )}
                 {!isPremium && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Upgrade für alle Features
+                    Upgrade für alle Premium-Features
                   </p>
                 )}
               </div>
             </div>
+
+            {/* Upgrade Button for Free Users */}
+            {!isPremium && (
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    createCheckout("premium");
+                  }}
+                  className="flex-1"
+                  variant="default"
+                >
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Premium (9,99€/Monat)
+                </Button>
+                <Button
+                  onClick={() => {
+                    setProfileOpen(false);
+                    createCheckout("lifetime");
+                  }}
+                  className="flex-1"
+                  variant="outline"
+                >
+                  Lifetime (50€)
+                </Button>
+              </div>
+            )}
 
             <Button onClick={handleSaveProfile} className="w-full">
               Speichern
