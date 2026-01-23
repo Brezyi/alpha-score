@@ -95,8 +95,8 @@ export default function Features() {
             Alles was du brauchst für dein <span className="text-gradient">Glow-Up</span>
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            FaceRank kombiniert modernste KI-Technologie mit bewährten Looksmaxing-Strategien, 
-            um dir den effektivsten Weg zu deinem besten Selbst zu zeigen.
+            FaceRank kombiniert moderne KI-Technologie mit bewährten Looksmaxing-Strategien, 
+            um dir einen klaren Weg zu deinem Glow-Up zu zeigen.
           </p>
         </div>
 

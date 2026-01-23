@@ -56,10 +56,10 @@ const Features = () => {
             <span className="text-sm text-muted-foreground">Features</span>
           </div>
           <h2 className="text-4xl md:text-5xl font-bold mb-4">
-            Alles was du brauchst für <span className="text-gradient">maximale Attraktivität</span>
+            Alles was du brauchst für <span className="text-gradient">dein Glow-Up</span>
           </h2>
           <p className="text-lg text-muted-foreground">
-            Wissenschaftlich fundierte Tools, die dir helfen, das Beste aus deinem Aussehen herauszuholen.
+            Moderne Tools, die dir helfen, das Beste aus deinem Aussehen herauszuholen.
           </p>
         </div>
 
