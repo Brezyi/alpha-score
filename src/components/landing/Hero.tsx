@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Star, Users, TrendingUp } from "lucide-react";
+import { ArrowRight, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 
@@ -127,33 +127,6 @@ const Hero = () => {
             </Link>
           </motion.div>
 
-          {/* Social Proof Stats */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.9 }}
-            className="flex flex-wrap items-center justify-center gap-8 md:gap-12"
-          >
-            {[
-              { icon: Users, value: "10k+", label: "Nutzer" },
-              { icon: Star, value: "4.9", label: "Bewertung" },
-              { icon: TrendingUp, value: "+2.1", label: "Ø Verbesserung" },
-            ].map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.4, delay: 1 + index * 0.1 }}
-                className="flex items-center gap-3 px-4 py-2 rounded-xl glass"
-              >
-                <stat.icon className="w-5 h-5 text-primary" />
-                <div className="text-left">
-                  <div className="text-lg font-bold text-foreground">{stat.value}</div>
-                  <div className="text-xs text-muted-foreground">{stat.label}</div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
         </div>
       </div>
 
