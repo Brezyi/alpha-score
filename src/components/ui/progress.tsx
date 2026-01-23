@@ -16,37 +16,25 @@ const Progress = React.forwardRef<
   const animatedRef = React.useRef(false);
 
   React.useEffect(() => {
+    const targetValue = value || 0;
+
     if (!animated) {
-      setDisplayValue(value || 0);
+      animatedRef.current = false;
+      setDisplayValue(targetValue);
       return;
     }
 
+    // Animate only once (on first mount / first load)
     if (animatedRef.current) {
-      setDisplayValue(value || 0);
+      setDisplayValue(targetValue);
       return;
     }
-    
+
     animatedRef.current = true;
-    const targetValue = value || 0;
-    
-    let frame = 0;
-    const totalFrames = 30;
-    
-    const animate = () => {
-      frame++;
-      const progress = frame / totalFrames;
-      const eased = 1 - Math.pow(1 - progress, 2);
-      setDisplayValue(eased * targetValue);
-      
-      if (frame < totalFrames) {
-        setTimeout(animate, 40);
-      } else {
-        setDisplayValue(targetValue);
-      }
-    };
-    
-    setTimeout(animate, 100);
-  }, [value, animated, animationDuration]);
+    setDisplayValue(0);
+    const raf = requestAnimationFrame(() => setDisplayValue(targetValue));
+    return () => cancelAnimationFrame(raf);
+  }, [value, animated]);
 
   return (
     <ProgressPrimitive.Root
@@ -55,9 +43,12 @@ const Progress = React.forwardRef<
       {...props}
     >
       <ProgressPrimitive.Indicator
-        className="h-full w-full flex-1 bg-primary"
+        className={cn("h-full w-full flex-1 bg-primary", animated && "will-change-transform")}
         style={{ 
-          transform: `translateX(-${100 - displayValue}%)`
+          transform: `translateX(-${100 - displayValue}%)`,
+          transition: animated
+            ? `transform ${animationDuration}ms cubic-bezier(0.16, 1, 0.3, 1)`
+            : undefined,
         }}
       />
     </ProgressPrimitive.Root>
