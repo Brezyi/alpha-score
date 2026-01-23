@@ -266,11 +266,15 @@ export default function TestimonialsManagement() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {testimonial.score_before && testimonial.score_after && 
-                       (testimonial.score_after - testimonial.score_before) > 0 ? (
-                        <span className="text-gradient font-bold">
-                          +{(testimonial.score_after - testimonial.score_before).toFixed(1)}
-                        </span>
+                      {testimonial.score_after ? (
+                        <div className="flex flex-col">
+                          <span className="font-bold">{testimonial.score_after.toFixed(1)}</span>
+                          {testimonial.score_before && testimonial.score_before !== testimonial.score_after && (
+                            <span className={`text-xs ${testimonial.score_after > testimonial.score_before ? 'text-green-500' : 'text-red-500'}`}>
+                              {testimonial.score_after > testimonial.score_before ? '+' : ''}{(testimonial.score_after - testimonial.score_before).toFixed(1)}
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-muted-foreground">—</span>
                       )}
