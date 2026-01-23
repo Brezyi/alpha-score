@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useStreak } from "@/hooks/useStreak";
 import { useSubscription } from "@/hooks/useSubscription";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
   Upload, 
   X, 
@@ -347,8 +348,10 @@ export default function AnalysisUpload() {
             const hasPhoto = getPhotoForType(type.id);
             return (
               <div key={type.id} className="flex items-center">
-                <button
+                <motion.button
                   onClick={() => setActiveType(type.id)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center transition-all",
                     hasPhoto 
@@ -358,13 +361,28 @@ export default function AnalysisUpload() {
                         : "bg-card text-muted-foreground border border-border"
                   )}
                 >
-                  {hasPhoto ? <Check className="w-5 h-5" /> : index + 1}
-                </button>
+                  {hasPhoto ? (
+                    <motion.div
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    >
+                      <Check className="w-5 h-5" />
+                    </motion.div>
+                  ) : (
+                    index + 1
+                  )}
+                </motion.button>
                 {index < photoTypes.length - 1 && (
-                  <div className={cn(
-                    "w-8 h-0.5 mx-1",
-                    hasPhoto ? "bg-primary" : "bg-border"
-                  )} />
+                  <motion.div 
+                    className={cn(
+                      "w-8 h-0.5 mx-1 origin-left",
+                      hasPhoto ? "bg-primary" : "bg-border"
+                    )}
+                    initial={hasPhoto ? { scaleX: 0 } : {}}
+                    animate={{ scaleX: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
                 )}
               </div>
             );
@@ -373,12 +391,17 @@ export default function AnalysisUpload() {
 
         {/* Photo type selector */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          {photoTypes.map((type) => {
+          {photoTypes.map((type, index) => {
             const photo = getPhotoForType(type.id);
             const Icon = type.icon;
             return (
-              <button
+              <motion.button
                 key={type.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setActiveType(type.id)}
                 className={cn(
                   "relative p-3 rounded-xl border-2 transition-all text-left",
@@ -389,18 +412,26 @@ export default function AnalysisUpload() {
                       : "border-border bg-card hover:border-muted-foreground"
                 )}
               >
-                {photo && (
-                  <div className="absolute top-2 right-2">
-                    <Check className="w-4 h-4 text-primary" />
-                  </div>
-                )}
+                <AnimatePresence>
+                  {photo && (
+                    <motion.div 
+                      className="absolute top-2 right-2"
+                      initial={{ scale: 0, rotate: -180 }}
+                      animate={{ scale: 1, rotate: 0 }}
+                      exit={{ scale: 0, rotate: 180 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <Check className="w-4 h-4 text-primary" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <Icon className={cn(
                   "w-5 h-5 mb-1",
                   activeType === type.id ? "text-primary" : "text-muted-foreground"
                 )} />
                 <p className="font-medium text-sm">{type.label}</p>
                 <p className="text-xs text-muted-foreground">{type.description}</p>
-              </button>
+              </motion.button>
             );
           })}
         </div>
@@ -474,38 +505,54 @@ export default function AnalysisUpload() {
         </Card>
 
         {/* Photo previews */}
-        {photos.length > 0 && (
-          <div className="mt-6">
-            <p className="text-sm text-muted-foreground mb-3">Deine Fotos</p>
-            <div className="flex gap-3">
-              {photos.map((photo) => (
-                <div 
-                  key={photo.type}
-                  onClick={() => setActiveType(photo.type)}
-                  className={cn(
-                    "relative w-16 h-20 rounded-lg overflow-hidden cursor-pointer border-2 transition-all",
-                    activeType === photo.type ? "border-primary" : "border-transparent"
-                  )}
-                >
-                  <img
-                    src={photo.preview}
-                    alt={photo.type}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removePhoto(photo.type);
-                    }}
-                    className="absolute top-1 right-1 p-0.5 rounded-full bg-black/50"
+        <AnimatePresence>
+          {photos.length > 0 && (
+            <motion.div 
+              className="mt-6"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+            >
+              <p className="text-sm text-muted-foreground mb-3">Deine Fotos</p>
+              <div className="flex gap-3">
+                {photos.map((photo, index) => (
+                  <motion.div 
+                    key={photo.type}
+                    initial={{ opacity: 0, scale: 0.5, rotate: -10 }}
+                    animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                    exit={{ opacity: 0, scale: 0.5, rotate: 10 }}
+                    transition={{ delay: index * 0.1, type: "spring", stiffness: 300 }}
+                    whileHover={{ scale: 1.05, y: -4 }}
+                    onClick={() => setActiveType(photo.type)}
+                    className={cn(
+                      "relative w-16 h-20 rounded-lg overflow-hidden cursor-pointer border-2 transition-all shadow-lg",
+                      activeType === photo.type ? "border-primary ring-2 ring-primary/30" : "border-transparent"
+                    )}
                   >
-                    <X className="w-3 h-3 text-white" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+                    <img
+                      src={photo.preview}
+                      alt={photo.type}
+                      className="w-full h-full object-cover"
+                    />
+                    {/* Shimmer effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer" />
+                    <motion.button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removePhoto(photo.type);
+                      }}
+                      whileHover={{ scale: 1.2 }}
+                      whileTap={{ scale: 0.8 }}
+                      className="absolute top-1 right-1 p-0.5 rounded-full bg-black/50 backdrop-blur-sm"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </motion.button>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Tips */}
         <div className="mt-8 p-4 rounded-xl bg-primary/5 border border-primary/20">
