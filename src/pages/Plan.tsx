@@ -50,12 +50,12 @@ type Analysis = {
 };
 
 const CATEGORIES = [
-  { id: "skincare", name: "Skincare", icon: Droplets, color: "bg-cyan-500/20 text-cyan-400" },
-  { id: "hair", name: "Haare & Bart", icon: Scissors, color: "bg-amber-500/20 text-amber-400" },
-  { id: "body", name: "Körper & Gym", icon: Dumbbell, color: "bg-red-500/20 text-red-400" },
-  { id: "style", name: "Style & Kleidung", icon: Shirt, color: "bg-purple-500/20 text-purple-400" },
-  { id: "teeth", name: "Zähne & Lächeln", icon: SmilePlus, color: "bg-emerald-500/20 text-emerald-400" },
-  { id: "mindset", name: "Mindset & Haltung", icon: Brain, color: "bg-blue-500/20 text-blue-400" },
+  { id: "skincare", name: "Skincare", icon: Droplets, color: "bg-cyan-500/20 text-cyan-600 dark:text-cyan-400" },
+  { id: "hair", name: "Haare & Bart", icon: Scissors, color: "bg-amber-500/20 text-amber-600 dark:text-amber-400" },
+  { id: "body", name: "Körper & Gym", icon: Dumbbell, color: "bg-red-500/20 text-red-600 dark:text-red-400" },
+  { id: "style", name: "Style & Kleidung", icon: Shirt, color: "bg-purple-500/20 text-purple-600 dark:text-purple-400" },
+  { id: "teeth", name: "Zähne & Lächeln", icon: SmilePlus, color: "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400" },
+  { id: "mindset", name: "Mindset & Haltung", icon: Brain, color: "bg-blue-500/20 text-blue-600 dark:text-blue-400" },
 ];
 
 const Plan = () => {

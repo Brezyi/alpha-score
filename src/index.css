@@ -70,7 +70,50 @@
     --sidebar-ring: 153 100% 50%;
   }
 
-  /* No light mode - always dark */
+  /* Light mode - proper contrast */
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 153 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 10%;
+    --destructive: 0 84.2% 50%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 85%;
+    --input: 0 0% 90%;
+    --ring: 153 100% 40%;
+    
+    /* Custom variables for light mode */
+    --glow-green: 153 100% 40%;
+    --surface-dark: 0 0% 96%;
+    --surface-darker: 0 0% 92%;
+    
+    /* Shadows for light mode */
+    --shadow-glow: 0 0 40px hsl(153, 100%, 40%, 0.2);
+    --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.08);
+    --shadow-elevated: 0 8px 32px hsl(0, 0%, 0%, 0.12);
+
+    /* Sidebar for light mode */
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 153 100% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 85%;
+    --sidebar-ring: 153 100% 40%;
+  }
+
+  /* Dark mode overrides */
   .dark {
     --background: 0 0% 4.3%;
     --foreground: 0 0% 98%;
