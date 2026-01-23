@@ -46,7 +46,9 @@ const parseSettingValue = (value: unknown): boolean => {
 };
 
 export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ children }) => {
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  // SECURITY: Default to true (maintenance) until we confirm otherwise from DB
+  // This prevents bypassing maintenance mode during initial load
+  const [maintenanceMode, setMaintenanceMode] = useState<boolean | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -145,13 +147,16 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
     };
   }, [checkMaintenanceAndRole]);
 
+  // maintenanceMode can be null (loading), true, or false
+  const contextValue: MaintenanceContextType = {
+    maintenanceMode: maintenanceMode === true,
+    isOwner,
+    isLoggedIn,
+    loading: loading || maintenanceMode === null, // Still loading if maintenance mode not yet fetched
+  };
+
   return (
-    <MaintenanceContext.Provider value={{
-      maintenanceMode,
-      isOwner,
-      isLoggedIn,
-      loading,
-    }}>
+    <MaintenanceContext.Provider value={contextValue}>
       {children}
     </MaintenanceContext.Provider>
   );
