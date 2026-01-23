@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { MFAVerification } from "@/components/MFAVerification";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useSecurityAlerts } from "@/hooks/useSecurityAlerts";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -33,6 +34,7 @@ const Login = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { settings } = useGlobalSettings();
+  const { sendSecurityAlert } = useSecurityAlerts();
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -98,7 +100,7 @@ const Login = () => {
     }
   };
 
-  // Record failed login attempt
+  // Record failed login attempt and send alert if locked
   const recordFailedAttempt = async (userEmail: string) => {
     try {
       const { data, error } = await supabase.rpc('record_failed_login', {
@@ -111,6 +113,14 @@ const Login = () => {
         setIsLocked(result.is_locked);
         setLockoutSeconds(result.remaining_seconds);
         setFailedAttempts(result.failed_attempts);
+        
+        // Send security alert email when account gets locked
+        if (result.is_locked && result.failed_attempts >= 5) {
+          sendSecurityAlert("ACCOUNT_LOCKED", userEmail, undefined, {
+            failedAttempts: result.failed_attempts,
+            lockoutMinutes: 5,
+          });
+        }
       }
     } catch (err) {
       console.error('Error recording failed login:', err);
