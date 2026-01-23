@@ -407,7 +407,7 @@ export function ProfileMenu() {
               Speichern
             </Button>
 
-            {/* Subscription Management - only show for premium users */}
+            {/* Subscription Management - only show for real Stripe premium users */}
             {isPremium && subscriptionType === "premium" && !isAdminGranted && (
               <Button
                 variant="outline"
@@ -421,6 +421,14 @@ export function ProfileMenu() {
                 <CreditCard className="w-4 h-4 mr-2" />
                 Abo verwalten
               </Button>
+            )}
+
+            {/* Admin-granted subscription hint */}
+            {isPremium && isAdminGranted && (
+              <div className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary">
+                <Shield className="w-4 h-4" />
+                <span>Von Admin vergeben</span>
+              </div>
             )}
 
             <Button
