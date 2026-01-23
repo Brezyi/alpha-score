@@ -36,6 +36,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SecuritySettingsDialog } from "@/components/SecuritySettingsDialog";
+import { RedeemCodeDialog } from "@/components/RedeemCodeDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -54,6 +55,7 @@ import {
   Key,
   AlertTriangle,
   Sparkles,
+  Gift,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -102,6 +104,7 @@ export function ProfileMenu() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
+  const [redeemCodeOpen, setRedeemCodeOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -378,27 +381,41 @@ export function ProfileMenu() {
 
             {/* Upgrade Button for Free Users */}
             {!isPremium && (
-              <div className="flex gap-2">
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      createCheckout("premium");
+                    }}
+                    className="flex-1"
+                    variant="default"
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Premium (9,99€/Monat)
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setProfileOpen(false);
+                      createCheckout("lifetime");
+                    }}
+                    className="flex-1"
+                    variant="outline"
+                  >
+                    Lifetime (50€)
+                  </Button>
+                </div>
                 <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => {
                     setProfileOpen(false);
-                    createCheckout("premium");
+                    setRedeemCodeOpen(true);
                   }}
-                  className="flex-1"
-                  variant="default"
+                  className="w-full text-muted-foreground"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Premium (9,99€/Monat)
-                </Button>
-                <Button
-                  onClick={() => {
-                    setProfileOpen(false);
-                    createCheckout("lifetime");
-                  }}
-                  className="flex-1"
-                  variant="outline"
-                >
-                  Lifetime (50€)
+                  <Gift className="w-4 h-4 mr-2" />
+                  Promocode einlösen
                 </Button>
               </div>
             )}
@@ -572,6 +589,13 @@ export function ProfileMenu() {
 
       {/* Security Settings Dialog */}
       <SecuritySettingsDialog open={securityOpen} onOpenChange={setSecurityOpen} />
+
+      {/* Redeem Code Dialog */}
+      <RedeemCodeDialog 
+        open={redeemCodeOpen} 
+        onOpenChange={setRedeemCodeOpen}
+        onSuccess={() => window.location.reload()}
+      />
     </>
   );
 }

@@ -38,6 +38,7 @@ import SupportManagement from "./pages/admin/SupportManagement";
 import SystemSettings from "./pages/admin/SystemSettings";
 import RevenueOverview from "./pages/admin/RevenueOverview";
 import TestimonialsManagement from "./pages/admin/TestimonialsManagement";
+import PromoCodes from "./pages/admin/PromoCodes";
 
 const queryClient = new QueryClient();
 
@@ -129,6 +130,14 @@ const App = () => (
                       element={
                         <ProtectedRoute requiredRole={["admin", "owner"]}>
                           <TestimonialsManagement />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/promocodes" 
+                      element={
+                        <ProtectedRoute requiredRole={["owner"]}>
+                          <PromoCodes />
                         </ProtectedRoute>
                       } 
                     />
