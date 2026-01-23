@@ -593,6 +593,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          _action_type: string
+          _max_actions?: number
+          _time_window?: unknown
+          _user_id: string
+        }
+        Returns: boolean
+      }
       create_audit_log: {
         Args: {
           _action_type: string
@@ -616,6 +625,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      log_security_event: {
+        Args: { _details?: Json; _event_type: string }
+        Returns: undefined
       }
       update_user_streak: {
         Args: { p_user_id: string }
