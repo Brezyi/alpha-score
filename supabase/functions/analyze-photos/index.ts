@@ -129,6 +129,140 @@ serve(async (req) => {
     }
     logStep("Photos prepared for analysis", { count: photoDataUrls.length });
 
+    // ====== STEP 0: Content Moderation (Illegal Content Detection) ======
+    logStep("Starting content moderation check");
+    const moderationPrompt = `Du bist ein Content-Moderator. Prüfe dieses Bild auf ILLEGALE oder VERBOTENE Inhalte.
+
+SOFORT ABLEHNEN bei:
+- Kinderpornografie oder Minderjährige in unangemessenen Situationen
+- Explizite sexuelle Inhalte oder Pornografie
+- Extreme Gewalt, Gore oder verstümmelte Körper
+- Terrorismus-Propaganda oder Hasssymbole (Nazi-Symbole, etc.)
+- Illegale Drogen oder Drogenkonsum
+- Waffen mit Drohgebärden
+
+AKZEPTABEL (auch wenn ungewöhnlich):
+- Normale Selfies/Porträtfotos
+- Künstlerische Nacktheit ohne sexuellen Fokus
+- Medizinische/chirurgische Bilder
+- Sport/Fitness-Fotos
+
+Sei präzise: Nur echte Verstöße ablehnen, keine harmlosen Fotos.`;
+
+    const moderationResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          { 
+            role: "user", 
+            content: [
+              { type: "text", text: moderationPrompt },
+              { type: "image_url", image_url: { url: photoDataUrls[0] } }
+            ]
+          }
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "moderate_content",
+              description: "Check if the image contains illegal or prohibited content",
+              parameters: {
+                type: "object",
+                properties: {
+                  is_safe: { type: "boolean", description: "True if the image is safe and allowed" },
+                  is_illegal: { type: "boolean", description: "True if the image contains illegal content that requires user ban" },
+                  violation_type: { type: "string", description: "Type of violation if any: 'child_exploitation', 'explicit_sexual', 'extreme_violence', 'hate_symbols', 'drugs', 'weapons', 'other'" },
+                  violation_severity: { type: "string", description: "'critical' for illegal content, 'high' for TOS violations, 'none' for safe content" },
+                  reason: { type: "string", description: "Brief explanation of why the content was flagged or approved" }
+                },
+                required: ["is_safe", "is_illegal"]
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "moderate_content" } }
+      }),
+    });
+
+    if (moderationResponse.ok) {
+      const moderationData = await moderationResponse.json();
+      const moderationToolCall = moderationData.choices?.[0]?.message?.tool_calls?.[0];
+      
+      if (moderationToolCall && moderationToolCall.function.name === "moderate_content") {
+        const moderationResult = JSON.parse(moderationToolCall.function.arguments);
+        logStep("Content moderation result", moderationResult);
+
+        if (moderationResult.is_illegal || !moderationResult.is_safe) {
+          logStep("ILLEGAL CONTENT DETECTED - Banning user and deleting content", { userId: user.id });
+
+          // 1. Delete all user's photos from storage
+          const { data: userPhotos } = await supabaseClient
+            .from('analyses')
+            .select('photo_urls')
+            .eq('user_id', user.id);
+
+          if (userPhotos) {
+            for (const analysis of userPhotos) {
+              for (const url of analysis.photo_urls || []) {
+                const urlParts = url.split('/analysis-photos/');
+                if (urlParts.length > 1) {
+                  const filePath = urlParts[1];
+                  await supabaseClient.storage.from('analysis-photos').remove([filePath]);
+                  logStep("Deleted photo", { filePath });
+                }
+              }
+            }
+          }
+
+          // 2. Delete all user's analyses
+          await supabaseClient
+            .from('analyses')
+            .delete()
+            .eq('user_id', user.id);
+
+          // 3. Create audit log for the ban
+          await supabaseClient.rpc('create_audit_log', {
+            _action_type: 'CONTENT_VIOLATION_BAN',
+            _table_name: 'users',
+            _record_id: user.id,
+            _actor_id: user.id,
+            _target_user_id: user.id,
+            _old_values: null,
+            _new_values: { 
+              violation_type: moderationResult.violation_type,
+              violation_severity: moderationResult.violation_severity,
+              reason: moderationResult.reason
+            },
+            _metadata: { 
+              event: 'User banned for illegal content',
+              auto_moderation: true
+            }
+          });
+
+          // Return banned status
+          return new Response(JSON.stringify({
+            success: false,
+            error: "CONTENT_VIOLATION",
+            message: "Dein Account wurde wegen Verstoßes gegen unsere Nutzungsbedingungen gesperrt. Alle deine Daten wurden gelöscht.",
+            banned: true
+          }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 200,
+          });
+        }
+      }
+    } else {
+      logStep("Content moderation API error - continuing with caution", { status: moderationResponse.status });
+    }
+
+    logStep("Content moderation passed");
+
     // ====== STEP 1: Face Detection Validation ======
     logStep("Starting face validation");
     const validationPrompt = `Analysiere dieses Bild und prüfe ob es für eine Gesichtsanalyse geeignet ist.
@@ -142,6 +276,7 @@ Prüfe folgende Kriterien:
 6. Gibt es nur EIN Hauptgesicht im Bild?
 
 Wichtig: Sei streng bei der Bewertung. Das Foto muss für eine professionelle Gesichtsanalyse geeignet sein.`;
+
 
     const validationResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

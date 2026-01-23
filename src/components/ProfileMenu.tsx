@@ -35,6 +35,7 @@ import { useProfile } from "@/hooks/useProfile";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubscription } from "@/hooks/useSubscription";
+import { SecuritySettingsDialog } from "@/components/SecuritySettingsDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -50,6 +51,7 @@ import {
   HelpCircle,
   Trash2,
   CreditCard,
+  Key,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -85,6 +87,7 @@ export function ProfileMenu() {
   const { isPremium, subscriptionType, subscriptionEnd, openCustomerPortal } = useSubscription();
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [securityOpen, setSecurityOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -210,6 +213,10 @@ export function ProfileMenu() {
           <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer">
             <Palette className="mr-2 h-4 w-4" />
             <span>Design anpassen</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSecurityOpen(true)} className="cursor-pointer">
+            <Key className="mr-2 h-4 w-4" />
+            <span>Sicherheit</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate("/support")} className="cursor-pointer">
             <HelpCircle className="mr-2 h-4 w-4" />
@@ -479,6 +486,9 @@ export function ProfileMenu() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Security Settings Dialog */}
+      <SecuritySettingsDialog open={securityOpen} onOpenChange={setSecurityOpen} />
     </>
   );
 }
