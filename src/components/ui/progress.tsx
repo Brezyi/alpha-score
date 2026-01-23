@@ -13,7 +13,7 @@ const Progress = React.forwardRef<
   ProgressProps
 >(({ className, value, animated = false, animationDuration = 1200, ...props }, ref) => {
   const [displayValue, setDisplayValue] = React.useState(animated ? 0 : (value || 0));
-  const hasAnimatedRef = React.useRef(false);
+  const animatedRef = React.useRef(false);
 
   React.useEffect(() => {
     if (!animated) {
@@ -21,33 +21,31 @@ const Progress = React.forwardRef<
       return;
     }
 
-    if (hasAnimatedRef.current) {
+    if (animatedRef.current) {
       setDisplayValue(value || 0);
       return;
     }
     
-    hasAnimatedRef.current = true;
+    animatedRef.current = true;
     const targetValue = value || 0;
     
-    // Simple stepped animation - fewer updates = smoother performance
-    const steps = 20;
-    const stepDuration = animationDuration / steps;
-    let currentStep = 0;
+    let frame = 0;
+    const totalFrames = 30;
     
-    const interval = setInterval(() => {
-      currentStep++;
-      const progress = currentStep / steps;
-      // Ease-out cubic for smooth deceleration
-      const eased = 1 - Math.pow(1 - progress, 3);
+    const animate = () => {
+      frame++;
+      const progress = frame / totalFrames;
+      const eased = 1 - Math.pow(1 - progress, 2);
       setDisplayValue(eased * targetValue);
       
-      if (currentStep >= steps) {
-        clearInterval(interval);
+      if (frame < totalFrames) {
+        setTimeout(animate, 40);
+      } else {
         setDisplayValue(targetValue);
       }
-    }, stepDuration);
+    };
     
-    return () => clearInterval(interval);
+    setTimeout(animate, 100);
   }, [value, animated, animationDuration]);
 
   return (
@@ -59,8 +57,7 @@ const Progress = React.forwardRef<
       <ProgressPrimitive.Indicator
         className="h-full w-full flex-1 bg-primary"
         style={{ 
-          transform: `translateX(-${100 - displayValue}%)`,
-          transition: animated ? 'none' : 'transform 150ms ease'
+          transform: `translateX(-${100 - displayValue}%)`
         }}
       />
     </ProgressPrimitive.Root>
