@@ -25,6 +25,7 @@ import Datenschutz from "./pages/Datenschutz";
 import Impressum from "./pages/Impressum";
 import AGB from "./pages/AGB";
 import NotFound from "./pages/NotFound";
+import ConfirmDeletion from "./pages/ConfirmDeletion";
 import CookieConsent from "./components/CookieConsent";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DocumentTitleUpdater } from "./components/DocumentTitleUpdater";
@@ -72,6 +73,7 @@ const App = () => (
                     <Route path="/datenschutz" element={<Datenschutz />} />
                     <Route path="/impressum" element={<Impressum />} />
                     <Route path="/agb" element={<AGB />} />
+                    <Route path="/confirm-deletion" element={<ConfirmDeletion />} />
                     
                     {/* Admin Routes - Protected by role */}
                     <Route 
