@@ -44,6 +44,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Send,
+  Copy,
+  Check,
+  Mail,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -62,6 +65,12 @@ const CATEGORY_CONFIG: Record<string, { label: string; color: string }> = {
   other: { label: "Sonstiges", color: "bg-muted text-muted-foreground" },
 };
 
+interface UserInfo {
+  user_id: string;
+  display_name?: string;
+  email?: string;
+}
+
 const SupportManagement = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdminOrOwner, loading: roleLoading } = useUserRole();
@@ -78,11 +87,49 @@ const SupportManagement = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [replyMessage, setReplyMessage] = useState("");
+  const [userInfoMap, setUserInfoMap] = useState<Record<string, UserInfo>>({});
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Messages hook for chat
   const { messages, loading: messagesLoading, sending, sendMessage } = useTicketMessages(
     selectedTicket?.id || null
   );
+
+  // Load user info for all tickets
+  useEffect(() => {
+    const loadUserInfo = async () => {
+      if (!tickets.length) return;
+      
+      const userIds = [...new Set(tickets.map(t => t.user_id))];
+      
+      // Fetch profiles
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('user_id, display_name')
+        .in('user_id', userIds);
+      
+      // Fetch subscriptions for emails
+      const { data: subsData } = await supabase
+        .from('subscriptions')
+        .select('user_id, customer_email')
+        .in('user_id', userIds);
+      
+      const infoMap: Record<string, UserInfo> = {};
+      userIds.forEach(uid => {
+        const profile = profilesData?.find(p => p.user_id === uid);
+        const sub = subsData?.find(s => s.user_id === uid);
+        infoMap[uid] = {
+          user_id: uid,
+          display_name: profile?.display_name || undefined,
+          email: sub?.customer_email || undefined,
+        };
+      });
+      
+      setUserInfoMap(infoMap);
+    };
+    
+    loadUserInfo();
+  }, [tickets]);
 
   // Load signed URLs for attachments when ticket is selected
   useEffect(() => {
@@ -116,6 +163,12 @@ const SupportManagement = () => {
 
     loadAttachments();
   }, [selectedTicket]);
+
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopiedId(text);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   if (authLoading || roleLoading) {
     return (
@@ -324,11 +377,19 @@ const SupportManagement = () => {
                           {ticket.description}
                         </p>
 
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5">
                             <User className="w-3.5 h-3.5" />
-                            <span className="font-mono">{ticket.user_id.slice(0, 8)}...</span>
+                            <span className="font-medium text-foreground">
+                              {userInfoMap[ticket.user_id]?.display_name || 'Unbekannt'}
+                            </span>
                           </div>
+                          {userInfoMap[ticket.user_id]?.email && (
+                            <div className="flex items-center gap-1.5">
+                              <Mail className="w-3.5 h-3.5" />
+                              <span>{userInfoMap[ticket.user_id]?.email}</span>
+                            </div>
+                          )}
                           <div className="flex items-center gap-1.5">
                             <Calendar className="w-3.5 h-3.5" />
                             <span>{format(new Date(ticket.created_at), "dd. MMM yyyy, HH:mm", { locale: de })}</span>
@@ -339,6 +400,26 @@ const SupportManagement = () => {
                               <span>Notiz vorhanden</span>
                             </div>
                           )}
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-2 text-xs">
+                          <code className="bg-muted px-1.5 py-0.5 rounded font-mono text-muted-foreground">
+                            {ticket.user_id}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              copyToClipboard(ticket.user_id);
+                            }}
+                          >
+                            {copiedId === ticket.user_id ? (
+                              <Check className="w-3 h-3 text-primary" />
+                            ) : (
+                              <Copy className="w-3 h-3" />
+                            )}
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -373,10 +454,39 @@ const SupportManagement = () => {
                 <Badge className={CATEGORY_CONFIG[selectedTicket.category]?.color || CATEGORY_CONFIG.other.color}>
                   {CATEGORY_CONFIG[selectedTicket.category]?.label || "Sonstiges"}
                 </Badge>
-                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5" />
-                  User: <span className="font-mono">{selectedTicket.user_id.slice(0, 12)}...</span>
-                </span>
+              </div>
+
+              {/* User Info Box */}
+              <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+                <div className="flex items-center gap-2 text-sm">
+                  <User className="w-4 h-4 text-muted-foreground" />
+                  <span className="font-medium">
+                    {userInfoMap[selectedTicket.user_id]?.display_name || 'Unbekannt'}
+                  </span>
+                </div>
+                {userInfoMap[selectedTicket.user_id]?.email && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Mail className="w-4 h-4" />
+                    <span>{userInfoMap[selectedTicket.user_id]?.email}</span>
+                  </div>
+                )}
+                <div className="flex items-center gap-2 text-xs">
+                  <code className="bg-background px-2 py-1 rounded font-mono text-muted-foreground flex-1 break-all">
+                    {selectedTicket.user_id}
+                  </code>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 shrink-0"
+                    onClick={() => copyToClipboard(selectedTicket.user_id)}
+                  >
+                    {copiedId === selectedTicket.user_id ? (
+                      <Check className="w-3 h-3 text-primary" />
+                    ) : (
+                      <Copy className="w-3 h-3" />
+                    )}
+                  </Button>
+                </div>
               </div>
 
               {/* Subject & Description */}
