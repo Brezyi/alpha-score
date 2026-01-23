@@ -30,10 +30,6 @@ interface GenderStat {
   count: number;
 }
 
-interface CountryStat {
-  country: string | null;
-  count: number;
-}
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -41,7 +37,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStat[]>([]);
   const [loading, setLoading] = useState(true);
   const [genderStats, setGenderStats] = useState<GenderStat[]>([]);
-  const [countryStats, setCountryStats] = useState<CountryStat[]>([]);
+  
 
   const [openTickets, setOpenTickets] = useState(0);
 
@@ -69,12 +65,11 @@ export default function AdminDashboard() {
         // Fetch gender statistics
         const { data: profiles } = await supabase
           .from('profiles')
-          .select('gender, country');
+          .select('gender');
 
         if (profiles) {
           // Calculate gender stats
           const genderCounts: Record<string, number> = { male: 0, female: 0, unknown: 0 };
-          const countryCounts: Record<string, number> = {};
 
           profiles.forEach((p) => {
             // Gender
@@ -82,10 +77,6 @@ export default function AdminDashboard() {
             else if (p.gender === 'female') genderCounts.female++;
             else genderCounts.unknown++;
 
-            // Country
-            if (p.country) {
-              countryCounts[p.country] = (countryCounts[p.country] || 0) + 1;
-            }
           });
 
           setGenderStats([
@@ -94,12 +85,6 @@ export default function AdminDashboard() {
             { gender: null, count: genderCounts.unknown },
           ]);
 
-          // Sort countries by count and take top 10
-          const sortedCountries = Object.entries(countryCounts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 10)
-            .map(([country, count]) => ({ country, count }));
-          setCountryStats(sortedCountries);
         }
 
         setStats([
@@ -311,32 +296,6 @@ export default function AdminDashboard() {
                 </CardContent>
               </Card>
 
-              {/* Country Distribution */}
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    Top Herkunftsländer
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {countryStats.length > 0 ? (
-                    <div className="space-y-2">
-                      {countryStats.slice(0, 5).map((stat, index) => (
-                        <div key={stat.country} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className="text-muted-foreground w-4">{index + 1}.</span>
-                            <span>{stat.country}</span>
-                          </div>
-                          <Badge variant="secondary">{stat.count}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Noch keine Daten</p>
-                  )}
-                </CardContent>
-              </Card>
             </div>
 
             {/* Owner Actions */}
