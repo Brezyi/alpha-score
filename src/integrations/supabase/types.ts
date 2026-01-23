@@ -687,6 +687,7 @@ export type Database = {
           is_featured: boolean
           score_after: number | null
           score_before: number | null
+          star_rating: number | null
           testimonial_text: string
           updated_at: string
           user_id: string
@@ -702,6 +703,7 @@ export type Database = {
           is_featured?: boolean
           score_after?: number | null
           score_before?: number | null
+          star_rating?: number | null
           testimonial_text: string
           updated_at?: string
           user_id: string
@@ -717,6 +719,7 @@ export type Database = {
           is_featured?: boolean
           score_after?: number | null
           score_before?: number | null
+          star_rating?: number | null
           testimonial_text?: string
           updated_at?: string
           user_id?: string

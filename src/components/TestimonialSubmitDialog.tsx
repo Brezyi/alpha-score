@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { MessageSquarePlus, Trash2, Clock, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { StarRating } from "@/components/StarRating";
 
 interface Analysis {
   id: string;
@@ -35,6 +36,7 @@ export function TestimonialSubmitDialog() {
     age: "",
     testimonial_text: "",
     analysis_id: "",
+    star_rating: 5,
   });
 
   const fetchAnalyses = async () => {
@@ -107,6 +109,7 @@ export function TestimonialSubmitDialog() {
         analysis_id: formData.analysis_id || undefined,
         score_before: scoreBefore,
         score_after: scoreAfter,
+        star_rating: formData.star_rating,
       });
 
       toast({
@@ -114,7 +117,7 @@ export function TestimonialSubmitDialog() {
         description: "Deine Bewertung wird nach Prüfung veröffentlicht.",
       });
       setOpen(false);
-      setFormData({ display_name: "", age: "", testimonial_text: "", analysis_id: "" });
+      setFormData({ display_name: "", age: "", testimonial_text: "", analysis_id: "", star_rating: 5 });
     } catch (error) {
       toast({
         title: "Fehler",
@@ -172,6 +175,11 @@ export function TestimonialSubmitDialog() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="p-4 rounded-lg bg-muted/50">
+              {testimonial.star_rating && (
+                <div className="mb-2">
+                  <StarRating rating={testimonial.star_rating} size="sm" />
+                </div>
+              )}
               <p className="text-sm">"{testimonial.testimonial_text}"</p>
               <p className="text-xs text-muted-foreground mt-2">
                 — {testimonial.display_name}
@@ -213,6 +221,22 @@ export function TestimonialSubmitDialog() {
           </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Star Rating */}
+          <div className="space-y-2">
+            <Label>Deine Bewertung *</Label>
+            <div className="flex items-center gap-3">
+              <StarRating
+                rating={formData.star_rating}
+                interactive
+                size="lg"
+                onChange={(rating) => setFormData({ ...formData, star_rating: rating })}
+              />
+              <span className="text-sm text-muted-foreground">
+                {formData.star_rating} von 5 Sternen
+              </span>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="display_name">Anzeigename *</Label>
