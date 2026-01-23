@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Wrench, Lock } from "lucide-react";
@@ -43,9 +43,12 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
   const [isOwner, setIsOwner] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [roleLoading, setRoleLoading] = useState(true);
+  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
     const checkOwnerRole = async () => {
+      setRoleLoading(true);
+      
       try {
         const { data: { session } } = await supabase.auth.getSession();
         
@@ -53,6 +56,7 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
           setIsOwner(false);
           setIsLoggedIn(false);
           setRoleLoading(false);
+          hasCheckedRef.current = true;
           return;
         }
 
@@ -66,30 +70,43 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
           console.error("Error checking owner role:", error);
           setIsOwner(false);
         } else {
-          setIsOwner(data === "owner");
+          const ownerStatus = data === "owner";
+          setIsOwner(ownerStatus);
+          console.log("[MaintenanceGate] Role check complete:", { role: data, isOwner: ownerStatus });
         }
       } catch (err) {
         console.error("Role check error:", err);
         setIsOwner(false);
       } finally {
         setRoleLoading(false);
+        hasCheckedRef.current = true;
       }
     };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      setRoleLoading(true);
-      checkOwnerRole();
-    });
-
+    // Initial check
     checkOwnerRole();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("[MaintenanceGate] Auth state changed:", event);
+      
+      // Always recheck on auth state changes
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+        checkOwnerRole();
+      } else if (event === 'SIGNED_OUT') {
+        setIsOwner(false);
+        setIsLoggedIn(false);
+        setRoleLoading(false);
+      }
+    });
 
     return () => {
       subscription.unsubscribe();
     };
   }, []);
 
-  const loading = settingsLoading || roleLoading;
+  // Don't render children until we've done at least one check
+  const loading = settingsLoading || roleLoading || !hasCheckedRef.current;
 
   return (
     <MaintenanceContext.Provider value={{
@@ -108,8 +125,11 @@ export const MaintenanceCheck: React.FC<{ children: React.ReactNode }> = ({ chil
   const location = useLocation();
   const { maintenanceMode, isOwner, isLoggedIn, loading } = useMaintenanceContext();
   
-  // Show loading state while checking
-  if (loading) {
+  // Check if current route is public
+  const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname);
+
+  // Always show loading for non-public routes while checking auth/role
+  if (loading && !isPublicRoute) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">Laden...</div>
@@ -117,15 +137,23 @@ export const MaintenanceCheck: React.FC<{ children: React.ReactNode }> = ({ chil
     );
   }
 
-  // Check if current route is public
-  const isPublicRoute = PUBLIC_ROUTES.includes(location.pathname);
-
   // Show maintenance page if:
   // - Maintenance mode is active
   // - User is logged in (so they passed the public pages)
   // - User is NOT an owner
   // - Current route is NOT a public route
-  if (maintenanceMode && isLoggedIn && !isOwner && !isPublicRoute) {
+  const shouldShowMaintenance = maintenanceMode && isLoggedIn && !isOwner && !isPublicRoute;
+  
+  console.log("[MaintenanceCheck]", { 
+    maintenanceMode, 
+    isLoggedIn, 
+    isOwner, 
+    isPublicRoute, 
+    path: location.pathname,
+    shouldShowMaintenance 
+  });
+
+  if (shouldShowMaintenance) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-6">
         <div className="max-w-md w-full text-center space-y-6">
