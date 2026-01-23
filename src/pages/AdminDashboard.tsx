@@ -69,18 +69,12 @@ export default function AdminDashboard() {
         if (profiles) {
           // Calculate gender stats
           const genderCounts: Record<string, number> = { male: 0, female: 0, unknown: 0 };
-          const regionCounts: Record<string, number> = {};
 
           profiles.forEach((p) => {
             // Gender
             if (p.gender === 'male') genderCounts.male++;
             else if (p.gender === 'female') genderCounts.female++;
             else genderCounts.unknown++;
-
-            // Region
-            if (p.country) {
-              regionCounts[p.country] = (regionCounts[p.country] || 0) + 1;
-            }
           });
 
           setGenderStats([
@@ -88,12 +82,6 @@ export default function AdminDashboard() {
             { gender: 'female', count: genderCounts.female },
             { gender: null, count: genderCounts.unknown },
           ]);
-
-          // Sort regions by count
-          const sortedRegions = Object.entries(regionCounts)
-            .sort((a, b) => b[1] - a[1])
-            .map(([region, count]) => ({ region, count }));
-          setRegionStats(sortedRegions);
         }
 
         setStats([
@@ -302,43 +290,6 @@ export default function AdminDashboard() {
                       );
                     })}
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Region Distribution */}
-              <Card className="bg-card border-border">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-primary" />
-                    Regionsverteilung
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {regionStats.length > 0 ? (
-                    <div className="space-y-3">
-                      {regionStats.slice(0, 8).map((stat) => {
-                        const total = regionStats.reduce((sum, s) => sum + s.count, 0);
-                        const percentage = total > 0 ? Math.round((stat.count / total) * 100) : 0;
-                        
-                        return (
-                          <div key={stat.region} className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span className="truncate">{stat.region}</span>
-                              <span className="text-muted-foreground ml-2">{stat.count} ({percentage}%)</span>
-                            </div>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden">
-                              <div 
-                                className="h-full bg-primary/70 rounded-full transition-all"
-                                style={{ width: `${percentage}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">Noch keine Daten</p>
-                  )}
                 </CardContent>
               </Card>
 
