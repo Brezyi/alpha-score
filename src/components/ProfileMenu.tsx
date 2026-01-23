@@ -82,7 +82,7 @@ export function ProfileMenu() {
   const { profile, updateProfile, uploadAvatar } = useProfile();
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
-  const { isPremium, subscriptionType, openCustomerPortal } = useSubscription();
+  const { isPremium, subscriptionType, subscriptionEnd, openCustomerPortal } = useSubscription();
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
@@ -280,6 +280,49 @@ export function ProfileMenu() {
             <div className="space-y-2">
               <Label>E-Mail</Label>
               <Input value={user.email || ""} disabled className="opacity-70" />
+            </div>
+
+            {/* Subscription Status */}
+            <div className="space-y-2">
+              <Label>Abo-Status</Label>
+              <div className={cn(
+                "p-3 rounded-lg border",
+                isPremium 
+                  ? "bg-primary/10 border-primary/30" 
+                  : "bg-muted/50 border-border"
+              )}>
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">
+                    {subscriptionType === "owner" ? "Owner (Unlimited)" :
+                     subscriptionType === "lifetime" ? "Lifetime" :
+                     subscriptionType === "premium" ? "Premium" : "Free"}
+                  </span>
+                  {isPremium && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary">
+                      Aktiv
+                    </span>
+                  )}
+                </div>
+                {subscriptionEnd && subscriptionType === "premium" && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Verlängert am: {new Date(subscriptionEnd).toLocaleDateString("de-DE", {
+                      day: "2-digit",
+                      month: "long",
+                      year: "numeric"
+                    })}
+                  </p>
+                )}
+                {subscriptionType === "lifetime" && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Unbegrenzte Laufzeit
+                  </p>
+                )}
+                {!isPremium && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upgrade für alle Features
+                  </p>
+                )}
+              </div>
             </div>
 
             <Button onClick={handleSaveProfile} className="w-full">
