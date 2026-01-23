@@ -22,6 +22,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { useSupport, TicketCategory, TicketStatus, SupportTicket } from "@/hooks/useSupport";
 import { useTicketMessages } from "@/hooks/useTicketMessages";
+import { useSubscription } from "@/hooks/useSubscription";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { TicketChat } from "@/components/TicketChat";
 import {
@@ -38,6 +39,8 @@ import {
   MoreHorizontal,
   Send,
   ChevronRight,
+  Crown,
+  Zap,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -59,6 +62,7 @@ const STATUS_CONFIG: Record<TicketStatus, { label: string; color: string; icon: 
 const Support = () => {
   const { user, loading: authLoading } = useAuth();
   const { tickets, loading, creating, createTicket } = useSupport();
+  const { isPremium } = useSubscription();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [category, setCategory] = useState<TicketCategory>("technical");
@@ -170,10 +174,20 @@ const Support = () => {
           <TabsContent value="new">
             <Card>
               <CardHeader>
-                <CardTitle>Support-Anfrage erstellen</CardTitle>
-                <CardDescription>
-                  Beschreibe dein Problem und wir helfen dir so schnell wie möglich.
-                </CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Support-Anfrage erstellen</CardTitle>
+                    <CardDescription>
+                      Beschreibe dein Problem und wir helfen dir so schnell wie möglich.
+                    </CardDescription>
+                  </div>
+                  {isPremium && (
+                    <Badge className="bg-primary/20 text-primary border-primary/30 gap-1">
+                      <Zap className="w-3 h-3" />
+                      Prioritäts-Support
+                    </Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
