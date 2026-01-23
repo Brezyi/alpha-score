@@ -102,7 +102,6 @@ export function ProfileMenu() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [securityOpen, setSecurityOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -133,43 +132,34 @@ export function ProfileMenu() {
     navigate("/");
   };
 
-  const handleDeleteAccount = async () => {
-    setIsDeleting(true);
+  const [isSendingDeleteEmail, setIsSendingDeleteEmail] = useState(false);
+
+  const handleRequestDeletion = async () => {
+    if (!user?.email) {
+      toast.error("Keine E-Mail-Adresse gefunden");
+      return;
+    }
+
+    setIsSendingDeleteEmail(true);
     try {
-      // Delete user data first
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("user_id", user.id);
-      
-      if (profileError) throw profileError;
+      const { data, error } = await supabase.functions.invoke("request-account-deletion", {
+        body: { userId: user.id, email: user.email },
+      });
 
-      // Delete analyses
-      const { error: analysesError } = await supabase
-        .from("analyses")
-        .delete()
-        .eq("user_id", user.id);
-      
-      if (analysesError) throw analysesError;
+      if (error) throw error;
 
-      // Delete tasks
-      const { error: tasksError } = await supabase
-        .from("user_tasks")
-        .delete()
-        .eq("user_id", user.id);
-      
-      if (tasksError) throw tasksError;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
 
-      // Sign out - account deletion requires admin SDK
-      await signOut();
-      toast.success("Deine Daten wurden gelöscht. Für vollständige Kontolöschung kontaktiere den Support.");
-      navigate("/");
-    } catch (error: any) {
-      console.error("Delete account error:", error);
-      toast.error("Fehler beim Löschen: " + error.message);
-    } finally {
-      setIsDeleting(false);
+      toast.success("Bestätigungs-E-Mail gesendet! Überprüfe dein Postfach.");
       setDeleteAccountOpen(false);
+    } catch (error: any) {
+      console.error("Deletion request error:", error);
+      toast.error("Fehler beim Senden der E-Mail: " + error.message);
+    } finally {
+      setIsSendingDeleteEmail(false);
     }
   };
 
@@ -426,10 +416,14 @@ export function ProfileMenu() {
       <AlertDialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Konto wirklich löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Diese Aktion kann nicht rückgängig gemacht werden. Alle deine Daten, 
-              Analysen und Fortschritte werden unwiderruflich gelöscht.
+            <AlertDialogTitle>Konto löschen anfordern</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <span className="block">
+                Wir senden dir eine Bestätigungs-E-Mail an <strong>{user?.email}</strong>.
+              </span>
+              <span className="block">
+                Klicke auf den Link in der E-Mail und gib dein Passwort ein, um die Löschung endgültig zu bestätigen.
+              </span>
               {isPremium && subscriptionType === "premium" && (
                 <span className="block mt-2 text-destructive font-medium">
                   Hinweis: Dein aktives Abo wird separat über Stripe gekündigt.
@@ -438,13 +432,13 @@ export function ProfileMenu() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel disabled={isSendingDeleteEmail}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteAccount}
-              disabled={isDeleting}
+              onClick={handleRequestDeletion}
+              disabled={isSendingDeleteEmail}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Wird gelöscht..." : "Ja, Konto löschen"}
+              {isSendingDeleteEmail ? "Wird gesendet..." : "Bestätigungs-E-Mail senden"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
