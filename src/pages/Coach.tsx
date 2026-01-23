@@ -7,7 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCoachHistory } from "@/hooks/useCoachHistory";
+import { useProfile } from "@/hooks/useProfile";
 import { ConversationSidebar } from "@/components/coach/ConversationSidebar";
+import { CoachOnboarding } from "@/components/coach/CoachOnboarding";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -94,6 +96,7 @@ export default function Coach() {
     "Wie verbessere ich meine Jawline?",
   ]);
   const { user, loading } = useAuth();
+  const { profile, updateProfile } = useProfile();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -105,6 +108,9 @@ export default function Coach() {
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
   
+  // Check if onboarding is needed
+  const needsOnboarding = profile && !profile.gender;
+  
   // Chat history
   const {
     conversations,
@@ -115,6 +121,11 @@ export default function Coach() {
     saveMessage,
     deleteConversation
   } = useCoachHistory();
+
+  // Handle onboarding completion
+  const handleOnboardingComplete = async (data: { gender: "male" | "female"; country: string }) => {
+    await updateProfile({ gender: data.gender, country: data.country });
+  };
 
   // Check if speech recognition is supported
   const isSpeechSupported = typeof window !== 'undefined' && 
@@ -601,6 +612,32 @@ export default function Coach() {
             </p>
           </Card>
         </main>
+      </div>
+    );
+  }
+
+  // Onboarding gate
+  if (needsOnboarding) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Zurück</span>
+            </button>
+            <h1 className="text-lg font-bold flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-primary" />
+              AI Coach
+            </h1>
+            <div className="w-20" />
+          </div>
+        </header>
+
+        <CoachOnboarding onComplete={handleOnboardingComplete} />
       </div>
     );
   }

@@ -279,8 +279,10 @@ export type Database = {
           accent_color: string | null
           avatar_url: string | null
           background_style: string | null
+          country: string | null
           created_at: string
           display_name: string | null
+          gender: string | null
           id: string
           theme: string | null
           updated_at: string
@@ -290,8 +292,10 @@ export type Database = {
           accent_color?: string | null
           avatar_url?: string | null
           background_style?: string | null
+          country?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id?: string
           theme?: string | null
           updated_at?: string
@@ -301,8 +305,10 @@ export type Database = {
           accent_color?: string | null
           avatar_url?: string | null
           background_style?: string | null
+          country?: string | null
           created_at?: string
           display_name?: string | null
+          gender?: string | null
           id?: string
           theme?: string | null
           updated_at?: string

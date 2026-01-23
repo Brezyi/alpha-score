@@ -43,10 +43,17 @@ serve(async (req) => {
     }
     logStep("User authenticated", { userId: user.id });
 
+    // Fetch user profile for gender and country
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('gender, country')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
     // Fetch user's latest completed analysis for context
     const { data: latestAnalysis } = await supabaseClient
       .from('analyses')
-      .select('looks_score, strengths, weaknesses, priorities')
+      .select('looks_score, strengths, weaknesses, priorities, detailed_results')
       .eq('user_id', user.id)
       .eq('status', 'completed')
       .order('created_at', { ascending: false })
@@ -63,10 +70,13 @@ serve(async (req) => {
 
     logStep("Context fetched", { 
       hasAnalysis: !!latestAnalysis, 
+      hasProfile: !!profile,
+      gender: profile?.gender,
+      country: profile?.country,
       openTasksCount: openTasks?.length || 0 
     });
 
-    // Build focused weakness list
+    // Build focused weakness list with details
     const weaknessList = latestAnalysis?.weaknesses?.length 
       ? latestAnalysis.weaknesses.map((w: string, i: number) => `${i + 1}. ${w}`).join('\n')
       : 'Noch keine Analyse';
@@ -76,23 +86,73 @@ serve(async (req) => {
       ? openTasks.map((t: any) => t.title).join(', ')
       : 'Keine';
 
-    const systemPrompt = `Du bist ein Looksmaxing-Coach. MAXIMAL 2-3 Sätze pro Antwort.
+    // Gender-specific context
+    const genderContext = profile?.gender === 'male' 
+      ? 'männlich - Fokus auf Maskulinität, Jawline, Körperbau, Ausstrahlung'
+      : profile?.gender === 'female'
+      ? 'weiblich - Fokus auf feminine Harmonie, Symmetrie, Ausstrahlung'
+      : 'unbekannt';
 
-STIL: Direkt, sachlich, männlich. Keine Floskeln. Du duzt.
+    // Ethnic/regional context
+    const ethnicContext = profile?.country 
+      ? `Herkunft: ${profile.country} - berücksichtige ethnische Merkmale und Standards`
+      : '';
 
-SCHWÄCHEN DES NUTZERS (FOKUS!):
+    // Build detailed scoring breakdown if available
+    let scoringBreakdown = '';
+    if (latestAnalysis?.detailed_results) {
+      const results = latestAnalysis.detailed_results as Record<string, any>;
+      const categories = ['symmetry', 'jawline', 'eyes', 'skin', 'hair', 'body'];
+      const categoryNames: Record<string, string> = {
+        symmetry: 'Symmetrie',
+        jawline: 'Jawline',
+        eyes: 'Augen',
+        skin: 'Haut',
+        hair: 'Haare',
+        body: 'Körper'
+      };
+      
+      const scores = categories
+        .filter(cat => results[cat]?.score !== undefined)
+        .map(cat => `${categoryNames[cat]}: ${results[cat].score}/10`)
+        .join(', ');
+      
+      if (scores) {
+        scoringBreakdown = `\nDETAILLIERTE SCORES: ${scores}`;
+      }
+    }
+
+    const systemPrompt = `Du bist ein BRUTAL EHRLICHER Looksmaxing-Coach. STRENGE Bewertungen, keine Schmeicheleien.
+
+NUTZER-PROFIL:
+- Geschlecht: ${genderContext}
+${ethnicContext ? `- ${ethnicContext}` : ''}
+- Aktueller Score: ${latestAnalysis?.looks_score || '?'}/10${scoringBreakdown}
+
+SCHWÄCHEN (HAUPTFOKUS):
 ${weaknessList}
 
 PRIORITÄTEN: ${priorityList}
-SCORE: ${latestAnalysis?.looks_score || '?'}/10
 OFFENE TASKS: ${taskList}
 
+BEWERTUNGSSKALA (sei STRENG!):
+- 1-3: Unterdurchschnitt, viel Arbeit nötig
+- 4-5: Durchschnitt, erkennbares Potenzial
+- 6-7: Überdurchschnitt, Details optimieren
+- 8-9: Top 10%, nur Feinschliff
+- 10: Genetisch perfekt (extrem selten!)
+
+POTENZIAL-BERECHNUNG:
+- Zeige IMMER: Aktueller Score → Erreichbarer Score mit Arbeit
+- Beispiel: "Du bist bei 5.5/10. Mit konsequenter Arbeit an Jawline und Skin: 7-7.5/10 realistisch."
+
 REGELN:
-- Jede Antwort bezieht sich auf Schwächen/Prioritäten oben
-- Max 2-3 Sätze, keine Romane
-- Konkrete Produkte, Dosierungen, Routinen nennen
-- Bei Off-Topic: Kurz zurück zu Verbesserungspotenzial lenken
-- Bei medizinischen Fragen: Arztbesuch empfehlen`;
+- Max 3-4 Sätze pro Antwort
+- KONKRET: Produkte, Dosierungen, Zeitrahmen nennen
+- EHRLICH: Keine Floskeln wie "du siehst gut aus"
+- Bei Verbesserungsfragen: Zeige Ist-Stand + Potenzial + Weg dahin
+- Bei medizinischen Fragen: Arztbesuch empfehlen
+- Berücksichtige Geschlecht und Herkunft bei Empfehlungen`;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
@@ -113,8 +173,8 @@ REGELN:
           ...messages
         ],
         stream: true,
-        max_tokens: 150,
-        temperature: 0.6,
+        max_tokens: 250,
+        temperature: 0.7,
       }),
     });
 

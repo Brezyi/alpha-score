@@ -11,6 +11,8 @@ export interface Profile {
   theme: string;
   accent_color: string;
   background_style: string;
+  gender: "male" | "female" | null;
+  country: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -101,7 +103,7 @@ export function useProfile() {
   }, [fetchProfile, user]);
 
   const updateProfile = useCallback(
-    async (updates: Partial<Pick<Profile, "display_name" | "avatar_url" | "theme" | "accent_color" | "background_style">>) => {
+    async (updates: Partial<Pick<Profile, "display_name" | "avatar_url" | "theme" | "accent_color" | "background_style" | "gender" | "country">>) => {
       if (!user || !profile) return false;
 
       try {
