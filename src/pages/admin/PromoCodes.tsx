@@ -26,6 +26,11 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
@@ -38,7 +43,11 @@ import {
   Check,
   Trash2,
   Crown,
-  Sparkles
+  Sparkles,
+  ChevronDown,
+  ChevronUp,
+  User,
+  Clock
 } from "lucide-react";
 
 interface PromoCode {
@@ -53,11 +62,21 @@ interface PromoCode {
   is_active: boolean;
 }
 
+interface Redemption {
+  id: string;
+  user_id: string;
+  redeemed_at: string;
+  user_email?: string;
+  user_name?: string;
+}
+
 export default function PromoCodes() {
   const navigate = useNavigate();
   const { isOwner } = useUserRole();
   const { toast } = useToast();
   const [codes, setCodes] = useState<PromoCode[]>([]);
+  const [redemptions, setRedemptions] = useState<Record<string, Redemption[]>>({});
+  const [expandedCode, setExpandedCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -89,6 +108,52 @@ export default function PromoCodes() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRedemptions = async (promoCodeId: string) => {
+    try {
+      // Fetch redemptions for this promo code
+      const { data: redemptionData, error } = await supabase
+        .from('promo_code_redemptions')
+        .select('id, user_id, redeemed_at')
+        .eq('promo_code_id', promoCodeId)
+        .order('redeemed_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch user profiles for the redemptions
+      if (redemptionData && redemptionData.length > 0) {
+        const userIds = redemptionData.map(r => r.user_id);
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('user_id, display_name')
+          .in('user_id', userIds);
+
+        const profileMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) || []);
+        
+        const enrichedRedemptions: Redemption[] = redemptionData.map(r => ({
+          ...r,
+          user_name: profileMap.get(r.user_id) || 'Unbekannt',
+        }));
+
+        setRedemptions(prev => ({ ...prev, [promoCodeId]: enrichedRedemptions }));
+      } else {
+        setRedemptions(prev => ({ ...prev, [promoCodeId]: [] }));
+      }
+    } catch (error) {
+      console.error("Error fetching redemptions:", error);
+    }
+  };
+
+  const toggleExpanded = async (codeId: string) => {
+    if (expandedCode === codeId) {
+      setExpandedCode(null);
+    } else {
+      setExpandedCode(codeId);
+      if (!redemptions[codeId]) {
+        await fetchRedemptions(codeId);
+      }
     }
   };
 
@@ -268,92 +333,149 @@ export default function PromoCodes() {
                 Keine Promocodes vorhanden
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Code</TableHead>
-                      <TableHead>Typ</TableHead>
-                      <TableHead>Dauer</TableHead>
-                      <TableHead>Nutzungen</TableHead>
-                      <TableHead>Läuft ab</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Aktionen</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {codes.map((code) => (
-                      <TableRow key={code.id}>
-                        <TableCell>
+              <div className="space-y-2">
+                {codes.map((code) => (
+                  <Collapsible 
+                    key={code.id} 
+                    open={expandedCode === code.id}
+                    onOpenChange={() => toggleExpanded(code.id)}
+                  >
+                    <div className="border border-border rounded-lg overflow-hidden">
+                      <CollapsibleTrigger asChild>
+                        <div className="flex items-center justify-between p-4 hover:bg-muted/50 cursor-pointer transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-2">
+                              <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
+                                {code.code}
+                              </code>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  copyToClipboard(code.code);
+                                }}
+                              >
+                                {copiedCode === code.code ? (
+                                  <Check className="w-3 h-3 text-primary" />
+                                ) : (
+                                  <Copy className="w-3 h-3" />
+                                )}
+                              </Button>
+                            </div>
+                            
+                            {code.plan_type === "lifetime" ? (
+                              <span className="inline-flex items-center gap-1 text-amber-500 text-sm">
+                                <Sparkles className="w-3 h-3" />
+                                Lifetime
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-primary text-sm">
+                                <Crown className="w-3 h-3" />
+                                {code.duration_days} Tage
+                              </span>
+                            )}
+
+                            <span className={`text-sm font-medium ${
+                              code.current_uses >= code.max_uses 
+                                ? 'text-destructive' 
+                                : 'text-muted-foreground'
+                            }`}>
+                              {code.current_uses}/{code.max_uses} Nutzungen
+                            </span>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleCodeActive(code.id, code.is_active);
+                              }}
+                              className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                                code.is_active 
+                                  ? "bg-green-500/20 text-green-500 hover:bg-green-500/30" 
+                                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+                              }`}
+                            >
+                              {code.is_active ? "Aktiv" : "Inaktiv"}
+                            </button>
+                          </div>
+
                           <div className="flex items-center gap-2">
-                            <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                              {code.code}
-                            </code>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-6 w-6"
-                              onClick={() => copyToClipboard(code.code)}
+                              className="h-8 w-8 text-destructive hover:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCode(code.id);
+                              }}
                             >
-                              {copiedCode === code.code ? (
-                                <Check className="w-3 h-3 text-primary" />
-                              ) : (
-                                <Copy className="w-3 h-3" />
-                              )}
+                              <Trash2 className="w-4 h-4" />
                             </Button>
+                            {expandedCode === code.id ? (
+                              <ChevronUp className="w-4 h-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                            )}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {code.plan_type === "lifetime" ? (
-                            <span className="inline-flex items-center gap-1 text-amber-500">
-                              <Sparkles className="w-3 h-3" />
-                              Lifetime
-                            </span>
+                        </div>
+                      </CollapsibleTrigger>
+
+                      <CollapsibleContent>
+                        <div className="border-t border-border bg-muted/30 p-4">
+                          <h4 className="text-sm font-medium mb-3 flex items-center gap-2">
+                            <Clock className="w-4 h-4" />
+                            Einlösungs-Historie
+                          </h4>
+                          {!redemptions[code.id] ? (
+                            <div className="flex items-center justify-center py-4">
+                              <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : redemptions[code.id].length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-2">
+                              Noch keine Einlösungen
+                            </p>
                           ) : (
-                            <span className="inline-flex items-center gap-1 text-primary">
-                              <Crown className="w-3 h-3" />
-                              Premium
-                            </span>
+                            <div className="space-y-2">
+                              {redemptions[code.id].map((redemption) => (
+                                <div 
+                                  key={redemption.id}
+                                  className="flex items-center justify-between py-2 px-3 bg-background rounded-lg"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <User className="w-4 h-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium">
+                                      {redemption.user_name}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground font-mono">
+                                      ({redemption.user_id.slice(0, 8)}...)
+                                    </span>
+                                  </div>
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(redemption.redeemed_at).toLocaleString('de-DE', {
+                                      day: '2-digit',
+                                      month: '2-digit',
+                                      year: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    })}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          {code.plan_type === "lifetime" ? "∞" : `${code.duration_days} Tage`}
-                        </TableCell>
-                        <TableCell>
-                          {code.current_uses} / {code.max_uses}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {code.expires_at 
-                            ? new Date(code.expires_at).toLocaleDateString('de-DE')
-                            : "—"
-                          }
-                        </TableCell>
-                        <TableCell>
-                          <button
-                            onClick={() => toggleCodeActive(code.id, code.is_active)}
-                            className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                              code.is_active 
-                                ? "bg-green-500/20 text-green-500 hover:bg-green-500/30" 
-                                : "bg-muted text-muted-foreground hover:bg-muted/80"
-                            }`}
-                          >
-                            {code.is_active ? "Aktiv" : "Inaktiv"}
-                          </button>
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive hover:text-destructive"
-                            onClick={() => handleDeleteCode(code.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                          
+                          <div className="mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+                            <p>Erstellt: {new Date(code.created_at).toLocaleDateString('de-DE')}</p>
+                            {code.expires_at && (
+                              <p>Läuft ab: {new Date(code.expires_at).toLocaleDateString('de-DE')}</p>
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleContent>
+                    </div>
+                  </Collapsible>
+                ))}
               </div>
             )}
           </CardContent>

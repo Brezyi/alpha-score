@@ -405,20 +405,22 @@ export function ProfileMenu() {
                     Lifetime (50€)
                   </Button>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setProfileOpen(false);
-                    setRedeemCodeOpen(true);
-                  }}
-                  className="w-full text-muted-foreground"
-                >
-                  <Gift className="w-4 h-4 mr-2" />
-                  Promocode einlösen
-                </Button>
               </div>
             )}
+
+            {/* Promocode Button - visible for all users */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setProfileOpen(false);
+                setRedeemCodeOpen(true);
+              }}
+              className="w-full text-muted-foreground"
+            >
+              <Gift className="w-4 h-4 mr-2" />
+              Promocode einlösen
+            </Button>
 
             <Button onClick={handleSaveProfile} className="w-full">
               Speichern
