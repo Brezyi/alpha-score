@@ -85,6 +85,17 @@ serve(async (req) => {
     }
     logStep("Analysis fetched and ownership verified", { status: analysis.status, photoCount: analysis.photo_urls?.length });
 
+    // Fetch user profile for gender and country context
+    const { data: profile } = await supabaseClient
+      .from('profiles')
+      .select('gender, country')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    const userGender = profile?.gender || null;
+    const userCountry = profile?.country || null;
+    logStep("User profile fetched", { gender: userGender, country: userCountry });
+
     // Update status to processing
     await supabaseClient
       .from('analyses')
@@ -389,13 +400,31 @@ Wichtig: Sei streng bei der Bewertung. Das Foto muss für eine professionelle Ge
     logStep("Face validation passed - proceeding with main analysis");
 
     // ====== STEP 2: Main AI Analysis (Critical & Detailed) ======
-    const systemPrompt = `Du bist ein KRITISCHER Experte für männliche Attraktivität und Looksmaxing.
+    
+    // Build gender-specific context
+    const genderContext = userGender === 'male' 
+      ? 'MÄNNLICH - Fokus auf maskuline Merkmale: starke Jawline, kantiges Gesicht, hohe Wangenknochen, maskuline Augenbrauenwölbung'
+      : userGender === 'female'
+      ? 'WEIBLICH - Fokus auf feminine Merkmale: harmonische Proportionen, weiche Gesichtszüge, volle Lippen, symmetrische Features'
+      : 'GESCHLECHT UNBEKANNT - allgemeine Kriterien anwenden';
+
+    // Build ethnicity-aware context
+    const ethnicityContext = userCountry 
+      ? `HERKUNFT/ETHNIE: ${userCountry} - Berücksichtige ethnische Normen und Standards. Bewerte nicht nach westlichen/europäischen Standards, sondern kontextbezogen.`
+      : '';
+
+    const systemPrompt = `Du bist ein KRITISCHER Experte für Attraktivität und Looksmaxing.
+
+NUTZER-KONTEXT:
+- ${genderContext}
+${ethnicityContext ? `- ${ethnicityContext}` : ''}
 
 DEINE BEWERTUNGSPHILOSOPHIE:
 - STRENG und EHRLICH - keine Schönfärberei
 - SPEZIFISCH - benenne exakt was falsch ist, nicht vage
 - SACHLICH - wie ein Arzt, der eine Diagnose stellt
 - KONSTRUKTIV - jede Kritik mit Lösungsansatz
+- ETHNISCH SENSIBEL - bewerte im Kontext der angegebenen Herkunft
 
 BEWERTUNGSSKALA (streng kalibriert):
 1-2: Starke Defizite in mehreren Bereichen
@@ -407,7 +436,7 @@ BEWERTUNGSSKALA (streng kalibriert):
 9: Exzellent, nahezu perfekt
 10: Praktisch nicht erreichbar
 
-Die meisten Menschen liegen zwischen 4-6. Sei nicht inflationär mit hohen Scores.
+Die meisten Menschen liegen zwischen 4-6. Sei NICHT inflationär mit hohen Scores.
 
 BEWERTE DIESE BEREICHE MIT TEIL-SCORES (1-10):
 
@@ -421,34 +450,38 @@ BEWERTE DIESE BEREICHE MIT TEIL-SCORES (1-10):
 - Definition der Kieferlinie
 - Submentaler Fettanteil (Doppelkinn?)
 - Kinnprojektion
-- Massetergröße
+- ${userGender === 'male' ? 'Massetergröße/Maskulinität' : 'Harmonie/Balance'}
 
 3. AUGENBEREICH
 - Kanthalneigung (positiv/negativ?)
 - Oberlidbelastung
 - Augenringe/Hyperpigmentierung
 - Augenbrauenposition/-form
-- PSL (positive canthal tilt gut)
+- PSL (positive canthal tilt)
 
 4. HAUT
 - Akne/Unreinheiten
 - Textur/Poren
 - Hyperpigmentierung
-- Anzeichen von Sonnenschäden
 - Pflegezustand
 
 5. HAARE
-- Haarlinie (Geheimratsecken?)
+- Haarlinie (${userGender === 'male' ? 'Geheimratsecken?' : 'Form/Fülle'})
 - Dichte (diffuse Ausdünnung?)
-- Styling-Eignung
-- Farbqualität
+- Styling-Eignung/Potential
+- Zustand/Pflege
 
 6. GESAMTAUSSTRAHLUNG
 - Körperfettanteil (sichtbar im Gesicht)
 - Gesichtszüge-Harmonie
-- Maskulinität der Features`;
+- ${userGender === 'male' ? 'Maskulinität der Features' : 'Feminität/Ausdrucksstärke'}
+
+POTENZIAL-BERECHNUNG:
+Zeige auch das ERREICHBARE POTENZIAL (mit Arbeit) als Score-Range.`;
 
     const userPrompt = `Analysiere diese Fotos KRITISCH und DETAILLIERT.
+${userGender ? `\nGeschlecht: ${userGender === 'male' ? 'Männlich' : 'Weiblich'}` : ''}
+${userCountry ? `Herkunft: ${userCountry}` : ''}
 
 WICHTIG:
 - Keine generischen Aussagen wie "gutes Gesicht"
@@ -456,6 +489,7 @@ WICHTIG:
 - Teil-Scores für jeden Bereich vergeben
 - Die Top-3 Schwächen klar priorisieren nach IMPACT
 - Konkrete, umsetzbare Verbesserungsvorschläge
+- Zeige AKTUELLER SCORE → ERREICHBARES POTENZIAL
 
 Beispiel für SCHLECHTE Aussage: "Könnte Haut verbessern"
 Beispiel für GUTE Aussage: "Aktive Akne an Kinn und Wangen (ca. 5-7 Läsionen), deutliche Postakne-Hyperpigmentierung. Score: 4/10"

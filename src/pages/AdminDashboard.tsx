@@ -14,7 +14,8 @@ import {
   Crown,
   History,
   HelpCircle,
-  Star
+  Star,
+  MapPin
 } from "lucide-react";
 
 interface DashboardStat {
@@ -24,11 +25,23 @@ interface DashboardStat {
   change?: string;
 }
 
+interface GenderStat {
+  gender: string | null;
+  count: number;
+}
+
+interface CountryStat {
+  country: string | null;
+  count: number;
+}
+
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { role, isOwner } = useUserRole();
   const [stats, setStats] = useState<DashboardStat[]>([]);
   const [loading, setLoading] = useState(true);
+  const [genderStats, setGenderStats] = useState<GenderStat[]>([]);
+  const [countryStats, setCountryStats] = useState<CountryStat[]>([]);
 
   const [openTickets, setOpenTickets] = useState(0);
 
@@ -52,6 +65,42 @@ export default function AdminDashboard() {
           .eq('status', 'open');
 
         setOpenTickets(ticketsCount || 0);
+
+        // Fetch gender statistics
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('gender, country');
+
+        if (profiles) {
+          // Calculate gender stats
+          const genderCounts: Record<string, number> = { male: 0, female: 0, unknown: 0 };
+          const countryCounts: Record<string, number> = {};
+
+          profiles.forEach((p) => {
+            // Gender
+            if (p.gender === 'male') genderCounts.male++;
+            else if (p.gender === 'female') genderCounts.female++;
+            else genderCounts.unknown++;
+
+            // Country
+            if (p.country) {
+              countryCounts[p.country] = (countryCounts[p.country] || 0) + 1;
+            }
+          });
+
+          setGenderStats([
+            { gender: 'male', count: genderCounts.male },
+            { gender: 'female', count: genderCounts.female },
+            { gender: null, count: genderCounts.unknown },
+          ]);
+
+          // Sort countries by count and take top 10
+          const sortedCountries = Object.entries(countryCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 10)
+            .map(([country, count]) => ({ country, count }));
+          setCountryStats(sortedCountries);
+        }
 
         setStats([
           { 
@@ -225,6 +274,72 @@ export default function AdminDashboard() {
               <Crown className="w-4 h-4 text-primary" />
               Owner-Bereich
             </h3>
+            
+            {/* Demographics Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* Gender Distribution */}
+              <Card className="bg-card border-border">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Users className="w-4 h-4 text-primary" />
+                    Geschlechterverteilung
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {genderStats.map((stat) => {
+                      const total = genderStats.reduce((sum, s) => sum + s.count, 0);
+                      const percentage = total > 0 ? Math.round((stat.count / total) * 100) : 0;
+                      const label = stat.gender === 'male' ? '♂️ Männlich' : stat.gender === 'female' ? '♀️ Weiblich' : '❓ Nicht angegeben';
+                      
+                      return (
+                        <div key={stat.gender || 'unknown'} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>{label}</span>
+                            <span className="text-muted-foreground">{stat.count} ({percentage}%)</span>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-primary rounded-full transition-all"
+                              style={{ width: `${percentage}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Country Distribution */}
+              <Card className="bg-card border-border">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-primary" />
+                    Top Herkunftsländer
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {countryStats.length > 0 ? (
+                    <div className="space-y-2">
+                      {countryStats.slice(0, 5).map((stat, index) => (
+                        <div key={stat.country} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground w-4">{index + 1}.</span>
+                            <span>{stat.country}</span>
+                          </div>
+                          <Badge variant="secondary">{stat.count}</Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Noch keine Daten</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Owner Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card 
                 className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 hover:border-primary/50 transition-colors cursor-pointer"

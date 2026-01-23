@@ -29,6 +29,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useStreak } from "@/hooks/useStreak";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileMenu } from "@/components/ProfileMenu";
+import { ProfileOnboardingModal } from "@/components/ProfileOnboardingModal";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { TestimonialSubmitDialog } from "@/components/TestimonialSubmitDialog";
@@ -89,7 +90,7 @@ const quickActions = [
 
 const Dashboard = () => {
   const { user, loading } = useAuth();
-  const { profile } = useProfile();
+  const { profile, updateProfile, loading: profileLoading } = useProfile();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [analysesLoading, setAnalysesLoading] = useState(true);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -100,6 +101,14 @@ const Dashboard = () => {
   const { isAdminOrOwner, role } = useUserRole();
   const { currentStreak, longestStreak, isActiveToday, loading: streakLoading } = useStreak();
   const { settings } = useGlobalSettings();
+
+  // Check if onboarding is needed (profile loaded but no gender set)
+  const needsOnboarding = !profileLoading && profile && !profile.gender;
+
+  // Handle onboarding completion
+  const handleOnboardingComplete = async (data: { gender: "male" | "female"; country: string }) => {
+    await updateProfile({ gender: data.gender, country: data.country });
+  };
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -174,6 +183,12 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Profile Onboarding Modal */}
+      <ProfileOnboardingModal 
+        open={needsOnboarding} 
+        onComplete={handleOnboardingComplete} 
+      />
+
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
         <div className="container px-4">
