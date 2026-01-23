@@ -242,14 +242,24 @@ export default function AnalysisResults() {
                     setLightboxIndex(index);
                     setLightboxOpen(true);
                   }}
-                  className="relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl bg-card cursor-pointer transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+                  className="group relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl bg-card cursor-pointer transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
                 >
                   <img 
                     src={url} 
                     alt={`Foto ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
+                  {/* Scan Line Animation */}
+                  <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-scan-line shadow-[0_0_15px_hsl(var(--primary)),0_0_30px_hsl(var(--primary)/0.5)]" />
+                  </div>
+                  {/* Corner Brackets */}
+                  <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-primary/60" />
+                  <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-primary/60" />
+                  <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-primary/60" />
+                  <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-primary/60" />
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
                 </button>
               ))}
             </div>

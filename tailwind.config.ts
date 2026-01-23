@@ -118,6 +118,11 @@ export default {
           "0%, 100%": { boxShadow: "0 0 20px hsl(153, 100%, 50%, 0.2)" },
           "50%": { boxShadow: "0 0 40px hsl(153, 100%, 50%, 0.4)" },
         },
+        "scan-line": {
+          "0%": { top: "0%" },
+          "50%": { top: "100%" },
+          "100%": { top: "0%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -127,6 +132,7 @@ export default {
         "scale-in": "scale-in 0.4s ease-out forwards",
         "slide-in-right": "slide-in-right 0.5s ease-out forwards",
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "scan-line": "scan-line 2.5s ease-in-out infinite",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
