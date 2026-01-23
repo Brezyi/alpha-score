@@ -133,13 +133,11 @@ export function RedeemCodeDialog({ open, onOpenChange, onSuccess }: RedeemCodeDi
 
       if (redemptionError) throw redemptionError;
 
-      // Increment the usage count
-      const { error: updateError } = await supabase
-        .from('promo_codes')
-        .update({ current_uses: promoCode.current_uses + 1 })
-        .eq('id', promoCode.id);
+      // Increment the usage count using SECURITY DEFINER function
+      const { error: incrementError } = await supabase
+        .rpc('increment_promo_code_usage', { promo_code_id: promoCode.id });
 
-      if (updateError) console.error("Error updating usage count:", updateError);
+      if (incrementError) console.error("Error updating usage count:", incrementError);
 
       // Show success
       setSuccess(true);
