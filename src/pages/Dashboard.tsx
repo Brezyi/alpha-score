@@ -35,6 +35,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { TestimonialSubmitDialog } from "@/components/TestimonialSubmitDialog";
 import { Progress } from "@/components/ui/progress";
+import { AnalysisThumbnail } from "@/components/AnalysisThumbnail";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,6 +55,7 @@ type Analysis = {
   status: string;
   strengths: string[] | null;
   weaknesses: string[] | null;
+  photo_urls: string[] | null;
 };
 
 const quickActions = [
@@ -128,7 +130,7 @@ const Dashboard = () => {
       try {
         const { data, error } = await supabase
           .from("analyses")
-          .select("id, looks_score, potential_score, created_at, status, strengths, weaknesses")
+          .select("id, looks_score, potential_score, created_at, status, strengths, weaknesses, photo_urls")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
@@ -527,20 +529,24 @@ const Dashboard = () => {
                       to={`/analysis/${analysis.id}`}
                       className="flex items-center gap-4 flex-1 min-w-0"
                     >
-                      {/* Score Circle */}
-                      <div className={`w-14 h-14 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        analysis.status === "completed" && analysis.looks_score !== null
-                          ? "bg-gradient-to-br from-primary/20 to-primary/5 border-2 border-primary/30"
-                          : "bg-muted"
-                      }`}>
-                        {analysis.status === "completed" && analysis.looks_score !== null ? (
-                          <span className="text-lg font-bold text-gradient">
-                            {analysis.looks_score.toFixed(1)}
-                          </span>
-                        ) : analysis.status === "processing" ? (
-                          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                        ) : (
-                          <span className="text-sm text-muted-foreground">—</span>
+                      {/* Photo Thumbnail */}
+                      <div className="relative flex-shrink-0">
+                        <AnalysisThumbnail 
+                          photoUrls={analysis.photo_urls} 
+                          className="w-14 h-14"
+                        />
+                        {/* Score Badge */}
+                        {analysis.status === "completed" && analysis.looks_score !== null && (
+                          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-background border-2 border-primary/30 flex items-center justify-center">
+                            <span className="text-xs font-bold text-primary">
+                              {analysis.looks_score.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+                        {analysis.status === "processing" && (
+                          <div className="absolute inset-0 bg-background/50 rounded-lg flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                          </div>
                         )}
                       </div>
 
