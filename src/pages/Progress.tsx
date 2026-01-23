@@ -32,6 +32,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
+import { useOptimizedAnimations } from "@/hooks/useReducedMotion";
 
 interface Analysis {
   id: string;
@@ -46,34 +47,6 @@ interface Analysis {
   signedPhotoUrls?: (string | null)[];
 }
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08
-    }
-  }
-};
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { type: "spring" as const, stiffness: 300, damping: 24 }
-  }
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    scale: 1,
-    transition: { type: "spring" as const, stiffness: 300, damping: 24 }
-  }
-};
-
 export default function Progress() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +55,7 @@ export default function Progress() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
-
+  const { shouldReduce, containerVariants, itemVariants, cardVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
@@ -416,88 +389,58 @@ export default function Progress() {
               initial="hidden"
               animate="visible"
             >
-              <motion.div variants={cardVariants} whileHover={{ scale: 1.05, y: -5 }}>
+              <motion.div variants={cardVariants} whileHover={hoverScale}>
                 <Card className="p-4 h-full">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <Target className="w-4 h-4" />
                     <span className="text-xs">Aktuell</span>
                   </div>
-                  <motion.div 
-                    className="text-2xl font-bold"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.3, type: "spring" }}
-                  >
+                  <div className="text-2xl font-bold">
                     {latestScore?.toFixed(1) || "-"}
-                  </motion.div>
+                  </div>
                 </Card>
               </motion.div>
               
-              <motion.div variants={cardVariants} whileHover={{ scale: 1.05, y: -5 }}>
+              <motion.div variants={cardVariants} whileHover={hoverScale}>
                 <Card className="p-4 h-full border-primary/30 bg-primary/5">
                   <div className="flex items-center gap-2 text-primary mb-2">
-                    <motion.div
-                      animate={{ rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <Zap className="w-4 h-4" />
-                    </motion.div>
+                    <Zap className="w-4 h-4" />
                     <span className="text-xs">Potenzial</span>
                   </div>
-                  <motion.div 
-                    className="text-2xl font-bold text-primary"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.4, type: "spring" }}
-                  >
+                  <div className="text-2xl font-bold text-primary">
                     {latestPotential?.toFixed(1) || "-"}
-                  </motion.div>
+                  </div>
                   {potentialGap && (
                     <span className="text-xs text-muted-foreground">+{potentialGap} möglich</span>
                   )}
                 </Card>
               </motion.div>
               
-              <motion.div variants={cardVariants} whileHover={{ scale: 1.05, y: -5 }}>
+              <motion.div variants={cardVariants} whileHover={hoverScale}>
                 <Card className="p-4 h-full">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <BarChart3 className="w-4 h-4" />
                     <span className="text-xs">Durchschnitt</span>
                   </div>
-                  <motion.div 
-                    className="text-2xl font-bold"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.5, type: "spring" }}
-                  >
+                  <div className="text-2xl font-bold">
                     {averageScore || "-"}
-                  </motion.div>
+                  </div>
                 </Card>
               </motion.div>
               
-              <motion.div variants={cardVariants} whileHover={{ scale: 1.05, y: -5 }}>
+              <motion.div variants={cardVariants} whileHover={hoverScale}>
                 <Card className="p-4 h-full">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
-                    <motion.div
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 1.5, repeat: Infinity }}
-                    >
-                      <Flame className="w-4 h-4" />
-                    </motion.div>
+                    <Flame className="w-4 h-4" />
                     <span className="text-xs">Höchster</span>
                   </div>
-                  <motion.div 
-                    className="text-2xl font-bold text-primary"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.6, type: "spring" }}
-                  >
+                  <div className="text-2xl font-bold text-primary">
                     {highestScore || "-"}
-                  </motion.div>
+                  </div>
                 </Card>
               </motion.div>
               
-              <motion.div variants={cardVariants} whileHover={{ scale: 1.05, y: -5 }}>
+              <motion.div variants={cardVariants} whileHover={hoverScale}>
                 <Card className="p-4 h-full">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     {totalImprovement && parseFloat(totalImprovement) > 0 ? (
@@ -509,18 +452,13 @@ export default function Progress() {
                     )}
                     <span className="text-xs">Gesamt</span>
                   </div>
-                  <motion.div 
-                    className={cn(
-                      "text-2xl font-bold",
-                      totalImprovement && parseFloat(totalImprovement) > 0 && "text-primary",
-                      totalImprovement && parseFloat(totalImprovement) < 0 && "text-destructive"
-                    )}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.7, type: "spring" }}
-                  >
+                  <div className={cn(
+                    "text-2xl font-bold",
+                    totalImprovement && parseFloat(totalImprovement) > 0 && "text-primary",
+                    totalImprovement && parseFloat(totalImprovement) < 0 && "text-destructive"
+                  )}>
                     {totalImprovement ? (parseFloat(totalImprovement) > 0 ? "+" : "") + totalImprovement : "-"}
-                  </motion.div>
+                  </div>
                 </Card>
               </motion.div>
             </motion.div>
@@ -528,36 +466,27 @@ export default function Progress() {
             {/* Score Chart */}
             {chartData.length >= 2 && (
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={shouldReduce ? false : { opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 }}
+                transition={shouldReduce ? { duration: 0.2 } : { delay: 0.4 }}
               >
                 <Card className="p-6 mb-8 overflow-hidden relative">
-                  {/* Animated background shimmer */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent"
-                    animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                  />
+                  {/* Animated background shimmer - only on desktop */}
+                  {!shouldReduce && (
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/5 to-transparent"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    />
+                  )}
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-4">
                       <h2 className="text-xl font-bold">Score-Entwicklung</h2>
-                      <motion.div 
-                        className="text-sm text-muted-foreground"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6 }}
-                      >
+                      <span className="text-sm text-muted-foreground">
                         {completedAnalyses.length} Analysen
-                      </motion.div>
+                      </span>
                     </div>
-                    <motion.div 
-                      className="h-64"
-                      initial={{ opacity: 0, scaleY: 0 }}
-                      animate={{ opacity: 1, scaleY: 1 }}
-                      transition={{ delay: 0.5, duration: 0.5 }}
-                      style={{ originY: 1 }}
-                    >
+                    <div className="h-64">
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={chartData}>
                           <defs>
@@ -599,7 +528,7 @@ export default function Progress() {
                           />
                         </AreaChart>
                       </ResponsiveContainer>
-                    </motion.div>
+                    </div>
                   </div>
                 </Card>
               </motion.div>
@@ -608,56 +537,44 @@ export default function Progress() {
             {/* Before/After Comparison */}
             {canCompare && (
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={shouldReduce ? false : { opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={shouldReduce ? { duration: 0.2 } : { delay: 0.5 }}
               >
                 <Card className="p-6 mb-8">
                   <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold">Vorher / Nachher</h2>
                     <div className="flex items-center gap-2">
-                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => setCompareIndex(Math.min(compareIndex + 1, maxCompareIndex))}
-                          disabled={compareIndex >= maxCompareIndex}
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </Button>
-                      </motion.div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCompareIndex(Math.min(compareIndex + 1, maxCompareIndex))}
+                        disabled={compareIndex >= maxCompareIndex}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
                       <span className="text-sm text-muted-foreground px-2">
                         {compareIndex + 1} / {maxCompareIndex + 1}
                       </span>
-                      <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => setCompareIndex(Math.max(compareIndex - 1, 0))}
-                          disabled={compareIndex <= 0}
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
-                      </motion.div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCompareIndex(Math.max(compareIndex - 1, 0))}
+                        disabled={compareIndex <= 0}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
                     {/* Before */}
-                    <motion.div
-                      key={`before-${compareIndex}`}
-                      initial={{ opacity: 0, x: -30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
+                    <div>
                       <div className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         Vorher
                       </div>
-                      <motion.div 
-                        className="aspect-square rounded-xl overflow-hidden bg-card mb-3 relative"
-                        whileHover={{ scale: 1.02 }}
-                      >
+                      <div className="aspect-square rounded-xl overflow-hidden bg-card mb-3 relative">
                         <ProgressImage 
                           src={beforeAnalysis?.signedPhotoUrls?.[0] || beforeAnalysis?.photo_urls?.[0]} 
                           alt="Vorher" 
@@ -667,102 +584,58 @@ export default function Progress() {
                         <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-muted-foreground/30" />
                         <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-muted-foreground/30" />
                         <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-muted-foreground/30" />
-                      </motion.div>
+                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">
                           {beforeAnalysis && formatDate(beforeAnalysis.created_at)}
                         </span>
-                        <motion.span 
-                          className="text-xl font-bold"
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.2 }}
-                        >
+                        <span className="text-xl font-bold">
                           {beforeAnalysis?.looks_score?.toFixed(1) || "-"}
-                        </motion.span>
+                        </span>
                       </div>
-                    </motion.div>
+                    </div>
 
                     {/* After */}
-                    <motion.div
-                      key={`after-${compareIndex}`}
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ type: "spring", stiffness: 300 }}
-                    >
+                    <div>
                       <div className="text-sm text-muted-foreground mb-2 flex items-center gap-2">
-                        <motion.div
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          <Zap className="w-4 h-4 text-primary" />
-                        </motion.div>
+                        <Zap className="w-4 h-4 text-primary" />
                         Nachher
                       </div>
-                      <motion.div 
-                        className="aspect-square rounded-xl overflow-hidden bg-card mb-3 relative"
-                        whileHover={{ scale: 1.02 }}
-                      >
+                      <div className="aspect-square rounded-xl overflow-hidden bg-card mb-3 relative">
                         <ProgressImage 
                           src={afterAnalysis?.signedPhotoUrls?.[0] || afterAnalysis?.photo_urls?.[0]} 
                           alt="Nachher" 
                         />
-                        {/* Animated glow corners */}
-                        <motion.div 
-                          className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-primary"
-                          animate={{ opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
-                        <motion.div 
-                          className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-primary"
-                          animate={{ opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
-                        />
-                        <motion.div 
-                          className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-primary"
-                          animate={{ opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: 1 }}
-                        />
-                        <motion.div 
-                          className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-primary"
-                          animate={{ opacity: [0.5, 1, 0.5] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: 1.5 }}
-                        />
-                      </motion.div>
+                        {/* Primary corners */}
+                        <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-primary" />
+                        <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-primary" />
+                        <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-primary" />
+                        <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-primary" />
+                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">
                           {afterAnalysis && formatDate(afterAnalysis.created_at)}
                         </span>
                         <div className="flex items-center gap-2">
-                          <motion.span 
-                            className="text-xl font-bold"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.2 }}
-                          >
+                          <span className="text-xl font-bold">
                             {afterAnalysis?.looks_score?.toFixed(1) || "-"}
-                          </motion.span>
+                          </span>
                           {beforeAnalysis?.looks_score && afterAnalysis?.looks_score && (
-                            <motion.span 
-                              className={cn(
-                                "text-sm font-medium px-2 py-0.5 rounded-full",
-                                afterAnalysis.looks_score > beforeAnalysis.looks_score 
-                                  ? "bg-green-500/10 text-green-500"
-                                  : afterAnalysis.looks_score < beforeAnalysis.looks_score
-                                  ? "bg-red-500/10 text-red-500"
-                                  : "bg-muted text-muted-foreground"
-                              )}
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: 0.4, type: "spring" }}
-                            >
+                            <span className={cn(
+                              "text-sm font-medium px-2 py-0.5 rounded-full",
+                              afterAnalysis.looks_score > beforeAnalysis.looks_score 
+                                ? "bg-green-500/10 text-green-500"
+                                : afterAnalysis.looks_score < beforeAnalysis.looks_score
+                                ? "bg-red-500/10 text-red-500"
+                                : "bg-muted text-muted-foreground"
+                            )}>
                               {afterAnalysis.looks_score > beforeAnalysis.looks_score ? "+" : ""}
                               {(afterAnalysis.looks_score - beforeAnalysis.looks_score).toFixed(1)}
-                            </motion.span>
+                            </span>
                           )}
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </Card>
               </motion.div>
@@ -771,25 +644,22 @@ export default function Progress() {
             {/* Improvement Insight Card */}
             {completedAnalyses.length >= 2 && (
               <motion.div
-                initial={{ opacity: 0, y: 30 }}
+                initial={shouldReduce ? false : { opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
+                transition={shouldReduce ? { duration: 0.2 } : { delay: 0.6 }}
               >
                 <Card className="p-6 mb-8 bg-gradient-to-br from-primary/10 to-card border-primary/20 relative overflow-hidden">
-                  {/* Animated gradient background */}
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"
-                    animate={{ x: ["-100%", "100%"] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                  />
+                  {/* Animated gradient background - only on desktop */}
+                  {!shouldReduce && (
+                    <motion.div
+                      className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"
+                      animate={{ x: ["-100%", "100%"] }}
+                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    />
+                  )}
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-4">
-                      <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                      >
-                        <Flame className="w-5 h-5 text-primary" />
-                      </motion.div>
+                      <Flame className="w-5 h-5 text-primary" />
                       <h3 className="font-bold">Deine Entwicklung</h3>
                     </div>
                     <motion.div 
