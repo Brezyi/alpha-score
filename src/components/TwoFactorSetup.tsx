@@ -14,6 +14,7 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { 
   Shield, 
@@ -23,7 +24,10 @@ import {
   Smartphone,
   AlertTriangle,
   Trash2,
-  Copy
+  Copy,
+  Key,
+  RefreshCw,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +44,8 @@ interface MFAFactor {
 }
 
 export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
-  const [step, setStep] = useState<"overview" | "enroll" | "verify">("overview");
+  const { user } = useAuth();
+  const [step, setStep] = useState<"overview" | "enroll" | "verify" | "backup-codes">("overview");
   const [loading, setLoading] = useState(false);
   const [factors, setFactors] = useState<MFAFactor[]>([]);
   const [qrCode, setQrCode] = useState<string | null>(null);
@@ -49,10 +54,14 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
   const [verifyCode, setVerifyCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [backupCodes, setBackupCodes] = useState<string[]>([]);
+  const [backupCodesCount, setBackupCodesCount] = useState(0);
+  const [isGeneratingCodes, setIsGeneratingCodes] = useState(false);
 
   useEffect(() => {
     if (open) {
       loadFactors();
+      loadBackupCodesCount();
     }
   }, [open]);
 
@@ -62,7 +71,6 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
       const { data, error } = await supabase.auth.mfa.listFactors();
       if (error) throw error;
       
-      // Filter to only verified TOTP factors
       const verifiedFactors = data.totp.filter(f => f.status === "verified");
       setFactors(verifiedFactors as MFAFactor[]);
     } catch (error: any) {
@@ -70,6 +78,20 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
       toast.error("Fehler beim Laden der 2FA-Einstellungen");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadBackupCodesCount = async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase.rpc('get_backup_codes_count', {
+        _user_id: user.id
+      });
+      if (!error && data !== null) {
+        setBackupCodesCount(data);
+      }
+    } catch (error) {
+      console.error("Error loading backup codes count:", error);
     }
   };
 
@@ -97,18 +119,16 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
   };
 
   const handleVerifyEnrollment = async () => {
-    if (verifyCode.length !== 6 || !factorId) return;
+    if (verifyCode.length !== 6 || !factorId || !user) return;
 
     setIsVerifying(true);
     try {
-      // Create a challenge first
       const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
         factorId,
       });
 
       if (challengeError) throw challengeError;
 
-      // Verify the code
       const { error: verifyError } = await supabase.auth.mfa.verify({
         factorId,
         challengeId: challengeData.id,
@@ -117,13 +137,27 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
 
       if (verifyError) throw verifyError;
 
-      toast.success("2FA erfolgreich aktiviert!");
-      setStep("overview");
+      // Generate backup codes after successful 2FA setup
+      const { data: codes, error: codesError } = await supabase.rpc('generate_backup_codes', {
+        _user_id: user.id,
+        _count: 8
+      });
+
+      if (codesError) {
+        console.error("Backup codes error:", codesError);
+        toast.success("2FA aktiviert! Backup-Codes konnten nicht generiert werden.");
+      } else {
+        setBackupCodes(codes || []);
+        setStep("backup-codes");
+        toast.success("2FA erfolgreich aktiviert!");
+      }
+
       setVerifyCode("");
       setQrCode(null);
       setSecret(null);
       setFactorId(null);
       await loadFactors();
+      await loadBackupCodesCount();
     } catch (error: any) {
       console.error("MFA verify error:", error);
       toast.error("Ungültiger Code. Bitte versuche es erneut.");
@@ -141,8 +175,14 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
 
       if (error) throw error;
 
+      // Delete backup codes when disabling 2FA
+      if (user) {
+        await supabase.from('mfa_backup_codes').delete().eq('user_id', user.id);
+      }
+
       toast.success("2FA wurde deaktiviert");
       await loadFactors();
+      setBackupCodesCount(0);
     } catch (error: any) {
       console.error("MFA unenroll error:", error);
       toast.error("Fehler beim Deaktivieren von 2FA: " + error.message);
@@ -151,11 +191,51 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
     }
   };
 
+  const handleRegenerateBackupCodes = async () => {
+    if (!user) return;
+    setIsGeneratingCodes(true);
+    try {
+      const { data: codes, error } = await supabase.rpc('generate_backup_codes', {
+        _user_id: user.id,
+        _count: 8
+      });
+
+      if (error) throw error;
+
+      setBackupCodes(codes || []);
+      setStep("backup-codes");
+      await loadBackupCodesCount();
+      toast.success("Neue Backup-Codes generiert");
+    } catch (error: any) {
+      console.error("Generate backup codes error:", error);
+      toast.error("Fehler beim Generieren der Backup-Codes");
+    } finally {
+      setIsGeneratingCodes(false);
+    }
+  };
+
   const copySecret = () => {
     if (secret) {
       navigator.clipboard.writeText(secret);
       toast.success("Geheimschlüssel kopiert");
     }
+  };
+
+  const copyAllBackupCodes = () => {
+    navigator.clipboard.writeText(backupCodes.join('\n'));
+    toast.success("Alle Backup-Codes kopiert");
+  };
+
+  const downloadBackupCodes = () => {
+    const content = `LooksMax Pro - 2FA Backup-Codes\n${'='.repeat(40)}\n\nDiese Codes können jeweils nur einmal verwendet werden.\nBewahre sie sicher auf!\n\n${backupCodes.join('\n')}\n\nGeneriert am: ${new Date().toLocaleString('de-DE')}`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'looksmax-backup-codes.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Backup-Codes heruntergeladen");
   };
 
   const has2FAEnabled = factors.length > 0;
@@ -172,6 +252,7 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
             {step === "overview" && "Schütze dein Konto mit einem zusätzlichen Sicherheitsfaktor"}
             {step === "enroll" && "Scanne den QR-Code mit deiner Authenticator-App"}
             {step === "verify" && "Gib den Code aus deiner Authenticator-App ein"}
+            {step === "backup-codes" && "Speichere diese Codes sicher - sie sind dein Notfallzugang"}
           </DialogDescription>
         </DialogHeader>
 
@@ -253,6 +334,44 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
                       </Button>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* Backup Codes Status */}
+              {has2FAEnabled && (
+                <div className="p-3 rounded-lg border bg-card">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Key className="w-5 h-5 text-muted-foreground" />
+                      <div>
+                        <p className="font-medium text-sm">Backup-Codes</p>
+                        <p className="text-xs text-muted-foreground">
+                          {backupCodesCount} von 8 Codes verfügbar
+                        </p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRegenerateBackupCodes}
+                      disabled={isGeneratingCodes}
+                    >
+                      {isGeneratingCodes ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <RefreshCw className="w-4 h-4 mr-1" />
+                          Neu generieren
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  {backupCodesCount <= 2 && backupCodesCount > 0 && (
+                    <p className="text-xs text-destructive mt-2 flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3" />
+                      Wenige Backup-Codes übrig. Generiere neue!
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -365,6 +484,66 @@ export function TwoFactorSetup({ open, onOpenChange }: TwoFactorSetupProps) {
                   )}
                 </Button>
               </div>
+            </div>
+          ) : step === "backup-codes" ? (
+            <div className="space-y-4">
+              <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                <p className="text-sm text-destructive flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                  <span>
+                    <strong>Wichtig:</strong> Speichere diese Codes jetzt! 
+                    Sie werden nicht erneut angezeigt.
+                  </span>
+                </p>
+              </div>
+
+              {/* Backup Codes Grid */}
+              <div className="grid grid-cols-2 gap-2">
+                {backupCodes.map((code, index) => (
+                  <div 
+                    key={index}
+                    className="p-2 rounded bg-muted font-mono text-sm text-center"
+                  >
+                    {code}
+                  </div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={copyAllBackupCodes}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Kopieren
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={downloadBackupCodes}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Herunterladen
+                </Button>
+              </div>
+
+              <Button 
+                className="w-full"
+                onClick={() => {
+                  setStep("overview");
+                  setBackupCodes([]);
+                }}
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Ich habe die Codes gespeichert
+              </Button>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Jeder Code kann nur einmal verwendet werden. 
+                Verwende sie, wenn du keinen Zugriff auf deine Authenticator-App hast.
+              </p>
             </div>
           ) : null}
         </div>
