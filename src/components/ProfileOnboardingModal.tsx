@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { User, MapPin, ArrowRight, Sparkles } from "lucide-react";
 import {
@@ -11,6 +10,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const REGIONS = [
+  { value: "westeuropa", label: "Westeuropa" },
+  { value: "osteuropa", label: "Osteuropa" },
+  { value: "nordeuropa", label: "Nordeuropa" },
+  { value: "suedeuropa", label: "Südeuropa" },
+  { value: "naher-osten", label: "Naher Osten" },
+  { value: "nordafrika", label: "Nordafrika" },
+  { value: "subsahara-afrika", label: "Subsahara-Afrika" },
+  { value: "suedasien", label: "Südasien" },
+  { value: "suedostasien", label: "Südostasien" },
+  { value: "ostasien", label: "Ostasien" },
+  { value: "zentralasien", label: "Zentralasien" },
+  { value: "nordamerika", label: "Nordamerika" },
+  { value: "lateinamerika", label: "Lateinamerika" },
+  { value: "ozeanien", label: "Ozeanien" },
+] as const;
 
 interface ProfileOnboardingModalProps {
   open: boolean;
@@ -20,7 +43,7 @@ interface ProfileOnboardingModalProps {
 export function ProfileOnboardingModal({ open, onComplete }: ProfileOnboardingModalProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [gender, setGender] = useState<"male" | "female" | null>(null);
-  const [country, setCountry] = useState("");
+  const [region, setRegion] = useState("");
 
   const handleGenderSelect = (selectedGender: "male" | "female") => {
     setGender(selectedGender);
@@ -28,8 +51,9 @@ export function ProfileOnboardingModal({ open, onComplete }: ProfileOnboardingMo
   };
 
   const handleComplete = () => {
-    if (gender && country.trim()) {
-      onComplete({ gender, country: country.trim() });
+    if (gender && region) {
+      const selectedRegion = REGIONS.find(r => r.value === region);
+      onComplete({ gender, country: selectedRegion?.label || region });
     }
   };
 
@@ -87,7 +111,7 @@ export function ProfileOnboardingModal({ open, onComplete }: ProfileOnboardingMo
           <div className="space-y-6 py-4">
             <div className="text-center space-y-2">
               <MapPin className="w-12 h-12 mx-auto text-primary" />
-              <h3 className="text-lg font-semibold">Herkunft</h3>
+              <h3 className="text-lg font-semibold">Region</h3>
               <p className="text-sm text-muted-foreground">
                 Ethnische Merkmale beeinflussen die optimale Strategie.
               </p>
@@ -95,19 +119,19 @@ export function ProfileOnboardingModal({ open, onComplete }: ProfileOnboardingMo
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="country">Land / Region / Ethnie</Label>
-                <Input
-                  id="country"
-                  placeholder="z.B. Deutschland, Türkei, Korea, Arabisch..."
-                  value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && country.trim()) {
-                      handleComplete();
-                    }
-                  }}
-                  autoFocus
-                />
+                <Label htmlFor="region">Wähle deine Region</Label>
+                <Select value={region} onValueChange={setRegion}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Region auswählen..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REGIONS.map((r) => (
+                      <SelectItem key={r.value} value={r.value}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="flex gap-2">
@@ -120,7 +144,7 @@ export function ProfileOnboardingModal({ open, onComplete }: ProfileOnboardingMo
                 </Button>
                 <Button
                   onClick={handleComplete}
-                  disabled={!country.trim()}
+                  disabled={!region}
                   className="flex-1 gap-2"
                 >
                   Fertig
