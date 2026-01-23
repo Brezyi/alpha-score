@@ -15,7 +15,8 @@ import {
   History,
   HelpCircle,
   Star,
-  MapPin
+  MapPin,
+  Ticket
 } from "lucide-react";
 
 interface DashboardStat {
@@ -350,7 +351,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Owner Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card 
                 className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 hover:border-primary/50 transition-colors cursor-pointer"
                 onClick={() => navigate("/admin/settings")}
@@ -373,6 +374,19 @@ export default function AdminDashboard() {
                   <p className="font-semibold">Umsatz & Abos</p>
                   <p className="text-sm text-muted-foreground">
                     Zahlungen, Subscriptions & Revenue
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="bg-gradient-to-br from-amber-500/10 to-amber-500/5 border-amber-500/30 hover:border-amber-500/50 transition-colors cursor-pointer"
+                onClick={() => navigate("/admin/promocodes")}
+              >
+                <CardContent className="p-6">
+                  <Ticket className="w-8 h-8 text-amber-500 mb-3" />
+                  <p className="font-semibold">Promocodes</p>
+                  <p className="text-sm text-muted-foreground">
+                    Codes für Premium & Lifetime erstellen
                   </p>
                 </CardContent>
               </Card>
