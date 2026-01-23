@@ -6,6 +6,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { motion, AnimatePresence } from "framer-motion";
 
 import { 
   ArrowLeft, 
@@ -254,16 +255,26 @@ export default function AnalysisResults() {
       <main className="container mx-auto px-4 py-8 max-w-2xl">
         {/* Photo Display */}
         {photoUrls.length > 0 && (
-          <div className="mb-8">
+          <motion.div 
+            className="mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <div className="flex gap-4 justify-center flex-wrap">
               {photoUrls.map((url, index) => (
-                <button 
-                  key={index} 
+                <motion.button 
+                  key={index}
+                  initial={{ opacity: 0, scale: 0.8, rotate: -5 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  transition={{ delay: index * 0.15, type: "spring", stiffness: 200 }}
+                  whileHover={{ scale: 1.08, y: -4 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={() => {
                     setLightboxIndex(index);
                     setLightboxOpen(true);
                   }}
-                  className="group relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl bg-card cursor-pointer transition-transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+                  className="group relative w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden border-2 border-primary/30 shadow-xl bg-card cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
                 >
                   <img 
                     src={url} 
@@ -274,18 +285,40 @@ export default function AnalysisResults() {
                   <div className="absolute inset-0 pointer-events-none overflow-hidden">
                     <div className="absolute left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-scan-line shadow-[0_0_15px_hsl(var(--primary)),0_0_30px_hsl(var(--primary)/0.5)]" />
                   </div>
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-shimmer pointer-events-none" />
                   {/* Corner Brackets */}
-                  <div className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-primary/60" />
-                  <div className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-primary/60" />
-                  <div className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-primary/60" />
-                  <div className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-primary/60" />
+                  <motion.div 
+                    className="absolute top-2 left-2 w-4 h-4 border-l-2 border-t-2 border-primary/60"
+                    initial={{ opacity: 0, x: -10, y: -10 }}
+                    animate={{ opacity: 1, x: 0, y: 0 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                  />
+                  <motion.div 
+                    className="absolute top-2 right-2 w-4 h-4 border-r-2 border-t-2 border-primary/60"
+                    initial={{ opacity: 0, x: 10, y: -10 }}
+                    animate={{ opacity: 1, x: 0, y: 0 }}
+                    transition={{ delay: 0.35 + index * 0.1 }}
+                  />
+                  <motion.div 
+                    className="absolute bottom-2 left-2 w-4 h-4 border-l-2 border-b-2 border-primary/60"
+                    initial={{ opacity: 0, x: -10, y: 10 }}
+                    animate={{ opacity: 1, x: 0, y: 0 }}
+                    transition={{ delay: 0.4 + index * 0.1 }}
+                  />
+                  <motion.div 
+                    className="absolute bottom-2 right-2 w-4 h-4 border-r-2 border-b-2 border-primary/60"
+                    initial={{ opacity: 0, x: 10, y: 10 }}
+                    animate={{ opacity: 1, x: 0, y: 0 }}
+                    transition={{ delay: 0.45 + index * 0.1 }}
+                  />
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                </button>
+                </motion.button>
               ))}
             </div>
             <p className="text-center text-xs text-muted-foreground mt-2">Tippe auf ein Foto zum Vergrößern</p>
-          </div>
+          </motion.div>
         )}
 
         {/* Lightbox Dialog */}
@@ -330,52 +363,121 @@ export default function AnalysisResults() {
         </Dialog>
 
         {/* Score Card with Potential */}
-        <Card className="bg-gradient-to-br from-card to-primary/5 border-primary/20 mb-6 overflow-hidden">
-          <CardContent className="p-6 relative">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
+        <motion.div
+          initial={{ opacity: 0, y: 30, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.3, duration: 0.5, type: "spring" }}
+        >
+          <Card className="bg-gradient-to-br from-card to-primary/5 border-primary/20 mb-6 overflow-hidden relative">
+            {/* Animated background glow */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 animate-gradient-shift pointer-events-none" />
             
-            <div className="flex items-center justify-center gap-6 md:gap-10">
-              {/* Current Score */}
-              <div className="text-center">
-                <p className="text-muted-foreground text-xs mb-1">Aktuell</p>
-                <div className="text-5xl md:text-6xl font-bold text-foreground">
-                  {analysis?.looks_score?.toFixed(1) || "?"}
-                </div>
+            <CardContent className="p-6 relative">
+              <motion.div 
+                className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50"
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ delay: 0.5, duration: 0.8 }}
+              />
+              
+              <div className="flex items-center justify-center gap-6 md:gap-10">
+                {/* Current Score */}
+                <motion.div 
+                  className="text-center"
+                  initial={{ opacity: 0, x: -30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4, type: "spring" }}
+                >
+                  <p className="text-muted-foreground text-xs mb-1">Aktuell</p>
+                  <motion.div 
+                    className="text-5xl md:text-6xl font-bold text-foreground"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
+                  >
+                    {analysis?.looks_score?.toFixed(1) || "?"}
+                  </motion.div>
+                </motion.div>
+                
+                {/* Arrow */}
+                <motion.div 
+                  className="flex flex-col items-center gap-1"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7, type: "spring" }}
+                >
+                  <motion.div
+                    animate={{ x: [0, 5, 0] }}
+                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                  >
+                    <ArrowRight className="w-6 h-6 text-primary" />
+                  </motion.div>
+                  <span className="text-xs text-muted-foreground">Potenzial</span>
+                </motion.div>
+                
+                {/* Potential Score */}
+                <motion.div 
+                  className="text-center"
+                  initial={{ opacity: 0, x: 30 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5, type: "spring" }}
+                >
+                  <p className="text-primary text-xs mb-1 flex items-center justify-center gap-1">
+                    <motion.div
+                      animate={{ rotate: [0, 10, -10, 0] }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                    >
+                      <Zap className="w-3 h-3" />
+                    </motion.div>
+                    Erreichbar
+                  </p>
+                  <motion.div 
+                    className="text-5xl md:text-6xl font-bold text-primary"
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.8, type: "spring", stiffness: 200 }}
+                  >
+                    {analysis?.potential_score?.toFixed(1) || (analysis?.looks_score ? (Math.min(10, analysis.looks_score + 1.5)).toFixed(1) : "?")}
+                  </motion.div>
+                  {/* Pulse ring behind potential score */}
+                  <div className="absolute -z-10 animate-pulse-ring rounded-full w-20 h-20 border-2 border-primary/30" style={{ top: '50%', right: '15%', transform: 'translate(50%, -50%)' }} />
+                </motion.div>
               </div>
               
-              {/* Arrow */}
-              <div className="flex flex-col items-center gap-1">
-                <ArrowRight className="w-6 h-6 text-primary" />
-                <span className="text-xs text-muted-foreground">Potenzial</span>
-              </div>
+              {/* Improvement indicator */}
+              {analysis?.looks_score && analysis?.potential_score && (
+                <motion.div 
+                  className="mt-4 text-center"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1 }}
+                >
+                  <motion.span 
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <motion.div
+                      animate={{ y: [0, -2, 0] }}
+                      transition={{ repeat: Infinity, duration: 1 }}
+                    >
+                      <TrendingUp className="w-4 h-4" />
+                    </motion.div>
+                    +{(analysis.potential_score - analysis.looks_score).toFixed(1)} Punkte möglich
+                  </motion.span>
+                </motion.div>
+              )}
               
-              {/* Potential Score */}
-              <div className="text-center">
-                <p className="text-primary text-xs mb-1 flex items-center justify-center gap-1">
-                  <Zap className="w-3 h-3" />
-                  Erreichbar
-                </p>
-                <div className="text-5xl md:text-6xl font-bold text-primary">
-                  {analysis?.potential_score?.toFixed(1) || (analysis?.looks_score ? (Math.min(10, analysis.looks_score + 1.5)).toFixed(1) : "?")}
-                </div>
-              </div>
-            </div>
-            
-            {/* Improvement indicator */}
-            {analysis?.looks_score && analysis?.potential_score && (
-              <div className="mt-4 text-center">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-                  <TrendingUp className="w-4 h-4" />
-                  +{(analysis.potential_score - analysis.looks_score).toFixed(1)} Punkte möglich
-                </span>
-              </div>
-            )}
-            
-            <p className="text-muted-foreground text-center mt-4 text-sm">
-              Dein persönlicher Ausgangswert und erreichbares Potenzial
-            </p>
-          </CardContent>
-        </Card>
+              <motion.p 
+                className="text-muted-foreground text-center mt-4 text-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.1 }}
+              >
+                Dein persönlicher Ausgangswert und erreichbares Potenzial
+              </motion.p>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         {/* Potential Image Preview */}
         {potentialImageUrl && isPremium && (
