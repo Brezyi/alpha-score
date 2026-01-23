@@ -47,6 +47,7 @@ import {
   Copy,
   Check,
   Mail,
+  Zap,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { format } from "date-fns";
@@ -182,14 +183,22 @@ const SupportManagement = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const filteredTickets = tickets.filter((ticket) => {
-    const matchesSearch =
-      ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
-    const matchesCategory = categoryFilter === "all" || ticket.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
+  const filteredTickets = tickets
+    .filter((ticket) => {
+      const matchesSearch =
+        ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        ticket.description.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
+      const matchesCategory = categoryFilter === "all" || ticket.category === categoryFilter;
+      return matchesSearch && matchesStatus && matchesCategory;
+    })
+    // Sort: Priority tickets first, then by created_at descending
+    .sort((a, b) => {
+      const aIsPriority = (a as any).is_priority ? 1 : 0;
+      const bIsPriority = (b as any).is_priority ? 1 : 0;
+      if (bIsPriority !== aIsPriority) return bIsPriority - aIsPriority;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   const handleTicketUpdate = async () => {
     if (selectedTicket && newStatus) {
@@ -336,11 +345,12 @@ const SupportManagement = () => {
               const categoryConfig = CATEGORY_CONFIG[ticket.category] || CATEGORY_CONFIG.other;
               const StatusIcon = statusConfig.icon;
               const hasAttachments = ticket.attachment_urls && ticket.attachment_urls.length > 0;
+              const isPriority = (ticket as any).is_priority === true;
 
               return (
                 <Card 
                   key={ticket.id} 
-                  className="hover:border-primary/50 transition-all cursor-pointer group"
+                  className={`hover:border-primary/50 transition-all cursor-pointer group ${isPriority ? 'border-amber-500/50 bg-gradient-to-r from-amber-500/5 to-transparent' : ''}`}
                   onClick={() => {
                     setSelectedTicket(ticket);
                     setNewStatus(ticket.status);
@@ -361,6 +371,12 @@ const SupportManagement = () => {
                             {ticket.subject}
                           </h4>
                           <div className="flex items-center gap-2 shrink-0">
+                            {isPriority && (
+                              <Badge className="gap-1 bg-amber-500/20 text-amber-400 border-amber-500/30">
+                                <Zap className="w-3 h-3" />
+                                Priorität
+                              </Badge>
+                            )}
                             {hasAttachments && (
                               <Badge variant="outline" className="gap-1">
                                 <Paperclip className="w-3 h-3" />
@@ -448,6 +464,12 @@ const SupportManagement = () => {
             <div className="space-y-6 py-4">
               {/* Header Info */}
               <div className="flex items-center gap-3 flex-wrap">
+                {(selectedTicket as any).is_priority && (
+                  <Badge className="gap-1 bg-amber-500/20 text-amber-400 border-amber-500/30">
+                    <Zap className="w-3 h-3" />
+                    Premium Priorität
+                  </Badge>
+                )}
                 <Badge className={TICKET_STATUS_CONFIG[selectedTicket.status].color}>
                   {TICKET_STATUS_CONFIG[selectedTicket.status].label}
                 </Badge>
