@@ -763,7 +763,7 @@ export default function Progress() {
                   
                   <div className={cn(
                     "grid gap-6",
-                    categoryImprovements.improvements.length > 0 ? "md:grid-cols-2" : "place-items-center"
+                    categoryImprovements.improvements.length > 0 ? "md:grid-cols-2" : "justify-center"
                   )}>
                     {/* Main improvement stat */}
                     <div className={cn(
