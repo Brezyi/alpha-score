@@ -48,9 +48,6 @@ export default function AdminPasswordReset() {
         if (data === true) {
           setStatus("success");
           toast.success("Token verifiziert! Du kannst jetzt ein neues Admin-Passwort erstellen.");
-          // Clear session storage verification
-          sessionStorage.removeItem("admin_password_verified");
-          sessionStorage.removeItem("admin_password_verified_expiry");
           // Show setup dialog
           setTimeout(() => {
             setShowSetupDialog(true);
