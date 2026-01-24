@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { 
-  Zap, 
   Camera, 
   TrendingUp, 
   MessageSquare, 
@@ -48,6 +47,7 @@ import { ProfileMenu } from "@/components/ProfileMenu";
 import { ProfileOnboardingModal } from "@/components/ProfileOnboardingModal";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, ComposedChart } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import { ScannerLogo } from "@/components/ScannerLogo";
 import { TestimonialSubmitDialog } from "@/components/TestimonialSubmitDialog";
 import { Progress } from "@/components/ui/progress";
 import { AnalysisThumbnail } from "@/components/AnalysisThumbnail";
@@ -460,11 +460,8 @@ const Dashboard = () => {
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
         <div className="container px-4">
           <div className="flex items-center justify-between h-16">
-            <Link to="/dashboard" className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-                <Zap className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <span className="text-xl font-bold">{settings.app_name}</span>
+            <Link to="/dashboard">
+              <ScannerLogo size="sm" labelSize="lg" />
             </Link>
 
             <div className="flex items-center gap-3">

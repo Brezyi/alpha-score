@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, ArrowLeft, Mail, Lock, User, Loader2, Check, AlertCircle } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Loader2, Check, AlertCircle } from "lucide-react";
+import { ScannerLogo } from "@/components/ScannerLogo";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -314,11 +315,8 @@ const Register = () => {
           </Link>
 
           {/* Logo */}
-          <div className="flex items-center gap-2 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold">{settings.app_name}</span>
+          <div className="mb-8">
+            <ScannerLogo size="md" labelSize="lg" />
           </div>
 
           {/* Header */}
