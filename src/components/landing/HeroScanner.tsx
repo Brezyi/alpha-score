@@ -69,46 +69,21 @@ const useAnimatedCounter = (finalValue: number, duration: number = 2000, delay: 
   return value.toFixed(decimals);
 };
 
-// Measurement label component
-const AnimatedMeasurement = memo(({ 
-  label, 
+// Simple animated value display
+const AnimatedValue = memo(({ 
   finalValue, 
   decimals, 
-  suffix = "", 
-  prefix = "",
-  x, 
-  y, 
   delay 
 }: { 
-  label: string;
   finalValue: number;
   decimals: number;
-  suffix?: string;
-  prefix?: string;
-  x: number;
-  y: number;
   delay: number;
 }) => {
   const animatedValue = useAnimatedCounter(finalValue, 1800, delay, decimals);
-  
-  return (
-    <div
-      className="absolute text-[8px] font-mono bg-background/95 px-2 py-1 rounded-md border border-primary/50 backdrop-blur-md shadow-lg"
-      style={{
-        left: `${x}%`,
-        top: `${y}%`,
-        transform: x < 50 ? "translateY(-50%)" : "translate(-100%, -50%)",
-      }}
-    >
-      <div className="text-muted-foreground text-[7px] uppercase tracking-wider">{label}</div>
-      <div className="text-primary font-bold tabular-nums text-[11px]">
-        {prefix}{animatedValue}{suffix}
-      </div>
-    </div>
-  );
+  return <>{animatedValue}</>;
 });
 
-AnimatedMeasurement.displayName = "AnimatedMeasurement";
+AnimatedValue.displayName = "AnimatedValue";
 
 const HeroScanner = memo(() => {
   const shouldReduce = useReducedMotion();
@@ -141,113 +116,104 @@ const HeroScanner = memo(() => {
   }, [shouldReduce]);
 
   return (
-    <div className="relative w-full max-w-md mx-auto aspect-[3/4]">
-      {/* Scanner Frame */}
-      <div className="absolute inset-0 rounded-2xl border-2 border-primary/60 bg-background/95 overflow-hidden backdrop-blur-sm shadow-2xl shadow-primary/10">
-        {/* Corner Brackets */}
-        <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl" />
-        <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-primary rounded-tr" />
-        <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-primary rounded-bl" />
-        <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-primary rounded-br" />
-
-        {/* Face Image Container */}
-        <div className="absolute inset-3 rounded-xl overflow-hidden">
-          <img 
-            src={scannerStatue} 
-            alt="Face Analysis" 
-            className="w-full h-full object-cover object-top"
-          />
-          
-          {/* Subtle gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/40 via-transparent to-background/20" />
-          
-          {/* Scanning Line */}
-          {!shouldReduce && (
-            <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-scanner-line-slow opacity-90 shadow-[0_0_15px_hsl(var(--primary)),0_0_30px_hsl(var(--primary)/0.5)]" />
-          )}
-
-          {/* Landmark Points */}
-          {points}
-
-          {/* Measurement Lines SVG - precisely aligned */}
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" fill="none" preserveAspectRatio="none">
-            {/* Vertical symmetry axis */}
-            <line x1="50" y1="5" x2="50" y2="60" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.5" strokeDasharray="1.5 2" />
-            
-            {/* Horizontal thirds */}
-            <line x1="25" y1="25" x2="75" y2="25" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.3" strokeDasharray="2 2" />
-            <line x1="25" y1="40" x2="75" y2="40" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.3" strokeDasharray="2 2" />
-            
-            {/* Eye line - connecting eye points */}
-            <line x1="34" y1="26" x2="66" y2="26" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.6" />
-            {/* Eye line end markers */}
-            <line x1="34" y1="24" x2="34" y2="28" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.6" />
-            <line x1="66" y1="24" x2="66" y2="28" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.6" />
-            
-            {/* Canthal tilt lines - from outer to inner eye corners */}
-            <line x1="34" y1="26" x2="42" y2="25" stroke="hsl(142, 76%, 46%)" strokeWidth="0.5" strokeOpacity="0.9" />
-            <line x1="58" y1="25" x2="66" y2="26" stroke="hsl(142, 76%, 46%)" strokeWidth="0.5" strokeOpacity="0.9" />
-            
-            {/* FWHR box - face width to height ratio */}
-            <rect x="28" y="20" width="44" height="28" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.4" fill="none" strokeDasharray="3 2" rx="1" />
-            
-            {/* Nose bridge to tip */}
-            <line x1="50" y1="30" x2="50" y2="38" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.5" />
-            
-            {/* Nostril width */}
-            <line x1="45" y1="40" x2="55" y2="40" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.5" />
-            
-            {/* Jaw V-lines - gonion to chin */}
-            <line x1="28" y1="48" x2="50" y2="58" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.6" />
-            <line x1="72" y1="48" x2="50" y2="58" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.6" />
-            
-            {/* Gonion angle arcs */}
-            <path d="M 32 48 Q 28 52, 35 55" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.4" fill="none" />
-            <path d="M 68 48 Q 72 52, 65 55" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.4" fill="none" />
-            
-            {/* Golden ratio spiral */}
-            <path d="M 28 15 Q 72 15, 72 40 Q 72 52, 50 58" stroke="hsl(45, 100%, 50%)" strokeWidth="0.35" strokeOpacity="0.4" fill="none" strokeDasharray="2 2" />
-            
-            {/* Philtrum to chin */}
-            <line x1="50" y1="40" x2="50" y2="58" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.35" strokeDasharray="1 1.5" />
-          </svg>
-
-          {/* Animated Measurement Labels */}
-          {measurements.map((m, index) => (
-            <AnimatedMeasurement
+    <div className="relative w-full max-w-2xl mx-auto">
+      <div className="flex items-center gap-4">
+        {/* Left measurements */}
+        <div className="hidden sm:flex flex-col gap-3 w-24">
+          {measurements.filter(m => m.x < 50).map((m, index) => (
+            <div
               key={`${m.id}-${scanCycle}`}
-              label={m.label}
-              finalValue={m.finalValue}
-              decimals={m.decimals}
-              suffix={m.suffix}
-              prefix={m.prefix}
-              x={m.x}
-              y={m.y}
-              delay={index * 250}
-            />
+              className="text-right font-mono bg-background/95 px-3 py-2 rounded-lg border border-primary/40 backdrop-blur-sm"
+            >
+              <div className="text-muted-foreground text-[10px] uppercase tracking-wider">{m.label}</div>
+              <div className="text-primary font-bold tabular-nums text-sm">
+                {m.prefix || ""}<AnimatedValue finalValue={m.finalValue} decimals={m.decimals} delay={index * 250} />{m.suffix}
+              </div>
+            </div>
           ))}
         </div>
 
-        {/* Bottom status bar */}
-        <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full bg-green-500 ${!shouldReduce ? 'animate-pulse' : ''}`} />
-            <span className="text-[9px] text-primary/80 font-mono uppercase tracking-wider">Scanning</span>
+        {/* Scanner Frame */}
+        <div className="relative flex-1 aspect-[3/4] max-w-sm mx-auto">
+          <div className="absolute inset-0 rounded-2xl border-2 border-primary/60 bg-background/95 overflow-hidden backdrop-blur-sm shadow-2xl shadow-primary/10">
+            {/* Corner Brackets */}
+            <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl" />
+            <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-primary rounded-tr" />
+            <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-primary rounded-bl" />
+            <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-primary rounded-br" />
+
+            {/* Face Image Container */}
+            <div className="absolute inset-3 rounded-xl overflow-hidden">
+              <img 
+                src={scannerStatue} 
+                alt="Face Analysis" 
+                className="w-full h-full object-cover object-top"
+              />
+              
+              {/* Subtle gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-background/10" />
+              
+              {/* Scanning Line */}
+              {!shouldReduce && (
+                <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-scanner-line-slow opacity-90 shadow-[0_0_15px_hsl(var(--primary)),0_0_30px_hsl(var(--primary)/0.5)]" />
+              )}
+
+              {/* Landmark Points Only - No Lines */}
+              {points}
+            </div>
+
+            {/* Bottom status bar */}
+            <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full bg-green-500 ${!shouldReduce ? 'animate-pulse' : ''}`} />
+                <span className="text-[9px] text-primary/80 font-mono uppercase tracking-wider">Scanning</span>
+              </div>
+              <span className="text-[9px] text-muted-foreground font-mono">15 Landmarks</span>
+            </div>
+
+            {/* Top status bar */}
+            <div className="absolute top-2 left-3 right-3 flex items-center justify-between">
+              <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">AI Analysis</span>
+              <div className="flex items-center gap-1 bg-primary/20 px-2 py-0.5 rounded border border-primary/30">
+                <span className="text-[10px] text-primary font-mono font-bold">φ 1.618</span>
+              </div>
+            </div>
           </div>
-          <span className="text-[9px] text-muted-foreground font-mono">15 Landmarks</span>
+
+          {/* Outer glow effect */}
+          <div className="absolute -inset-6 rounded-3xl bg-primary/8 blur-3xl -z-10" />
         </div>
 
-        {/* Top status bar */}
-        <div className="absolute top-2 left-3 right-3 flex items-center justify-between">
-          <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">Golden Ratio</span>
-          <div className="flex items-center gap-1 bg-primary/20 px-2 py-0.5 rounded border border-primary/30">
-            <span className="text-[10px] text-primary font-mono font-bold">φ 1.618</span>
-          </div>
+        {/* Right measurements */}
+        <div className="hidden sm:flex flex-col gap-3 w-24">
+          {measurements.filter(m => m.x >= 50).map((m, index) => (
+            <div
+              key={`${m.id}-${scanCycle}`}
+              className="text-left font-mono bg-background/95 px-3 py-2 rounded-lg border border-primary/40 backdrop-blur-sm"
+            >
+              <div className="text-muted-foreground text-[10px] uppercase tracking-wider">{m.label}</div>
+              <div className="text-primary font-bold tabular-nums text-sm">
+                {m.prefix || ""}<AnimatedValue finalValue={m.finalValue} decimals={m.decimals} delay={index * 250} />{m.suffix}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Outer glow effect */}
-      <div className="absolute -inset-6 rounded-3xl bg-primary/8 blur-3xl -z-10" />
+      {/* Mobile measurements - below image */}
+      <div className="flex sm:hidden flex-wrap justify-center gap-2 mt-4">
+        {measurements.map((m, index) => (
+          <div
+            key={`${m.id}-mobile-${scanCycle}`}
+            className="font-mono bg-background/95 px-3 py-2 rounded-lg border border-primary/40 backdrop-blur-sm"
+          >
+            <div className="text-muted-foreground text-[9px] uppercase tracking-wider">{m.label}</div>
+            <div className="text-primary font-bold tabular-nums text-xs">
+              {m.prefix || ""}<AnimatedValue finalValue={m.finalValue} decimals={m.decimals} delay={index * 150} />{m.suffix}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 });
