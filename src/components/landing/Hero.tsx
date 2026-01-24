@@ -11,26 +11,16 @@ const Hero = () => {
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       
-      {/* Animated Particles */}
+      {/* Static decorative elements instead of animated particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
-          <motion.div
+          <div
             key={i}
-            className="absolute w-2 h-2 bg-primary/30 rounded-full"
-            initial={{ 
-              x: Math.random() * 100 + "%", 
-              y: "110%",
-              opacity: 0 
-            }}
-            animate={{ 
-              y: "-10%",
-              opacity: [0, 1, 1, 0]
-            }}
-            transition={{ 
-              duration: 8 + Math.random() * 4,
-              repeat: Infinity,
-              delay: i * 1.5,
-              ease: "linear"
+            className="absolute w-2 h-2 bg-primary/20 rounded-full"
+            style={{ 
+              left: `${15 + i * 15}%`, 
+              top: `${20 + (i % 3) * 25}%`,
+              opacity: 0.3 + (i * 0.1)
             }}
           />
         ))}
@@ -130,25 +120,12 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
-      <motion.div 
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-      >
-        <motion.div
-          animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-          className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2"
-        >
-          <motion.div 
-            className="w-1.5 h-1.5 rounded-full bg-primary"
-            animate={{ opacity: [1, 0.5, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-        </motion.div>
-      </motion.div>
+      {/* Scroll Indicator - CSS animation instead of JS */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+        <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+        </div>
+      </div>
     </section>
   );
 };
