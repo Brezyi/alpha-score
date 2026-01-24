@@ -577,9 +577,12 @@ const Dashboard = () => {
                           <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center relative`}>
                             <item.Icon className={`w-4 h-4 ${item.iconColor}`} />
                             {hasDetails && (
-                              <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
-                                <Info className="w-2 h-2 text-primary-foreground" />
-                              </span>
+                              <>
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping opacity-75" />
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
+                                  <Info className="w-2 h-2 text-primary-foreground" />
+                                </span>
+                              </>
                             )}
                           </div>
                           <div className="flex-1 flex items-center justify-between">
