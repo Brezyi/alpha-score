@@ -765,29 +765,65 @@ export default function Progress() {
                     "grid gap-6",
                     categoryImprovements.improvements.length > 0
                       ? "md:grid-cols-2"
-                      : "place-items-center min-h-56"
+                      : "flex justify-center"
                   )}>
-                    {/* Main improvement stat */}
+                    {/* Main improvement stat with circular design */}
                     <div className={cn(
-                      "text-center p-6 rounded-xl bg-primary/5 border border-primary/20 flex flex-col items-center min-h-44",
-                      categoryImprovements.improvements.length === 0 && "max-w-xs w-full"
+                      "flex flex-col items-center justify-center p-6",
+                      categoryImprovements.improvements.length === 0 && "w-full"
                     )}>
-                      <motion.div 
-                        className={cn(
-                          "text-5xl font-bold mb-2",
-                          parseFloat(categoryImprovements.total) > 0 ? "text-primary" : "text-muted-foreground"
-                        )}
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ type: "spring", stiffness: 200, delay: 0.5 }}
-                      >
-                        {categoryImprovements.total}
-                      </motion.div>
-
-                      <div className="mt-auto">
-                        <div className="text-sm text-muted-foreground">Punkte</div>
-                        <div className="text-xs text-muted-foreground mt-1">
+                      <div className="relative">
+                        {/* Circular ring background */}
+                        <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
+                          <circle
+                            cx="50"
+                            cy="50"
+                            r="42"
+                            fill="none"
+                            stroke="hsl(var(--muted))"
+                            strokeWidth="6"
+                            className="opacity-20"
+                          />
+                          <motion.circle
+                            cx="50"
+                            cy="50"
+                            r="42"
+                            fill="none"
+                            stroke="hsl(var(--primary))"
+                            strokeWidth="6"
+                            strokeLinecap="round"
+                            initial={{ pathLength: 0 }}
+                            animate={{ pathLength: Math.min(parseFloat(categoryImprovements.total) / 5, 1) }}
+                            transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
+                            style={{
+                              filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.4))"
+                            }}
+                          />
+                        </svg>
+                        {/* Center content */}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <motion.span
+                            className={cn(
+                              "text-3xl font-bold",
+                              parseFloat(categoryImprovements.total) > 0 ? "text-primary" : "text-muted-foreground"
+                            )}
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 200, delay: 0.6 }}
+                          >
+                            {categoryImprovements.total}
+                          </motion.span>
+                          <span className="text-xs text-muted-foreground">Punkte</span>
+                        </div>
+                      </div>
+                      <div className="mt-4 text-center">
+                        <div className="text-sm font-medium">
                           {categoryImprovements.isPotential ? 'Erreichbares Potenzial' : 'Gesamtverbesserung'}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {categoryImprovements.isPotential 
+                            ? 'Basierend auf deiner Analyse'
+                            : `Über ${completedAnalyses.length} Analysen`}
                         </div>
                       </div>
                     </div>
