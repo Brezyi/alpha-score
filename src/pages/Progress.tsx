@@ -490,13 +490,15 @@ export default function Progress() {
                           <p className="text-xs text-muted-foreground">{completedAnalyses.length} Analysen total</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3 text-xs">
+                      <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                          <div className="w-4 h-0.5 bg-primary rounded-full" />
                           <span className="text-muted-foreground">Score</span>
                         </div>
                         <div className="flex items-center gap-1.5">
-                          <div className="w-2.5 h-2.5 rounded-full border border-primary/50 bg-primary/20" />
+                          <svg className="w-4 h-2" viewBox="0 0 16 2">
+                            <line x1="0" y1="1" x2="16" y2="1" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="3 2" strokeOpacity="0.5" />
+                          </svg>
                           <span className="text-muted-foreground">Potenzial</span>
                         </div>
                       </div>
