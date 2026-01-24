@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Circle, Zap, Loader2 } from "lucide-react";
+import { CheckCircle2, Circle, Zap, Loader2, Clock } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +21,33 @@ interface DailyChallengesCardProps {
   onComplete: (challengeId: string) => Promise<void>;
 }
 
+const useCountdownToMidnight = () => {
+  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      
+      const diff = midnight.getTime() - now.getTime();
+      
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      setTimeLeft({ hours, minutes, seconds });
+    };
+
+    calculateTimeLeft();
+    const interval = setInterval(calculateTimeLeft, 1000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  return timeLeft;
+};
+
 export const DailyChallengesCard = ({
   challenges,
   loading,
@@ -30,6 +58,7 @@ export const DailyChallengesCard = ({
   const earnedXp = challenges
     .filter((c) => c.completed)
     .reduce((acc, c) => acc + c.xpReward, 0);
+  const { hours, minutes, seconds } = useCountdownToMidnight();
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -69,9 +98,22 @@ export const DailyChallengesCard = ({
             {completedCount}/{challenges.length} abgeschlossen
           </p>
         </div>
-        <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-          <Zap className="w-4 h-4" />
-          <span>{earnedXp}/{totalXpPossible || challenges.reduce((acc, c) => acc + c.xpReward, 0)} XP</span>
+        <div className="flex flex-col items-end gap-1">
+          <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
+            <Zap className="w-4 h-4" />
+            <span>{earnedXp}/{totalXpPossible || challenges.reduce((acc, c) => acc + c.xpReward, 0)} XP</span>
+          </div>
+          <motion.div 
+            className="flex items-center gap-1.5 text-xs text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Clock className="w-3 h-3" />
+            <span className="font-mono">
+              {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+            </span>
+          </motion.div>
         </div>
       </div>
 
