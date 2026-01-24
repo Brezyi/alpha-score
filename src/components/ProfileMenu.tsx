@@ -105,7 +105,7 @@ export function ProfileMenu() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { profile, updateProfile, uploadAvatar, displayNameChangeStatus } = useProfile();
-  const { firstName, lastName, hasData: hasSensitiveData, updateSensitiveData } = useSensitiveData();
+  const { firstName, lastName, hasData: hasSensitiveData, updateSensitiveData, storeSensitiveData } = useSensitiveData();
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
   const { isPremium, subscriptionType, subscriptionEnd, isAdminGranted, openCustomerPortal, createCheckout } = useSubscription();
@@ -190,17 +190,24 @@ export function ProfileMenu() {
     
     setIsSavingProfile(true);
     try {
-      // Update sensitive data if changed
+      // Update or store sensitive data if changed
       const firstNameChanged = trimmedFirstName !== (firstName || "");
       const lastNameChanged = trimmedLastName !== (lastName || "");
       
-      if ((firstNameChanged || lastNameChanged) && hasSensitiveData) {
-        const sensitiveSuccess = await updateSensitiveData(trimmedFirstName, trimmedLastName);
-        if (!sensitiveSuccess) {
-          toast.error("Fehler beim Speichern des Namens");
-          return;
+      if (firstNameChanged || lastNameChanged) {
+        if (trimmedFirstName || trimmedLastName) {
+          let sensitiveSuccess: boolean;
+          if (hasSensitiveData) {
+            sensitiveSuccess = await updateSensitiveData(trimmedFirstName, trimmedLastName);
+          } else {
+            sensitiveSuccess = await storeSensitiveData(trimmedFirstName, trimmedLastName);
+          }
+          if (!sensitiveSuccess) {
+            toast.error("Fehler beim Speichern des Namens");
+            return;
+          }
+          toast.success("Name erfolgreich aktualisiert");
         }
-        toast.success("Name erfolgreich aktualisiert");
       }
       
       // Update display name if changed
@@ -374,29 +381,27 @@ export function ProfileMenu() {
               </Button>
             </div>
 
-            {/* Private Name - Editable */}
-            {hasSensitiveData && (
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">Vorname</Label>
-                  <Input 
-                    id="firstName"
-                    value={editFirstName} 
-                    onChange={(e) => setEditFirstName(e.target.value)}
-                    placeholder="Vorname eingeben"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Nachname</Label>
-                  <Input 
-                    id="lastName"
-                    value={editLastName} 
-                    onChange={(e) => setEditLastName(e.target.value)}
-                    placeholder="Nachname eingeben"
-                  />
-                </div>
+            {/* Private Name - Always Editable */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Vorname</Label>
+                <Input 
+                  id="firstName"
+                  value={editFirstName} 
+                  onChange={(e) => setEditFirstName(e.target.value)}
+                  placeholder="Vorname eingeben"
+                />
               </div>
-            )}
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Nachname</Label>
+                <Input 
+                  id="lastName"
+                  value={editLastName} 
+                  onChange={(e) => setEditLastName(e.target.value)}
+                  placeholder="Nachname eingeben"
+                />
+              </div>
+            </div>
 
             {/* Display Name (editable) */}
             <div className="space-y-2">
