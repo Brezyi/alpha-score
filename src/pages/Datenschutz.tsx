@@ -133,23 +133,45 @@ export default function Datenschutz() {
               <li>Abwicklung von Premium-Abonnements und Einmalkäufen</li>
               <li>Zahlungsabwicklung über Stripe</li>
               <li>Verwaltung von Kündigungen und Erstattungen</li>
+              <li>Bearbeitung von Widerrufsanträgen und Rückerstattungen</li>
             </ul>
 
-            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">3.3 Kommunikation</h3>
+            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">3.2a Widerrufsverfahren</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Im Rahmen der Ausübung Ihres Widerrufsrechts verarbeiten wir folgende Daten:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4 mt-2">
+              <li>Zahlungstransaktions-ID (zur Identifikation der betroffenen Zahlung)</li>
+              <li>Betrag und Währung der Erstattung</li>
+              <li>Datum der ursprünglichen Zahlung</li>
+              <li>Datum und Zeitpunkt des Widerrufsantrags</li>
+              <li>Von Ihnen angegebener Grund (optional)</li>
+              <li>Bearbeitungsstatus und ggf. Anmerkungen</li>
+              <li>E-Mail-Adresse (für Statusbenachrichtigungen)</li>
+            </ul>
+            <p className="text-muted-foreground leading-relaxed mt-2">
+              <strong className="text-foreground">Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung) und Art. 6 Abs. 1 lit. c DSGVO (rechtliche Verpflichtung zur Dokumentation).
+            </p>
+            <p className="text-muted-foreground leading-relaxed mt-2">
+              <strong className="text-foreground">Speicherdauer:</strong> Widerrufsdaten werden für 10 Jahre aufbewahrt (steuer- und handelsrechtliche Aufbewahrungspflichten gemäß § 147 AO, § 257 HGB).
+            </p>
+
+            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">3.6 Kommunikation</h3>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
               <li>Versand transaktionsbezogener E-Mails (Registrierung, Zahlungsbestätigung)</li>
+              <li>E-Mail-Benachrichtigungen über den Status von Widerrufsanträgen</li>
               <li>Beantwortung von Supportanfragen</li>
               <li>Information über wichtige Änderungen (AGB, Datenschutz)</li>
             </ul>
 
-            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">3.4 Sicherheit und Missbrauchsprävention</h3>
+            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">3.7 Sicherheit und Missbrauchsprävention</h3>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
               <li>Schutz vor unbefugtem Zugriff</li>
               <li>Erkennung und Verhinderung von Missbrauch</li>
               <li>Sicherstellung der Integrität unserer Systeme</li>
             </ul>
 
-            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">3.5 Verbesserung unserer Dienste</h3>
+            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">3.8 Verbesserung unserer Dienste</h3>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4">
               <li>Analyse der Nutzung zur Optimierung der Benutzerfreundlichkeit</li>
               <li>Weiterentwicklung der KI-Algorithmen (anonymisiert)</li>
