@@ -1,6 +1,5 @@
-import { forwardRef } from "react";
+import { memo, useMemo } from "react";
 import { Lock } from "lucide-react";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import {
@@ -21,24 +20,22 @@ interface Achievement {
   unlockedAt?: string;
 }
 
-// Wrapper component to handle ref forwarding for motion.div inside Tooltip
-const AchievementItem = forwardRef<HTMLDivElement, { 
+// Memoized achievement item
+const AchievementItem = memo(({ 
+  achievement, 
+  index 
+}: { 
   achievement: Achievement; 
   index: number;
-  children?: React.ReactNode;
-}>(({ achievement, index, ...props }, ref) => (
-  <motion.div
-    ref={ref}
-    initial={{ opacity: 0, scale: 0.8 }}
-    animate={{ opacity: 1, scale: 1 }}
-    transition={{ delay: index * 0.05 }}
+}) => (
+  <div
     className={cn(
-      "relative aspect-square rounded-xl flex items-center justify-center text-2xl cursor-pointer transition-all",
+      "relative aspect-square rounded-xl flex items-center justify-center text-2xl cursor-pointer transition-transform duration-200 animate-fade-in",
       achievement.unlocked
         ? "bg-primary/10 border-2 border-primary/30 hover:scale-110 hover:border-primary/50"
         : "bg-muted/50 border-2 border-transparent grayscale opacity-50"
     )}
-    {...props}
+    style={{ animationDelay: `${index * 30}ms` }}
   >
     {achievement.unlocked ? (
       <span>{achievement.icon}</span>
@@ -52,11 +49,10 @@ const AchievementItem = forwardRef<HTMLDivElement, {
     {achievement.unlocked && (
       <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
     )}
-  </motion.div>
+  </div>
 ));
 
 AchievementItem.displayName = "AchievementItem";
-
 
 interface AchievementsGridProps {
   achievements: Achievement[];
@@ -66,24 +62,29 @@ interface AchievementsGridProps {
 
 const categoryOrder = ["analysis", "streak", "improvement", "level", "tasks", "score", "special"];
 
-export const AchievementsGrid = ({
+export const AchievementsGrid = memo(({
   achievements,
   showAll = false,
   maxDisplay = 8,
 }: AchievementsGridProps) => {
   const navigate = useNavigate();
   
-  // Sort: unlocked first, then by category
-  const sortedAchievements = [...achievements].sort((a, b) => {
-    if (a.unlocked !== b.unlocked) return a.unlocked ? -1 : 1;
-    return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
-  });
+  // Memoize sorted achievements
+  const sortedAchievements = useMemo(() => {
+    return [...achievements].sort((a, b) => {
+      if (a.unlocked !== b.unlocked) return a.unlocked ? -1 : 1;
+      return categoryOrder.indexOf(a.category) - categoryOrder.indexOf(b.category);
+    });
+  }, [achievements]);
 
-  const displayAchievements = showAll
-    ? sortedAchievements
-    : sortedAchievements.slice(0, maxDisplay);
+  const displayAchievements = useMemo(() => {
+    return showAll ? sortedAchievements : sortedAchievements.slice(0, maxDisplay);
+  }, [sortedAchievements, showAll, maxDisplay]);
 
-  const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const unlockedCount = useMemo(() => {
+    return achievements.filter((a) => a.unlocked).length;
+  }, [achievements]);
+
   const remainingCount = achievements.length - maxDisplay;
 
   const handleMoreClick = () => {
@@ -105,7 +106,9 @@ export const AchievementsGrid = ({
         {displayAchievements.map((achievement, index) => (
           <Tooltip key={achievement.id}>
             <TooltipTrigger asChild>
-              <AchievementItem achievement={achievement} index={index} />
+              <div>
+                <AchievementItem achievement={achievement} index={index} />
+              </div>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
               <div className="space-y-1">
@@ -138,4 +141,6 @@ export const AchievementsGrid = ({
       )}
     </div>
   );
-};
+});
+
+AchievementsGrid.displayName = "AchievementsGrid";
