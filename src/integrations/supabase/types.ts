@@ -990,6 +990,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_sensitive_data: {
+        Row: {
+          created_at: string
+          data_hash: string
+          first_name_encrypted: string
+          id: string
+          last_name_encrypted: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data_hash: string
+          first_name_encrypted: string
+          id?: string
+          last_name_encrypted: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data_hash?: string
+          first_name_encrypted?: string
+          id?: string
+          last_name_encrypted?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_streaks: {
         Row: {
           created_at: string
@@ -1240,6 +1270,11 @@ export type Database = {
         }
         Returns: string
       }
+      decrypt_sensitive_text: {
+        Args: { encrypted_text: string; original_hint: string }
+        Returns: string
+      }
+      encrypt_sensitive_text: { Args: { plain_text: string }; Returns: string }
       generate_backup_codes: {
         Args: { _count?: number; _user_id: string }
         Returns: string[]
@@ -1277,6 +1312,13 @@ export type Database = {
           icon: string
           title: string
           xp_reward: number
+        }[]
+      }
+      get_my_sensitive_data: {
+        Args: never
+        Returns: {
+          first_name: string
+          last_name: string
         }[]
       }
       get_owner_masked_email: { Args: never; Returns: string }
@@ -1317,6 +1359,10 @@ export type Database = {
         Returns: boolean
       }
       set_admin_password: { Args: { _password: string }; Returns: boolean }
+      store_user_sensitive_data: {
+        Args: { p_first_name: string; p_last_name: string }
+        Returns: boolean
+      }
       update_user_streak: {
         Args: { p_user_id: string }
         Returns: {

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
+import { useSensitiveData } from "@/hooks/useSensitiveData";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -56,8 +57,12 @@ import {
   AlertTriangle,
   Sparkles,
   Gift,
+  Lock,
+  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // Helper to check if subscription expires within days
 const getExpirationWarning = (subscriptionEnd: string | null): { warning: boolean; daysLeft: number } => {
@@ -96,6 +101,7 @@ export function ProfileMenu() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { profile, updateProfile, uploadAvatar } = useProfile();
+  const { firstName, lastName, hasData: hasSensitiveData } = useSensitiveData();
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
   const { isPremium, subscriptionType, subscriptionEnd, isAdminGranted, openCustomerPortal, createCheckout } = useSubscription();
@@ -106,7 +112,74 @@ export function ProfileMenu() {
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [redeemCodeOpen, setRedeemCodeOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [isCheckingName, setIsCheckingName] = useState(false);
+  const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const debouncedDisplayName = useDebounce(displayName, 300);
+
+  // Initialize display name when profile loads or dialog opens
+  useEffect(() => {
+    if (profileOpen && profile?.display_name) {
+      setDisplayName(profile.display_name);
+    }
+  }, [profileOpen, profile?.display_name]);
+
+  // Check display name availability
+  useEffect(() => {
+    const checkAvailability = async () => {
+      const trimmedName = debouncedDisplayName.trim();
+      
+      if (!trimmedName || trimmedName.toLowerCase() === profile?.display_name?.toLowerCase()) {
+        setNameAvailable(null);
+        setIsCheckingName(false);
+        return;
+      }
+
+      setIsCheckingName(true);
+      try {
+        const { data, error } = await supabase.rpc('check_display_name_available', {
+          p_display_name: trimmedName,
+          p_current_user_id: user?.id || null
+        });
+
+        if (error) throw error;
+        setNameAvailable(data === true);
+      } catch (error) {
+        console.error('Error checking display name:', error);
+        setNameAvailable(null);
+      } finally {
+        setIsCheckingName(false);
+      }
+    };
+
+    checkAvailability();
+  }, [debouncedDisplayName, profile?.display_name, user?.id]);
+
+  const handleSaveProfile = async () => {
+    const trimmedName = displayName.trim();
+    
+    if (trimmedName && trimmedName.toLowerCase() !== profile?.display_name?.toLowerCase() && nameAvailable === false) {
+      toast.error("Dieser Anzeigename ist bereits vergeben");
+      return;
+    }
+    
+    if (trimmedName && trimmedName !== profile?.display_name) {
+      setIsSavingProfile(true);
+      try {
+        const success = await updateProfile({ display_name: trimmedName });
+        if (success) {
+          setProfileOpen(false);
+        }
+      } finally {
+        setIsSavingProfile(false);
+      }
+    } else {
+      setProfileOpen(false);
+    }
+  };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -265,17 +338,62 @@ export function ProfileMenu() {
               </Button>
             </div>
 
-            {/* Display Name (read-only) */}
+            {/* Private Name (if available) */}
+            {hasSensitiveData && firstName && lastName && (
+              <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-4 h-4 text-muted-foreground" />
+                  <Label className="text-sm font-medium">Echter Name (privat)</Label>
+                </div>
+                <p className="text-sm">{firstName} {lastName}</p>
+                <p className="text-xs text-muted-foreground">
+                  Nur für dich sichtbar. Kann nicht geändert werden.
+                </p>
+              </div>
+            )}
+
+            {/* Display Name (editable) */}
             <div className="space-y-2">
-              <Label>Anzeigename</Label>
-              <Input 
-                value={profile?.display_name || ""} 
-                disabled 
-                className="opacity-70" 
-              />
-              <p className="text-xs text-muted-foreground">
-                Der Anzeigename wurde bei der Registrierung festgelegt und kann nicht geändert werden.
-              </p>
+              <Label htmlFor="displayName">Anzeigename</Label>
+              <div className="relative">
+                <Input
+                  id="displayName"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="Dein Anzeigename"
+                  className={cn(
+                    nameAvailable === false && "border-destructive focus-visible:ring-destructive",
+                    nameAvailable === true && displayName.trim().toLowerCase() !== profile?.display_name?.toLowerCase() && "border-primary focus-visible:ring-primary"
+                  )}
+                />
+                {isCheckingName && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                {!isCheckingName && nameAvailable === false && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                  </div>
+                )}
+                {!isCheckingName && nameAvailable === true && displayName.trim().toLowerCase() !== profile?.display_name?.toLowerCase() && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Check className="h-4 w-4 text-primary" />
+                  </div>
+                )}
+              </div>
+              {nameAvailable === false && (
+                <p className="text-sm text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Dieser Name ist bereits vergeben
+                </p>
+              )}
+              {nameAvailable === true && displayName.trim().toLowerCase() !== profile?.display_name?.toLowerCase() && (
+                <p className="text-sm text-primary flex items-center gap-1">
+                  <Check className="h-3 w-3" />
+                  Name ist verfügbar
+                </p>
+              )}
             </div>
 
             {/* Email (read-only) */}
@@ -412,10 +530,18 @@ export function ProfileMenu() {
             </Button>
 
             <Button 
-              onClick={() => setProfileOpen(false)} 
+              onClick={handleSaveProfile} 
               className="w-full"
+              disabled={isSavingProfile || nameAvailable === false || isCheckingName}
             >
-              Schließen
+              {isSavingProfile ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Speichern...
+                </>
+              ) : (
+                "Speichern"
+              )}
             </Button>
 
             {/* Subscription Management - only show for real Stripe premium users */}

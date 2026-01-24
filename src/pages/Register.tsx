@@ -26,7 +26,9 @@ const benefits = [
 ];
 
 const Register = () => {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,9 +50,20 @@ const Register = () => {
     setLoading(true);
 
     try {
-      // First check if display name is available
+      // Validate inputs
+      if (!firstName.trim() || !lastName.trim()) {
+        toast({
+          title: "Fehlende Angaben",
+          description: "Bitte gib deinen Vor- und Nachnamen ein.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Check if display name is available
       const { data: isAvailable, error: checkError } = await supabase.rpc('check_display_name_available', {
-        p_display_name: name.trim(),
+        p_display_name: displayName.trim(),
         p_current_user_id: null
       });
 
@@ -66,18 +79,32 @@ const Register = () => {
         return;
       }
 
-      const { error } = await supabase.auth.signUp({
+      // Sign up user
+      const { data: signUpData, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: name.trim(),
+            full_name: displayName.trim(),
+            // Store first/last name temporarily in metadata for the post-login hook
+            pending_first_name: firstName.trim(),
+            pending_last_name: lastName.trim(),
           },
           emailRedirectTo: window.location.origin,
         },
       });
 
       if (error) throw error;
+
+      // If we got a user back immediately (auto-confirm enabled), store sensitive data now
+      if (signUpData?.user) {
+        // We need to store sensitive data after login, so save to localStorage temporarily
+        // This will be processed on first login
+        localStorage.setItem('pending_sensitive_data', JSON.stringify({
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+        }));
+      }
 
       toast({
         title: "Konto erstellt!",
@@ -173,20 +200,56 @@ const Register = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleRegister} className="space-y-6">
+          <form onSubmit={handleRegister} className="space-y-5">
+            {/* First & Last Name Row */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Vorname</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="Max"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="h-12 bg-card border-border"
+                  minLength={2}
+                  maxLength={50}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Nachname</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Mustermann"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="h-12 bg-card border-border"
+                  minLength={2}
+                  maxLength={50}
+                  required
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground -mt-3">
+              Dein echter Name wird privat gespeichert und ist nur für dich sichtbar.
+            </p>
+
+            {/* Display Name */}
             <div className="space-y-2">
-              <Label htmlFor="name">Anzeigename</Label>
+              <Label htmlFor="displayName">Anzeigename</Label>
               <p className="text-xs text-muted-foreground">
-                Dieser Name wird öffentlich angezeigt und kann später nicht geändert werden.
+                Dieser Name wird öffentlich angezeigt. Du kannst ihn später ändern.
               </p>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
-                  id="name"
+                  id="displayName"
                   type="text"
                   placeholder="Dein Anzeigename"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
                   className="pl-10 h-12 bg-card border-border"
                   minLength={2}
                   maxLength={30}
@@ -195,6 +258,7 @@ const Register = () => {
               </div>
             </div>
 
+            {/* Email */}
             <div className="space-y-2">
               <Label htmlFor="email">E-Mail</Label>
               <div className="relative">
@@ -211,6 +275,7 @@ const Register = () => {
               </div>
             </div>
 
+            {/* Password */}
             <div className="space-y-2">
               <Label htmlFor="password">Passwort</Label>
               <div className="relative">
