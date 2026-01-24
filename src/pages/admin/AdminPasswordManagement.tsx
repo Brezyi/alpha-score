@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, Key, RotateCcw, Check, X, AlertTriangle, ArrowLeft, Loader2, Mail } from "lucide-react";
+import { Shield, Users, Key, RotateCcw, Check, X, AlertTriangle, ArrowLeft, Loader2, Mail, Clock, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,16 +17,33 @@ import {
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminPasswordManagement } from "@/hooks/useAdminPasswordManagement";
 import { useAuth } from "@/contexts/AuthContext";
+import { formatDistanceToNow } from "date-fns";
+import { de } from "date-fns/locale";
 
 export default function AdminPasswordManagement() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isOwner, loading: roleLoading } = useUserRole();
-  const { adminUsers, loading, maskedEmail, resetPasswordForUser, sendResetEmailToUser, requestEmailReset, refetch } = useAdminPasswordManagement();
+  const { isOwner, role, loading: roleLoading } = useUserRole();
+  const { 
+    adminUsers, 
+    resetRequests,
+    loading, 
+    maskedEmail, 
+    hasPendingRequest,
+    resetPasswordForUser, 
+    sendResetEmailToUser, 
+    requestEmailReset, 
+    requestResetFromOwner,
+    approveResetRequest,
+    rejectResetRequest,
+    refetch 
+  } = useAdminPasswordManagement();
   const [resetTargetUser, setResetTargetUser] = useState<{ id: string; name: string; action: "delete" | "email" } | null>(null);
   const [isResetting, setIsResetting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [showSelfResetDialog, setShowSelfResetDialog] = useState(false);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [processingRequest, setProcessingRequest] = useState<string | null>(null);
 
   const handleResetAction = async () => {
     if (!resetTargetUser) return;
@@ -56,10 +73,123 @@ export default function AdminPasswordManagement() {
     }
   };
 
+  const handleRequestFromOwner = async () => {
+    setIsSendingEmail(true);
+    try {
+      const success = await requestResetFromOwner();
+      if (success) {
+        setShowRequestDialog(false);
+      }
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const handleApproveRequest = async (requestId: string, userId: string) => {
+    setProcessingRequest(requestId);
+    try {
+      await approveResetRequest(requestId, userId);
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    setProcessingRequest(requestId);
+    try {
+      await rejectResetRequest(requestId);
+    } finally {
+      setProcessingRequest(null);
+    }
+  };
+
   if (roleLoading || loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Show different UI for admins vs owners
+  const isAdmin = role === "admin";
+
+  // Admin view - can only request reset from owner
+  if (isAdmin && !isOwner) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container max-w-2xl mx-auto py-8 px-4">
+          <Button variant="ghost" onClick={() => navigate("/admin")} className="mb-6">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Zurück zum Dashboard
+          </Button>
+
+          <Card className="border-primary/30">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Key className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <CardTitle>Admin-Passwort zurücksetzen</CardTitle>
+                  <CardDescription>
+                    Fordere einen Passwort-Reset beim Owner an
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {hasPendingRequest ? (
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                  <Clock className="w-5 h-5 text-yellow-500" />
+                  <div>
+                    <p className="font-medium text-yellow-600 dark:text-yellow-400">Anfrage ausstehend</p>
+                    <p className="text-sm text-muted-foreground">
+                      Deine Anfrage wurde gesendet. Du erhältst eine E-Mail, sobald der Owner sie genehmigt.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Um dein Admin-Passwort zurückzusetzen, musst du eine Anfrage an den Owner senden. 
+                    Nach Genehmigung erhältst du einen Reset-Link per E-Mail.
+                  </p>
+                  <Button onClick={() => setShowRequestDialog(true)} className="w-full">
+                    <Mail className="w-4 h-4 mr-2" />
+                    Passwort-Reset anfordern
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Request Dialog */}
+        <AlertDialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-primary" />
+                Passwort-Reset anfordern
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                Der Owner wird über deine Anfrage benachrichtigt und kann dir einen Reset-Link per E-Mail senden.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isSendingEmail}>Abbrechen</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRequestFromOwner} disabled={isSendingEmail}>
+                {isSendingEmail ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Mail className="w-4 h-4 mr-2" />
+                )}
+                Anfrage senden
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     );
   }
@@ -87,6 +217,78 @@ export default function AdminPasswordManagement() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Zurück zum Dashboard
         </Button>
+
+        {/* Pending Reset Requests - Only for Owner */}
+        {resetRequests.length > 0 && (
+          <Card className="mb-6 border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 to-yellow-500/10">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center">
+                  <Bell className="w-6 h-6 text-yellow-500" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    Ausstehende Anfragen
+                    <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+                      {resetRequests.length}
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Admins haben einen Passwort-Reset angefordert
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {resetRequests.map((request) => (
+                  <div
+                    key={request.id}
+                    className="flex items-center justify-between p-4 rounded-lg border bg-card"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                        <Users className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <div className="font-medium">{request.display_name}</div>
+                        <p className="text-sm text-muted-foreground">{request.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Angefragt {formatDistanceToNow(new Date(request.requested_at), { addSuffix: true, locale: de })}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleApproveRequest(request.id, request.user_id)}
+                        disabled={processingRequest === request.id}
+                      >
+                        {processingRequest === request.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <>
+                            <Check className="w-4 h-4 mr-1" />
+                            Genehmigen
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleRejectRequest(request.id)}
+                        disabled={processingRequest === request.id}
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Ablehnen
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Self-Reset Card for Owner */}
         <Card className="mb-6 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">

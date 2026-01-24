@@ -83,6 +83,36 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_password_reset_requests: {
+        Row: {
+          admin_notes: string | null
+          id: string
+          processed_at: string | null
+          processed_by: string | null
+          requested_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          requested_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_password_reset_tokens: {
         Row: {
           created_at: string
@@ -1387,10 +1417,23 @@ export type Database = {
         }[]
       }
       get_owner_masked_email: { Args: never; Returns: string }
+      get_pending_password_reset_requests: {
+        Args: never
+        Returns: {
+          display_name: string
+          email: string
+          id: string
+          requested_at: string
+          role: string
+          status: string
+          user_id: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      has_pending_password_reset_request: { Args: never; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
