@@ -17,6 +17,7 @@ interface UseAdminPasswordManagementReturn {
   loading: boolean;
   maskedEmail: string | null;
   resetPasswordForUser: (userId: string) => Promise<boolean>;
+  sendResetEmailToUser: (userId: string) => Promise<boolean>;
   requestEmailReset: () => Promise<boolean>;
   refetch: () => Promise<void>;
 }
@@ -107,11 +108,35 @@ export function useAdminPasswordManagement(): UseAdminPasswordManagementReturn {
     }
   };
 
+  const sendResetEmailToUser = async (userId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase.functions.invoke("send-admin-password-reset", {
+        method: "POST",
+        body: { target_user_id: userId },
+      });
+
+      if (error) {
+        console.error("Error sending reset email to user:", error);
+        toast.error("Fehler beim Senden der E-Mail");
+        return false;
+      }
+
+      toast.success("Reset-Link wurde per E-Mail gesendet");
+      await fetchData();
+      return true;
+    } catch (err) {
+      console.error("Send reset email error:", err);
+      toast.error("Ein Fehler ist aufgetreten");
+      return false;
+    }
+  };
+
   return {
     adminUsers,
     loading,
     maskedEmail,
     resetPasswordForUser,
+    sendResetEmailToUser,
     requestEmailReset,
     refetch: fetchData,
   };

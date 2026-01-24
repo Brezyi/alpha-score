@@ -52,26 +52,95 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Generate reset token
-    const { data: token, error: tokenError } = await supabase.rpc("request_admin_password_reset");
+    // Check if there's a target user (owner sending to admin)
+    let body: { target_user_id?: string } = {};
+    try {
+      body = await req.json();
+    } catch {
+      // No body, self-reset
+    }
+
+    const targetUserId = body.target_user_id;
+    let targetEmail = user.email!;
+    let isAdminReset = false;
+
+    if (targetUserId && targetUserId !== user.id) {
+      // Owner is sending reset to another admin
+      isAdminReset = true;
+      
+      // Get target user's email using service role
+      const supabaseAdmin = createClient(
+        supabaseUrl,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      
+      const { data: targetUser, error: targetError } = await supabaseAdmin.auth.admin.getUserById(targetUserId);
+      if (targetError || !targetUser?.user?.email) {
+        return new Response(
+          JSON.stringify({ error: "Target user not found" }),
+          { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      // Verify target is admin or owner
+      const { data: targetRole } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", targetUserId)
+        .single();
+      
+      if (!targetRole || (targetRole.role !== "admin" && targetRole.role !== "owner")) {
+        return new Response(
+          JSON.stringify({ error: "Target user is not an admin" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      
+      targetEmail = targetUser.user.email;
+    }
+
+    // Generate reset token for target user
+    const supabaseAdmin = createClient(
+      supabaseUrl,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    
+    const { data: token, error: tokenError } = await supabaseAdmin.rpc(
+      "request_admin_password_reset_for_user",
+      { _target_user_id: targetUserId || user.id }
+    );
     
     if (tokenError || !token) {
-      console.error("Error generating reset token:", tokenError);
-      return new Response(
-        JSON.stringify({ error: "Failed to generate reset token" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // Fallback to old function if new one doesn't exist
+      const { data: fallbackToken, error: fallbackError } = await supabase.rpc("request_admin_password_reset");
+      if (fallbackError || !fallbackToken) {
+        console.error("Error generating reset token:", tokenError || fallbackError);
+        return new Response(
+          JSON.stringify({ error: "Failed to generate reset token" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
+
+    const finalToken = token || (await supabase.rpc("request_admin_password_reset")).data;
 
     // Get the origin from the request for the reset URL
     const origin = req.headers.get("origin") || "https://glowalyze.com";
-    const resetUrl = `${origin}/admin-password-reset?token=${token}`;
+    const resetUrl = `${origin}/admin-password-reset?token=${finalToken}`;
 
-    // Send email
+    // Send email to target user
+    const emailSubject = isAdminReset 
+      ? "Admin-Passwort Reset-Link von Owner"
+      : "Admin-Passwort zurücksetzen";
+    
+    const emailIntro = isAdminReset
+      ? "Der Owner hat dir einen Reset-Link für dein Admin-Passwort gesendet."
+      : "Du hast angefordert, dein Admin-Passwort für den geschützten Bereich zurückzusetzen.";
+
     const emailResponse = await resend.emails.send({
       from: "Glowalyze Security <noreply@glowalyze.com>",
-      to: [user.email!],
-      subject: "Admin-Passwort zurücksetzen",
+      to: [targetEmail],
+      subject: emailSubject,
       html: `
         <!DOCTYPE html>
         <html>
@@ -94,7 +163,7 @@ const handler = async (req: Request): Promise<Response> => {
             </div>
             <div class="content">
               <p>Hallo,</p>
-              <p>Du hast angefordert, dein Admin-Passwort für den geschützten Bereich zurückzusetzen.</p>
+              <p>${emailIntro}</p>
               
               <p style="text-align: center;">
                 <a href="${resetUrl}" class="button">Passwort zurücksetzen</a>
@@ -105,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
                 <ul>
                   <li>Dieser Link ist <strong>1 Stunde</strong> gültig</li>
                   <li>Der Link kann nur <strong>einmal</strong> verwendet werden</li>
-                  <li>Falls du diese Anfrage nicht gestellt hast, ignoriere diese E-Mail</li>
+                  <li>Falls du diese Anfrage nicht erwartet hast, kontaktiere den Owner</li>
                 </ul>
               </div>
               
@@ -122,10 +191,13 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Admin password reset email sent:", emailResponse);
+    console.log("Admin password reset email sent to:", targetEmail, emailResponse);
 
     return new Response(
-      JSON.stringify({ success: true, message: "Reset email sent" }),
+      JSON.stringify({ 
+        success: true, 
+        message: isAdminReset ? `Reset email sent to admin` : "Reset email sent" 
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {

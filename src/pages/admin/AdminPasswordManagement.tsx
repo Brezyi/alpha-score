@@ -22,18 +22,22 @@ export default function AdminPasswordManagement() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner, loading: roleLoading } = useUserRole();
-  const { adminUsers, loading, maskedEmail, resetPasswordForUser, requestEmailReset, refetch } = useAdminPasswordManagement();
-  const [resetTargetUser, setResetTargetUser] = useState<{ id: string; name: string } | null>(null);
+  const { adminUsers, loading, maskedEmail, resetPasswordForUser, sendResetEmailToUser, requestEmailReset, refetch } = useAdminPasswordManagement();
+  const [resetTargetUser, setResetTargetUser] = useState<{ id: string; name: string; action: "delete" | "email" } | null>(null);
   const [isResetting, setIsResetting] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
   const [showSelfResetDialog, setShowSelfResetDialog] = useState(false);
 
-  const handleResetPassword = async () => {
+  const handleResetAction = async () => {
     if (!resetTargetUser) return;
 
     setIsResetting(true);
     try {
-      await resetPasswordForUser(resetTargetUser.id);
+      if (resetTargetUser.action === "email") {
+        await sendResetEmailToUser(resetTargetUser.id);
+      } else {
+        await resetPasswordForUser(resetTargetUser.id);
+      }
       setResetTargetUser(null);
     } finally {
       setIsResetting(false);
@@ -212,16 +216,27 @@ export default function AdminPasswordManagement() {
                         )}
                       </div>
 
-                      {/* Reset Button */}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setResetTargetUser({ id: user.user_id, name: user.display_name })}
-                        disabled={!user.has_admin_password}
-                      >
-                        <RotateCcw className="w-4 h-4 mr-1" />
-                        Zurücksetzen
-                      </Button>
+                      {/* Reset Buttons */}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setResetTargetUser({ id: user.user_id, name: user.display_name, action: "email" })}
+                        >
+                          <Mail className="w-4 h-4 mr-1" />
+                          E-Mail senden
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setResetTargetUser({ id: user.user_id, name: user.display_name, action: "delete" })}
+                          disabled={!user.has_admin_password}
+                          className="text-muted-foreground"
+                        >
+                          <RotateCcw className="w-4 h-4 mr-1" />
+                          Löschen
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -234,8 +249,8 @@ export default function AdminPasswordManagement() {
                 Hinweis
               </h4>
               <ul className="text-xs text-muted-foreground space-y-1">
-                <li>• Das Zurücksetzen löscht das Admin-Passwort des Benutzers</li>
-                <li>• Der Benutzer muss beim nächsten Admin-Zugriff ein neues Passwort erstellen</li>
+                <li>• <strong>E-Mail senden:</strong> Sendet einen Reset-Link an die E-Mail des Admins</li>
+                <li>• <strong>Löschen:</strong> Entfernt das Passwort - Admin muss beim nächsten Zugriff neu erstellen</li>
                 <li>• Alle Aktionen werden im Audit-Log protokolliert</li>
               </ul>
             </div>
@@ -247,21 +262,36 @@ export default function AdminPasswordManagement() {
       <AlertDialog open={!!resetTargetUser} onOpenChange={(open) => !open && setResetTargetUser(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Admin-Passwort zurücksetzen?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {resetTargetUser?.action === "email" 
+                ? "Reset-Link per E-Mail senden?" 
+                : "Admin-Passwort löschen?"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Das Admin-Passwort von <strong>{resetTargetUser?.name}</strong> wird gelöscht.
-              Der Benutzer muss beim nächsten Zugriff auf den Admin-Bereich ein neues Passwort erstellen.
+              {resetTargetUser?.action === "email" ? (
+                <>
+                  Ein Reset-Link wird an <strong>{resetTargetUser?.name}</strong> per E-Mail gesendet.
+                  Der Admin kann damit ein neues Passwort erstellen.
+                </>
+              ) : (
+                <>
+                  Das Admin-Passwort von <strong>{resetTargetUser?.name}</strong> wird gelöscht.
+                  Der Admin muss beim nächsten Zugriff ein neues Passwort erstellen.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isResetting}>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction onClick={handleResetPassword} disabled={isResetting}>
+            <AlertDialogAction onClick={handleResetAction} disabled={isResetting}>
               {isResetting ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : resetTargetUser?.action === "email" ? (
+                <Mail className="w-4 h-4 mr-2" />
               ) : (
                 <RotateCcw className="w-4 h-4 mr-2" />
               )}
-              Zurücksetzen
+              {resetTargetUser?.action === "email" ? "E-Mail senden" : "Löschen"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
