@@ -761,9 +761,15 @@ export default function Progress() {
                     </div>
                   </div>
                   
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className={cn(
+                    "grid gap-6",
+                    categoryImprovements.improvements.length > 0 ? "md:grid-cols-2" : "place-items-center"
+                  )}>
                     {/* Main improvement stat */}
-                    <div className="text-center p-6 rounded-xl bg-primary/5 border border-primary/20">
+                    <div className={cn(
+                      "text-center p-6 rounded-xl bg-primary/5 border border-primary/20",
+                      categoryImprovements.improvements.length === 0 && "max-w-xs w-full"
+                    )}>
                       <motion.div 
                         className={cn(
                           "text-5xl font-bold mb-2",
@@ -781,10 +787,10 @@ export default function Progress() {
                       </div>
                     </div>
                     
-                    {/* Category breakdown */}
-                    <div className="space-y-4">
-                      {categoryImprovements.improvements.length > 0 ? (
-                        categoryImprovements.improvements.map((item, index) => (
+                    {/* Category breakdown - only show if there are improvements */}
+                    {categoryImprovements.improvements.length > 0 && (
+                      <div className="space-y-4">
+                        {categoryImprovements.improvements.map((item, index) => (
                           <motion.div 
                             key={item.category}
                             className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card transition-colors"
@@ -803,13 +809,9 @@ export default function Progress() {
                               {parseFloat(item.improvement) > 0 ? `+${parseFloat(item.improvement).toFixed(1)}` : item.improvement}
                             </span>
                           </motion.div>
-                        ))
-                      ) : (
-                        <div className="text-center text-muted-foreground text-sm py-4">
-                          Noch keine Kategorie-Daten verfügbar
-                        </div>
-                      )}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </Card>
               </motion.div>
