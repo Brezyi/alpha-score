@@ -288,6 +288,11 @@ const Dashboard = () => {
   const pointsToGo = latestScore !== null && latestPotential !== null
     ? (latestPotential - latestScore).toFixed(1)
     : null;
+  
+  // Check if current score is the personal best
+  const allScores = completedAnalyses.map(a => a.looks_score).filter((s): s is number => s !== null);
+  const highestScore = allScores.length > 0 ? Math.max(...allScores) : null;
+  const isPersonalBest = latestScore !== null && highestScore !== null && latestScore >= highestScore && completedAnalyses.length > 1;
 
   // Chart data (last 10 analyses, reversed for chronological order) with potential
   const chartData = completedAnalyses
@@ -376,7 +381,14 @@ const Dashboard = () => {
         {/* Stats Overview - Showcase Style */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Main Score Card with Circle */}
-          <div className="md:col-span-1 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
+          <div className="md:col-span-1 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
+            {/* Personal Best Badge */}
+            {isPersonalBest && (
+              <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-medium">
+                <Trophy className="w-3 h-3" />
+                <span>Bestwert</span>
+              </div>
+            )}
             <div className="text-center">
               <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
               <div className="relative inline-flex items-center justify-center">
