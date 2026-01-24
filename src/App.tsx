@@ -42,6 +42,7 @@ import TestimonialsManagement from "./pages/admin/TestimonialsManagement";
 import PromoCodes from "./pages/admin/PromoCodes";
 import AdminPasswordReset from "./pages/AdminPasswordReset";
 import AdminPasswordManagement from "./pages/admin/AdminPasswordManagement";
+import StripeCoupons from "./pages/admin/StripeCoupons";
 
 const queryClient = new QueryClient();
 
@@ -143,6 +144,14 @@ const App = () => (
                         element={
                           <ProtectedRoute requiredRole={["owner"]}>
                             <PromoCodes />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/stripe-coupons" 
+                        element={
+                          <ProtectedRoute requiredRole={["owner"]}>
+                            <StripeCoupons />
                           </ProtectedRoute>
                         } 
                       />
