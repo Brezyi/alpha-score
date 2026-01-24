@@ -31,7 +31,8 @@ import {
   Droplets,
   Eye,
   Scissors,
-  Info
+  Info,
+  Flame
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -896,37 +897,48 @@ export default function AnalysisResults() {
                     details: extractDetails(detailedResults?.jawline)
                   },
                   { 
-                    key: "skin_quality",
-                    label: "Hautqualität", 
-                    score: extractScore(detailedResults?.skin_quality, Math.min(10, baseScore - 0.5)),
-                    color: "bg-orange-500",
-                    iconBg: "bg-orange-500/20",
-                    iconColor: "text-orange-500",
-                    Icon: Droplets,
-                    issues: extractIssues(detailedResults?.skin_quality),
-                    details: extractDetails(detailedResults?.skin_quality)
-                  },
-                  { 
-                    key: "eye_area",
+                    key: "eyes",
                     label: "Augenbereich", 
-                    score: extractScore(detailedResults?.eye_area, Math.min(10, baseScore + 0.5)),
+                    score: extractScore(detailedResults?.eyes || detailedResults?.eye_area, Math.min(10, baseScore + 0.5)),
                     color: "bg-purple-500",
                     iconBg: "bg-purple-500/20",
                     iconColor: "text-purple-500",
                     Icon: Eye,
-                    issues: extractIssues(detailedResults?.eye_area),
-                    details: extractDetails(detailedResults?.eye_area)
+                    issues: extractIssues(detailedResults?.eyes || detailedResults?.eye_area),
+                    details: extractDetails(detailedResults?.eyes || detailedResults?.eye_area)
                   },
                   { 
-                    key: "hair_styling",
+                    key: "skin",
+                    label: "Hautqualität", 
+                    score: extractScore(detailedResults?.skin || detailedResults?.skin_quality, Math.min(10, baseScore - 0.5)),
+                    color: "bg-orange-500",
+                    iconBg: "bg-orange-500/20",
+                    iconColor: "text-orange-500",
+                    Icon: Droplets,
+                    issues: extractIssues(detailedResults?.skin || detailedResults?.skin_quality),
+                    details: extractDetails(detailedResults?.skin || detailedResults?.skin_quality)
+                  },
+                  { 
+                    key: "hair",
                     label: "Haare & Styling", 
-                    score: extractScore(detailedResults?.hair_styling, Math.min(10, baseScore - 0.3)),
+                    score: extractScore(detailedResults?.hair || detailedResults?.hair_styling, Math.min(10, baseScore - 0.3)),
                     color: "bg-pink-500",
                     iconBg: "bg-pink-500/20",
                     iconColor: "text-pink-500",
                     Icon: Scissors,
-                    issues: extractIssues(detailedResults?.hair_styling),
-                    details: extractDetails(detailedResults?.hair_styling)
+                    issues: extractIssues(detailedResults?.hair || detailedResults?.hair_styling),
+                    details: extractDetails(detailedResults?.hair || detailedResults?.hair_styling)
+                  },
+                  { 
+                    key: "overall_vibe",
+                    label: "Ausstrahlung", 
+                    score: extractScore(detailedResults?.overall_vibe, Math.min(10, baseScore)),
+                    color: "bg-amber-500",
+                    iconBg: "bg-amber-500/20",
+                    iconColor: "text-amber-500",
+                    Icon: Flame,
+                    issues: extractIssues(detailedResults?.overall_vibe),
+                    details: extractDetails(detailedResults?.overall_vibe)
                   },
                 ];
                 
