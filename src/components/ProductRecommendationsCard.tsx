@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, ExternalLink, ShoppingBag, X, ShoppingCart } from "lucide-react";
+import { ExternalLink, ShoppingBag, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,7 +19,7 @@ interface Product {
   description: string | null;
   targetIssues: string[];
   priceRange: string;
-  rating: number;
+  rating?: number; // Optional - not displayed since links go to search results
   affiliateLink?: string | null;
   imageUrl?: string | null;
 }
@@ -111,21 +111,15 @@ export const ProductRecommendationsCard = ({
         {categoryIcons[product.category] || "📦"}
       </div>
 
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">{product.name}</h4>
-            <p className="text-xs text-muted-foreground">{product.brand}</p>
-          </div>
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <span className={cn("text-xs font-medium", priceLabels[product.priceRange]?.color)}>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">{product.name}</h4>
+              <p className="text-xs text-muted-foreground">{product.brand}</p>
+            </div>
+            <span className={cn("text-xs font-medium flex-shrink-0", priceLabels[product.priceRange]?.color)}>
               {priceLabels[product.priceRange]?.label || "€€"}
             </span>
-            <div className="flex items-center gap-0.5">
-              <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
-              <span className="text-xs">{product.rating}</span>
-            </div>
-          </div>
         </div>
 
         {product.description && (
@@ -229,15 +223,9 @@ export const ProductRecommendationsCard = ({
                   <p className="text-sm text-muted-foreground">{selectedProduct.brand}</p>
                   <p className="text-sm text-muted-foreground">{categoryNames[selectedProduct.category] || selectedProduct.category}</p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={cn("text-lg font-bold", priceLabels[selectedProduct.priceRange]?.color)}>
-                    {priceLabels[selectedProduct.priceRange]?.label || "€€"}
-                  </span>
-                  <div className="flex items-center gap-1 bg-yellow-500/10 px-2 py-1 rounded-full">
-                    <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
-                    <span className="font-medium">{selectedProduct.rating}</span>
-                  </div>
-                </div>
+                <span className={cn("text-lg font-bold", priceLabels[selectedProduct.priceRange]?.color)}>
+                  {priceLabels[selectedProduct.priceRange]?.label || "€€"}
+                </span>
               </div>
 
               {selectedProduct.description && (
@@ -263,8 +251,8 @@ export const ProductRecommendationsCard = ({
                 className="w-full mt-4" 
                 onClick={() => handleBuyClick(selectedProduct)}
               >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Produkt kaufen
+                <ExternalLink className="w-4 h-4 mr-2" />
+                Auf Amazon suchen
               </Button>
             </div>
           )}
