@@ -2,41 +2,47 @@ import { memo, useMemo } from "react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import scannerStatue from "@/assets/scanner-statue.png";
 
-// Facial analysis measurements with Greek ratios
+// Facial analysis measurements with Greek ratios - adjusted for statue
 const measurements = [
-  { id: "fwhr", label: "FWHR", value: "1.89", x: 8, y: 38 },
-  { id: "canthal", label: "Canthal Tilt", value: "+4.2°", x: 75, y: 32 },
-  { id: "ipd", label: "IPD Ratio", value: "0.46", x: 75, y: 42 },
-  { id: "jaw", label: "Jaw Angle", value: "118°", x: 8, y: 70 },
-  { id: "philtrum", label: "Philtrum", value: "1.2cm", x: 75, y: 62 },
-  { id: "symmetry", label: "Symmetry", value: "94.2%", x: 8, y: 22 },
+  { id: "fwhr", label: "FWHR", value: "1.92", x: 5, y: 32 },
+  { id: "canthal", label: "Canthal Tilt", value: "+5.1°", x: 78, y: 28 },
+  { id: "ipd", label: "IPD Ratio", value: "0.44", x: 78, y: 38 },
+  { id: "jaw", label: "Jaw Angle", value: "125°", x: 5, y: 58 },
+  { id: "gonion", label: "Gonion", value: "Perfect", x: 78, y: 52 },
+  { id: "symmetry", label: "Symmetry", value: "97.8%", x: 5, y: 18 },
 ];
 
-// Key facial landmark points
+// Key facial landmark points - adjusted for the statue's features
 const landmarkPoints = [
-  // Eyes
-  { id: 1, x: 35, y: 36, size: 4 },
-  { id: 2, x: 42, y: 35, size: 4 },
-  { id: 3, x: 58, y: 35, size: 4 },
-  { id: 4, x: 65, y: 36, size: 4 },
-  // Eyebrows
-  { id: 5, x: 30, y: 30, size: 3 },
-  { id: 6, x: 70, y: 30, size: 3 },
-  // Nose
-  { id: 7, x: 50, y: 45, size: 4 },
-  { id: 8, x: 46, y: 52, size: 3 },
-  { id: 9, x: 54, y: 52, size: 3 },
+  // Eyes - hunter eyes position
+  { id: 1, x: 38, y: 30, size: 5 },  // Left eye inner
+  { id: 2, x: 44, y: 29, size: 5 },  // Left eye outer
+  { id: 3, x: 56, y: 29, size: 5 },  // Right eye inner
+  { id: 4, x: 62, y: 30, size: 5 },  // Right eye outer
+  // Eyebrows - strong brow ridge
+  { id: 5, x: 35, y: 25, size: 4 },
+  { id: 6, x: 65, y: 25, size: 4 },
+  { id: 7, x: 50, y: 24, size: 3 },  // Glabella
+  // Nose bridge and tip
+  { id: 8, x: 50, y: 35, size: 4 },  // Nose bridge
+  { id: 9, x: 50, y: 42, size: 5 },  // Nose tip
+  { id: 10, x: 46, y: 44, size: 3 }, // Left nostril
+  { id: 11, x: 54, y: 44, size: 3 }, // Right nostril
   // Lips
-  { id: 10, x: 50, y: 62, size: 4 },
-  { id: 11, x: 42, y: 60, size: 3 },
-  { id: 12, x: 58, y: 60, size: 3 },
-  // Jaw
-  { id: 13, x: 30, y: 65, size: 3 },
-  { id: 14, x: 70, y: 65, size: 3 },
-  { id: 15, x: 50, y: 78, size: 4 },
-  // Cheekbones
-  { id: 16, x: 25, y: 48, size: 3 },
-  { id: 17, x: 75, y: 48, size: 3 },
+  { id: 12, x: 50, y: 52, size: 4 }, // Upper lip center
+  { id: 13, x: 44, y: 53, size: 3 }, // Left lip corner
+  { id: 14, x: 56, y: 53, size: 3 }, // Right lip corner
+  // Jaw - sharp jawline
+  { id: 15, x: 32, y: 52, size: 4 }, // Left gonion
+  { id: 16, x: 68, y: 52, size: 4 }, // Right gonion
+  { id: 17, x: 50, y: 62, size: 5 }, // Chin
+  // Cheekbones - high and defined
+  { id: 18, x: 28, y: 38, size: 4 },
+  { id: 19, x: 72, y: 38, size: 4 },
+  // Forehead
+  { id: 20, x: 50, y: 12, size: 4 },
+  { id: 21, x: 35, y: 14, size: 3 },
+  { id: 22, x: 65, y: 14, size: 3 },
 ];
 
 const HeroScanner = memo(() => {
@@ -53,7 +59,7 @@ const HeroScanner = memo(() => {
           width: point.size,
           height: point.size,
           boxShadow: `0 0 ${point.size * 2}px hsl(var(--primary))`,
-          animationDelay: `${index * 0.15}s`,
+          animationDelay: `${index * 0.12}s`,
           transform: "translate(-50%, -50%)",
         }}
       />
@@ -75,11 +81,11 @@ const HeroScanner = memo(() => {
           <img 
             src={scannerStatue} 
             alt="Face Analysis" 
-            className="w-full h-full object-cover object-top grayscale-[30%]"
+            className="w-full h-full object-cover object-top"
           />
           
           {/* Overlay for better visibility */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-background/20 to-background/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-background/30" />
           
           {/* Scanning Line */}
           {!shouldReduce && (
@@ -92,41 +98,51 @@ const HeroScanner = memo(() => {
           {/* Greek Ratio Measurement Lines SVG */}
           <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" fill="none" preserveAspectRatio="none">
             {/* Vertical symmetry axis */}
-            <line x1="50" y1="15" x2="50" y2="85" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.6" strokeDasharray="1 1" />
+            <line x1="50" y1="8" x2="50" y2="68" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.6" strokeDasharray="1 1" />
             
-            {/* Horizontal thirds - Rule of thirds */}
-            <line x1="20" y1="33" x2="80" y2="33" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.4" strokeDasharray="2 2" />
-            <line x1="20" y1="50" x2="80" y2="50" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.4" strokeDasharray="2 2" />
-            <line x1="20" y1="66" x2="80" y2="66" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.4" strokeDasharray="2 2" />
+            {/* Horizontal facial thirds */}
+            <line x1="25" y1="25" x2="75" y2="25" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.4" strokeDasharray="2 2" />
+            <line x1="25" y1="42" x2="75" y2="42" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.4" strokeDasharray="2 2" />
+            <line x1="25" y1="52" x2="75" y2="52" stroke="hsl(var(--primary))" strokeWidth="0.25" strokeOpacity="0.4" strokeDasharray="2 2" />
             
             {/* Eye line - interpupillary distance */}
-            <line x1="35" y1="36" x2="65" y2="36" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.7" />
-            <line x1="35" y1="34" x2="35" y2="38" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.7" />
-            <line x1="65" y1="34" x2="65" y2="38" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.7" />
+            <line x1="41" y1="29.5" x2="59" y2="29.5" stroke="hsl(var(--primary))" strokeWidth="0.5" strokeOpacity="0.8" />
+            <line x1="41" y1="27" x2="41" y2="32" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.7" />
+            <line x1="59" y1="27" x2="59" y2="32" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.7" />
             
-            {/* Canthal tilt lines */}
-            <line x1="35" y1="36" x2="42" y2="34" stroke="hsl(142, 70%, 50%)" strokeWidth="0.4" strokeOpacity="0.8" />
-            <line x1="58" y1="34" x2="65" y2="36" stroke="hsl(142, 70%, 50%)" strokeWidth="0.4" strokeOpacity="0.8" />
+            {/* Canthal tilt lines - positive tilt (hunter eyes) */}
+            <line x1="38" y1="30" x2="44" y2="28" stroke="hsl(142, 70%, 50%)" strokeWidth="0.5" strokeOpacity="0.9" />
+            <line x1="56" y1="28" x2="62" y2="30" stroke="hsl(142, 70%, 50%)" strokeWidth="0.5" strokeOpacity="0.9" />
             
             {/* FWHR - Face Width to Height Ratio box */}
-            <rect x="25" y="30" width="50" height="35" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.5" fill="none" strokeDasharray="3 2" />
+            <rect x="28" y="25" width="44" height="27" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.6" fill="none" strokeDasharray="3 2" />
             
-            {/* Jaw angle lines */}
-            <line x1="30" y1="65" x2="50" y2="78" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.6" />
-            <line x1="70" y1="65" x2="50" y2="78" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.6" />
+            {/* Jaw angle lines - sharp angular jaw */}
+            <line x1="32" y1="52" x2="50" y2="62" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.7" />
+            <line x1="68" y1="52" x2="50" y2="62" stroke="hsl(var(--primary))" strokeWidth="0.4" strokeOpacity="0.7" />
             
-            {/* Cheekbone width */}
-            <line x1="25" y1="48" x2="75" y2="48" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.5" strokeDasharray="2 1" />
+            {/* Gonion markers */}
+            <circle cx="32" cy="52" r="1.5" stroke="hsl(var(--primary))" strokeWidth="0.3" fill="none" strokeOpacity="0.6" />
+            <circle cx="68" cy="52" r="1.5" stroke="hsl(var(--primary))" strokeWidth="0.3" fill="none" strokeOpacity="0.6" />
             
-            {/* Nose proportion lines */}
-            <line x1="46" y1="52" x2="54" y2="52" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.6" />
+            {/* Cheekbone width line */}
+            <line x1="28" y1="38" x2="72" y2="38" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.5" strokeDasharray="2 1" />
             
-            {/* Philtrum to chin ratio */}
+            {/* Nose proportion - bridge to tip */}
+            <line x1="50" y1="35" x2="50" y2="44" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.6" />
+            <line x1="46" y1="44" x2="54" y2="44" stroke="hsl(var(--primary))" strokeWidth="0.35" strokeOpacity="0.6" />
+            
+            {/* Philtrum ratio */}
+            <line x1="50" y1="44" x2="50" y2="52" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.5" />
+            
+            {/* Lower third - lip to chin */}
             <line x1="50" y1="52" x2="50" y2="62" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.5" />
-            <line x1="50" y1="62" x2="50" y2="78" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.5" />
             
-            {/* Golden ratio spiral hint - simplified arc */}
-            <path d="M 30 30 Q 70 30, 70 55 Q 70 70, 50 78" stroke="hsl(45, 90%, 55%)" strokeWidth="0.3" strokeOpacity="0.4" fill="none" strokeDasharray="2 2" />
+            {/* Golden ratio spiral - adjusted to face */}
+            <path d="M 35 14 Q 65 14, 72 38 Q 72 52, 50 62" stroke="hsl(45, 90%, 55%)" strokeWidth="0.35" strokeOpacity="0.5" fill="none" strokeDasharray="2 2" />
+            
+            {/* Brow ridge line */}
+            <path d="M 35 25 Q 50 22, 65 25" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.5" fill="none" />
           </svg>
 
           {/* Measurement Labels */}
