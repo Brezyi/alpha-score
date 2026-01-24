@@ -1158,13 +1158,13 @@ export default function Progress() {
                       {topStrengths.map(([strength, count], i) => (
                         <motion.div 
                           key={i} 
-                          className="flex items-center justify-between"
+                          className="flex items-start gap-3"
                           variants={itemVariants}
                           whileHover={{ x: 5 }}
                         >
-                          <span className="text-sm">{strength}</span>
+                          <span className="text-sm flex-1">{strength}</span>
                           <motion.span 
-                            className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full"
+                            className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full shrink-0"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.3 + i * 0.1 }}
@@ -1204,13 +1204,13 @@ export default function Progress() {
                       {topWeaknesses.map(([weakness, count], i) => (
                         <motion.div 
                           key={i} 
-                          className="flex items-center justify-between"
+                          className="flex items-start gap-3"
                           variants={itemVariants}
                           whileHover={{ x: 5 }}
                         >
-                          <span className="text-sm">{weakness}</span>
+                          <span className="text-sm flex-1">{weakness}</span>
                           <motion.span 
-                            className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full"
+                            className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded-full shrink-0"
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.3 + i * 0.1 }}
