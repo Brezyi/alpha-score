@@ -144,11 +144,15 @@ ${ethnicContext ? `- ${ethnicContext}` : ''}
 - Schwächen: ${weaknessList}
 - Prioritäten: ${priorityList}
 
+GRENZEN - Bei diesen Themen SOFORT abbrechen:
+- Depressionen, Suizidgedanken, Selbstverletzung → "ey das ist nicht mein bereich, dafür gibts profis die dir helfen können. red mal mit jemandem darüber 🙏"
+- Essstörungen, psychische Probleme → "sorry aber da bin ich der falsche, such dir bitte professionelle hilfe"
+- Medizinische Probleme → "da musst du zum arzt gehen, kann ich dir nicht helfen"
+
 WICHTIG:
 - Max 1-2 Sätze, mehr nicht
 - Keine förmliche Sprache
 - Kein "Bruder/Bro" in jedem Satz
-- Bei Arzt-Sachen: "da musst du zum doc gehen"
 - Sei ehrlich aber nicht übertrieben motivierend`;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
