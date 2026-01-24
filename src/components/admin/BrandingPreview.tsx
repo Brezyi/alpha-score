@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Zap, X, Globe, Sun, Moon } from "lucide-react";
+import { X, Globe, Sun, Moon, ScanFace } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface BrandingPreviewProps {
@@ -121,17 +121,35 @@ export function BrandingPreview({ appName, logoUrl, faviconUrl, accentColor }: B
                 {/* Logo Area */}
                 <div className="flex items-center gap-2">
                   {logoUrl ? (
-                    <img 
-                      src={logoUrl} 
-                      alt="Logo" 
-                      className="w-8 h-8 rounded-lg object-contain"
-                    />
+                    <div className="relative">
+                      <img 
+                        src={logoUrl} 
+                        alt="Logo" 
+                        className="w-8 h-8 rounded-lg object-contain relative z-10"
+                      />
+                      {/* Corner Brackets */}
+                      <div className="absolute -inset-0.5 pointer-events-none z-0">
+                        <div className="absolute top-0 left-0 w-1.5 h-1.5 border-l border-t rounded-tl" style={{ borderColor: accentColor || "#00FF88" }} />
+                        <div className="absolute top-0 right-0 w-1.5 h-1.5 border-r border-t rounded-tr" style={{ borderColor: accentColor || "#00FF88" }} />
+                        <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-l border-b rounded-bl" style={{ borderColor: accentColor || "#00FF88" }} />
+                        <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-r border-b rounded-br" style={{ borderColor: accentColor || "#00FF88" }} />
+                      </div>
+                    </div>
                   ) : (
-                    <div 
-                      className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: accentColor || "#00FF88" }}
-                    >
-                      <Zap className="w-4 h-4 text-black" />
+                    <div className="relative">
+                      <div 
+                        className="w-8 h-8 rounded-lg flex items-center justify-center relative z-10"
+                        style={{ backgroundColor: accentColor || "#00FF88" }}
+                      >
+                        <ScanFace className="w-4 h-4 text-black" />
+                      </div>
+                      {/* Corner Brackets */}
+                      <div className="absolute -inset-0.5 pointer-events-none z-0">
+                        <div className="absolute top-0 left-0 w-1.5 h-1.5 border-l border-t rounded-tl" style={{ borderColor: accentColor || "#00FF88", opacity: 0.6 }} />
+                        <div className="absolute top-0 right-0 w-1.5 h-1.5 border-r border-t rounded-tr" style={{ borderColor: accentColor || "#00FF88", opacity: 0.6 }} />
+                        <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-l border-b rounded-bl" style={{ borderColor: accentColor || "#00FF88", opacity: 0.6 }} />
+                        <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-r border-b rounded-br" style={{ borderColor: accentColor || "#00FF88", opacity: 0.6 }} />
+                      </div>
                     </div>
                   )}
                   <span className={`font-bold text-sm ${colors.text}`}>{appName || "App Name"}</span>

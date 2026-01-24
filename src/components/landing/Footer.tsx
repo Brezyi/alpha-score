@@ -1,6 +1,6 @@
-import { Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import { ScannerLogo } from "@/components/ScannerLogo";
 
 const Footer = () => {
   const { settings } = useGlobalSettings();
@@ -13,19 +13,8 @@ const Footer = () => {
           {/* Top Row */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-8">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2">
-              {settings.app_logo_url ? (
-                <img 
-                  src={settings.app_logo_url} 
-                  alt={settings.app_name} 
-                  className="w-10 h-10 rounded-xl object-contain"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-                  <Zap className="w-5 h-5 text-primary-foreground" />
-                </div>
-              )}
-              <span className="text-xl font-bold">{settings.app_name}</span>
+            <Link to="/">
+              <ScannerLogo size="md" labelSize="lg" animated={false} />
             </Link>
 
             {/* Main Links */}
