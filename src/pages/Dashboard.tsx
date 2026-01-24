@@ -421,7 +421,7 @@ const Dashboard = () => {
 
   // Get user's weaknesses for product recommendations
   const userWeaknesses = completedAnalyses[0]?.weaknesses || [];
-  const { products: recommendedProducts, loading: productsLoading } = useProductRecommendations(userWeaknesses);
+  const { products: recommendedProducts, loading: productsLoading, hasPersonalizedResults } = useProductRecommendations(userWeaknesses);
 
   // Chart data (last 10 analyses, reversed for chronological order) with potential and change
   const chartDataRaw = completedAnalyses.slice(0, 10).reverse();
@@ -1140,6 +1140,7 @@ const Dashboard = () => {
                 loading={productsLoading}
                 maxDisplay={4}
                 title="Empfohlene Produkte für dich"
+                hasPersonalizedResults={hasPersonalizedResults}
               />
             )}
           </div>
