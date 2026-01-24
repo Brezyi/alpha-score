@@ -23,8 +23,15 @@ import {
   Square,
   Droplets,
   Eye,
-  Scissors
+  Scissors,
+  ChevronDown,
+  Info
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -532,38 +539,89 @@ const Dashboard = () => {
                   if (typeof value === 'string') return parseFloat(value) || fallback;
                   return fallback;
                 };
+
+                // Helper to extract issues array
+                const extractIssues = (value: any): string[] => {
+                  if (value && typeof value === 'object' && 'issues' in value && Array.isArray(value.issues)) {
+                    return value.issues;
+                  }
+                  return [];
+                };
+
+                // Helper to extract details string
+                const extractDetails = (value: any): string => {
+                  if (value && typeof value === 'object' && 'details' in value && typeof value.details === 'string') {
+                    return value.details;
+                  }
+                  return '';
+                };
                 
                 const featureScores = [
-                  { label: "Gesichtssymmetrie", score: isPremiumUser ? extractScore(detailedResults?.face_symmetry, baseScore + 0.3) : 7.2, color: "bg-emerald-500", iconBg: "bg-emerald-500/20", iconColor: "text-emerald-500", Icon: Hexagon },
-                  { label: "Jawline Definition", score: isPremiumUser ? extractScore(detailedResults?.jawline, baseScore - 0.2) : 6.8, color: "bg-blue-500", iconBg: "bg-blue-500/20", iconColor: "text-blue-500", Icon: Square },
-                  { label: "Hautqualität", score: isPremiumUser ? extractScore(detailedResults?.skin_quality, baseScore - 0.5) : 5.9, color: "bg-orange-500", iconBg: "bg-orange-500/20", iconColor: "text-orange-500", Icon: Droplets },
-                  { label: "Augenbereich", score: isPremiumUser ? extractScore(detailedResults?.eye_area, baseScore + 0.5) : 7.5, color: "bg-purple-500", iconBg: "bg-purple-500/20", iconColor: "text-purple-500", Icon: Eye },
-                  { label: "Haare & Styling", score: isPremiumUser ? extractScore(detailedResults?.hair_styling, baseScore - 0.3) : 6.4, color: "bg-pink-500", iconBg: "bg-pink-500/20", iconColor: "text-pink-500", Icon: Scissors },
+                  { key: "face_symmetry", label: "Gesichtssymmetrie", score: isPremiumUser ? extractScore(detailedResults?.face_symmetry, baseScore + 0.3) : 7.2, color: "bg-emerald-500", iconBg: "bg-emerald-500/20", iconColor: "text-emerald-500", Icon: Hexagon, issues: extractIssues(detailedResults?.face_symmetry), details: extractDetails(detailedResults?.face_symmetry) },
+                  { key: "jawline", label: "Jawline Definition", score: isPremiumUser ? extractScore(detailedResults?.jawline, baseScore - 0.2) : 6.8, color: "bg-blue-500", iconBg: "bg-blue-500/20", iconColor: "text-blue-500", Icon: Square, issues: extractIssues(detailedResults?.jawline), details: extractDetails(detailedResults?.jawline) },
+                  { key: "skin_quality", label: "Hautqualität", score: isPremiumUser ? extractScore(detailedResults?.skin_quality, baseScore - 0.5) : 5.9, color: "bg-orange-500", iconBg: "bg-orange-500/20", iconColor: "text-orange-500", Icon: Droplets, issues: extractIssues(detailedResults?.skin_quality), details: extractDetails(detailedResults?.skin_quality) },
+                  { key: "eye_area", label: "Augenbereich", score: isPremiumUser ? extractScore(detailedResults?.eye_area, baseScore + 0.5) : 7.5, color: "bg-purple-500", iconBg: "bg-purple-500/20", iconColor: "text-purple-500", Icon: Eye, issues: extractIssues(detailedResults?.eye_area), details: extractDetails(detailedResults?.eye_area) },
+                  { key: "hair_styling", label: "Haare & Styling", score: isPremiumUser ? extractScore(detailedResults?.hair_styling, baseScore - 0.3) : 6.4, color: "bg-pink-500", iconBg: "bg-pink-500/20", iconColor: "text-pink-500", Icon: Scissors, issues: extractIssues(detailedResults?.hair_styling), details: extractDetails(detailedResults?.hair_styling) },
                 ];
                 
-                return featureScores.map((item, index) => (
-                  <div 
-                    key={item.label} 
-                    className="p-4 rounded-xl bg-card border border-border/50 opacity-0 animate-fade-in"
-                    style={{ animationDelay: `${600 + index * 50}ms`, animationFillMode: "forwards" }}
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center`}>
-                        <item.Icon className={`w-4 h-4 ${item.iconColor}`} />
+                return featureScores.map((item, index) => {
+                  const hasDetails = isPremiumUser && (item.issues.length > 0 || item.details);
+                  
+                  return (
+                    <Collapsible key={item.key}>
+                      <div 
+                        className="p-4 rounded-xl bg-card border border-border/50 opacity-0 animate-fade-in"
+                        style={{ animationDelay: `${600 + index * 50}ms`, animationFillMode: "forwards" }}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center`}>
+                            <item.Icon className={`w-4 h-4 ${item.iconColor}`} />
+                          </div>
+                          <div className="flex-1 flex items-center justify-between">
+                            <span className="text-sm font-medium">{item.label}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold">{Math.min(10, item.score).toFixed(1)}</span>
+                              {hasDetails && (
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-muted">
+                                    <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                                  </Button>
+                                </CollapsibleTrigger>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${item.color} transition-all duration-1000`}
+                            style={{ width: `${Math.min(100, item.score * 10)}%` }}
+                          />
+                        </div>
+                        
+                        {hasDetails && (
+                          <CollapsibleContent className="mt-3 pt-3 border-t border-border/50">
+                            {item.details && (
+                              <p className="text-xs text-muted-foreground mb-2">{item.details}</p>
+                            )}
+                            {item.issues.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                  <Info className="w-3 h-3" />
+                                  Verbesserungspotenzial:
+                                </span>
+                                <ul className="text-xs text-muted-foreground space-y-0.5 pl-4">
+                                  {item.issues.map((issue, i) => (
+                                    <li key={i} className="list-disc">{issue}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </CollapsibleContent>
+                        )}
                       </div>
-                      <div className="flex-1 flex items-center justify-between">
-                        <span className="text-sm font-medium">{item.label}</span>
-                        <span className="font-bold">{Math.min(10, item.score).toFixed(1)}</span>
-                      </div>
-                    </div>
-                    <div className="h-2 rounded-full bg-muted overflow-hidden">
-                      <div
-                        className={`h-full rounded-full ${item.color} transition-all duration-1000`}
-                        style={{ width: `${Math.min(100, item.score * 10)}%` }}
-                      />
-                    </div>
-                  </div>
-                ));
+                    </Collapsible>
+                  );
+                });
               })()}
             </div>
             
