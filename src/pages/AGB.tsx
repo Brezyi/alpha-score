@@ -279,17 +279,22 @@ export default function AGB() {
             </p>
             
             <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mt-4">
-              <p className="text-green-400 font-semibold mb-2">🔒 Automatische Nachweisführung</p>
+              <p className="text-green-400 font-semibold mb-2">🔒 Vollautomatische Nachweisführung – Sie müssen nichts tun!</p>
               <p className="text-muted-foreground leading-relaxed text-sm">
-                <strong className="text-foreground">Sie müssen sich nicht um Nachweise kümmern!</strong> Unser System dokumentiert automatisch alle Schritte Ihres Widerrufs:
+                Unser System übernimmt die komplette Dokumentation für Sie:
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-3 text-sm">
-                <li><strong className="text-foreground">App-Status:</strong> Jeder Antrag wird mit Zeitstempel, Betrag und Bearbeitungsstatus in Ihrem Profil gespeichert</li>
-                <li><strong className="text-foreground">E-Mail-Bestätigung:</strong> Sie erhalten automatisch eine E-Mail bei Antragstellung sowie bei jeder Statusänderung (Bearbeitung, Genehmigung, Erstattung)</li>
-                <li><strong className="text-foreground">Rechtssicherer Nachweis:</strong> Alle Vorgänge werden serverseitig protokolliert und können bei Bedarf als Nachweis dienen</li>
+                <li><strong className="text-foreground">App-Status (primärer Nachweis):</strong> Jeder Antrag wird mit Zeitstempel, Betrag und Bearbeitungsstatus dauerhaft in Ihrem Profil gespeichert</li>
+                <li><strong className="text-foreground">Automatische E-Mail-Bestätigungen:</strong> Sie erhalten automatisch eine E-Mail bei:
+                  <ul className="list-disc list-inside ml-4 mt-1">
+                    <li>Antragstellung (Eingangsbestätigung)</li>
+                    <li>Jeder Statusänderung (Bearbeitung, Genehmigung, Ablehnung, Erstattung)</li>
+                  </ul>
+                </li>
+                <li><strong className="text-foreground">Serverseitige Protokollierung:</strong> Alle Vorgänge werden rechtssicher auf unseren Servern dokumentiert</li>
               </ul>
-              <p className="text-muted-foreground leading-relaxed text-sm mt-3">
-                <em>Screenshots oder manuelle Dokumentation sind nicht erforderlich – die App übernimmt die komplette Nachweisführung für Sie.</em>
+              <p className="text-muted-foreground leading-relaxed text-sm mt-3 bg-background/50 p-2 rounded-lg">
+                <strong className="text-foreground">Wichtig:</strong> Sie müssen <em>keine</em> Screenshots machen, <em>keine</em> E-Mails aufbewahren und <em>keine</em> manuelle Dokumentation führen. Die E-Mails dienen nur zu Ihrer Information – alle Nachweise werden automatisch vom System gespeichert und können bei Bedarf jederzeit abgerufen werden.
               </p>
             </div>
             
