@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import scannerFace from "@/assets/scanner-face.jpg";
+import scannerStatue from "@/assets/scanner-statue.jpg";
 
 // Facial analysis measurements with Greek ratios
 const measurements = [
@@ -73,7 +73,7 @@ const HeroScanner = memo(() => {
         {/* Real Face Image Container */}
         <div className="absolute inset-3 rounded-xl overflow-hidden">
           <img 
-            src={scannerFace} 
+            src={scannerStatue} 
             alt="Face Analysis" 
             className="w-full h-full object-cover object-top grayscale-[30%]"
           />
