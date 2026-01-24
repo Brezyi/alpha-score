@@ -226,7 +226,60 @@ const Register = () => {
       <div className="hidden lg:flex flex-1 relative bg-card overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-radial from-primary/20 via-transparent to-transparent opacity-50" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-primary/8 rounded-full blur-3xl animate-float" style={{ animationDelay: "1.5s" }} />
+        
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full animate-float"
+              style={{ 
+                left: `${8 + (i * 8)}%`, 
+                top: `${12 + ((i * 15) % 65)}%`,
+                width: `${3 + (i % 3) * 2}px`,
+                height: `${3 + (i % 3) * 2}px`,
+                backgroundColor: `hsl(var(--primary) / ${0.12 + (i % 4) * 0.06})`,
+                animationDuration: `${5 + (i % 4) * 1.5}s`,
+                animationDelay: `${i * 0.35}s`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Pulsing Rings */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={`ring-${i}`}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/10 animate-pulse-ring"
+              style={{
+                width: `${180 + i * 140}px`,
+                height: `${180 + i * 140}px`,
+                animationDelay: `${i * 0.7}s`,
+                animationDuration: "4.5s"
+              }}
+            />
+          ))}
+        </div>
+        
+        {/* Animated Lines */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(2)].map((_, i) => (
+            <div
+              key={`line-${i}`}
+              className="absolute h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent animate-shimmer"
+              style={{
+                top: `${30 + i * 35}%`,
+                left: 0,
+                right: 0,
+                animationDuration: `${4 + i}s`,
+                animationDelay: `${i * 0.5}s`
+              }}
+            />
+          ))}
+        </div>
         
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-16">
