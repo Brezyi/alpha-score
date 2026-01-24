@@ -28,8 +28,7 @@ import {
   Info,
   Quote,
   CheckCircle2,
-  Circle,
-  Star
+  Circle
 } from "lucide-react";
 import {
   Collapsible,
@@ -588,47 +587,8 @@ const Dashboard = () => {
                 )}
               </div>
               <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "350ms", animationFillMode: "forwards" }}>
-                {latestScore !== null ? (
-                  <>
-                    <div className="flex items-center justify-center gap-1.5 mb-1">
-                      <div className={`text-2xl font-bold ${
-                        latestScore >= 7 ? "text-emerald-500" : 
-                        latestScore >= 5 ? "text-primary" : 
-                        latestScore >= 3 ? "text-orange-500" : "text-red-500"
-                      }`}>
-                        Top {Math.round((1 - latestScore / 10) * 100)}%
-                      </div>
-                    </div>
-                    <div className="text-xs text-muted-foreground mb-2">Ranking</div>
-                    <div className="flex justify-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map((star) => {
-                        const filled = latestScore >= star * 2;
-                        const halfFilled = !filled && latestScore >= star * 2 - 1;
-                        return (
-                          <div key={star} className="relative w-4 h-4">
-                            <Star className={`w-4 h-4 ${filled ? "text-yellow-400 fill-yellow-400" : halfFilled ? "text-yellow-400" : "text-muted-foreground/30"}`} />
-                            {halfFilled && (
-                              <div className="absolute inset-0 overflow-hidden w-1/2">
-                                <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground mt-1">
-                      {latestScore >= 8 ? "Außergewöhnlich" : 
-                       latestScore >= 7 ? "Überdurchschnittlich" : 
-                       latestScore >= 5.5 ? "Gut" : 
-                       latestScore >= 4 ? "Durchschnitt" : "Verbesserungspotenzial"}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="text-2xl font-bold text-muted-foreground">—</div>
-                    <div className="text-xs text-muted-foreground">Ranking</div>
-                  </>
-                )}
+                <div className="text-2xl font-bold text-primary">{latestPotential ? `Top ${Math.round((1 - (latestScore || 0) / 10) * 100)}%` : "—"}</div>
+                <div className="text-xs text-muted-foreground">Ranking</div>
               </div>
             </div>
           </div>
