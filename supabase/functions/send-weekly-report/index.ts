@@ -118,7 +118,7 @@ serve(async (req) => {
 <body>
   <div class="container">
     <div class="header">
-      <div class="logo">⚡ FaceRank</div>
+      <div class="logo">⚡ GLOMAXXED AI</div>
       <h1 class="title">Hey ${userName}! 👋</h1>
       <p class="subtitle">Dein wöchentlicher Fortschritts-Report</p>
     </div>
@@ -146,13 +146,13 @@ serve(async (req) => {
       ${analyses?.length || 0} Analysen · ${challenges?.length || 0} Challenges abgeschlossen
     </p>
 
-    <a href="https://facerank.app/dashboard" class="cta">
+    <a href="https://glomaxxed.ai/dashboard" class="cta">
       Dashboard öffnen →
     </a>
 
     <div class="footer">
       <p>Du erhältst diese E-Mail, weil du den wöchentlichen Report aktiviert hast.</p>
-      <p>© ${new Date().getFullYear()} FaceRank. Alle Rechte vorbehalten.</p>
+      <p>© ${new Date().getFullYear()} GLOMAXXED AI. Alle Rechte vorbehalten.</p>
     </div>
   </div>
 </body>
@@ -167,9 +167,9 @@ serve(async (req) => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "FaceRank <noreply@facerank.app>",
+            from: "GLOMAXXED AI <noreply@glomaxxed.ai>",
             to: [userData.user.email],
-            subject: `📊 Dein Wöchentlicher FaceRank Report`,
+            subject: `📊 Dein Wöchentlicher GLOMAXXED AI Report`,
             html: emailHtml,
           }),
         });

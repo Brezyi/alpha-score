@@ -32,7 +32,7 @@ export default function Impressum() {
           <section>
             <h2 className="text-xl font-semibold mb-4 text-foreground">Anbieter und Verantwortlicher</h2>
             <p className="text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">FaceRank</strong><br />
+              <strong className="text-foreground">GLOMAXXED AI</strong><br />
               Max Mustermann<br />
               Musterstraße 123<br />
               12345 Musterstadt<br />
