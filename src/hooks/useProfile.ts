@@ -3,6 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
+const PROFILE_UPDATED_EVENT = "profile:updated";
+
+type ProfileUpdatedDetail = {
+  userId: string;
+  updates: Partial<Pick<Profile, "display_name" | "avatar_url" | "theme" | "accent_color" | "background_style" | "gender" | "country">>;
+};
+
 export interface Profile {
   id: string;
   user_id: string;
@@ -65,6 +72,23 @@ export function useProfile() {
   useEffect(() => {
     fetchProfile();
 
+    // In-app sync: keep multiple useProfile() hook instances in sync instantly
+    // (e.g. ProfileMenu updates should immediately reflect on Dashboard without a reload)
+    const handleLocalProfileUpdate = (event: Event) => {
+      if (!user) return;
+      const detail = (event as CustomEvent<ProfileUpdatedDetail>).detail;
+      if (!detail || detail.userId !== user.id) return;
+
+      setProfile((prev) => {
+        if (!prev) return prev;
+        return { ...prev, ...detail.updates };
+      });
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener(PROFILE_UPDATED_EVENT, handleLocalProfileUpdate);
+    }
+
     // Subscribe to realtime changes for immediate updates across components
     if (user) {
       const channel = supabase
@@ -98,8 +122,17 @@ export function useProfile() {
 
       return () => {
         supabase.removeChannel(channel);
+        if (typeof window !== "undefined") {
+          window.removeEventListener(PROFILE_UPDATED_EVENT, handleLocalProfileUpdate);
+        }
       };
     }
+
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener(PROFILE_UPDATED_EVENT, handleLocalProfileUpdate);
+      }
+    };
   }, [fetchProfile, user]);
 
   const updateProfile = useCallback(
@@ -115,6 +148,15 @@ export function useProfile() {
         if (error) throw error;
 
         setProfile((prev) => (prev ? { ...prev, ...updates } : null));
+
+        // Broadcast to other hook instances (Dashboard, etc.) for instant UI updates
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent<ProfileUpdatedDetail>(PROFILE_UPDATED_EVENT, {
+              detail: { userId: user.id, updates },
+            })
+          );
+        }
         
         toast({
           title: "Gespeichert",
@@ -124,9 +166,19 @@ export function useProfile() {
         return true;
       } catch (error) {
         console.error("Error updating profile:", error);
+
+        // Friendly conflict message for unique display_name constraint
+        const err = error as any;
+        const isUniqueViolation =
+          err?.code === "23505" ||
+          err?.message?.toLowerCase?.().includes("duplicate") ||
+          err?.message?.toLowerCase?.().includes("unique");
+
         toast({
           title: "Fehler",
-          description: "Einstellungen konnten nicht gespeichert werden.",
+          description: isUniqueViolation
+            ? "Dieser Anzeigename ist bereits vergeben."
+            : "Einstellungen konnten nicht gespeichert werden.",
           variant: "destructive",
         });
         return false;
