@@ -94,7 +94,7 @@ const quickActions = [
     title: "Mein Plan",
     description: "Dein personalisierter Looksmax-Plan",
     href: "/plan",
-    color: "bg-teal-500/10 text-teal-600 dark:text-teal-400",
+    color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
     premium: true,
   },
   {
@@ -102,7 +102,7 @@ const quickActions = [
     title: "Fortschritt",
     description: "Verfolge deine Entwicklung",
     href: "/progress",
-    color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    color: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
     premium: true,
   },
   {
@@ -110,7 +110,7 @@ const quickActions = [
     title: "AI Coach",
     description: "Stelle Fragen an deinen Coach",
     href: "/coach",
-    color: "bg-green-500/10 text-green-600 dark:text-green-400",
+    color: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
     premium: true,
   },
 ];
@@ -809,11 +809,11 @@ const Dashboard = () => {
                 
                 const featureScores = [
                   { key: "face_symmetry", label: "Gesichtssymmetrie", score: isPremiumUser ? extractScore(detailedResults?.face_symmetry, baseScore + 0.3) : 7.2, color: "bg-emerald-500", iconBg: "bg-emerald-500/20", iconColor: "text-emerald-500", Icon: Hexagon, issues: extractIssues(detailedResults?.face_symmetry), details: extractDetails(detailedResults?.face_symmetry) },
-                  { key: "jawline", label: "Jawline Definition", score: isPremiumUser ? extractScore(detailedResults?.jawline, baseScore - 0.2) : 6.8, color: "bg-teal-500", iconBg: "bg-teal-500/20", iconColor: "text-teal-500", Icon: Square, issues: extractIssues(detailedResults?.jawline), details: extractDetails(detailedResults?.jawline) },
-                  { key: "eyes", label: "Augenbereich", score: isPremiumUser ? extractScore(detailedResults?.eyes || detailedResults?.eye_area, baseScore + 0.5) : 7.5, color: "bg-green-500", iconBg: "bg-green-500/20", iconColor: "text-green-500", Icon: Eye, issues: extractIssues(detailedResults?.eyes || detailedResults?.eye_area), details: extractDetails(detailedResults?.eyes || detailedResults?.eye_area) },
-                  { key: "skin", label: "Hautqualität", score: isPremiumUser ? extractScore(detailedResults?.skin || detailedResults?.skin_quality, baseScore - 0.5) : 5.9, color: "bg-lime-500", iconBg: "bg-lime-500/20", iconColor: "text-lime-500", Icon: Droplets, issues: extractIssues(detailedResults?.skin || detailedResults?.skin_quality), details: extractDetails(detailedResults?.skin || detailedResults?.skin_quality) },
-                  { key: "hair", label: "Haare & Styling", score: isPremiumUser ? extractScore(detailedResults?.hair || detailedResults?.hair_styling, baseScore - 0.3) : 6.4, color: "bg-cyan-500", iconBg: "bg-cyan-500/20", iconColor: "text-cyan-500", Icon: Scissors, issues: extractIssues(detailedResults?.hair || detailedResults?.hair_styling), details: extractDetails(detailedResults?.hair || detailedResults?.hair_styling) },
-                  { key: "overall_vibe", label: "Ausstrahlung", score: isPremiumUser ? extractScore(detailedResults?.overall_vibe, baseScore) : 6.5, color: "bg-emerald-400", iconBg: "bg-emerald-400/20", iconColor: "text-emerald-400", Icon: Flame, issues: extractIssues(detailedResults?.overall_vibe), details: extractDetails(detailedResults?.overall_vibe) },
+                  { key: "jawline", label: "Jawline Definition", score: isPremiumUser ? extractScore(detailedResults?.jawline, baseScore - 0.2) : 6.8, color: "bg-blue-500", iconBg: "bg-blue-500/20", iconColor: "text-blue-500", Icon: Square, issues: extractIssues(detailedResults?.jawline), details: extractDetails(detailedResults?.jawline) },
+                  { key: "eyes", label: "Augenbereich", score: isPremiumUser ? extractScore(detailedResults?.eyes || detailedResults?.eye_area, baseScore + 0.5) : 7.5, color: "bg-purple-500", iconBg: "bg-purple-500/20", iconColor: "text-purple-500", Icon: Eye, issues: extractIssues(detailedResults?.eyes || detailedResults?.eye_area), details: extractDetails(detailedResults?.eyes || detailedResults?.eye_area) },
+                  { key: "skin", label: "Hautqualität", score: isPremiumUser ? extractScore(detailedResults?.skin || detailedResults?.skin_quality, baseScore - 0.5) : 5.9, color: "bg-orange-500", iconBg: "bg-orange-500/20", iconColor: "text-orange-500", Icon: Droplets, issues: extractIssues(detailedResults?.skin || detailedResults?.skin_quality), details: extractDetails(detailedResults?.skin || detailedResults?.skin_quality) },
+                  { key: "hair", label: "Haare & Styling", score: isPremiumUser ? extractScore(detailedResults?.hair || detailedResults?.hair_styling, baseScore - 0.3) : 6.4, color: "bg-pink-500", iconBg: "bg-pink-500/20", iconColor: "text-pink-500", Icon: Scissors, issues: extractIssues(detailedResults?.hair || detailedResults?.hair_styling), details: extractDetails(detailedResults?.hair || detailedResults?.hair_styling) },
+                  { key: "overall_vibe", label: "Ausstrahlung", score: isPremiumUser ? extractScore(detailedResults?.overall_vibe, baseScore) : 6.5, color: "bg-amber-500", iconBg: "bg-amber-500/20", iconColor: "text-amber-500", Icon: Flame, issues: extractIssues(detailedResults?.overall_vibe), details: extractDetails(detailedResults?.overall_vibe) },
                 ];
                 
                 return featureScores.map((item, index) => {
