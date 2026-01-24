@@ -133,8 +133,8 @@ export default {
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(0, 100%, 50%, 0.2)" },
-          "50%": { boxShadow: "0 0 40px hsl(0, 100%, 50%, 0.4)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary) / 0.2)" },
+          "50%": { boxShadow: "0 0 40px hsl(var(--primary) / 0.4)" },
         },
         "progress-glow": {
           "0%, 100%": { 
@@ -222,7 +222,7 @@ export default {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "glow-gradient": "radial-gradient(ellipse at center, hsl(0, 100%, 50%, 0.15) 0%, transparent 70%)",
+        "glow-gradient": "radial-gradient(ellipse at center, hsl(var(--primary) / 0.15) 0%, transparent 70%)",
       },
     },
   },
