@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const Hero = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const [scrollY, setScrollY] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -26,35 +27,61 @@ const Hero = () => {
     return () => observer.disconnect();
   }, []);
 
+  // Parallax scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      // Only update if we're in the hero section area for performance
+      if (window.scrollY < window.innerHeight * 1.5) {
+        setScrollY(window.scrollY);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <section 
       ref={sectionRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      {/* Background Effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
+      {/* Background Effects with Parallax */}
+      <div 
+        className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50 transition-transform duration-100 will-change-transform"
+        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+      />
+      <div 
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl transition-transform duration-100 will-change-transform"
+        style={{ transform: `translate(-50%, ${scrollY * 0.15}px)` }}
+      />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       
-      {/* Static decorative elements */}
+      {/* Static decorative elements with parallax */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-primary/20 rounded-full"
+            className="absolute w-2 h-2 bg-primary/20 rounded-full transition-transform duration-100 will-change-transform"
             style={{ 
               left: `${15 + i * 15}%`, 
               top: `${20 + (i % 3) * 25}%`,
-              opacity: 0.3 + (i * 0.1)
+              opacity: 0.3 + (i * 0.1),
+              transform: `translateY(${scrollY * (0.05 + i * 0.02)}px)`
             }}
           />
         ))}
       </div>
       
       {/* Grid Pattern - Dark Mode */}
-      <div className="absolute inset-0 dark:block hidden bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]" />
+      <div 
+        className="absolute inset-0 dark:block hidden bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)] transition-transform duration-100 will-change-transform"
+        style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+      />
       {/* Grid Pattern - Light Mode */}
-      <div className="absolute inset-0 dark:hidden block bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]" />
+      <div 
+        className="absolute inset-0 dark:hidden block bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)] transition-transform duration-100 will-change-transform"
+        style={{ transform: `translateY(${scrollY * 0.05}px)` }}
+      />
 
       <div className="container relative z-10 px-4 pt-20">
         <div className="max-w-4xl mx-auto text-center">
