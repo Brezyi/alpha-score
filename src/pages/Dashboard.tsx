@@ -419,20 +419,23 @@ const Dashboard = () => {
                 </div>
               </div>
               
-              {/* Score Change Indicator */}
+              {/* Score Change Indicator - centered below */}
               {scoreDiff !== null && (
-                <div className={`mt-3 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${
-                  parseFloat(scoreDiff) > 0 ? "bg-green-500/10 text-green-500" : 
-                  parseFloat(scoreDiff) < 0 ? "bg-red-500/10 text-red-500" : "bg-muted text-muted-foreground"
-                }`}>
-                  {parseFloat(scoreDiff) > 0 ? (
-                    <ArrowUpRight className="w-4 h-4" />
-                  ) : parseFloat(scoreDiff) < 0 ? (
-                    <ArrowDownRight className="w-4 h-4" />
-                  ) : (
-                    <Minus className="w-4 h-4" />
-                  )}
-                  {parseFloat(scoreDiff) > 0 ? "+" : ""}{scoreDiff} seit letzter Analyse
+                <div className="mt-3 flex justify-center">
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
+                    parseFloat(scoreDiff) > 0 ? "bg-green-500/10 text-green-500" : 
+                    parseFloat(scoreDiff) < 0 ? "bg-red-500/10 text-red-500" : "bg-muted text-muted-foreground"
+                  }`}>
+                    {parseFloat(scoreDiff) > 0 ? (
+                      <ArrowUpRight className="w-4 h-4" />
+                    ) : parseFloat(scoreDiff) < 0 ? (
+                      <ArrowDownRight className="w-4 h-4" />
+                    ) : (
+                      <Minus className="w-4 h-4" />
+                    )}
+                    <span>{parseFloat(scoreDiff) > 0 ? "+" : ""}{scoreDiff}</span>
+                    <span className="text-muted-foreground font-normal">seit letzter Analyse</span>
+                  </div>
                 </div>
               )}
             </div>
