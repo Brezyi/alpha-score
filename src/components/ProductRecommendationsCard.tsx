@@ -71,9 +71,14 @@ export const ProductRecommendationsCard = ({
 
   const handleBuyClick = (product: Product, e?: React.MouseEvent) => {
     e?.stopPropagation();
-    // Open Google search for buying the product
-    const searchQuery = encodeURIComponent(`${product.brand} ${product.name} kaufen`);
-    window.open(`https://www.google.com/search?q=${searchQuery}`, "_blank");
+    
+    // Use affiliate link if available, otherwise fallback to Amazon search
+    if (product.affiliateLink) {
+      window.open(product.affiliateLink, "_blank", "noopener,noreferrer");
+    } else {
+      const searchQuery = encodeURIComponent(`${product.brand} ${product.name}`);
+      window.open(`https://www.amazon.de/s?k=${searchQuery}&tag=looksmaxing-21`, "_blank", "noopener,noreferrer");
+    }
   };
 
   if (loading) {
