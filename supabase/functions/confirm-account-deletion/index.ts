@@ -95,23 +95,69 @@ serve(async (req) => {
       .update({ used: true })
       .eq("token", token);
 
-    // Delete user data from all tables
+    // Delete user data from all tables (order matters due to foreign keys)
     const deletionSteps = [
-      { table: "mfa_backup_codes", column: "user_id" },
+      // Coach data
+      { table: "coach_messages", column: "conversation_id", via: "coach_conversations" },
+      { table: "coach_conversations", column: "user_id" },
+      // Gamification
+      { table: "user_challenge_progress", column: "user_id" },
+      { table: "user_achievements", column: "user_id" },
+      { table: "user_xp", column: "user_id" },
+      { table: "user_milestones", column: "user_id" },
       { table: "user_streaks", column: "user_id" },
+      // Tasks & Support
       { table: "user_tasks", column: "user_id" },
       { table: "ticket_messages", column: "sender_id" },
       { table: "support_tickets", column: "user_id" },
+      // Testimonials & Reports
       { table: "user_testimonials", column: "user_id" },
+      { table: "reports", column: "reporter_id" },
+      // Promo codes
+      { table: "promo_code_redemptions", column: "user_id" },
+      // Analyses
       { table: "analyses", column: "user_id" },
+      // Subscriptions & Payments
       { table: "subscriptions", column: "user_id" },
       { table: "payments", column: "user_id" },
+      // Security
+      { table: "mfa_backup_codes", column: "user_id" },
+      { table: "admin_passwords", column: "user_id" },
+      { table: "admin_password_reset_tokens", column: "user_id" },
+      { table: "push_subscriptions", column: "user_id" },
+      { table: "user_sensitive_data", column: "user_id" },
+      { table: "user_email_preferences", column: "user_id" },
+      // Profile & Roles (last)
       { table: "profiles", column: "user_id" },
       { table: "user_roles", column: "user_id" },
-      { table: "failed_login_attempts", column: "email" }, // Special case: uses email
+      // Failed logins (by email)
+      { table: "failed_login_attempts", column: "email" },
     ];
 
+    // First, delete coach_messages via coach_conversations (foreign key constraint)
+    try {
+      const { data: conversations } = await supabaseAdmin
+        .from("coach_conversations")
+        .select("id")
+        .eq("user_id", userId);
+      
+      if (conversations?.length) {
+        const conversationIds = conversations.map(c => c.id);
+        await supabaseAdmin
+          .from("coach_messages")
+          .delete()
+          .in("conversation_id", conversationIds);
+        logStep("Deleted coach_messages", { count: conversationIds.length });
+      }
+    } catch (e) {
+      logStep("Error deleting coach_messages", e);
+    }
+
+    // Delete from all other tables
     for (const step of deletionSteps) {
+      // Skip coach_messages as we handled it above
+      if (step.table === "coach_messages") continue;
+      
       try {
         if (step.table === "failed_login_attempts") {
           await supabaseAdmin.from(step.table).delete().eq(step.column, userEmail);
