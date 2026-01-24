@@ -12,7 +12,8 @@ import {
   Droplets,
   Scissors,
   Dumbbell,
-  Eye
+  Eye,
+  Lock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -500,35 +501,56 @@ const ProgressPreview = () => (
       </div>
     </div>
 
-    {/* Milestones */}
+    {/* Achievements - styled like the in-app AchievementsGrid */}
     <div className="glass-card p-6 rounded-2xl">
-      <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-        <Star className="w-5 h-5 text-primary" />
-        Meilensteine
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          🏆 Achievements
+        </h3>
+        <span className="text-sm text-muted-foreground">
+          3/5 freigeschaltet
+        </span>
+      </div>
       
-      <div className="space-y-3">
+      <div className="grid grid-cols-5 gap-3">
         {[
-          { emoji: "🎯", title: "Erste Analyse", unlocked: true },
-          { emoji: "📈", title: "+0.5 Score erreicht", unlocked: true },
-          { emoji: "🔥", title: "7-Tage Streak", unlocked: true },
-          { emoji: "⭐", title: "Score 7.0 erreicht", unlocked: false },
-          { emoji: "🏆", title: "Top 10% erreicht", unlocked: false },
-        ].map((milestone) => (
-          <div 
-            key={milestone.title}
-            className={`flex items-center gap-3 p-3 rounded-xl ${
-              milestone.unlocked ? "bg-primary/10" : "bg-muted/30 opacity-60"
+          { emoji: "📸", title: "Erste Schritte", description: "Schließe deine erste Analyse ab", xp: 50, unlocked: true },
+          { emoji: "⬆️", title: "Erste Verbesserung", description: "Verbessere deinen Score", xp: 100, unlocked: true },
+          { emoji: "🔥", title: "Wochenkrieger", description: "7 Tage Streak erreicht", xp: 100, unlocked: true },
+          { emoji: "🌟", title: "+1 Punkt", description: "Score um 1 Punkt verbessert", xp: 200, unlocked: false },
+          { emoji: "👑", title: "Monatsmeister", description: "30 Tage Streak erreicht", xp: 500, unlocked: false },
+        ].map((achievement, index) => (
+          <motion.div 
+            key={achievement.title}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.05 }}
+            className={`relative aspect-square rounded-xl flex items-center justify-center text-2xl cursor-pointer transition-all ${
+              achievement.unlocked 
+                ? "bg-primary/10 border-2 border-primary/30 hover:scale-110 hover:border-primary/50" 
+                : "bg-muted/50 border-2 border-transparent grayscale opacity-50"
             }`}
+            title={`${achievement.title}: ${achievement.description} (+${achievement.xp} XP)`}
           >
-            <span className="text-2xl">{milestone.emoji}</span>
-            <span className={`font-medium ${milestone.unlocked ? "" : "text-muted-foreground"}`}>
-              {milestone.title}
-            </span>
-            {milestone.unlocked && <CheckCircle2 className="w-5 h-5 text-primary ml-auto" />}
-          </div>
+            {achievement.unlocked ? (
+              <span>{achievement.emoji}</span>
+            ) : (
+              <div className="relative">
+                <span className="blur-[2px]">{achievement.emoji}</span>
+                <Lock className="absolute inset-0 m-auto w-4 h-4 text-muted-foreground" />
+              </div>
+            )}
+            
+            {achievement.unlocked && (
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
+            )}
+          </motion.div>
         ))}
       </div>
+      
+      <p className="text-xs text-muted-foreground mt-3 text-center">
+        Schalte Achievements frei und sammle XP
+      </p>
     </div>
   </motion.div>
 );
