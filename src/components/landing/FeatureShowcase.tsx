@@ -153,7 +153,7 @@ const PotentialPreview = () => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.4 }}
-      className="grid md:grid-cols-2 gap-8 items-center"
+      className="flex flex-col lg:flex-row gap-8 items-center justify-center"
     >
       {/* Before/After Slider */}
       <div
