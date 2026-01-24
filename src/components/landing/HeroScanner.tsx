@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import scannerStatue from "@/assets/scanner-statue.jpg";
+import scannerStatue from "@/assets/scanner-statue.png";
 
 // Facial analysis measurements with Greek ratios
 const measurements = [
