@@ -117,7 +117,7 @@ export function useSubscription() {
     };
   }, [checkSubscription]);
 
-  const createCheckout = async (plan: "premium" | "lifetime") => {
+  const createCheckout = async (plan: "premium" | "lifetime", discountCode?: string) => {
     try {
       const priceConfig = STRIPE_PRICES[plan];
       
@@ -125,6 +125,7 @@ export function useSubscription() {
         body: {
           priceId: priceConfig.priceId,
           mode: priceConfig.mode,
+          discountCode: discountCode || undefined,
         },
       });
 

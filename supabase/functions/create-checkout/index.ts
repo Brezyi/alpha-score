@@ -25,8 +25,8 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const { priceId, mode } = await req.json();
-    logStep("Request body", { priceId, mode });
+    const { priceId, mode, discountCode } = await req.json();
+    logStep("Request body", { priceId, mode, discountCode: discountCode ? "provided" : "none" });
 
     const authHeader = req.headers.get("Authorization")!;
     const token = authHeader.replace("Bearer ", "");
@@ -48,7 +48,8 @@ serve(async (req) => {
 
     const origin = req.headers.get("origin") || "https://d30bdb3d-7c6b-4134-bde1-3d141f10bbeb.lovableproject.com";
 
-    const session = await stripe.checkout.sessions.create({
+    // Build session options
+    const sessionOptions: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
       line_items: [
@@ -63,7 +64,40 @@ serve(async (req) => {
       metadata: {
         user_id: user.id,
       },
-    });
+      allow_promotion_codes: true, // Allow users to enter codes on Stripe checkout page
+    };
+
+    // If a discount code is provided, validate and apply it
+    if (discountCode && discountCode.trim()) {
+      try {
+        // Try to find the coupon by ID (Stripe coupon codes)
+        const coupon = await stripe.coupons.retrieve(discountCode.trim());
+        if (coupon && coupon.valid) {
+          sessionOptions.discounts = [{ coupon: coupon.id }];
+          logStep("Discount code applied", { couponId: coupon.id, percentOff: coupon.percent_off, amountOff: coupon.amount_off });
+        }
+      } catch (couponError) {
+        // Coupon not found or invalid - try as promotion code
+        try {
+          const promotionCodes = await stripe.promotionCodes.list({
+            code: discountCode.trim(),
+            active: true,
+            limit: 1,
+          });
+          
+          if (promotionCodes.data.length > 0) {
+            sessionOptions.discounts = [{ promotion_code: promotionCodes.data[0].id }];
+            logStep("Promotion code applied", { promoCodeId: promotionCodes.data[0].id });
+          } else {
+            logStep("Discount code not found or invalid", { code: discountCode });
+          }
+        } catch (promoError) {
+          logStep("Promotion code lookup failed", { error: String(promoError) });
+        }
+      }
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionOptions);
 
     logStep("Checkout session created", { sessionId: session.id, url: session.url });
 
