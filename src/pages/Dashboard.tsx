@@ -164,6 +164,7 @@ const Dashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [analysisToDelete, setAnalysisToDelete] = useState<Analysis | null>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [viewedDetails, setViewedDetails] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, subscriptionType, subscriptionEnd } = useSubscription();
@@ -566,9 +567,17 @@ const Dashboard = () => {
                 
                 return featureScores.map((item, index) => {
                   const hasDetails = isPremiumUser && (item.issues.length > 0 || item.details);
+                  const hasBeenViewed = viewedDetails.has(item.key);
+                  const showPulse = hasDetails && !hasBeenViewed;
+                  
+                  const handleOpenChange = (open: boolean) => {
+                    if (open && !hasBeenViewed) {
+                      setViewedDetails(prev => new Set([...prev, item.key]));
+                    }
+                  };
                   
                   return (
-                    <Collapsible key={item.key}>
+                    <Collapsible key={item.key} onOpenChange={handleOpenChange}>
                       <div 
                         className="p-4 rounded-xl bg-card border border-border/50 opacity-0 animate-fade-in"
                         style={{ animationDelay: `${600 + index * 50}ms`, animationFillMode: "forwards" }}
@@ -578,7 +587,9 @@ const Dashboard = () => {
                             <item.Icon className={`w-4 h-4 ${item.iconColor}`} />
                             {hasDetails && (
                               <>
-                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping opacity-75" />
+                                {showPulse && (
+                                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping opacity-75" />
+                                )}
                                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
                                   <Info className="w-2 h-2 text-primary-foreground" />
                                 </span>
@@ -588,7 +599,7 @@ const Dashboard = () => {
                           <div className="flex-1 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">{item.label}</span>
-                              {hasDetails && (
+                              {hasDetails && !hasBeenViewed && (
                                 <span className="px-1.5 py-0.5 text-[10px] font-medium bg-primary/15 text-primary rounded-full">
                                   Details
                                 </span>
