@@ -410,7 +410,7 @@ const Login = () => {
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-16">
           <div className="text-center max-w-md">
-            <div className="text-8xl font-black text-gradient mb-6">7.8</div>
+            <div className="text-8xl font-black text-gradient mb-6">8.6</div>
             <p className="text-xl font-semibold mb-2">Dein Potenzial wartet</p>
             <p className="text-muted-foreground">
               Tracke deinen Fortschritt und erreiche deinen Ziel-Score.
