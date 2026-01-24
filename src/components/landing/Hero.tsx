@@ -177,7 +177,7 @@ const Hero = () => {
             )}
             style={{ transitionDelay: "500ms" }}
           >
-            Systematisch. Messbar. Wissenschaftlich.
+            Systematisch. Messbar. KI-gestützt.
           </p>
 
           <p 
