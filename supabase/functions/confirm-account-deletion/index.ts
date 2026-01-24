@@ -1,5 +1,24 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+
+const sendEmail = async (to: string, subject: string, html: string, from: string) => {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({ from, to: [to], subject, html }),
+  });
+  
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Failed to send email: ${error}`);
+  }
+  
+  return response.json();
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +32,76 @@ interface ConfirmDeleteBody {
 
 const logStep = (step: string, details?: unknown) => {
   console.log(`[CONFIRM-ACCOUNT-DELETION] ${step}`, details ? JSON.stringify(details) : "");
+};
+
+const generateDeletionConfirmationEmail = (appName: string) => {
+  const deletedDataCategories = [
+    { icon: "📊", title: "Analysen & Ergebnisse", items: ["Alle Gesichtsanalysen", "Score-Verlauf", "Detaillierte Bewertungen", "Potenzial-Bilder"] },
+    { icon: "📸", title: "Medien & Uploads", items: ["Hochgeladene Fotos", "Profilbilder", "Analyse-Bilder"] },
+    { icon: "💬", title: "Kommunikation", items: ["KI-Coach Gespräche", "Support-Tickets", "Nachrichten"] },
+    { icon: "🎮", title: "Gamification", items: ["XP & Level", "Achievements", "Tägliche Challenges", "Streak-Daten", "Meilensteine"] },
+    { icon: "📝", title: "Nutzerdaten", items: ["Profil & Einstellungen", "Aufgaben & To-Dos", "E-Mail-Präferenzen", "Testimonials"] },
+    { icon: "💳", title: "Zahlungen & Abos", items: ["Zahlungshistorie", "Abonnement-Daten", "Promo-Code-Einlösungen"] },
+    { icon: "🔐", title: "Sicherheit", items: ["2FA & Backup-Codes", "Admin-Passwörter", "Push-Benachrichtigungen", "Sensible Daten"] },
+  ];
+
+  const categoriesHtml = deletedDataCategories.map(cat => `
+    <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin-bottom: 12px;">
+      <div style="font-weight: 600; margin-bottom: 8px; font-size: 14px;">
+        ${cat.icon} ${cat.title}
+      </div>
+      <ul style="margin: 0; padding-left: 20px; color: #6b7280; font-size: 13px;">
+        ${cat.items.map(item => `<li style="margin-bottom: 4px;">✓ ${item}</li>`).join("")}
+      </ul>
+    </div>
+  `).join("");
+
+  return `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f4f4f5; margin: 0; padding: 20px;">
+      <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); padding: 32px; text-align: center;">
+          <div style="width: 64px; height: 64px; background: rgba(255,255,255,0.2); border-radius: 50%; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+            <span style="font-size: 32px;">✓</span>
+          </div>
+          <h1 style="color: white; margin: 0; font-size: 24px;">Konto erfolgreich gelöscht</h1>
+        </div>
+        
+        <div style="padding: 32px;">
+          <p style="color: #374151; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+            Dein Konto bei <strong>${appName}</strong> wurde erfolgreich gelöscht. Alle zugehörigen Daten wurden gemäß DSGVO vollständig und unwiderruflich aus unseren Systemen entfernt.
+          </p>
+          
+          <h2 style="color: #1f2937; font-size: 16px; margin-bottom: 16px;">Folgende Daten wurden gelöscht:</h2>
+          
+          ${categoriesHtml}
+          
+          <div style="background: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 16px; margin-top: 24px;">
+            <p style="color: #065f46; font-size: 14px; margin: 0;">
+              ✓ Alle Daten wurden gemäß DSGVO vollständig und unwiderruflich aus unseren Systemen entfernt.
+            </p>
+          </div>
+          
+          <p style="color: #6b7280; font-size: 14px; margin-top: 24px; text-align: center;">
+            Vielen Dank, dass du unseren Service genutzt hast.<br>
+            Du kannst jederzeit ein neues Konto erstellen.
+          </p>
+        </div>
+        
+        <div style="background: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+          <p style="color: #9ca3af; font-size: 12px; margin: 0;">
+            Diese E-Mail wurde automatisch versendet. Bitte antworte nicht auf diese Nachricht.
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 };
 
 serve(async (req) => {
@@ -215,6 +304,36 @@ serve(async (req) => {
       _new_values: null,
       _metadata: { deletion_confirmed: true },
     });
+
+    // Get app name for email
+    let appName = "Glow Up AI";
+    try {
+      const { data: settingsData } = await supabaseAdmin
+        .from("system_settings")
+        .select("value")
+        .eq("key", "app_name")
+        .single();
+      if (settingsData?.value) {
+        appName = String(settingsData.value);
+      }
+    } catch (e) {
+      logStep("Could not fetch app name, using default");
+    }
+
+    // Send confirmation email before deleting the user
+    try {
+      const emailHtml = generateDeletionConfirmationEmail(appName);
+      const emailResponse = await sendEmail(
+        userEmail,
+        `Dein Konto wurde erfolgreich gelöscht - ${appName}`,
+        emailHtml,
+        `${appName} <noreply@glowupai.de>`
+      );
+      logStep("Deletion confirmation email sent", emailResponse);
+    } catch (emailError: any) {
+      logStep("Error sending confirmation email", emailError.message);
+      // Continue with deletion even if email fails
+    }
 
     // Finally, delete the auth user
     const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(userId);
