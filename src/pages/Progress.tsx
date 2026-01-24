@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useStreak } from "@/hooks/useStreak";
+import { useGamification } from "@/hooks/useGamification";
 import { generateSignedUrls } from "@/hooks/useSignedImageUrl";
 import { ProgressImage } from "@/components/ProgressImage";
 import { 
@@ -51,6 +52,7 @@ interface Analysis {
 interface UserMilestone {
   milestone_key: string;
   achieved_at: string;
+  xp_reward?: number;
 }
 
 export default function Progress() {
@@ -63,6 +65,7 @@ export default function Progress() {
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
   const { currentStreak, longestStreak } = useStreak();
+  const { addXp } = useGamification();
   const { shouldReduce, containerVariants, itemVariants, cardVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -132,8 +135,8 @@ export default function Progress() {
     }
   }, [user]);
 
-  // Save new milestone
-  const saveMilestone = useCallback(async (key: string) => {
+  // Save new milestone and award XP
+  const saveMilestone = useCallback(async (key: string, xpReward: number) => {
     if (!user) return;
     
     // Check if already saved
@@ -145,12 +148,17 @@ export default function Progress() {
         .insert({ user_id: user.id, milestone_key: key });
       
       if (!error) {
-        setUserMilestones(prev => [...prev, { milestone_key: key, achieved_at: new Date().toISOString() }]);
+        setUserMilestones(prev => [...prev, { milestone_key: key, achieved_at: new Date().toISOString(), xp_reward: xpReward }]);
+        
+        // Award XP for milestone achievement
+        if (xpReward > 0) {
+          await addXp(xpReward, `milestone_${key}`);
+        }
       }
     } catch (err) {
       console.error("Error saving milestone:", err);
     }
-  }, [user, userMilestones]);
+  }, [user, userMilestones, addXp]);
 
   useEffect(() => {
     if (user) {
@@ -921,36 +929,36 @@ export default function Progress() {
                     animate="visible"
                   >
                     {(() => {
-                      // Define milestone tiers per category
+                      // Define milestone tiers per category with XP rewards
                       const analysisMilestones = [
-                        { key: "first_analysis", emoji: "🎯", title: "Erste Analyse", threshold: 1 },
-                        { key: "5_analyses", emoji: "📊", title: "5 Analysen", threshold: 5 },
-                        { key: "10_analyses", emoji: "🔬", title: "10 Analysen", threshold: 10 },
-                        { key: "25_analyses", emoji: "🧪", title: "25 Analysen", threshold: 25 },
-                        { key: "50_analyses", emoji: "💎", title: "50 Analysen", threshold: 50 },
+                        { key: "first_analysis", emoji: "🎯", title: "Erste Analyse", threshold: 1, xpReward: 50 },
+                        { key: "5_analyses", emoji: "📊", title: "5 Analysen", threshold: 5, xpReward: 100 },
+                        { key: "10_analyses", emoji: "🔬", title: "10 Analysen", threshold: 10, xpReward: 150 },
+                        { key: "25_analyses", emoji: "🧪", title: "25 Analysen", threshold: 25, xpReward: 250 },
+                        { key: "50_analyses", emoji: "💎", title: "50 Analysen", threshold: 50, xpReward: 500 },
                       ];
                       
                       const streakMilestones = [
-                        { key: "streak_7_days", emoji: "🔥", title: "7-Tage Streak", threshold: 7 },
-                        { key: "streak_14_days", emoji: "🔥", title: "14-Tage Streak", threshold: 14 },
-                        { key: "streak_30_days", emoji: "🔥", title: "30-Tage Streak", threshold: 30 },
-                        { key: "streak_60_days", emoji: "🔥", title: "60-Tage Streak", threshold: 60 },
-                        { key: "streak_100_days", emoji: "🔥", title: "100-Tage Streak", threshold: 100 },
+                        { key: "streak_7_days", emoji: "🔥", title: "7-Tage Streak", threshold: 7, xpReward: 75 },
+                        { key: "streak_14_days", emoji: "🔥", title: "14-Tage Streak", threshold: 14, xpReward: 150 },
+                        { key: "streak_30_days", emoji: "🔥", title: "30-Tage Streak", threshold: 30, xpReward: 300 },
+                        { key: "streak_60_days", emoji: "🔥", title: "60-Tage Streak", threshold: 60, xpReward: 500 },
+                        { key: "streak_100_days", emoji: "🔥", title: "100-Tage Streak", threshold: 100, xpReward: 1000 },
                       ];
                       
                       const scoreMilestones = [
-                        { key: "score_6", emoji: "⭐", title: "Score 6.0 erreicht", threshold: 6.0 },
-                        { key: "score_7", emoji: "⭐", title: "Score 7.0 erreicht", threshold: 7.0 },
-                        { key: "score_8", emoji: "🌟", title: "Score 8.0 erreicht", threshold: 8.0 },
-                        { key: "top_10_percent", emoji: "🏆", title: "Top 10% (8.5+)", threshold: 8.5 },
-                        { key: "score_9", emoji: "👑", title: "Score 9.0 erreicht", threshold: 9.0 },
+                        { key: "score_6", emoji: "⭐", title: "Score 6.0 erreicht", threshold: 6.0, xpReward: 100 },
+                        { key: "score_7", emoji: "⭐", title: "Score 7.0 erreicht", threshold: 7.0, xpReward: 200 },
+                        { key: "score_8", emoji: "🌟", title: "Score 8.0 erreicht", threshold: 8.0, xpReward: 400 },
+                        { key: "top_10_percent", emoji: "🏆", title: "Top 10% (8.5+)", threshold: 8.5, xpReward: 750 },
+                        { key: "score_9", emoji: "👑", title: "Score 9.0 erreicht", threshold: 9.0, xpReward: 1000 },
                       ];
                       
                       const improvementMilestones = [
-                        { key: "score_improvement_05", emoji: "📈", title: "+0.5 Verbesserung", threshold: 0.5 },
-                        { key: "score_improvement_1", emoji: "📈", title: "+1.0 Verbesserung", threshold: 1.0 },
-                        { key: "score_improvement_2", emoji: "🚀", title: "+2.0 Verbesserung", threshold: 2.0 },
-                        { key: "score_improvement_3", emoji: "💫", title: "+3.0 Verbesserung", threshold: 3.0 },
+                        { key: "score_improvement_05", emoji: "📈", title: "+0.5 Verbesserung", threshold: 0.5, xpReward: 50 },
+                        { key: "score_improvement_1", emoji: "📈", title: "+1.0 Verbesserung", threshold: 1.0, xpReward: 100 },
+                        { key: "score_improvement_2", emoji: "🚀", title: "+2.0 Verbesserung", threshold: 2.0, xpReward: 250 },
+                        { key: "score_improvement_3", emoji: "💫", title: "+3.0 Verbesserung", threshold: 3.0, xpReward: 500 },
                       ];
                       
                       // Get current values
@@ -997,9 +1005,9 @@ export default function Progress() {
                         const savedMilestone = userMilestones.find(m => m.milestone_key === milestone.key);
                         const achievedAt = savedMilestone?.achieved_at;
                         
-                        // Auto-save newly achieved milestones
+                        // Auto-save newly achieved milestones and award XP
                         if (milestone.achieved && !savedMilestone) {
-                          saveMilestone(milestone.key);
+                          saveMilestone(milestone.key, milestone.xpReward);
                         }
                         
                         return (
@@ -1014,9 +1022,19 @@ export default function Progress() {
                           >
                             <span className="text-2xl">{milestone.emoji}</span>
                             <div className="flex flex-col flex-1">
-                              <span className={cn("font-medium", !milestone.achieved && "text-muted-foreground")}>
-                                {milestone.title}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className={cn("font-medium", !milestone.achieved && "text-muted-foreground")}>
+                                  {milestone.title}
+                                </span>
+                                <span className={cn(
+                                  "text-xs px-1.5 py-0.5 rounded-full font-medium",
+                                  milestone.achieved 
+                                    ? "bg-primary/20 text-primary" 
+                                    : "bg-muted text-muted-foreground"
+                                )}>
+                                  +{milestone.xpReward} XP
+                                </span>
+                              </div>
                               {achievedAt ? (
                                 <span className="text-xs text-muted-foreground">
                                   Erreicht am {format(new Date(achievedAt), "dd. MMM yyyy", { locale: de })}
