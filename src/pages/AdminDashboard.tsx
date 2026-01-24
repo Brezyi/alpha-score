@@ -18,7 +18,8 @@ import {
   MapPin,
   Ticket,
   Key,
-  Percent
+  Percent,
+  RotateCcw
 } from "lucide-react";
 
 interface DashboardStat {
@@ -454,6 +455,19 @@ export default function AdminDashboard() {
                   <p className="font-semibold">Admin-Passwörter</p>
                   <p className="text-sm text-muted-foreground">
                     Admin-Zugänge verwalten
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="bg-gradient-to-br from-orange-500/10 to-orange-500/5 border-orange-500/30 hover:border-orange-500/50 transition-colors cursor-pointer"
+                onClick={() => navigate("/admin/refunds")}
+              >
+                <CardContent className="p-6">
+                  <RotateCcw className="w-8 h-8 text-orange-500 mb-3" />
+                  <p className="font-semibold">Widerrufe</p>
+                  <p className="text-sm text-muted-foreground">
+                    Widerrufsanträge verwalten
                   </p>
                 </CardContent>
               </Card>

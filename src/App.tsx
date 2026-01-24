@@ -43,6 +43,7 @@ import PromoCodes from "./pages/admin/PromoCodes";
 import AdminPasswordReset from "./pages/AdminPasswordReset";
 import AdminPasswordManagement from "./pages/admin/AdminPasswordManagement";
 import StripeCoupons from "./pages/admin/StripeCoupons";
+import RefundManagement from "./pages/admin/RefundManagement";
 
 const queryClient = new QueryClient();
 
@@ -160,6 +161,14 @@ const App = () => (
                         element={
                           <ProtectedRoute requiredRole={["owner"]}>
                             <AdminPasswordManagement />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/refunds" 
+                        element={
+                          <ProtectedRoute requiredRole={["admin", "owner"]}>
+                            <RefundManagement />
                           </ProtectedRoute>
                         } 
                       />
