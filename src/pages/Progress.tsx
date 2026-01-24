@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,19 +57,31 @@ export default function Progress() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
+  const achievementsSectionRef = useRef<HTMLDivElement>(null);
   // userMilestones state removed - using achievements from useGamification
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
   const { currentStreak, longestStreak } = useStreak();
   const { addXp, achievements, loading: achievementsLoading } = useGamification();
   const { shouldReduce, containerVariants, itemVariants, cardVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       navigate("/login");
     }
   }, [user, authLoading, navigate]);
+
+  // Scroll to achievements section when hash is #achievements
+  useEffect(() => {
+    if (location.hash === "#achievements" && !loading && !achievementsLoading && achievementsSectionRef.current) {
+      setTimeout(() => {
+        achievementsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [location.hash, loading, achievementsLoading]);
 
   // Fetch analyses with signed URLs
   const fetchAnalyses = useCallback(async () => {
@@ -863,6 +875,8 @@ export default function Progress() {
             {/* Achievements Section - Full Grid with Filter */}
             {achievements.length > 0 && (
               <motion.div
+                ref={achievementsSectionRef}
+                id="achievements"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
