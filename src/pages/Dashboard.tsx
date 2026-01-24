@@ -380,7 +380,10 @@ const Dashboard = () => {
             <div className="text-center">
               <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
               <div className="relative inline-flex items-center justify-center">
-                <svg className="w-32 h-32 transform -rotate-90">
+                <svg
+                  className="w-32 h-32 transform -rotate-90 overflow-visible"
+                  viewBox="-8 -8 144 144"
+                >
                   <circle
                     cx="64"
                     cy="64"
