@@ -209,7 +209,7 @@ const Pricing = () => {
                       Wird geladen...
                     </>
                   ) : isPremium && (subscriptionType === "lifetime" || (subscriptionType === "premium" && plan.name === "Premium")) ? (
-                    "Bereits aktiviert ✓"
+                    `${subscriptionType === "lifetime" ? "Lifetime" : "Premium"} aktiviert ✓`
                   ) : (
                     plan.cta
                   )}

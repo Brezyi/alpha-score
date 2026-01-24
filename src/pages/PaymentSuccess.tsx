@@ -7,12 +7,15 @@ import { useSubscription } from "@/hooks/useSubscription";
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
-  const { checkSubscription } = useSubscription();
+  const { checkSubscription, subscriptionType } = useSubscription();
 
   useEffect(() => {
     // Refresh subscription status
     checkSubscription();
   }, [checkSubscription]);
+
+  const isLifetime = subscriptionType === "lifetime";
+  const planLabel = isLifetime ? "Lifetime" : "Premium";
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -23,13 +26,17 @@ export default function PaymentSuccess() {
           </div>
           
           <div className="flex items-center justify-center gap-2 mb-4">
-            <Crown className="w-6 h-6 text-primary" />
-            <span className="text-sm font-medium text-primary">Premium aktiviert</span>
+            {isLifetime ? (
+              <Sparkles className="w-6 h-6 text-primary" />
+            ) : (
+              <Crown className="w-6 h-6 text-primary" />
+            )}
+            <span className="text-sm font-medium text-primary">{planLabel} aktiviert</span>
           </div>
           
-          <h1 className="text-2xl font-bold mb-2">Willkommen bei Premium!</h1>
+          <h1 className="text-2xl font-bold mb-2">Willkommen bei {planLabel}!</h1>
           <p className="text-muted-foreground mb-8">
-            Dein Upgrade war erfolgreich. Du hast jetzt Zugang zu allen Premium-Features.
+            Dein Upgrade war erfolgreich. Du hast jetzt {isLifetime ? "unbegrenzten" : ""} Zugang zu allen Premium-Features.
           </p>
 
           <div className="space-y-3 text-left mb-8">
@@ -38,6 +45,7 @@ export default function PaymentSuccess() {
               "Personalisierter Looksmax-Plan",
               "AI Coach ohne Limits",
               "Progress Tracking",
+              ...(isLifetime ? ["Lebenslanger Zugang"] : []),
             ].map((feature, i) => (
               <div key={i} className="flex items-center gap-3">
                 <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
