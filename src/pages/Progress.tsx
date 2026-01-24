@@ -920,55 +920,128 @@ export default function Progress() {
                     initial="hidden"
                     animate="visible"
                   >
-                    {[
-                      { key: "first_analysis", emoji: "🎯", title: "Erste Analyse", achieved: completedAnalyses.length >= 1 },
-                      { key: "score_improvement_05", emoji: "📈", title: "+0.5 Score erreicht", achieved: totalImprovement && parseFloat(totalImprovement) >= 0.5 },
-                      { key: "streak_7_days", emoji: "🔥", title: "7-Tage Streak", achieved: currentStreak >= 7 || longestStreak >= 7 },
-                      { key: "score_7", emoji: "⭐", title: "Score 7.0 erreicht", achieved: highestScore && parseFloat(highestScore) >= 7.0 },
-                      { key: "top_10_percent", emoji: "🏆", title: "Top 10% erreicht", achieved: highestScore && parseFloat(highestScore) >= 8.5 },
-                    ].map((milestone) => {
-                      const savedMilestone = userMilestones.find(m => m.milestone_key === milestone.key);
-                      const achievedAt = savedMilestone?.achieved_at;
+                    {(() => {
+                      // Define milestone tiers per category
+                      const analysisMilestones = [
+                        { key: "first_analysis", emoji: "🎯", title: "Erste Analyse", threshold: 1 },
+                        { key: "5_analyses", emoji: "📊", title: "5 Analysen", threshold: 5 },
+                        { key: "10_analyses", emoji: "🔬", title: "10 Analysen", threshold: 10 },
+                        { key: "25_analyses", emoji: "🧪", title: "25 Analysen", threshold: 25 },
+                        { key: "50_analyses", emoji: "💎", title: "50 Analysen", threshold: 50 },
+                      ];
                       
-                      // Auto-save newly achieved milestones
-                      if (milestone.achieved && !savedMilestone) {
-                        saveMilestone(milestone.key);
-                      }
+                      const streakMilestones = [
+                        { key: "streak_7_days", emoji: "🔥", title: "7-Tage Streak", threshold: 7 },
+                        { key: "streak_14_days", emoji: "🔥", title: "14-Tage Streak", threshold: 14 },
+                        { key: "streak_30_days", emoji: "🔥", title: "30-Tage Streak", threshold: 30 },
+                        { key: "streak_60_days", emoji: "🔥", title: "60-Tage Streak", threshold: 60 },
+                        { key: "streak_100_days", emoji: "🔥", title: "100-Tage Streak", threshold: 100 },
+                      ];
                       
-                      return (
-                        <motion.div 
-                          key={milestone.key}
-                          variants={cardVariants}
-                          whileHover={{ scale: 1.01, x: 3 }}
-                          className={cn(
-                            "flex items-center gap-3 p-3 rounded-xl",
-                            milestone.achieved ? "bg-primary/10" : "bg-muted/30 opacity-60"
-                          )}
-                        >
-                          <span className="text-2xl">{milestone.emoji}</span>
-                          <div className="flex flex-col">
-                            <span className={cn("font-medium", !milestone.achieved && "text-muted-foreground")}>
-                              {milestone.title}
-                            </span>
-                            {achievedAt && (
-                              <span className="text-xs text-muted-foreground">
-                                Erreicht am {format(new Date(achievedAt), "dd. MMM yyyy", { locale: de })}
-                              </span>
+                      const scoreMilestones = [
+                        { key: "score_6", emoji: "⭐", title: "Score 6.0 erreicht", threshold: 6.0 },
+                        { key: "score_7", emoji: "⭐", title: "Score 7.0 erreicht", threshold: 7.0 },
+                        { key: "score_8", emoji: "🌟", title: "Score 8.0 erreicht", threshold: 8.0 },
+                        { key: "top_10_percent", emoji: "🏆", title: "Top 10% (8.5+)", threshold: 8.5 },
+                        { key: "score_9", emoji: "👑", title: "Score 9.0 erreicht", threshold: 9.0 },
+                      ];
+                      
+                      const improvementMilestones = [
+                        { key: "score_improvement_05", emoji: "📈", title: "+0.5 Verbesserung", threshold: 0.5 },
+                        { key: "score_improvement_1", emoji: "📈", title: "+1.0 Verbesserung", threshold: 1.0 },
+                        { key: "score_improvement_2", emoji: "🚀", title: "+2.0 Verbesserung", threshold: 2.0 },
+                        { key: "score_improvement_3", emoji: "💫", title: "+3.0 Verbesserung", threshold: 3.0 },
+                      ];
+                      
+                      // Get current values
+                      const analysisCount = completedAnalyses.length;
+                      const maxStreak = Math.max(currentStreak, longestStreak);
+                      const maxScore = highestScore ? parseFloat(highestScore) : 0;
+                      const improvement = totalImprovement ? parseFloat(totalImprovement) : 0;
+                      
+                      // Helper: Get current + next milestone for a category
+                      const getVisibleMilestones = (
+                        milestones: typeof analysisMilestones,
+                        currentValue: number
+                      ) => {
+                        const achieved = milestones.filter(m => currentValue >= m.threshold);
+                        const nextUnachieved = milestones.find(m => currentValue < m.threshold);
+                        
+                        // Show last achieved + next goal
+                        const lastAchieved = achieved[achieved.length - 1];
+                        
+                        if (lastAchieved && nextUnachieved) {
+                          return [
+                            { ...lastAchieved, achieved: true },
+                            { ...nextUnachieved, achieved: false }
+                          ];
+                        } else if (lastAchieved) {
+                          // All achieved, show last one
+                          return [{ ...lastAchieved, achieved: true }];
+                        } else if (nextUnachieved) {
+                          // None achieved, show first goal
+                          return [{ ...nextUnachieved, achieved: false }];
+                        }
+                        return [];
+                      };
+                      
+                      // Build visible milestones
+                      const visibleMilestones = [
+                        ...getVisibleMilestones(analysisMilestones, analysisCount),
+                        ...getVisibleMilestones(streakMilestones, maxStreak),
+                        ...getVisibleMilestones(scoreMilestones, maxScore),
+                        ...getVisibleMilestones(improvementMilestones, improvement),
+                      ];
+                      
+                      return visibleMilestones.map((milestone) => {
+                        const savedMilestone = userMilestones.find(m => m.milestone_key === milestone.key);
+                        const achievedAt = savedMilestone?.achieved_at;
+                        
+                        // Auto-save newly achieved milestones
+                        if (milestone.achieved && !savedMilestone) {
+                          saveMilestone(milestone.key);
+                        }
+                        
+                        return (
+                          <motion.div 
+                            key={milestone.key}
+                            variants={cardVariants}
+                            whileHover={{ scale: 1.01, x: 3 }}
+                            className={cn(
+                              "flex items-center gap-3 p-3 rounded-xl",
+                              milestone.achieved ? "bg-primary/10" : "bg-muted/30 opacity-60"
                             )}
-                          </div>
-                          {milestone.achieved && (
-                            <motion.div
-                              className="ml-auto"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: "spring", stiffness: 300 }}
-                            >
-                              <Target className="w-5 h-5 text-primary" />
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      );
-                    })}
+                          >
+                            <span className="text-2xl">{milestone.emoji}</span>
+                            <div className="flex flex-col flex-1">
+                              <span className={cn("font-medium", !milestone.achieved && "text-muted-foreground")}>
+                                {milestone.title}
+                              </span>
+                              {achievedAt ? (
+                                <span className="text-xs text-muted-foreground">
+                                  Erreicht am {format(new Date(achievedAt), "dd. MMM yyyy", { locale: de })}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">
+                                  Nächstes Ziel
+                                </span>
+                              )}
+                            </div>
+                            {milestone.achieved ? (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                              >
+                                <Target className="w-5 h-5 text-primary" />
+                              </motion.div>
+                            ) : (
+                              <Lock className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </motion.div>
+                        );
+                      });
+                    })()}
                   </motion.div>
                 </Card>
               </motion.div>
