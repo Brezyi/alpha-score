@@ -824,30 +824,39 @@ export default function AnalysisResults() {
                 const detailedResults = analysis?.detailed_results as any;
                 const baseScore = analysis?.looks_score || 5;
                 
+                // Helper to extract score value (handles both object {score, issues, details} and plain numbers)
+                const extractScore = (value: any, fallback: number): number => {
+                  if (value === null || value === undefined) return fallback;
+                  if (typeof value === 'number') return value;
+                  if (typeof value === 'object' && 'score' in value) return Number(value.score) || fallback;
+                  if (typeof value === 'string') return parseFloat(value) || fallback;
+                  return fallback;
+                };
+                
                 const featureScores = [
                   { 
                     label: "Gesichtssymmetrie", 
-                    score: detailedResults?.face_symmetry || Math.min(10, baseScore + (Math.random() * 1 - 0.5)).toFixed(1),
+                    score: extractScore(detailedResults?.face_symmetry, Math.min(10, baseScore + 0.3)),
                     color: "bg-emerald-500" 
                   },
                   { 
                     label: "Jawline Definition", 
-                    score: detailedResults?.jawline || Math.min(10, baseScore - 0.3 + (Math.random() * 0.6)).toFixed(1),
+                    score: extractScore(detailedResults?.jawline, Math.min(10, baseScore - 0.2)),
                     color: "bg-blue-500" 
                   },
                   { 
                     label: "Hautqualität", 
-                    score: detailedResults?.skin_quality || Math.min(10, baseScore - 0.5 + (Math.random() * 0.5)).toFixed(1),
+                    score: extractScore(detailedResults?.skin_quality, Math.min(10, baseScore - 0.5)),
                     color: "bg-orange-500" 
                   },
                   { 
                     label: "Augenbereich", 
-                    score: detailedResults?.eye_area || Math.min(10, baseScore + 0.5 + (Math.random() * 0.5)).toFixed(1),
+                    score: extractScore(detailedResults?.eye_area, Math.min(10, baseScore + 0.5)),
                     color: "bg-purple-500" 
                   },
                   { 
                     label: "Haare & Styling", 
-                    score: detailedResults?.hair_styling || Math.min(10, baseScore - 0.8 + (Math.random() * 0.8)).toFixed(1),
+                    score: extractScore(detailedResults?.hair_styling, Math.min(10, baseScore - 0.3)),
                     color: "bg-pink-500" 
                   },
                 ];
@@ -862,12 +871,12 @@ export default function AnalysisResults() {
                   >
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium">{item.label}</span>
-                      <span className="font-bold">{typeof item.score === 'number' ? item.score.toFixed(1) : item.score}</span>
+                      <span className="font-bold">{item.score.toFixed(1)}</span>
                     </div>
                     <div className="h-2 rounded-full bg-muted overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${(typeof item.score === 'number' ? item.score : parseFloat(item.score)) * 10}%` }}
+                        animate={{ width: `${item.score * 10}%` }}
                         transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
                         className={`h-full rounded-full ${item.color}`}
                       />
