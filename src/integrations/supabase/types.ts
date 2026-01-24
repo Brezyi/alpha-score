@@ -1301,6 +1301,10 @@ export type Database = {
         }[]
       }
       request_admin_password_reset: { Args: never; Returns: string }
+      request_admin_password_reset_for_user: {
+        Args: { _target_user_id: string }
+        Returns: string
+      }
       reset_admin_password_for_user: {
         Args: { _target_user_id: string }
         Returns: boolean
