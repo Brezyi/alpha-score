@@ -48,12 +48,30 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // First check if display name is available
+      const { data: isAvailable, error: checkError } = await supabase.rpc('check_display_name_available', {
+        p_display_name: name.trim(),
+        p_current_user_id: null
+      });
+
+      if (checkError) throw checkError;
+
+      if (!isAvailable) {
+        toast({
+          title: "Name nicht verfügbar",
+          description: "Dieser Anzeigename ist bereits vergeben. Bitte wähle einen anderen.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            full_name: name,
+            full_name: name.trim(),
           },
           emailRedirectTo: window.location.origin,
         },
@@ -157,16 +175,21 @@ const Register = () => {
           {/* Form */}
           <form onSubmit={handleRegister} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Anzeigename</Label>
+              <p className="text-xs text-muted-foreground">
+                Dieser Name wird öffentlich angezeigt und kann später nicht geändert werden.
+              </p>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Dein Name"
+                  placeholder="Dein Anzeigename"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="pl-10 h-12 bg-card border-border"
+                  minLength={2}
+                  maxLength={30}
                   required
                 />
               </div>
