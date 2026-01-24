@@ -380,13 +380,7 @@ const Dashboard = () => {
             <div className="text-center">
               <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
               <div className="relative inline-flex items-center justify-center">
-                {/* Glow effect when score improved */}
-                {scoreDiff !== null && parseFloat(scoreDiff) > 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-36 h-36 rounded-full bg-green-500/20 blur-xl animate-pulse" />
-                  </div>
-                )}
-                <svg className="w-32 h-32 transform -rotate-90 relative z-10">
+                <svg className="w-32 h-32 transform -rotate-90">
                   <circle
                     cx="64"
                     cy="64"
@@ -400,27 +394,22 @@ const Dashboard = () => {
                     cx="64"
                     cy="64"
                     r="56"
-                    stroke={scoreDiff !== null && parseFloat(scoreDiff) > 0 ? "url(#dashboardScoreGradientImproved)" : "url(#dashboardScoreGradient)"}
+                    stroke="url(#dashboardScoreGradient)"
                     strokeWidth="8"
                     fill="none"
                     strokeLinecap="round"
                     strokeDasharray={352}
                     strokeDashoffset={352 - (352 * (latestScore || 0)) / 10}
-                    className="transition-all duration-1000 ease-out"
-                    style={scoreDiff !== null && parseFloat(scoreDiff) > 0 ? { filter: "drop-shadow(0 0 8px hsl(142, 76%, 45%))" } : undefined}
+                    className={`transition-all duration-1000 ease-out ${scoreDiff !== null && parseFloat(scoreDiff) > 0 ? '[filter:drop-shadow(0_0_6px_hsl(var(--primary)/0.5))]' : ''}`}
                   />
                   <defs>
                     <linearGradient id="dashboardScoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                       <stop offset="0%" stopColor="hsl(var(--primary))" />
                       <stop offset="100%" stopColor="hsl(153, 100%, 60%)" />
                     </linearGradient>
-                    <linearGradient id="dashboardScoreGradientImproved" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="hsl(142, 76%, 45%)" />
-                      <stop offset="100%" stopColor="hsl(153, 100%, 60%)" />
-                    </linearGradient>
                   </defs>
                 </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-4xl font-black text-primary">
                     {latestScore !== null ? (
                       hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
