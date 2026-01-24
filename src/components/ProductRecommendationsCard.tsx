@@ -1,0 +1,143 @@
+import { Star, ExternalLink, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
+
+interface Product {
+  id: string;
+  name: string;
+  brand: string;
+  category: string;
+  description: string | null;
+  targetIssues: string[];
+  priceRange: string;
+  rating: number;
+}
+
+interface ProductRecommendationsCardProps {
+  products: Product[];
+  loading: boolean;
+  maxDisplay?: number;
+  title?: string;
+}
+
+const categoryIcons: Record<string, string> = {
+  serum: "💧",
+  treatment: "⚗️",
+  exfoliant: "✨",
+  sunscreen: "☀️",
+  hair: "💇",
+  tool: "🔧",
+};
+
+const priceLabels: Record<string, { label: string; color: string }> = {
+  budget: { label: "€", color: "text-green-500" },
+  medium: { label: "€€", color: "text-yellow-500" },
+  premium: { label: "€€€", color: "text-orange-500" },
+};
+
+export const ProductRecommendationsCard = ({
+  products,
+  loading,
+  maxDisplay = 4,
+  title = "Für dich empfohlen",
+}: ProductRecommendationsCardProps) => {
+  const displayProducts = products.slice(0, maxDisplay);
+
+  if (loading) {
+    return (
+      <div className="p-6 rounded-2xl glass-card animate-pulse">
+        <div className="h-6 bg-muted rounded w-1/3 mb-4" />
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-20 bg-muted rounded-xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (products.length === 0) {
+    return null;
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-5 rounded-2xl glass-card"
+    >
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-lg flex items-center gap-2">
+          <ShoppingBag className="w-5 h-5 text-primary" />
+          {title}
+        </h3>
+        <Badge variant="outline" className="text-xs">
+          {products.length} Produkte
+        </Badge>
+      </div>
+
+      <div className="space-y-3">
+        {displayProducts.map((product, index) => (
+          <motion.div
+            key={product.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 }}
+            className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted/70 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
+              {categoryIcons[product.category] || "📦"}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="font-medium text-sm truncate">{product.name}</h4>
+                  <p className="text-xs text-muted-foreground">{product.brand}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className={cn("text-xs font-medium", priceLabels[product.priceRange]?.color)}>
+                    {priceLabels[product.priceRange]?.label || "€€"}
+                  </span>
+                  <div className="flex items-center gap-0.5">
+                    <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                    <span className="text-xs">{product.rating}</span>
+                  </div>
+                </div>
+              </div>
+
+              {product.description && (
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  {product.description}
+                </p>
+              )}
+
+              {product.targetIssues.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {product.targetIssues.slice(0, 3).map((issue) => (
+                    <Badge
+                      key={issue}
+                      variant="secondary"
+                      className="text-[10px] px-1.5 py-0"
+                    >
+                      {issue.replace(/_/g, " ")}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {products.length > maxDisplay && (
+        <Button variant="ghost" className="w-full mt-3 text-sm">
+          Alle {products.length} Produkte anzeigen
+          <ExternalLink className="w-4 h-4 ml-2" />
+        </Button>
+      )}
+    </motion.div>
+  );
+};

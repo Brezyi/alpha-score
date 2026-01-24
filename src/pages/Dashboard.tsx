@@ -51,6 +51,12 @@ import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { TestimonialSubmitDialog } from "@/components/TestimonialSubmitDialog";
 import { Progress } from "@/components/ui/progress";
 import { AnalysisThumbnail } from "@/components/AnalysisThumbnail";
+import { useGamification } from "@/hooks/useGamification";
+import { XpLevelCard } from "@/components/gamification/XpLevelCard";
+import { DailyChallengesCard } from "@/components/gamification/DailyChallengesCard";
+import { AchievementsGrid } from "@/components/gamification/AchievementsGrid";
+import { useProductRecommendations } from "@/hooks/useProductRecommendations";
+import { ProductRecommendationsCard } from "@/components/ProductRecommendationsCard";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -214,6 +220,9 @@ const Dashboard = () => {
   const { isAdminOrOwner, role } = useUserRole();
   const { currentStreak, longestStreak, isActiveToday, loading: streakLoading } = useStreak();
   const { settings } = useGlobalSettings();
+  
+  // Gamification
+  const { xp, achievements, dailyChallenges, loading: gamificationLoading, challengesLoading, completeChallenge } = useGamification();
 
   // Format subscription badge
   const getSubscriptionBadge = () => {
@@ -353,6 +362,10 @@ const Dashboard = () => {
   const allScores = completedAnalyses.map(a => a.looks_score).filter((s): s is number => s !== null);
   const highestScore = allScores.length > 0 ? Math.max(...allScores) : null;
   const isPersonalBest = latestScore !== null && highestScore !== null && latestScore >= highestScore && completedAnalyses.length > 1;
+
+  // Get user's weaknesses for product recommendations
+  const userWeaknesses = completedAnalyses[0]?.weaknesses || [];
+  const { products: recommendedProducts, loading: productsLoading } = useProductRecommendations(userWeaknesses);
 
   // Chart data (last 10 analyses, reversed for chronological order) with potential and change
   const chartDataRaw = completedAnalyses.slice(0, 10).reverse();
@@ -1033,6 +1046,47 @@ const Dashboard = () => {
             })}
           </div>
         </div>
+
+        {/* Gamification Section - XP, Challenges, Achievements */}
+        {isPremiumUser && (
+          <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }}>
+            <h2 className="text-xl font-bold">Dein Fortschritt</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* XP & Level Card */}
+              <XpLevelCard
+                level={xp.level}
+                currentXp={xp.currentXp}
+                xpForNextLevel={xp.xpForNextLevel}
+                progress={xp.progress}
+              />
+              
+              {/* Daily Challenges */}
+              <DailyChallengesCard
+                challenges={dailyChallenges}
+                loading={challengesLoading}
+                onComplete={completeChallenge}
+              />
+            </div>
+            
+            {/* Achievements Grid */}
+            {achievements.length > 0 && (
+              <div className="p-5 rounded-2xl glass-card">
+                <AchievementsGrid achievements={achievements} maxDisplay={12} />
+              </div>
+            )}
+            
+            {/* Product Recommendations */}
+            {recommendedProducts.length > 0 && (
+              <ProductRecommendationsCard
+                products={recommendedProducts}
+                loading={productsLoading}
+                maxDisplay={4}
+                title="Empfohlene Produkte für dich"
+              />
+            )}
+          </div>
+        )}
 
         {/* Analysis History - Show last 5 */}
         <div className="mb-8">
