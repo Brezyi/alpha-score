@@ -61,101 +61,101 @@ const App = () => (
                   <MaintenanceCheck>
                     <Routes>
                       <Route path="/" element={<Index />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/upload" element={<AnalysisUpload />} />
-                    <Route path="/analysis/:id" element={<AnalysisResults />} />
-                    <Route path="/payment-success" element={<PaymentSuccess />} />
-                    <Route path="/coach" element={<Coach />} />
-                    <Route path="/plan" element={<Plan />} />
-                    <Route path="/progress" element={<Progress />} />
-                    <Route path="/support" element={<Support />} />
-                    <Route path="/features" element={<Features />} />
-                    <Route path="/pricing" element={<PricingPage />} />
-                    <Route path="/datenschutz" element={<Datenschutz />} />
-                    <Route path="/impressum" element={<Impressum />} />
-                    <Route path="/agb" element={<AGB />} />
-                    <Route path="/confirm-deletion" element={<ConfirmDeletion />} />
-                    <Route path="/admin-password-reset" element={<AdminPasswordReset />} />
-                    
-                    {/* Admin Routes - Protected by role */}
-                    <Route 
-                      path="/admin" 
-                      element={
-                        <ProtectedRoute requiredRole={["admin", "owner"]}>
-                          <AdminDashboard />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/users" 
-                      element={
-                        <ProtectedRoute requiredRole={["admin", "owner"]}>
-                          <UserManagement />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/audit" 
-                      element={
-                        <ProtectedRoute requiredRole={["admin", "owner"]}>
-                          <AuditLogs />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/support" 
-                      element={
-                        <ProtectedRoute requiredRole={["admin", "owner"]}>
-                          <SupportManagement />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/settings" 
-                      element={
-                        <ProtectedRoute requiredRole={["owner"]}>
-                          <SystemSettings />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/billing" 
-                      element={
-                        <ProtectedRoute requiredRole={["owner"]}>
-                          <RevenueOverview />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/testimonials" 
-                      element={
-                        <ProtectedRoute requiredRole={["admin", "owner"]}>
-                          <TestimonialsManagement />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/promocodes" 
-                      element={
-                        <ProtectedRoute requiredRole={["owner"]}>
-                          <PromoCodes />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route 
-                      path="/admin/passwords" 
-                      element={
-                        <ProtectedRoute requiredRole={["owner"]}>
-                          <AdminPasswordManagement />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    
-                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/register" element={<Register />} />
+                      <Route path="/forgot-password" element={<ForgotPassword />} />
+                      <Route path="/reset-password" element={<ResetPassword />} />
+                      <Route path="/dashboard" element={<Dashboard />} />
+                      <Route path="/upload" element={<AnalysisUpload />} />
+                      <Route path="/analysis/:id" element={<AnalysisResults />} />
+                      <Route path="/payment-success" element={<PaymentSuccess />} />
+                      <Route path="/coach" element={<Coach />} />
+                      <Route path="/plan" element={<Plan />} />
+                      <Route path="/progress" element={<Progress />} />
+                      <Route path="/support" element={<Support />} />
+                      <Route path="/features" element={<Features />} />
+                      <Route path="/pricing" element={<PricingPage />} />
+                      <Route path="/datenschutz" element={<Datenschutz />} />
+                      <Route path="/impressum" element={<Impressum />} />
+                      <Route path="/agb" element={<AGB />} />
+                      <Route path="/confirm-deletion" element={<ConfirmDeletion />} />
+                      <Route path="/admin-password-reset" element={<AdminPasswordReset />} />
+                      
+                      {/* Admin Routes - Protected by role */}
+                      <Route 
+                        path="/admin" 
+                        element={
+                          <ProtectedRoute requiredRole={["admin", "owner"]}>
+                            <AdminDashboard />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/users" 
+                        element={
+                          <ProtectedRoute requiredRole={["admin", "owner"]}>
+                            <UserManagement />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/audit" 
+                        element={
+                          <ProtectedRoute requiredRole={["admin", "owner"]}>
+                            <AuditLogs />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/support" 
+                        element={
+                          <ProtectedRoute requiredRole={["admin", "owner"]}>
+                            <SupportManagement />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/settings" 
+                        element={
+                          <ProtectedRoute requiredRole={["owner"]}>
+                            <SystemSettings />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/billing" 
+                        element={
+                          <ProtectedRoute requiredRole={["owner"]}>
+                            <RevenueOverview />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/testimonials" 
+                        element={
+                          <ProtectedRoute requiredRole={["admin", "owner"]}>
+                            <TestimonialsManagement />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/promocodes" 
+                        element={
+                          <ProtectedRoute requiredRole={["owner"]}>
+                            <PromoCodes />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/admin/passwords" 
+                        element={
+                          <ProtectedRoute requiredRole={["owner"]}>
+                            <AdminPasswordManagement />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      
+                      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                     <CookieConsent />
