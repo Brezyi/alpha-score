@@ -183,12 +183,37 @@ export const useGamification = () => {
       return;
     }
 
+    setChallengesLoading(true);
     try {
       const { data, error } = await supabase.rpc("get_daily_challenges", {
         p_user_id: user.id,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching daily challenges:", error);
+        // Fallback: fetch challenges directly if RPC fails
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("daily_challenges")
+          .select("*")
+          .eq("is_active", true)
+          .order("xp_reward", { ascending: false })
+          .limit(3);
+
+        if (!fallbackError && fallbackData) {
+          const challenges: DailyChallenge[] = fallbackData.map((c: any) => ({
+            challengeId: c.id,
+            title: c.title,
+            description: c.description,
+            icon: c.icon,
+            category: c.category,
+            xpReward: c.xp_reward,
+            difficulty: c.difficulty,
+            completed: false,
+          }));
+          setDailyChallenges(challenges);
+        }
+        return;
+      }
 
       const challenges: DailyChallenge[] = (data || []).map((c: any) => ({
         challengeId: c.challenge_id,
