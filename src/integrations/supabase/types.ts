@@ -1381,6 +1381,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      validate_display_name: { Args: { p_name: string }; Returns: boolean }
       verify_admin_password: {
         Args: { _password: string }
         Returns: {
