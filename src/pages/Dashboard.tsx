@@ -56,6 +56,7 @@ type Analysis = {
   strengths: string[] | null;
   weaknesses: string[] | null;
   photo_urls: string[] | null;
+  detailed_results: any;
 };
 
 const quickActions = [
@@ -216,7 +217,7 @@ const Dashboard = () => {
       try {
         const { data, error } = await supabase
           .from("analyses")
-          .select("id, looks_score, potential_score, created_at, status, strengths, weaknesses, photo_urls")
+          .select("id, looks_score, potential_score, created_at, status, strengths, weaknesses, photo_urls, detailed_results")
           .eq("user_id", user.id)
           .order("created_at", { ascending: false });
 
@@ -488,6 +489,61 @@ const Dashboard = () => {
                 Plan ansehen
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Detaillierte Analyse - Feature Scores */}
+        {completedAnalyses.length > 0 && completedAnalyses[0]?.detailed_results && isPremiumUser && (
+          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "550ms", animationFillMode: "forwards" }}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">Detaillierte Analyse</h3>
+              <Link to={`/analysis/${completedAnalyses[0].id}`} className="text-sm text-primary hover:underline flex items-center gap-1 group">
+                Vollständig ansehen
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {(() => {
+                const detailedResults = completedAnalyses[0]?.detailed_results;
+                const baseScore = completedAnalyses[0]?.looks_score || 5;
+                
+                // Helper to extract score value
+                const extractScore = (value: any, fallback: number): number => {
+                  if (value === null || value === undefined) return fallback;
+                  if (typeof value === 'number') return value;
+                  if (typeof value === 'object' && 'score' in value) return Number(value.score) || fallback;
+                  if (typeof value === 'string') return parseFloat(value) || fallback;
+                  return fallback;
+                };
+                
+                const featureScores = [
+                  { label: "Gesichtssymmetrie", score: extractScore(detailedResults?.face_symmetry, baseScore + 0.3), color: "bg-emerald-500" },
+                  { label: "Jawline Definition", score: extractScore(detailedResults?.jawline, baseScore - 0.2), color: "bg-blue-500" },
+                  { label: "Hautqualität", score: extractScore(detailedResults?.skin_quality, baseScore - 0.5), color: "bg-orange-500" },
+                  { label: "Augenbereich", score: extractScore(detailedResults?.eye_area, baseScore + 0.5), color: "bg-purple-500" },
+                  { label: "Haare & Styling", score: extractScore(detailedResults?.hair_styling, baseScore - 0.3), color: "bg-pink-500" },
+                ];
+                
+                return featureScores.map((item, index) => (
+                  <div 
+                    key={item.label} 
+                    className="p-4 rounded-xl bg-card border border-border/50 opacity-0 animate-fade-in"
+                    style={{ animationDelay: `${600 + index * 50}ms`, animationFillMode: "forwards" }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium">{item.label}</span>
+                      <span className="font-bold">{Math.min(10, item.score).toFixed(1)}</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${item.color} transition-all duration-1000`}
+                        style={{ width: `${Math.min(100, item.score * 10)}%` }}
+                      />
+                    </div>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         )}
