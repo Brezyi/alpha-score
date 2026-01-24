@@ -257,15 +257,23 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
             </div>
           )}
 
-          {/* Forgot Password Link - only for owners in verify mode */}
-          {mode === "verify" && isOwner && !showForgotPassword && (
-            <button
-              type="button"
-              onClick={() => setShowForgotPassword(true)}
-              className="text-sm text-primary hover:underline w-full text-center"
-            >
-              Admin-Passwort vergessen?
-            </button>
+          {/* Forgot Password - different for owners vs admins */}
+          {mode === "verify" && !showForgotPassword && (
+            <>
+              {isOwner ? (
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-primary hover:underline w-full text-center"
+                >
+                  Admin-Passwort vergessen?
+                </button>
+              ) : (
+                <p className="text-xs text-muted-foreground text-center">
+                  Passwort vergessen? Kontaktiere den Owner für einen Reset-Link.
+                </p>
+              )}
+            </>
           )}
 
           {/* Forgot Password Form - only for owners */}
