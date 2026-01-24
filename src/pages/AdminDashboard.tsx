@@ -16,7 +16,8 @@ import {
   HelpCircle,
   Star,
   MapPin,
-  Ticket
+  Ticket,
+  Key
 } from "lucide-react";
 
 interface DashboardStat {
@@ -387,6 +388,19 @@ export default function AdminDashboard() {
                   <p className="font-semibold">Promocodes</p>
                   <p className="text-sm text-muted-foreground">
                     Codes für Premium & Lifetime erstellen
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 hover:border-primary/50 transition-colors cursor-pointer"
+                onClick={() => navigate("/admin/passwords")}
+              >
+                <CardContent className="p-6">
+                  <Key className="w-8 h-8 text-primary mb-3" />
+                  <p className="font-semibold">Admin-Passwörter</p>
+                  <p className="text-sm text-muted-foreground">
+                    Admin-Zugänge verwalten
                   </p>
                 </CardContent>
               </Card>

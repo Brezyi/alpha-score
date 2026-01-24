@@ -83,6 +83,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_password_reset_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          token_hash: string
+          used: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token_hash: string
+          used?: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          token_hash?: string
+          used?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_passwords: {
         Row: {
           created_at: string
@@ -1219,6 +1246,18 @@ export type Database = {
           last_changed_at: string
         }[]
       }
+      get_admin_users_password_status: {
+        Args: never
+        Returns: {
+          days_until_expiry: number
+          display_name: string
+          email: string
+          has_admin_password: boolean
+          password_expired: boolean
+          role: string
+          user_id: string
+        }[]
+      }
       get_backup_codes_count: { Args: { _user_id: string }; Returns: number }
       get_daily_challenges: {
         Args: { p_user_id: string }
@@ -1233,6 +1272,7 @@ export type Database = {
           xp_reward: number
         }[]
       }
+      get_owner_masked_email: { Args: never; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1259,6 +1299,11 @@ export type Database = {
           is_locked: boolean
           remaining_seconds: number
         }[]
+      }
+      request_admin_password_reset: { Args: never; Returns: string }
+      reset_admin_password_for_user: {
+        Args: { _target_user_id: string }
+        Returns: boolean
       }
       set_admin_password: { Args: { _password: string }; Returns: boolean }
       update_user_streak: {
@@ -1287,6 +1332,10 @@ export type Database = {
           is_valid: boolean
           needs_setup: boolean
         }[]
+      }
+      verify_admin_password_reset_token: {
+        Args: { _token: string }
+        Returns: boolean
       }
       verify_backup_code: {
         Args: { _code: string; _user_id: string }

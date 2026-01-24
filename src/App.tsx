@@ -39,6 +39,8 @@ import SystemSettings from "./pages/admin/SystemSettings";
 import RevenueOverview from "./pages/admin/RevenueOverview";
 import TestimonialsManagement from "./pages/admin/TestimonialsManagement";
 import PromoCodes from "./pages/admin/PromoCodes";
+import AdminPasswordReset from "./pages/AdminPasswordReset";
+import AdminPasswordManagement from "./pages/admin/AdminPasswordManagement";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +77,7 @@ const App = () => (
                     <Route path="/impressum" element={<Impressum />} />
                     <Route path="/agb" element={<AGB />} />
                     <Route path="/confirm-deletion" element={<ConfirmDeletion />} />
+                    <Route path="/admin-password-reset" element={<AdminPasswordReset />} />
                     
                     {/* Admin Routes - Protected by role */}
                     <Route 
@@ -138,6 +141,14 @@ const App = () => (
                       element={
                         <ProtectedRoute requiredRole={["owner"]}>
                           <PromoCodes />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/admin/passwords" 
+                      element={
+                        <ProtectedRoute requiredRole={["owner"]}>
+                          <AdminPasswordManagement />
                         </ProtectedRoute>
                       } 
                     />
