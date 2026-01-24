@@ -18,51 +18,10 @@ interface UseAdminPasswordReturn {
   refetch: () => Promise<void>;
 }
 
-// Session storage key for admin verification
-const ADMIN_VERIFIED_KEY = "admin_password_verified";
-const ADMIN_VERIFIED_EXPIRY_KEY = "admin_password_verified_expiry";
-
 export function useAdminPassword(): UseAdminPasswordReturn {
   const [status, setStatus] = useState<AdminPasswordStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
-
-  // Check session storage for existing verification - but only after we know password status
-  useEffect(() => {
-    // Don't restore verification state until we know the password status
-    if (status === null) return;
-    
-    // If user doesn't have a password set up, they can't be verified
-    if (!status.hasPassword) {
-      sessionStorage.removeItem(ADMIN_VERIFIED_KEY);
-      sessionStorage.removeItem(ADMIN_VERIFIED_EXPIRY_KEY);
-      setIsVerified(false);
-      return;
-    }
-    
-    // If password is expired, clear verification
-    if (status.isExpired) {
-      sessionStorage.removeItem(ADMIN_VERIFIED_KEY);
-      sessionStorage.removeItem(ADMIN_VERIFIED_EXPIRY_KEY);
-      setIsVerified(false);
-      return;
-    }
-    
-    const verified = sessionStorage.getItem(ADMIN_VERIFIED_KEY);
-    const expiry = sessionStorage.getItem(ADMIN_VERIFIED_EXPIRY_KEY);
-    
-    if (verified === "true" && expiry) {
-      const expiryDate = new Date(expiry);
-      if (expiryDate > new Date()) {
-        setIsVerified(true);
-      } else {
-        // Expired, clear storage
-        sessionStorage.removeItem(ADMIN_VERIFIED_KEY);
-        sessionStorage.removeItem(ADMIN_VERIFIED_EXPIRY_KEY);
-        setIsVerified(false);
-      }
-    }
-  }, [status]);
 
   const fetchStatus = useCallback(async () => {
     try {
@@ -111,12 +70,8 @@ export function useAdminPassword(): UseAdminPasswordReturn {
 
       // Refetch status
       await fetchStatus();
-      
-      // Mark as verified after setting
-      const expiryTime = new Date();
-      expiryTime.setHours(expiryTime.getHours() + 1); // 1 hour session
-      sessionStorage.setItem(ADMIN_VERIFIED_KEY, "true");
-      sessionStorage.setItem(ADMIN_VERIFIED_EXPIRY_KEY, expiryTime.toISOString());
+
+      // Mark as verified for the current UI flow (no persistent client-side cache)
       setIsVerified(true);
 
       return { success: true };
@@ -149,11 +104,7 @@ export function useAdminPassword(): UseAdminPasswordReturn {
         }
 
         if (row.is_valid) {
-          // Store verification in session storage (1 hour expiry)
-          const expiryTime = new Date();
-          expiryTime.setHours(expiryTime.getHours() + 1);
-          sessionStorage.setItem(ADMIN_VERIFIED_KEY, "true");
-          sessionStorage.setItem(ADMIN_VERIFIED_EXPIRY_KEY, expiryTime.toISOString());
+          // Mark as verified for the current UI flow (no persistent client-side cache)
           setIsVerified(true);
 
           return { success: true, daysUntilExpiry: row.days_until_expiry };
@@ -170,8 +121,6 @@ export function useAdminPassword(): UseAdminPasswordReturn {
   };
 
   const clearVerification = () => {
-    sessionStorage.removeItem(ADMIN_VERIFIED_KEY);
-    sessionStorage.removeItem(ADMIN_VERIFIED_EXPIRY_KEY);
     setIsVerified(false);
   };
 
