@@ -27,9 +27,9 @@ const FeatureShowcase = () => {
   const [activeTab, setActiveTab] = useState<FeatureTab>("potential");
 
   const tabs = [
-    { id: "potential" as const, label: "Dein Potenzial", icon: Eye },
     { id: "analysis" as const, label: "KI-Analyse", icon: Camera },
     { id: "plan" as const, label: "Dein Plan", icon: CheckCircle2 },
+    { id: "potential" as const, label: "Dein Potenzial", icon: Eye },
     { id: "progress" as const, label: "Fortschritt", icon: TrendingUp },
     { id: "coach" as const, label: "AI Coach", icon: MessageSquare },
   ];
@@ -220,8 +220,8 @@ const PotentialPreview = () => {
 
       {/* Score Improvement Info */}
       <div className="space-y-6">
-        <div className="p-6 rounded-2xl glass-card">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="p-6 rounded-2xl glass-card text-center">
+          <div className="flex flex-col items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
               <TrendingUp className="w-7 h-7 text-primary" />
             </div>
