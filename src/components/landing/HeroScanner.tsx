@@ -88,14 +88,49 @@ AnimatedValue.displayName = "AnimatedValue";
 const HeroScanner = memo(() => {
   const shouldReduce = useReducedMotion();
   const [scanCycle, setScanCycle] = useState(0);
+  const [showScore, setShowScore] = useState(false);
+  const [scoreValue, setScoreValue] = useState(0);
 
+  // Scan cycle timer
   useEffect(() => {
     if (shouldReduce) return;
     const interval = setInterval(() => {
       setScanCycle(c => c + 1);
-    }, 6000);
+      setShowScore(false);
+      setScoreValue(0);
+    }, 8000);
     return () => clearInterval(interval);
   }, [shouldReduce]);
+
+  // Show score after measurements complete
+  useEffect(() => {
+    const showTimer = setTimeout(() => {
+      setShowScore(true);
+    }, 2500);
+
+    return () => clearTimeout(showTimer);
+  }, [scanCycle]);
+
+  // Animate score value
+  useEffect(() => {
+    if (!showScore) return;
+    
+    const finalScore = 9.4;
+    const duration = 1200;
+    const startTime = Date.now();
+
+    const animate = () => {
+      const progress = Math.min((Date.now() - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setScoreValue(eased * finalScore);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [showScore]);
 
   const points = useMemo(() => {
     return landmarkPoints.map((point, index) => (
@@ -175,6 +210,33 @@ const HeroScanner = memo(() => {
                 <span className="text-[10px] text-primary font-mono font-bold">φ 1.618</span>
               </div>
             </div>
+            {/* Final Score Overlay */}
+            {showScore && (
+              <div className="absolute inset-0 flex items-center justify-center z-10 animate-fade-in">
+                <div className="relative">
+                  {/* Glow rings */}
+                  <div className="absolute inset-0 -m-8 rounded-full bg-primary/20 blur-2xl animate-pulse" />
+                  <div className="absolute inset-0 -m-4 rounded-full bg-primary/30 blur-xl" />
+                  
+                  {/* Score container */}
+                  <div className="relative bg-background/95 backdrop-blur-md px-6 py-4 rounded-2xl border-2 border-primary shadow-[0_0_30px_hsl(var(--primary)/0.4),0_0_60px_hsl(var(--primary)/0.2)]">
+                    <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-widest text-center mb-1">
+                      Looks Score
+                    </div>
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-4xl font-bold text-primary tabular-nums drop-shadow-[0_0_10px_hsl(var(--primary))]">
+                        {scoreValue.toFixed(1)}
+                      </span>
+                      <span className="text-lg text-muted-foreground font-medium">/10</span>
+                    </div>
+                    <div className="flex items-center justify-center gap-1 mt-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                      <span className="text-[9px] text-green-500 font-mono uppercase">Scan Complete</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Outer glow effect */}
