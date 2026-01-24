@@ -179,8 +179,8 @@ const HeroScanner = memo(() => {
 
             {/* Bottom status bar */}
             <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full bg-green-500 ${!shouldReduce ? 'animate-pulse' : ''}`} />
+            <div className="flex items-center gap-2">
+                <div className={`w-2 h-2 rounded-full bg-primary ${!shouldReduce ? 'animate-pulse' : ''}`} />
                 <span className="text-[9px] text-primary/80 font-mono uppercase tracking-wider">Scanning</span>
               </div>
               <span className="text-[9px] text-muted-foreground font-mono">15 Landmarks</span>
@@ -250,8 +250,8 @@ const HeroScanner = memo(() => {
                 <span className="text-xl text-muted-foreground font-medium">/10</span>
               </div>
               <div className="flex items-center justify-center gap-1.5 mt-2">
-                <div className="w-2 h-2 rounded-full bg-green-500" />
-                <span className="text-[10px] text-green-500 font-mono uppercase tracking-wide">Scan Complete</span>
+                <div className="w-2 h-2 rounded-full bg-primary" />
+                <span className="text-[10px] text-primary font-mono uppercase tracking-wide">Scan Complete</span>
               </div>
             </div>
           </div>

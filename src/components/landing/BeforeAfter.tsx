@@ -83,7 +83,7 @@ const BeforeAfter = () => {
               />
               {/* Score Badge */}
               <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
-                <span className="text-orange-400 text-sm font-bold">Score: 5.2</span>
+                <span className="text-muted-foreground text-sm font-bold">Score: 5.2</span>
               </div>
             </div>
 
