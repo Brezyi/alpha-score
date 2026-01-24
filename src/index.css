@@ -470,3 +470,141 @@ img {
     box-shadow: var(--shadow-glow);
   }
 }
+
+/* ====== UX IMPROVEMENTS ====== */
+
+/* Safe area padding for notched devices */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Touch-friendly tap targets */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Improved focus states for accessibility */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background;
+}
+
+/* Better button press feedback */
+.press-effect {
+  @apply active:scale-[0.98] transition-transform duration-75;
+}
+
+/* Improved text legibility */
+.text-balance {
+  text-wrap: balance;
+}
+
+/* Card hover enhancement */
+.card-interactive {
+  @apply transition-all duration-200 hover:border-primary/30 hover:shadow-lg cursor-pointer;
+}
+
+/* Fade-in animation for page content */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out forwards;
+}
+
+/* Staggered animation delays */
+.stagger-1 { animation-delay: 50ms; }
+.stagger-2 { animation-delay: 100ms; }
+.stagger-3 { animation-delay: 150ms; }
+.stagger-4 { animation-delay: 200ms; }
+.stagger-5 { animation-delay: 250ms; }
+
+/* Improved mobile scroll behavior */
+@media (max-width: 768px) {
+  /* Account for mobile nav height */
+  main {
+    padding-bottom: 5rem;
+  }
+  
+  /* Larger touch targets on mobile */
+  button, a, input, select, textarea {
+    min-height: 44px;
+  }
+  
+  /* Better mobile typography */
+  h1 {
+    font-size: 1.75rem;
+    line-height: 1.2;
+  }
+  
+  h2 {
+    font-size: 1.5rem;
+    line-height: 1.25;
+  }
+  
+  /* Reduce visual noise on small screens */
+  .hide-mobile-decoration {
+    display: none;
+  }
+}
+
+/* Skeleton loading animation */
+@keyframes skeleton-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--muted) / 0.5) 50%, hsl(var(--muted)) 100%);
+  background-size: 200% 100%;
+}
+
+/* Improved contrast for form labels */
+label {
+  @apply font-medium text-sm;
+}
+
+/* Better input focus states */
+input:focus, textarea:focus, select:focus {
+  @apply ring-2 ring-primary/30 border-primary/50;
+}
+
+/* Success/Error input states */
+.input-success {
+  @apply border-green-500/50 ring-green-500/20;
+}
+
+.input-error {
+  @apply border-red-500/50 ring-red-500/20;
+}
+
+/* Improved link underlines */
+.link-underline {
+  @apply relative;
+}
+
+.link-underline::after {
+  content: '';
+  @apply absolute bottom-0 left-0 w-full h-px bg-current transform scale-x-0 origin-right transition-transform duration-200;
+}
+
+.link-underline:hover::after {
+  @apply scale-x-100 origin-left;
+}
