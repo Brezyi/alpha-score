@@ -48,11 +48,17 @@ interface Analysis {
   signedPhotoUrls?: (string | null)[];
 }
 
+interface UserMilestone {
+  milestone_key: string;
+  achieved_at: string;
+}
+
 export default function Progress() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
+  const [userMilestones, setUserMilestones] = useState<UserMilestone[]>([]);
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
@@ -108,11 +114,50 @@ export default function Progress() {
     }
   }, [user]);
 
+  // Fetch user milestones
+  const fetchMilestones = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("user_milestones")
+        .select("milestone_key, achieved_at")
+        .eq("user_id", user.id);
+      
+      if (!error && data) {
+        setUserMilestones(data);
+      }
+    } catch (err) {
+      console.error("Error fetching milestones:", err);
+    }
+  }, [user]);
+
+  // Save new milestone
+  const saveMilestone = useCallback(async (key: string) => {
+    if (!user) return;
+    
+    // Check if already saved
+    if (userMilestones.some(m => m.milestone_key === key)) return;
+    
+    try {
+      const { error } = await supabase
+        .from("user_milestones")
+        .insert({ user_id: user.id, milestone_key: key });
+      
+      if (!error) {
+        setUserMilestones(prev => [...prev, { milestone_key: key, achieved_at: new Date().toISOString() }]);
+      }
+    } catch (err) {
+      console.error("Error saving milestone:", err);
+    }
+  }, [user, userMilestones]);
+
   useEffect(() => {
     if (user) {
       fetchAnalyses();
+      fetchMilestones();
     }
-  }, [user, fetchAnalyses]);
+  }, [user, fetchAnalyses, fetchMilestones]);
 
   if (authLoading || subscriptionLoading) {
     return (
@@ -876,37 +921,54 @@ export default function Progress() {
                     animate="visible"
                   >
                     {[
-                      { emoji: "🎯", title: "Erste Analyse", achieved: completedAnalyses.length >= 1 },
-                      { emoji: "📈", title: "+0.5 Score erreicht", achieved: totalImprovement && parseFloat(totalImprovement) >= 0.5 },
-                      { emoji: "🔥", title: "7-Tage Streak", achieved: currentStreak >= 7 || longestStreak >= 7 },
-                      { emoji: "⭐", title: "Score 7.0 erreicht", achieved: highestScore && parseFloat(highestScore) >= 7.0 },
-                      { emoji: "🏆", title: "Top 10% erreicht", achieved: highestScore && parseFloat(highestScore) >= 8.5 },
-                    ].map((milestone) => (
-                      <motion.div 
-                        key={milestone.title}
-                        variants={cardVariants}
-                        whileHover={{ scale: 1.01, x: 3 }}
-                        className={cn(
-                          "flex items-center gap-3 p-3 rounded-xl",
-                          milestone.achieved ? "bg-primary/10" : "bg-muted/30 opacity-60"
-                        )}
-                      >
-                        <span className="text-2xl">{milestone.emoji}</span>
-                        <span className={cn("font-medium", !milestone.achieved && "text-muted-foreground")}>
-                          {milestone.title}
-                        </span>
-                        {milestone.achieved && (
-                          <motion.div
-                            className="ml-auto"
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 300 }}
-                          >
-                            <Target className="w-5 h-5 text-primary" />
-                          </motion.div>
-                        )}
-                      </motion.div>
-                    ))}
+                      { key: "first_analysis", emoji: "🎯", title: "Erste Analyse", achieved: completedAnalyses.length >= 1 },
+                      { key: "score_improvement_05", emoji: "📈", title: "+0.5 Score erreicht", achieved: totalImprovement && parseFloat(totalImprovement) >= 0.5 },
+                      { key: "streak_7_days", emoji: "🔥", title: "7-Tage Streak", achieved: currentStreak >= 7 || longestStreak >= 7 },
+                      { key: "score_7", emoji: "⭐", title: "Score 7.0 erreicht", achieved: highestScore && parseFloat(highestScore) >= 7.0 },
+                      { key: "top_10_percent", emoji: "🏆", title: "Top 10% erreicht", achieved: highestScore && parseFloat(highestScore) >= 8.5 },
+                    ].map((milestone) => {
+                      const savedMilestone = userMilestones.find(m => m.milestone_key === milestone.key);
+                      const achievedAt = savedMilestone?.achieved_at;
+                      
+                      // Auto-save newly achieved milestones
+                      if (milestone.achieved && !savedMilestone) {
+                        saveMilestone(milestone.key);
+                      }
+                      
+                      return (
+                        <motion.div 
+                          key={milestone.key}
+                          variants={cardVariants}
+                          whileHover={{ scale: 1.01, x: 3 }}
+                          className={cn(
+                            "flex items-center gap-3 p-3 rounded-xl",
+                            milestone.achieved ? "bg-primary/10" : "bg-muted/30 opacity-60"
+                          )}
+                        >
+                          <span className="text-2xl">{milestone.emoji}</span>
+                          <div className="flex flex-col">
+                            <span className={cn("font-medium", !milestone.achieved && "text-muted-foreground")}>
+                              {milestone.title}
+                            </span>
+                            {achievedAt && (
+                              <span className="text-xs text-muted-foreground">
+                                Erreicht am {format(new Date(achievedAt), "dd. MMM yyyy", { locale: de })}
+                              </span>
+                            )}
+                          </div>
+                          {milestone.achieved && (
+                            <motion.div
+                              className="ml-auto"
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ type: "spring", stiffness: 300 }}
+                            >
+                              <Target className="w-5 h-5 text-primary" />
+                            </motion.div>
+                          )}
+                        </motion.div>
+                      );
+                    })}
                   </motion.div>
                 </Card>
               </motion.div>
