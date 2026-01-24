@@ -16,8 +16,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import beforeImage from "@/assets/transformation-before.jpg";
-import afterImage from "@/assets/transformation-after.jpg";
+import beforeImage from "@/assets/transformation-before-new.jpg";
+import afterImage from "@/assets/transformation-after-new.jpg";
 
 type FeatureTab = "potential" | "analysis" | "plan" | "progress" | "coach";
 
