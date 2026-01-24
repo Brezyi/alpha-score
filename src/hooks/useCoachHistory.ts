@@ -7,6 +7,7 @@ export interface Conversation {
   title: string;
   created_at: string;
   updated_at: string;
+  is_archived: boolean;
 }
 
 export interface Message {
@@ -18,6 +19,7 @@ export interface Message {
 export function useCoachHistory() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [archivedConversations, setArchivedConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -29,10 +31,23 @@ export function useCoachHistory() {
       .from("coach_conversations")
       .select("*")
       .eq("user_id", user.id)
+      .eq("is_archived", false)
       .order("updated_at", { ascending: false });
     
     if (!error && data) {
       setConversations(data);
+    }
+
+    // Load archived separately
+    const { data: archivedData } = await supabase
+      .from("coach_conversations")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("is_archived", true)
+      .order("updated_at", { ascending: false });
+    
+    if (archivedData) {
+      setArchivedConversations(archivedData);
     }
   }, [user]);
 
@@ -147,6 +162,77 @@ export function useCoachHistory() {
     return true;
   }, [currentConversationId, loadConversations]);
 
+  // Delete all conversations
+  const deleteAllConversations = useCallback(async () => {
+    if (!user) return false;
+
+    const { error } = await supabase
+      .from("coach_conversations")
+      .delete()
+      .eq("user_id", user.id);
+    
+    if (error) {
+      console.error("Error deleting all conversations:", error);
+      return false;
+    }
+    
+    setCurrentConversationId(null);
+    await loadConversations();
+    return true;
+  }, [user, loadConversations]);
+
+  // Archive a conversation
+  const archiveConversation = useCallback(async (conversationId: string) => {
+    const { error } = await supabase
+      .from("coach_conversations")
+      .update({ is_archived: true })
+      .eq("id", conversationId);
+    
+    if (error) {
+      console.error("Error archiving conversation:", error);
+      return false;
+    }
+    
+    if (currentConversationId === conversationId) {
+      setCurrentConversationId(null);
+    }
+    
+    await loadConversations();
+    return true;
+  }, [currentConversationId, loadConversations]);
+
+  // Unarchive a conversation
+  const unarchiveConversation = useCallback(async (conversationId: string) => {
+    const { error } = await supabase
+      .from("coach_conversations")
+      .update({ is_archived: false })
+      .eq("id", conversationId);
+    
+    if (error) {
+      console.error("Error unarchiving conversation:", error);
+      return false;
+    }
+    
+    await loadConversations();
+    return true;
+  }, [loadConversations]);
+
+  // Rename a conversation
+  const renameConversation = useCallback(async (conversationId: string, newTitle: string) => {
+    const { error } = await supabase
+      .from("coach_conversations")
+      .update({ title: newTitle })
+      .eq("id", conversationId);
+    
+    if (error) {
+      console.error("Error renaming conversation:", error);
+      return false;
+    }
+    
+    await loadConversations();
+    return true;
+  }, [loadConversations]);
+
   // Load conversations on mount
   useEffect(() => {
     if (user) {
@@ -156,6 +242,7 @@ export function useCoachHistory() {
 
   return {
     conversations,
+    archivedConversations,
     currentConversationId,
     setCurrentConversationId,
     isLoading,
@@ -163,6 +250,10 @@ export function useCoachHistory() {
     loadMessages,
     createConversation,
     saveMessage,
-    deleteConversation
+    deleteConversation,
+    deleteAllConversations,
+    archiveConversation,
+    unarchiveConversation,
+    renameConversation
   };
 }
