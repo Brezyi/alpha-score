@@ -2,6 +2,7 @@ import { forwardRef } from "react";
 import { Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
 import {
   Tooltip,
   TooltipContent,
@@ -63,13 +64,15 @@ interface AchievementsGridProps {
   maxDisplay?: number;
 }
 
-const categoryOrder = ["analysis", "streak", "improvement", "level", "tasks"];
+const categoryOrder = ["analysis", "streak", "improvement", "level", "tasks", "score", "special"];
 
 export const AchievementsGrid = ({
   achievements,
   showAll = false,
   maxDisplay = 8,
 }: AchievementsGridProps) => {
+  const navigate = useNavigate();
+  
   // Sort: unlocked first, then by category
   const sortedAchievements = [...achievements].sort((a, b) => {
     if (a.unlocked !== b.unlocked) return a.unlocked ? -1 : 1;
@@ -81,6 +84,11 @@ export const AchievementsGrid = ({
     : sortedAchievements.slice(0, maxDisplay);
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const remainingCount = achievements.length - maxDisplay;
+
+  const handleMoreClick = () => {
+    navigate("/progress#achievements");
+  };
 
   return (
     <div className="space-y-4">
@@ -120,10 +128,13 @@ export const AchievementsGrid = ({
         ))}
       </div>
 
-      {!showAll && achievements.length > maxDisplay && (
-        <p className="text-center text-sm text-muted-foreground">
-          +{achievements.length - maxDisplay} weitere Achievements
-        </p>
+      {!showAll && remainingCount > 0 && (
+        <button 
+          onClick={handleMoreClick}
+          className="w-full text-center text-sm text-primary hover:text-primary/80 transition-colors font-medium py-2 hover:bg-primary/5 rounded-lg"
+        >
+          +{remainingCount} weitere Achievements ansehen →
+        </button>
       )}
     </div>
   );

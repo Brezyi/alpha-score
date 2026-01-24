@@ -364,6 +364,7 @@ const Dashboard = () => {
       const scores = completedAnalysesForCheck.map(a => a.looks_score).filter((s): s is number => s !== null);
       const highestScoreForCheck = scores.length > 0 ? Math.max(...scores) : 0;
       const lowestScoreForCheck = scores.length > 0 ? Math.min(...scores) : 0;
+      const latestScoreForCheck = completedAnalysesForCheck[0]?.looks_score ?? 0;
       
       // Fetch completed tasks count
       const { count: tasksCount } = await supabase
@@ -379,6 +380,7 @@ const Dashboard = () => {
         lowestScore: lowestScoreForCheck,
         completedTasksCount: tasksCount || 0,
         level: xp.level,
+        latestScore: latestScoreForCheck,
       });
     };
     
