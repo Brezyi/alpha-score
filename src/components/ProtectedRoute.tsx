@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
 import { useMaintenanceContext } from "@/components/MaintenanceGate";
-import { useAdminPassword } from "@/hooks/useAdminPassword";
 import { Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
+import { useAdminAccess } from "@/contexts/AdminAccessContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -23,10 +23,9 @@ export function ProtectedRoute({
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const { loading: maintenanceLoading } = useMaintenanceContext();
-  const { isVerified, loading: adminPasswordLoading, status: adminPasswordStatus } = useAdminPassword();
+  const adminAccess = useAdminAccess();
   
   const [showAdminPasswordDialog, setShowAdminPasswordDialog] = useState(false);
-  const [adminPasswordVerified, setAdminPasswordVerified] = useState(false);
 
   // Check if this route requires admin/owner role
   const requiresAdminRole = requiredRole && (
@@ -38,9 +37,9 @@ export function ProtectedRoute({
   // Check if user has admin/owner role
   const isAdminOrOwner = role === "admin" || role === "owner";
 
-  // Determine if admin password verification is needed
-  // User needs verification if: route requires admin, user is admin/owner, and not yet verified
-  const needsAdminPasswordVerification = requiresAdminRole && isAdminOrOwner && !isVerified && !adminPasswordVerified;
+  // Requirement: always ask when entering the admin area.
+  // We only keep "verified" in-memory (context) while user stays under /admin.
+  const needsAdminPasswordVerification = requiresAdminRole && isAdminOrOwner && !adminAccess.verified;
 
   // Redirect when not authenticated (after loading completes)
   useEffect(() => {
@@ -51,22 +50,13 @@ export function ProtectedRoute({
 
   // Show admin password dialog when accessing admin routes
   useEffect(() => {
-    if (!roleLoading && !adminPasswordLoading && needsAdminPasswordVerification) {
-      // Always show dialog - either for setup (if no password) or verification
+    if (!roleLoading && needsAdminPasswordVerification) {
       setShowAdminPasswordDialog(true);
     }
-  }, [roleLoading, adminPasswordLoading, needsAdminPasswordVerification]);
-
-  // Sync verified state - only when truly verified via the hook
-  useEffect(() => {
-    if (isVerified && !adminPasswordVerified) {
-      setAdminPasswordVerified(true);
-      setShowAdminPasswordDialog(false);
-    }
-  }, [isVerified, adminPasswordVerified]);
+  }, [roleLoading, needsAdminPasswordVerification]);
 
   // Loading state
-  const isLoading = authLoading || (roleLoading && maintenanceLoading) || (requiresAdminRole && isAdminOrOwner && adminPasswordLoading);
+  const isLoading = authLoading || roleLoading || maintenanceLoading;
   
   if (isLoading) {
     return (
@@ -124,7 +114,7 @@ export function ProtectedRoute({
     }
 
     // Admin password check for admin/owner routes
-    if (requiresAdminRole && isAdminOrOwner && !isVerified && !adminPasswordVerified) {
+    if (requiresAdminRole && isAdminOrOwner && !adminAccess.verified) {
       return (
         <>
           <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -145,7 +135,7 @@ export function ProtectedRoute({
           <AdminPasswordDialog
             open={showAdminPasswordDialog}
             onSuccess={() => {
-              setAdminPasswordVerified(true);
+              adminAccess.setVerified(true);
               setShowAdminPasswordDialog(false);
             }}
             onCancel={() => {
@@ -164,7 +154,7 @@ export function ProtectedRoute({
       <AdminPasswordDialog
         open={showAdminPasswordDialog}
         onSuccess={() => {
-          setAdminPasswordVerified(true);
+          adminAccess.setVerified(true);
           setShowAdminPasswordDialog(false);
         }}
         onCancel={() => {

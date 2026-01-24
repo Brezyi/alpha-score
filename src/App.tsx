@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { SystemSettingsProvider } from "./contexts/SystemSettingsContext";
+import { AdminAccessProvider } from "./contexts/AdminAccessContext";
 import { MaintenanceProvider, MaintenanceCheck } from "./components/MaintenanceGate";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -55,10 +56,11 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <MaintenanceProvider>
-                <MaintenanceCheck>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
+              <AdminAccessProvider>
+                <MaintenanceProvider>
+                  <MaintenanceCheck>
+                    <Routes>
+                      <Route path="/" element={<Index />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -154,11 +156,12 @@ const App = () => (
                     />
                     
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <CookieConsent />
-                </MaintenanceCheck>
-              </MaintenanceProvider>
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                    <CookieConsent />
+                  </MaintenanceCheck>
+                </MaintenanceProvider>
+              </AdminAccessProvider>
             </BrowserRouter>
           </TooltipProvider>
         </SystemSettingsProvider>
