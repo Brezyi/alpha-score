@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOptimizedAnimations } from "@/hooks/useReducedMotion";
+import { FaceFitnessExercises } from "@/components/FaceFitnessExercises";
 
 type Task = {
   id: string;
@@ -755,6 +756,16 @@ const Plan = () => {
                   ))}
                 </AnimatePresence>
               </div>
+            </motion.div>
+
+            {/* Face Fitness Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="glass-card p-6 rounded-2xl mb-6"
+            >
+              <FaceFitnessExercises />
             </motion.div>
 
             {/* Regenerate Button */}
