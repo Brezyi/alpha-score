@@ -45,28 +45,77 @@ const Hero = () => {
       ref={sectionRef}
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      {/* Background Effects with Parallax */}
+      {/* Animated Gradient Orbs */}
       <div 
-        className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50 transition-transform duration-100 will-change-transform"
-        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
-      />
-      <div 
-        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl transition-transform duration-100 will-change-transform"
+        className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl animate-pulse-slow will-change-transform"
         style={{ transform: `translate(-50%, ${scrollY * 0.15}px)` }}
       />
+      <div 
+        className="absolute top-1/3 right-1/4 w-[400px] h-[400px] bg-primary/8 rounded-full blur-3xl animate-float will-change-transform"
+        style={{ transform: `translateY(${scrollY * 0.1}px)`, animationDelay: "1s" }}
+      />
+      <div 
+        className="absolute bottom-1/4 left-1/4 w-[300px] h-[300px] bg-primary/6 rounded-full blur-3xl animate-float will-change-transform"
+        style={{ transform: `translateY(${scrollY * 0.08}px)`, animationDelay: "2s" }}
+      />
+      
+      {/* Radial gradient overlay */}
+      <div 
+        className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50 will-change-transform"
+        style={{ transform: `translateY(${scrollY * 0.1}px)` }}
+      />
+      
+      {/* Bottom line */}
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       
-      {/* Static decorative elements with parallax */}
+      {/* Floating Particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
+        {[...Array(12)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-2 h-2 bg-primary/20 rounded-full transition-transform duration-100 will-change-transform"
+            className="absolute rounded-full animate-float will-change-transform"
             style={{ 
-              left: `${15 + i * 15}%`, 
-              top: `${20 + (i % 3) * 25}%`,
-              opacity: 0.3 + (i * 0.1),
-              transform: `translateY(${scrollY * (0.05 + i * 0.02)}px)`
+              left: `${8 + (i * 8)}%`, 
+              top: `${15 + ((i * 17) % 60)}%`,
+              width: `${4 + (i % 3) * 2}px`,
+              height: `${4 + (i % 3) * 2}px`,
+              backgroundColor: `hsl(var(--primary) / ${0.15 + (i % 4) * 0.08})`,
+              animationDuration: `${4 + (i % 3) * 2}s`,
+              animationDelay: `${i * 0.3}s`,
+              transform: `translateY(${scrollY * (0.03 + i * 0.015)}px)`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Animated Lines */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(3)].map((_, i) => (
+          <div
+            key={`line-${i}`}
+            className="absolute h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent animate-shimmer"
+            style={{
+              top: `${25 + i * 25}%`,
+              left: 0,
+              right: 0,
+              animationDuration: `${3 + i}s`,
+              animationDelay: `${i * 0.5}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Pulsing Rings */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        {[...Array(3)].map((_, i) => (
+          <div
+            key={`ring-${i}`}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/10 animate-pulse-ring"
+            style={{
+              width: `${300 + i * 200}px`,
+              height: `${300 + i * 200}px`,
+              animationDelay: `${i * 0.8}s`,
+              animationDuration: "4s"
             }}
           />
         ))}
@@ -74,12 +123,12 @@ const Hero = () => {
       
       {/* Grid Pattern - Dark Mode */}
       <div 
-        className="absolute inset-0 dark:block hidden bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)] transition-transform duration-100 will-change-transform"
+        className="absolute inset-0 dark:block hidden bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)] will-change-transform"
         style={{ transform: `translateY(${scrollY * 0.05}px)` }}
       />
       {/* Grid Pattern - Light Mode */}
       <div 
-        className="absolute inset-0 dark:hidden block bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)] transition-transform duration-100 will-change-transform"
+        className="absolute inset-0 dark:hidden block bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)] will-change-transform"
         style={{ transform: `translateY(${scrollY * 0.05}px)` }}
       />
 
