@@ -66,11 +66,36 @@ const Register = () => {
   const passwordStrength = getPasswordStrength(password);
   const passwordsMatch = confirmPassword === "" || password === confirmPassword;
 
+  // Name validation - only letters, spaces, hyphens allowed
+  const isValidName = (name: string): boolean => {
+    return /^[a-zA-ZäöüÄÖÜßéèêëàâîïôûùç\s\-']+$/.test(name);
+  };
+  
+  const firstNameValid = firstName === "" || isValidName(firstName);
+  const lastNameValid = lastName === "" || isValidName(lastName);
+
+  const handleNameChange = (value: string, setter: (val: string) => void) => {
+    // Allow typing but filter out invalid characters
+    const filtered = value.replace(/[0-9]/g, '');
+    setter(filtered);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Validate name format
+      if (!isValidName(firstName.trim()) || !isValidName(lastName.trim())) {
+        toast({
+          title: "Ungültiger Name",
+          description: "Vor- und Nachname dürfen nur Buchstaben enthalten.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       // Validate inputs
       if (!firstName.trim() || !lastName.trim()) {
         toast({
@@ -237,36 +262,61 @@ const Register = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">Vorname</Label>
-                <Input
-                  id="firstName"
-                  type="text"
-                  placeholder="Max"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="h-12 bg-card border-border"
-                  minLength={2}
-                  maxLength={50}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="Max"
+                    value={firstName}
+                    onChange={(e) => handleNameChange(e.target.value, setFirstName)}
+                    className={`h-12 bg-card border-border ${
+                      firstName && !firstNameValid ? "border-destructive focus-visible:ring-destructive" : ""
+                    }`}
+                    minLength={2}
+                    maxLength={50}
+                    required
+                  />
+                  {firstName && !firstNameValid && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <AlertCircle className="h-4 w-4 text-destructive" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Nachname</Label>
-                <Input
-                  id="lastName"
-                  type="text"
-                  placeholder="Mustermann"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="h-12 bg-card border-border"
-                  minLength={2}
-                  maxLength={50}
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Mustermann"
+                    value={lastName}
+                    onChange={(e) => handleNameChange(e.target.value, setLastName)}
+                    className={`h-12 bg-card border-border ${
+                      lastName && !lastNameValid ? "border-destructive focus-visible:ring-destructive" : ""
+                    }`}
+                    minLength={2}
+                    maxLength={50}
+                    required
+                  />
+                  {lastName && !lastNameValid && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <AlertCircle className="h-4 w-4 text-destructive" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-            <p className="text-xs text-muted-foreground -mt-3">
-              Dein echter Name wird privat gespeichert und ist nur für dich sichtbar.
-            </p>
+            {(!firstNameValid || !lastNameValid) && (firstName || lastName) ? (
+              <p className="text-xs text-destructive -mt-3 flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                Nur Buchstaben erlaubt (keine Zahlen oder Sonderzeichen)
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground -mt-3">
+                Dein echter Name wird privat gespeichert und ist nur für dich sichtbar.
+              </p>
+            )}
 
             {/* Display Name */}
             <div className="space-y-2">
