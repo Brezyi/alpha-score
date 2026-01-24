@@ -1,17 +1,42 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useEffect, useState, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 const Hero = () => {
+  const [isVisible, setIsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section 
+      ref={sectionRef}
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+    >
       {/* Background Effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-50" />
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
       
-      {/* Static decorative elements instead of animated particles */}
+      {/* Static decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(6)].map((_, i) => (
           <div
@@ -34,67 +59,68 @@ const Hero = () => {
       <div className="container relative z-10 px-4 pt-20">
         <div className="max-w-4xl mx-auto text-center">
           {/* Badge */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8"
+          <div 
+            className={cn(
+              "inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 transition-all duration-500",
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+            )}
+            style={{ transitionDelay: "100ms" }}
           >
             <Zap className="w-4 h-4 text-primary animate-pulse" />
             <span className="text-sm text-muted-foreground">KI-gestützte Looksmaxing Analyse</span>
-          </motion.div>
+          </div>
 
           {/* Main Headline with staggered animation */}
-          <motion.h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <motion.span 
-              className="text-gradient glow-text inline-block"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6">
+            <span 
+              className={cn(
+                "text-gradient glow-text inline-block transition-all duration-600",
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              )}
+              style={{ transitionDelay: "200ms" }}
             >
               Maximiere
-            </motion.span>
+            </span>
             <br />
-            <motion.span 
-              className="text-foreground inline-block"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
+            <span 
+              className={cn(
+                "text-foreground inline-block transition-all duration-600",
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              )}
+              style={{ transitionDelay: "350ms" }}
             >
               dein Aussehen.
-            </motion.span>
-          </motion.h1>
+            </span>
+          </h1>
 
           {/* Subheadline */}
-          <motion.p 
-            className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-4"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
+          <p 
+            className={cn(
+              "text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-4 transition-all duration-500",
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+            )}
+            style={{ transitionDelay: "500ms" }}
           >
             Systematisch. Messbar. Wissenschaftlich.
-          </motion.p>
+          </p>
 
-          <motion.p 
-            className="text-lg text-muted-foreground/80 max-w-xl mx-auto mb-10"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
+          <p 
+            className={cn(
+              "text-lg text-muted-foreground/80 max-w-xl mx-auto mb-10 transition-all duration-500",
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+            )}
+            style={{ transitionDelay: "600ms" }}
           >
             Deine KI für objektive Analyse und einen personalisierten Plan zur Optimierung deines Aussehens.
-          </motion.p>
+          </p>
 
           {/* CTA Buttons */}
-          <motion.div 
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
+          <div 
+            className={cn(
+              "flex flex-col sm:flex-row items-center justify-center gap-4 mb-12 transition-all duration-500",
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+            )}
+            style={{ transitionDelay: "700ms" }}
           >
             <Link to="/register">
               <Button variant="hero" size="xl" className="group relative overflow-hidden">
@@ -102,12 +128,7 @@ const Hero = () => {
                   Kostenlos starten
                   <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                 </span>
-                <motion.div 
-                  className="absolute inset-0 bg-white/20"
-                  initial={{ x: "-100%" }}
-                  whileHover={{ x: "100%" }}
-                  transition={{ duration: 0.5 }}
-                />
+                <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
               </Button>
             </Link>
             <Link to="/login">
@@ -115,13 +136,19 @@ const Hero = () => {
                 Anmelden
               </Button>
             </Link>
-          </motion.div>
+          </div>
 
         </div>
       </div>
 
-      {/* Scroll Indicator - CSS animation instead of JS */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+      {/* Scroll Indicator - CSS animation */}
+      <div 
+        className={cn(
+          "absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce transition-opacity duration-500",
+          isVisible ? "opacity-100" : "opacity-0"
+        )}
+        style={{ transitionDelay: "900ms" }}
+      >
         <div className="w-6 h-10 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-2">
           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
         </div>
