@@ -22,6 +22,13 @@ export interface Profile {
   country: string | null;
   created_at: string;
   updated_at: string;
+  display_name_changed_at: string | null;
+}
+
+export interface DisplayNameChangeStatus {
+  allowed: boolean;
+  days_remaining: number;
+  next_change_date: string | null;
 }
 
 export function useProfile() {
@@ -29,6 +36,33 @@ export function useProfile() {
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [displayNameChangeStatus, setDisplayNameChangeStatus] = useState<DisplayNameChangeStatus | null>(null);
+
+  const checkDisplayNameChangeAllowed = useCallback(async () => {
+    if (!user) {
+      setDisplayNameChangeStatus(null);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.rpc('can_change_display_name', {
+        p_user_id: user.id
+      });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setDisplayNameChangeStatus({
+          allowed: data[0].allowed,
+          days_remaining: data[0].days_remaining,
+          next_change_date: data[0].next_change_date
+        });
+      }
+    } catch (error) {
+      console.error("Error checking display name change status:", error);
+      setDisplayNameChangeStatus({ allowed: true, days_remaining: 0, next_change_date: null });
+    }
+  }, [user]);
 
   const fetchProfile = useCallback(async () => {
     if (!user) {
@@ -71,7 +105,7 @@ export function useProfile() {
 
   useEffect(() => {
     fetchProfile();
-
+    checkDisplayNameChangeAllowed();
     // In-app sync: keep multiple useProfile() hook instances in sync instantly
     // (e.g. ProfileMenu updates should immediately reflect on Dashboard without a reload)
     const handleLocalProfileUpdate = (event: Event) => {
@@ -133,11 +167,23 @@ export function useProfile() {
         window.removeEventListener(PROFILE_UPDATED_EVENT, handleLocalProfileUpdate);
       }
     };
-  }, [fetchProfile, user]);
+  }, [fetchProfile, user, checkDisplayNameChangeAllowed]);
 
   const updateProfile = useCallback(
     async (updates: Partial<Pick<Profile, "display_name" | "avatar_url" | "theme" | "accent_color" | "background_style" | "gender" | "country">>) => {
       if (!user || !profile) return false;
+
+      // Check if trying to change display name and if it's allowed
+      if (updates.display_name && updates.display_name !== profile.display_name) {
+        if (displayNameChangeStatus && !displayNameChangeStatus.allowed) {
+          toast({
+            title: "Änderung nicht möglich",
+            description: `Du kannst deinen Namen erst in ${displayNameChangeStatus.days_remaining} Tagen wieder ändern.`,
+            variant: "destructive",
+          });
+          return false;
+        }
+      }
 
       try {
         const { error } = await supabase
@@ -156,6 +202,11 @@ export function useProfile() {
               detail: { userId: user.id, updates },
             })
           );
+        }
+        
+        // Refresh the change status after a display name update
+        if (updates.display_name && updates.display_name !== profile.display_name) {
+          await checkDisplayNameChangeAllowed();
         }
         
         toast({
@@ -184,7 +235,7 @@ export function useProfile() {
         return false;
       }
     },
-    [user, profile, toast]
+    [user, profile, toast, displayNameChangeStatus, checkDisplayNameChangeAllowed]
   );
 
   const uploadAvatar = useCallback(
@@ -229,5 +280,7 @@ export function useProfile() {
     updateProfile,
     uploadAvatar,
     refetch: fetchProfile,
+    displayNameChangeStatus,
+    checkDisplayNameChangeAllowed,
   };
 }

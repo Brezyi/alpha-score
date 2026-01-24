@@ -471,6 +471,7 @@ export type Database = {
           country: string | null
           created_at: string
           display_name: string | null
+          display_name_changed_at: string | null
           gender: string | null
           id: string
           theme: string | null
@@ -485,6 +486,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           display_name?: string | null
+          display_name_changed_at?: string | null
           gender?: string | null
           id?: string
           theme?: string | null
@@ -499,6 +501,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           display_name?: string | null
+          display_name_changed_at?: string | null
           gender?: string | null
           id?: string
           theme?: string | null
@@ -1278,6 +1281,14 @@ export type Database = {
           leveled_up: boolean
           new_level: number
           new_xp: number
+        }[]
+      }
+      can_change_display_name: {
+        Args: { p_user_id: string }
+        Returns: {
+          allowed: boolean
+          days_remaining: number
+          next_change_date: string
         }[]
       }
       check_account_lockout: {
