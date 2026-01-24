@@ -338,19 +338,27 @@ export function ProfileMenu() {
               </Button>
             </div>
 
-            {/* Private Name (if available) */}
-            {hasSensitiveData && firstName && lastName && (
-              <div className="space-y-2 p-3 rounded-lg bg-muted/50 border border-border">
-                <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-muted-foreground" />
-                  <Label className="text-sm font-medium">Echter Name (privat)</Label>
-                </div>
-                <p className="text-sm">{firstName} {lastName}</p>
-                <p className="text-xs text-muted-foreground">
-                  Nur für dich sichtbar. Kann nicht geändert werden.
-                </p>
+            {/* Private Name - Read-only like email */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Vorname</Label>
+                <Input 
+                  value={firstName || ""} 
+                  disabled 
+                  className="opacity-70" 
+                  placeholder={!hasSensitiveData ? "Nicht angegeben" : ""}
+                />
               </div>
-            )}
+              <div className="space-y-2">
+                <Label>Nachname</Label>
+                <Input 
+                  value={lastName || ""} 
+                  disabled 
+                  className="opacity-70" 
+                  placeholder={!hasSensitiveData ? "Nicht angegeben" : ""}
+                />
+              </div>
+            </div>
 
             {/* Display Name (editable) */}
             <div className="space-y-2">
