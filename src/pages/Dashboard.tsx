@@ -25,7 +25,10 @@ import {
   Eye,
   Scissors,
   ChevronDown,
-  Info
+  Info,
+  Quote,
+  CheckCircle2,
+  Circle
 } from "lucide-react";
 import {
   Collapsible,
@@ -43,7 +46,7 @@ import { useStreak } from "@/hooks/useStreak";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { ProfileOnboardingModal } from "@/components/ProfileOnboardingModal";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, ComposedChart } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { TestimonialSubmitDialog } from "@/components/TestimonialSubmitDialog";
 import { Progress } from "@/components/ui/progress";
@@ -156,6 +159,25 @@ const AnimatedNumber = React.forwardRef<
 });
 AnimatedNumber.displayName = "AnimatedNumber";
 
+// Motivational quotes
+const motivationalQuotes = [
+  { text: "Jeden Tag 1% besser – das ist der Weg.", author: "Atomic Habits" },
+  { text: "Dein Aussehen ist eine Investition in dich selbst.", author: "FaceRank" },
+  { text: "Konsistenz schlägt Intensität. Immer.", author: "James Clear" },
+  { text: "Der beste Zeitpunkt war gestern. Der zweitbeste ist jetzt.", author: "Chinesisches Sprichwort" },
+  { text: "Du wirst nie deinen Wert sehen, wenn du ihn nicht entwickelst.", author: "FaceRank" },
+  { text: "Erfolg ist die Summe kleiner Anstrengungen, die sich täglich wiederholen.", author: "Robert Collier" },
+  { text: "Sei die beste Version deiner selbst.", author: "FaceRank" },
+];
+
+type UserTask = {
+  id: string;
+  title: string;
+  category: string;
+  completed: boolean;
+  priority: number;
+};
+
 const Dashboard = () => {
   const { user, loading } = useAuth();
   const { profile, updateProfile, loading: profileLoading } = useProfile();
@@ -164,6 +186,13 @@ const Dashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [analysisToDelete, setAnalysisToDelete] = useState<Analysis | null>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [tasks, setTasks] = useState<UserTask[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [dailyQuote] = useState(() => {
+    // Get quote based on day of year for consistency within a day
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    return motivationalQuotes[dayOfYear % motivationalQuotes.length];
+  });
   const [viewedDetails, setViewedDetails] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem('dashboard-viewed-details');
@@ -262,6 +291,37 @@ const Dashboard = () => {
     }
   }, [user]);
 
+  // Fetch user tasks for "Next Steps" widget
+  useEffect(() => {
+    const fetchTasks = async () => {
+      if (!user) {
+        setTasksLoading(false);
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from("user_tasks")
+          .select("id, title, category, completed, priority")
+          .eq("user_id", user.id)
+          .eq("completed", false)
+          .order("priority", { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setTasks(data || []);
+      } catch (error: any) {
+        console.error("Error fetching tasks:", error);
+      } finally {
+        setTasksLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchTasks();
+    }
+  }, [user]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -294,15 +354,19 @@ const Dashboard = () => {
   const highestScore = allScores.length > 0 ? Math.max(...allScores) : null;
   const isPersonalBest = latestScore !== null && highestScore !== null && latestScore >= highestScore && completedAnalyses.length > 1;
 
-  // Chart data (last 10 analyses, reversed for chronological order) with potential
-  const chartData = completedAnalyses
-    .slice(0, 10)
-    .reverse()
-    .map((a) => ({
+  // Chart data (last 10 analyses, reversed for chronological order) with potential and change
+  const chartDataRaw = completedAnalyses.slice(0, 10).reverse();
+  const chartData = chartDataRaw.map((a, index) => {
+    const prevScore = index > 0 ? chartDataRaw[index - 1].looks_score : null;
+    const change = a.looks_score !== null && prevScore !== null ? a.looks_score - prevScore : null;
+    return {
       date: new Date(a.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+      fullDate: new Date(a.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" }),
       score: a.looks_score,
       potential: a.potential_score,
-    }));
+      change,
+    };
+  });
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -482,18 +546,31 @@ const Dashboard = () => {
                 <div className="text-2xl font-bold">{completedAnalyses.length}</div>
                 <div className="text-xs text-muted-foreground">Analysen</div>
               </div>
-              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
-                <div className="flex items-center justify-center gap-1">
+              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform relative overflow-hidden" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
+                {/* Animated flame background for active streaks */}
+                {!streakLoading && currentStreak >= 3 && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-orange-500/10 via-transparent to-transparent animate-pulse" />
+                )}
+                <div className="relative flex items-center justify-center gap-1">
                   <span className="text-2xl font-bold">
                     {streakLoading ? (
                       <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                     ) : currentStreak}
                   </span>
-                  {!streakLoading && currentStreak > 0 && <Flame className="w-5 h-5 text-orange-500" />}
+                  {!streakLoading && currentStreak > 0 && (
+                    <div className="relative">
+                      <Flame className={`w-5 h-5 text-orange-500 ${currentStreak >= 7 ? 'animate-bounce' : currentStreak >= 3 ? 'animate-pulse' : ''}`} />
+                      {currentStreak >= 7 && (
+                        <Flame className="absolute inset-0 w-5 h-5 text-orange-400 animate-ping opacity-50" />
+                      )}
+                    </div>
+                  )}
                 </div>
-                <div className="text-xs text-muted-foreground">Streak</div>
+                <div className="relative text-xs text-muted-foreground">
+                  {currentStreak >= 7 ? "🔥 On Fire!" : currentStreak >= 3 ? "Streak" : "Streak"}
+                </div>
                 {!streakLoading && !isActiveToday && currentStreak > 0 && (
-                  <div className="text-[10px] text-orange-400 mt-1 animate-pulse">Heute aktiv werden!</div>
+                  <div className="relative text-[10px] text-orange-400 mt-1 animate-pulse font-medium">Heute aktiv werden!</div>
                 )}
               </div>
               <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "350ms", animationFillMode: "forwards" }}>
@@ -501,6 +578,81 @@ const Dashboard = () => {
                 <div className="text-xs text-muted-foreground">Ranking</div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* New Widgets Row: Motivation Quote + Next Steps */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Motivation Quote Widget */}
+          <div className="p-5 rounded-2xl glass-card opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
+            <div className="absolute top-3 right-3">
+              <Quote className="w-8 h-8 text-primary/10" />
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-muted-foreground mb-1">Motivation des Tages</div>
+                <p className="text-sm font-medium leading-relaxed mb-2">"{dailyQuote.text}"</p>
+                <p className="text-xs text-muted-foreground">— {dailyQuote.author}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Next Steps Widget */}
+          <div className="p-5 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "450ms", animationFillMode: "forwards" }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-blue-500" />
+                </div>
+                <span className="font-semibold text-sm">Nächste Schritte</span>
+              </div>
+              <Link to="/plan" className="text-xs text-primary hover:underline flex items-center gap-1 group">
+                Alle
+                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
+            
+            {tasksLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="text-center py-3">
+                <p className="text-sm text-muted-foreground mb-2">Keine offenen Tasks</p>
+                {isPremiumUser ? (
+                  <Link to="/plan">
+                    <Button variant="outline" size="sm" className="text-xs">
+                      Plan erstellen
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/pricing">
+                    <Button variant="outline" size="sm" className="text-xs gap-1">
+                      <Lock className="w-3 h-3" />
+                      Premium freischalten
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {tasks.map((task, index) => (
+                  <div 
+                    key={task.id} 
+                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
+                  >
+                    <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm truncate flex-1">{task.title}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wide">
+                      {task.category}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -732,6 +884,12 @@ const Dashboard = () => {
             <div className="h-44">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="scoreGradientFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
                   <XAxis 
                     dataKey="date" 
                     stroke="hsl(var(--muted-foreground))"
@@ -757,16 +915,42 @@ const Dashboard = () => {
                       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                       padding: "10px 14px",
                     }}
-                    labelFormatter={(label) => (
-                      <span className="text-sm font-semibold text-foreground">{label}</span>
-                    )}
-                    formatter={(value: number, name: string) => [
-                      <span key={name} className="font-medium">{value?.toFixed(1) || "—"}</span>, 
-                      name === "score" ? "Score" : "Potenzial"
-                    ]}
+                    labelFormatter={(_, payload) => {
+                      const data = payload?.[0]?.payload;
+                      return (
+                        <span className="text-sm font-semibold text-foreground block mb-1">{data?.fullDate || data?.date}</span>
+                      );
+                    }}
+                    formatter={(value: number, name: string, props: any) => {
+                      const change = props?.payload?.change;
+                      if (name === "score") {
+                        return [
+                          <div key={name} className="flex items-center gap-2">
+                            <span className="font-medium">{value?.toFixed(1) || "—"}</span>
+                            {change !== null && change !== undefined && (
+                              <span className={`text-xs font-medium ${change > 0 ? 'text-green-500' : change < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                ({change > 0 ? '+' : ''}{change.toFixed(1)})
+                              </span>
+                            )}
+                          </div>, 
+                          "Score"
+                        ];
+                      }
+                      return [
+                        <span key={name} className="font-medium">{value?.toFixed(1) || "—"}</span>, 
+                        "Potenzial"
+                      ];
+                    }}
                     cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
                   />
-                  {/* Potential Line (area fill + dashed) */}
+                  {/* Gradient fill area under score line */}
+                  <Area
+                    type="monotone"
+                    dataKey="score"
+                    stroke="none"
+                    fill="url(#scoreGradientFill)"
+                  />
+                  {/* Potential Line (dashed) */}
                   <Line
                     type="monotone"
                     dataKey="potential"

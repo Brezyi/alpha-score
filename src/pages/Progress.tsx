@@ -28,7 +28,7 @@ import {
   Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area } from "recharts";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -223,16 +223,20 @@ export default function Progress() {
     ? (latestPotential - latestScore).toFixed(1)
     : null;
 
-  // Chart data (chronological order)
-  const chartData = completedAnalyses
-    .slice()
-    .reverse()
-    .map((a, index) => ({
+  // Chart data (chronological order) with change calculation
+  const chartDataRaw = completedAnalyses.slice().reverse();
+  const chartData = chartDataRaw.map((a, index) => {
+    const prevScore = index > 0 ? chartDataRaw[index - 1].looks_score : null;
+    const change = a.looks_score !== null && prevScore !== null ? a.looks_score - prevScore : null;
+    return {
       date: format(new Date(a.created_at), "dd.MM", { locale: de }),
+      fullDate: format(new Date(a.created_at), "dd. MMMM yyyy", { locale: de }),
       score: a.looks_score,
       potential: a.potential_score,
+      change,
       index: index + 1,
-    }));
+    };
+  });
 
   // Before/After comparison
   const canCompare = completedAnalyses.length >= 2;
@@ -506,6 +510,12 @@ export default function Progress() {
                     <div className="h-56">
                       <ResponsiveContainer width="100%" height="100%">
                         <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="progressScoreGradientFill" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                              <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
                           <XAxis 
                             dataKey="date" 
                             stroke="hsl(var(--muted-foreground))"
@@ -531,14 +541,40 @@ export default function Progress() {
                               boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
                               padding: "10px 14px",
                             }}
-                            labelFormatter={(label) => (
-                              <span className="text-sm font-semibold text-foreground">{label}</span>
-                            )}
-                            formatter={(value: number, name: string) => [
-                              <span key={name} className="font-medium">{value?.toFixed(1) || "—"}</span>, 
-                              name === "score" ? "Score" : "Potenzial"
-                            ]}
+                            labelFormatter={(_, payload) => {
+                              const data = payload?.[0]?.payload;
+                              return (
+                                <span className="text-sm font-semibold text-foreground block mb-1">{data?.fullDate || data?.date}</span>
+                              );
+                            }}
+                            formatter={(value: number, name: string, props: any) => {
+                              const change = props?.payload?.change;
+                              if (name === "score") {
+                                return [
+                                  <div key={name} className="flex items-center gap-2">
+                                    <span className="font-medium">{value?.toFixed(1) || "—"}</span>
+                                    {change !== null && change !== undefined && (
+                                      <span className={`text-xs font-medium ${change > 0 ? 'text-green-500' : change < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                        ({change > 0 ? '+' : ''}{change.toFixed(1)})
+                                      </span>
+                                    )}
+                                  </div>, 
+                                  "Score"
+                                ];
+                              }
+                              return [
+                                <span key={name} className="font-medium">{value?.toFixed(1) || "—"}</span>, 
+                                "Potenzial"
+                              ];
+                            }}
                             cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
+                          />
+                          {/* Gradient fill area under score line */}
+                          <Area
+                            type="monotone"
+                            dataKey="score"
+                            stroke="none"
+                            fill="url(#progressScoreGradientFill)"
                           />
                           {/* Potential Line (dashed) */}
                           <Line
