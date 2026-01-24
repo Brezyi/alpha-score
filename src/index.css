@@ -1,38 +1,10 @@
-/* Optimized font loading - only load weights we actually use */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* GLOMAXXED AI Design System - Masculine, High-End, Minimal */
-
-/* ===== CROSS-BROWSER PERFORMANCE OPTIMIZATIONS ===== */
-
-/* Force GPU acceleration for smoother animations */
-@layer base {
-  * {
-    /* Improve text rendering across browsers */
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  
-  /* Optimize scrolling performance */
-  html {
-    scroll-behavior: smooth;
-    /* Firefox scrollbar styling */
-    scrollbar-width: thin;
-    scrollbar-color: hsl(0, 0%, 25%) transparent;
-  }
-  
-  /* Enable hardware acceleration for transformed elements */
-  .transform-gpu {
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    perspective: 1000px;
-  }
-}
 
 @layer base {
   :root {
@@ -428,15 +400,6 @@
 
 /* Reduce motion for accessibility and mobile performance */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-  
   .animate-fade-in,
   .animate-scale-in,
   .animate-slide-in,
@@ -454,7 +417,7 @@
   }
 }
 
-/* ===== WEBKIT/CHROME/EDGE OPTIMIZATIONS ===== */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -466,61 +429,13 @@
 
 ::-webkit-scrollbar-thumb {
   @apply bg-muted rounded-full;
-  transition: background-color 0.2s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   @apply bg-muted-foreground/50;
 }
 
-/* ===== FIREFOX SPECIFIC OPTIMIZATIONS ===== */
-@-moz-document url-prefix() {
-  /* Firefox-specific smooth scrolling */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(0, 0%, 25%) transparent;
-  }
-  
-  /* Firefox backdrop-filter fallback */
-  .glass-card {
-    background-color: hsl(0, 0%, 7.8%, 0.95);
-  }
-  
-  .dark .glass-card {
-    background-color: hsl(0, 0%, 7.8%, 0.95);
-  }
-}
-
-/* ===== SAFARI/iOS OPTIMIZATIONS ===== */
-@supports (-webkit-touch-callout: none) {
-  /* Fix 100vh issue on iOS Safari */
-  .min-h-screen {
-    min-height: -webkit-fill-available;
-  }
-  
-  /* Improve touch scrolling */
-  .overflow-auto,
-  .overflow-scroll,
-  .overflow-y-auto,
-  .overflow-x-auto {
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  /* Fix backdrop-filter rendering on Safari */
-  .backdrop-blur-xl {
-    -webkit-backdrop-filter: blur(24px);
-  }
-  
-  .backdrop-blur-lg {
-    -webkit-backdrop-filter: blur(16px);
-  }
-  
-  .backdrop-blur-md {
-    -webkit-backdrop-filter: blur(12px);
-  }
-}
-
-/* ===== GPU ACCELERATION UTILITIES ===== */
+/* GPU acceleration for smooth animations */
 .will-change-transform {
   will-change: transform;
 }
@@ -529,68 +444,23 @@
   will-change: opacity;
 }
 
-.will-change-auto {
-  will-change: auto;
-}
-
-/* Force hardware acceleration */
-.gpu-accelerated {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-/* ===== LAYOUT CONTAINMENT FOR BETTER PERFORMANCE ===== */
-.contain-layout {
-  contain: layout;
-}
-
-.contain-paint {
-  contain: paint;
-}
-
-.contain-strict {
-  contain: strict;
-}
-
-.contain-content {
-  contain: content;
-}
-
-/* ===== TOUCH & MOBILE OPTIMIZATIONS ===== */
+/* Improve touch scrolling on mobile */
 .smooth-scroll {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  overscroll-behavior: contain;
 }
 
-/* Prevent text selection lag on touch devices */
-.touch-optimized {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  touch-action: manipulation;
-}
-
-/* ===== IMAGE OPTIMIZATIONS ===== */
+/* Optimize image rendering */
 img {
   content-visibility: auto;
-  contain-intrinsic-size: auto 300px;
 }
 
-/* Lazy-loaded images */
-img[loading="lazy"] {
-  background-color: hsl(0, 0%, 12%);
-}
-
-/* ===== MOBILE PERFORMANCE ===== */
+/* Reduce layout thrashing on mobile */
 @media (max-width: 768px) {
-  /* Reduce backdrop blur intensity on mobile */
   .glass-card {
     backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
   }
   
-  /* Disable expensive animations on mobile */
   .animate-float {
     animation: none;
   }
@@ -598,36 +468,5 @@ img[loading="lazy"] {
   .animate-glow {
     animation: none;
     box-shadow: var(--shadow-glow);
-  }
-  
-  /* Simpler shadows on mobile */
-  .shadow-elevated {
-    box-shadow: 0 4px 12px hsl(0, 0%, 0%, 0.3);
-  }
-}
-
-/* ===== LOW-POWER MODE / BATTERY SAVER ===== */
-@media (prefers-reduced-motion: reduce), (update: slow) {
-  * {
-    transition-duration: 0.001ms !important;
-  }
-  
-  .backdrop-blur-xl,
-  .backdrop-blur-lg,
-  .backdrop-blur-md {
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background-color: hsl(0, 0%, 7.8%, 0.98);
-  }
-}
-
-/* ===== HIGH CONTRAST MODE ===== */
-@media (prefers-contrast: high) {
-  :root {
-    --border: 0 0% 40%;
-  }
-  
-  .glass-card {
-    border-width: 2px;
   }
 }

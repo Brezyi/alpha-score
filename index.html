@@ -4,15 +4,6 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
     
-    <!-- DNS Prefetch & Preconnect for faster resource loading -->
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    
-    <!-- Preload critical font -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" as="style" />
-    
     <!-- App Info -->
     <title>GLOMAXXED AI - Maximiere dein Aussehen</title>
     <meta name="description" content="GLOMAXXED AI - Deine Looksmaxing App. KI-gestützte Analyse, personalisierte Pläne und AI Coach für dein bestes Aussehen." />
@@ -39,56 +30,10 @@
     
     <!-- Capacitor -->
     <link rel="manifest" href="/manifest.json" />
-    
-    <!-- Critical CSS for faster first paint -->
-    <style>
-      /* Prevent FOUC and ensure smooth loading */
-      html { 
-        background-color: #0B0B0B; 
-        color-scheme: dark light;
-      }
-      body { 
-        margin: 0; 
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-        text-rendering: optimizeLegibility;
-      }
-      /* Initial loading state */
-      #root:empty::before {
-        content: '';
-        display: block;
-        width: 32px;
-        height: 32px;
-        margin: 40vh auto;
-        border: 2px solid #333;
-        border-top-color: #ff0000;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-      }
-      @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
-    
-    <!-- Browser feature detection and polyfills -->
-    <script>
-      // Passive event listeners support
-      try {
-        var opts = Object.defineProperty({}, 'passive', {
-          get: function() { window.supportsPassive = true; }
-        });
-        window.addEventListener('testPassive', null, opts);
-        window.removeEventListener('testPassive', null, opts);
-      } catch (e) {}
-      
-      // Add performance marks for debugging
-      if (window.performance && window.performance.mark) {
-        window.performance.mark('app-init');
-      }
-    </script>
   </body>
 </html>
