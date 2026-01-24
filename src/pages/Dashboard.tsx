@@ -164,7 +164,21 @@ const Dashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [analysisToDelete, setAnalysisToDelete] = useState<Analysis | null>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
-  const [viewedDetails, setViewedDetails] = useState<Set<string>>(new Set());
+  const [viewedDetails, setViewedDetails] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('dashboard-viewed-details');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Persist viewed details to localStorage
+  useEffect(() => {
+    if (viewedDetails.size > 0) {
+      localStorage.setItem('dashboard-viewed-details', JSON.stringify([...viewedDetails]));
+    }
+  }, [viewedDetails]);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, subscriptionType, subscriptionEnd } = useSubscription();
