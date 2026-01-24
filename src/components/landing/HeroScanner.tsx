@@ -101,35 +101,31 @@ const HeroScanner = memo(() => {
     return () => clearInterval(interval);
   }, [shouldReduce]);
 
-  // Show score after measurements complete
+  // Show score after measurements complete and animate it
   useEffect(() => {
     const showTimer = setTimeout(() => {
       setShowScore(true);
+      
+      // Animate score value
+      const finalScore = 9.4;
+      const duration = 1200;
+      const startTime = Date.now();
+
+      const animate = () => {
+        const progress = Math.min((Date.now() - startTime) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        setScoreValue(eased * finalScore);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+
+      requestAnimationFrame(animate);
     }, 2500);
 
     return () => clearTimeout(showTimer);
   }, [scanCycle]);
-
-  // Animate score value
-  useEffect(() => {
-    if (!showScore) return;
-    
-    const finalScore = 9.4;
-    const duration = 1200;
-    const startTime = Date.now();
-
-    const animate = () => {
-      const progress = Math.min((Date.now() - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setScoreValue(eased * finalScore);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      }
-    };
-
-    requestAnimationFrame(animate);
-  }, [showScore]);
 
   const points = useMemo(() => {
     return landmarkPoints.map((point, index) => (
