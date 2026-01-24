@@ -9,6 +9,7 @@ import { useStreak } from "@/hooks/useStreak";
 import { useGamification } from "@/hooks/useGamification";
 import { generateSignedUrls } from "@/hooks/useSignedImageUrl";
 import { ProgressImage } from "@/components/ProgressImage";
+import { AchievementsFullGrid } from "@/components/gamification/AchievementsFullGrid";
 import { 
   ArrowLeft, 
   TrendingUp, 
@@ -859,7 +860,7 @@ export default function Progress() {
               </motion.div>
             )}
 
-            {/* Achievements Section - Replaces old Milestones */}
+            {/* Achievements Section - Full Grid with Filter */}
             {achievements.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
@@ -867,70 +868,10 @@ export default function Progress() {
                 transition={{ delay: 0.7 }}
               >
                 <Card className="p-6 mb-8 glass-card">
-                  <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                    <motion.div
-                      animate={shouldReduce ? {} : { rotate: [0, 10, -10, 0] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    >
-                      <Crown className="w-5 h-5 text-primary" />
-                    </motion.div>
-                    Achievements
-                    <span className="text-sm font-normal text-muted-foreground ml-2">
-                      {achievements.filter(a => a.unlocked).length}/{achievements.length}
-                    </span>
-                  </h3>
-                  <motion.div 
-                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
-                    variants={containerVariants}
-                    initial="hidden"
-                    animate="visible"
-                  >
-                    {achievements.map((achievement, index) => (
-                      <motion.div 
-                        key={achievement.id}
-                        variants={cardVariants}
-                        whileHover={hoverScaleSmall}
-                        className={cn(
-                          "flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all",
-                          achievement.unlocked 
-                            ? "bg-primary/10 border border-primary/20" 
-                            : "bg-muted/30 opacity-60"
-                        )}
-                      >
-                        <span className="text-3xl">{achievement.icon}</span>
-                        <div className="flex flex-col gap-0.5">
-                          <span className={cn(
-                            "text-sm font-medium line-clamp-2",
-                            !achievement.unlocked && "text-muted-foreground"
-                          )}>
-                            {achievement.name}
-                          </span>
-                          <span className={cn(
-                            "text-xs",
-                            achievement.unlocked ? "text-primary" : "text-muted-foreground"
-                          )}>
-                            +{achievement.xpReward} XP
-                          </span>
-                        </div>
-                        {achievement.unlocked ? (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 300, delay: index * 0.05 }}
-                          >
-                            <Target className="w-4 h-4 text-primary" />
-                          </motion.div>
-                        ) : (
-                          <Lock className="w-4 h-4 text-muted-foreground" />
-                        )}
-                        {achievement.unlockedAt && (
-                          <span className="text-[10px] text-muted-foreground">
-                            {format(new Date(achievement.unlockedAt), "dd.MM.yy", { locale: de })}
-                          </span>
-                        )}
-                      </motion.div>
-                    ))}
-                  </motion.div>
+                  <AchievementsFullGrid 
+                    achievements={achievements} 
+                    loading={achievementsLoading} 
+                  />
                 </Card>
               </motion.div>
             )}

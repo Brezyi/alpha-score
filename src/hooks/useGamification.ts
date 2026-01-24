@@ -43,6 +43,7 @@ interface UserStats {
   lowestScore: number;
   completedTasksCount: number;
   level: number;
+  latestScore?: number;
 }
 
 export const useGamification = () => {
@@ -393,6 +394,16 @@ export const useGamification = () => {
             // Score gain is stored as value * 10 (e.g., 10 = 1.0 point improvement)
             const improvement = stats.highestScore - stats.lowestScore;
             shouldUnlock = improvement * 10 >= achievement.requirementValue;
+            break;
+          case "score":
+            // Score achievements - requirement_value is score * 10 (e.g., 70 = 7.0)
+            const latestScoreVal = stats.latestScore ?? stats.highestScore;
+            shouldUnlock = latestScoreVal * 10 >= achievement.requirementValue;
+            break;
+          case "special":
+            // Special achievements are unlocked manually or via specific triggers
+            // These won't auto-unlock through checkAchievements
+            shouldUnlock = false;
             break;
         }
 
