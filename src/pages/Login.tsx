@@ -246,6 +246,9 @@ const Login = () => {
               <AlertDescription>
                 Dein Konto ist vorübergehend gesperrt. Bitte warte{" "}
                 <span className="font-bold">{formatTime(lockoutSeconds)}</span> bevor du es erneut versuchst.
+                <Link to="/forgot-password" className="block mt-2 underline hover:no-underline">
+                  Passwort vergessen? Jetzt zurücksetzen
+                </Link>
               </AlertDescription>
             </Alert>
           )}
