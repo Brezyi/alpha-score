@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sheet,
@@ -18,27 +19,58 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MessageSquare, Plus, Trash2, History, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  MessageSquare, 
+  Plus, 
+  Trash2, 
+  History, 
+  Archive, 
+  ArchiveRestore,
+  Pencil,
+  MoreVertical,
+  Trash
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Conversation } from "@/hooks/useCoachHistory";
 
 interface ConversationSidebarProps {
   conversations: Conversation[];
+  archivedConversations: Conversation[];
   currentConversationId: string | null;
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
+  onDeleteAllConversations: () => void;
+  onArchiveConversation: (id: string) => void;
+  onUnarchiveConversation: (id: string) => void;
+  onRenameConversation: (id: string, newTitle: string) => void;
 }
 
 export function ConversationSidebar({
   conversations,
+  archivedConversations,
   currentConversationId,
   onSelectConversation,
   onNewConversation,
   onDeleteConversation,
+  onDeleteAllConversations,
+  onArchiveConversation,
+  onUnarchiveConversation,
+  onRenameConversation,
 }: ConversationSidebarProps) {
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteAllOpen, setDeleteAllOpen] = useState(false);
+  const [renameId, setRenameId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [showArchived, setShowArchived] = useState(false);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -74,15 +106,37 @@ export function ConversationSidebar({
     }
   };
 
+  const handleDeleteAll = () => {
+    onDeleteAllConversations();
+    setDeleteAllOpen(false);
+  };
+
+  const handleStartRename = (conv: Conversation, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRenameId(conv.id);
+    setRenameValue(conv.title);
+  };
+
+  const handleRename = () => {
+    if (renameId && renameValue.trim()) {
+      onRenameConversation(renameId, renameValue.trim());
+      setRenameId(null);
+      setRenameValue("");
+    }
+  };
+
+  const displayedConversations = showArchived ? archivedConversations : conversations;
+  const totalCount = conversations.length + archivedConversations.length;
+
   return (
     <>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="relative">
             <History className="w-5 h-5" />
-            {conversations.length > 0 && (
+            {totalCount > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center">
-                {conversations.length > 9 ? "9+" : conversations.length}
+                {totalCount > 9 ? "9+" : totalCount}
               </span>
             )}
           </Button>
@@ -95,7 +149,7 @@ export function ConversationSidebar({
             </SheetTitle>
           </SheetHeader>
           
-          <div className="p-3 border-b border-border">
+          <div className="p-3 border-b border-border space-y-2">
             <Button 
               onClick={handleNew} 
               className="w-full"
@@ -104,16 +158,36 @@ export function ConversationSidebar({
               <Plus className="w-4 h-4 mr-2" />
               Neues Gespräch
             </Button>
+            
+            <div className="flex gap-2">
+              <Button
+                variant={showArchived ? "outline" : "secondary"}
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => setShowArchived(false)}
+              >
+                Aktiv ({conversations.length})
+              </Button>
+              <Button
+                variant={showArchived ? "secondary" : "outline"}
+                size="sm"
+                className="flex-1 text-xs"
+                onClick={() => setShowArchived(true)}
+              >
+                <Archive className="w-3 h-3 mr-1" />
+                Archiv ({archivedConversations.length})
+              </Button>
+            </div>
           </div>
           
-          <ScrollArea className="h-[calc(100vh-140px)]">
+          <ScrollArea className="h-[calc(100vh-220px)]">
             <div className="p-2 space-y-1">
-              {conversations.length === 0 ? (
+              {displayedConversations.length === 0 ? (
                 <p className="text-center text-muted-foreground text-sm py-8">
-                  Noch keine Gespräche gespeichert
+                  {showArchived ? "Keine archivierten Gespräche" : "Noch keine Gespräche gespeichert"}
                 </p>
               ) : (
-                conversations.map((conv) => (
+                displayedConversations.map((conv) => (
                   <div
                     key={conv.id}
                     className={cn(
@@ -126,30 +200,102 @@ export function ConversationSidebar({
                   >
                     <MessageSquare className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{conv.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(conv.updated_at)}
-                      </p>
+                      {renameId === conv.id ? (
+                        <Input
+                          value={renameValue}
+                          onChange={(e) => setRenameValue(e.target.value)}
+                          onBlur={handleRename}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") handleRename();
+                            if (e.key === "Escape") {
+                              setRenameId(null);
+                              setRenameValue("");
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          className="h-7 text-sm"
+                          autoFocus
+                        />
+                      ) : (
+                        <>
+                          <p className="text-sm font-medium truncate">{conv.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatDate(conv.updated_at)}
+                          </p>
+                        </>
+                      )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteId(conv.id);
-                      }}
-                    >
-                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
-                    </Button>
+                    
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={(e) => handleStartRename(conv, e as any)}>
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Umbenennen
+                        </DropdownMenuItem>
+                        {showArchived ? (
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            onUnarchiveConversation(conv.id);
+                          }}>
+                            <ArchiveRestore className="w-4 h-4 mr-2" />
+                            Wiederherstellen
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            onArchiveConversation(conv.id);
+                          }}>
+                            <Archive className="w-4 h-4 mr-2" />
+                            Archivieren
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteId(conv.id);
+                          }}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Löschen
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 ))
               )}
             </div>
           </ScrollArea>
+
+          {/* Delete All Button */}
+          {conversations.length > 0 && !showArchived && (
+            <div className="p-3 border-t border-border">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-destructive hover:text-destructive"
+                onClick={() => setDeleteAllOpen(true)}
+              >
+                <Trash className="w-4 h-4 mr-2" />
+                Alle löschen
+              </Button>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
+      {/* Delete Single Dialog */}
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -165,6 +311,28 @@ export function ConversationSidebar({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Löschen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Delete All Dialog */}
+      <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Alle Gespräche löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle {conversations.length} Gespräche werden unwiderruflich gelöscht. 
+              Archivierte Gespräche bleiben erhalten.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAll}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Alle löschen
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

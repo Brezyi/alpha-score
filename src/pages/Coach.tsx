@@ -126,12 +126,17 @@ export default function Coach() {
   // Chat history
   const {
     conversations,
+    archivedConversations,
     currentConversationId,
     setCurrentConversationId,
     loadMessages,
     createConversation,
     saveMessage,
-    deleteConversation
+    deleteConversation,
+    deleteAllConversations,
+    archiveConversation,
+    unarchiveConversation,
+    renameConversation
   } = useCoachHistory();
 
   // Check if speech recognition is supported
@@ -386,6 +391,30 @@ export default function Coach() {
     await deleteConversation(id);
     toast({ title: "Gespräch gelöscht" });
   }, [deleteConversation, toast]);
+
+  // Handle delete all
+  const handleDeleteAllConversations = useCallback(async () => {
+    await deleteAllConversations();
+    toast({ title: "Alle Gespräche gelöscht" });
+  }, [deleteAllConversations, toast]);
+
+  // Handle archive
+  const handleArchiveConversation = useCallback(async (id: string) => {
+    await archiveConversation(id);
+    toast({ title: "Gespräch archiviert" });
+  }, [archiveConversation, toast]);
+
+  // Handle unarchive
+  const handleUnarchiveConversation = useCallback(async (id: string) => {
+    await unarchiveConversation(id);
+    toast({ title: "Gespräch wiederhergestellt" });
+  }, [unarchiveConversation, toast]);
+
+  // Handle rename
+  const handleRenameConversation = useCallback(async (id: string, newTitle: string) => {
+    await renameConversation(id, newTitle);
+    toast({ title: "Gespräch umbenannt" });
+  }, [renameConversation, toast]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -662,10 +691,15 @@ export default function Coach() {
             </Button>
             <ConversationSidebar
               conversations={conversations}
+              archivedConversations={archivedConversations}
               currentConversationId={currentConversationId}
               onSelectConversation={handleSelectConversation}
               onNewConversation={handleNewConversation}
               onDeleteConversation={handleDeleteConversation}
+              onDeleteAllConversations={handleDeleteAllConversations}
+              onArchiveConversation={handleArchiveConversation}
+              onUnarchiveConversation={handleUnarchiveConversation}
+              onRenameConversation={handleRenameConversation}
             />
           </div>
         </div>
