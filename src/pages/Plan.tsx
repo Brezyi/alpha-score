@@ -163,7 +163,21 @@ const Plan = () => {
         throw new Error(result.error || "Plan generation failed");
       }
 
-      setTasks(result.tasks || []);
+      // Re-fetch tasks from database to ensure consistency
+      const { data: freshTasks, error: fetchError } = await supabase
+        .from("user_tasks")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("priority", { ascending: true });
+
+      if (fetchError) {
+        console.error("Error fetching fresh tasks:", fetchError);
+        // Fallback to response tasks if fetch fails
+        setTasks(result.tasks || []);
+      } else {
+        setTasks(freshTasks || []);
+      }
+      
       setFocusAreas(result.focus_areas || []);
 
       toast({
@@ -172,9 +186,10 @@ const Plan = () => {
       });
 
       // Select first category with new tasks
-      if (result.tasks?.length > 0) {
+      const tasksToUse = freshTasks || result.tasks || [];
+      if (tasksToUse.length > 0) {
         const firstCat = CATEGORIES.find(c => 
-          result.tasks.some((t: Task) => t.category === c.id)
+          tasksToUse.some((t: Task) => t.category === c.id)
         );
         if (firstCat) setActiveCategory(firstCat.id);
       }
