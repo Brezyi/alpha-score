@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useStreak } from "@/hooks/useStreak";
 import { generateSignedUrls } from "@/hooks/useSignedImageUrl";
 import { ProgressImage } from "@/components/ProgressImage";
 import { 
@@ -55,6 +56,7 @@ export default function Progress() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
+  const { currentStreak, longestStreak } = useStreak();
   const { shouldReduce, containerVariants, itemVariants, cardVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -876,7 +878,7 @@ export default function Progress() {
                     {[
                       { emoji: "🎯", title: "Erste Analyse", achieved: completedAnalyses.length >= 1 },
                       { emoji: "📈", title: "+0.5 Score erreicht", achieved: totalImprovement && parseFloat(totalImprovement) >= 0.5 },
-                      { emoji: "🔥", title: "7-Tage Streak", achieved: false },
+                      { emoji: "🔥", title: "7-Tage Streak", achieved: currentStreak >= 7 || longestStreak >= 7 },
                       { emoji: "⭐", title: "Score 7.0 erreicht", achieved: highestScore && parseFloat(highestScore) >= 7.0 },
                       { emoji: "🏆", title: "Top 10% erreicht", achieved: highestScore && parseFloat(highestScore) >= 8.5 },
                     ].map((milestone) => (
