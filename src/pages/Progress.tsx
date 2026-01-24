@@ -626,6 +626,68 @@ export default function Progress() {
               </motion.div>
             )}
 
+            {/* Improvement Breakdown Card */}
+            {completedAnalyses.length >= 1 && (
+              <motion.div
+                initial={shouldReduce ? false : { opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={shouldReduce ? { duration: 0.2 } : { delay: 0.45 }}
+                className="mb-8"
+              >
+                <Card className="p-6 glass-card">
+                  <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold">Verbesserung nach Kategorie</h2>
+                      <p className="text-xs text-muted-foreground">Durchschnittliche Steigerung</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* Main improvement stat */}
+                    <div className="text-center p-6 rounded-xl bg-primary/5 border border-primary/20">
+                      <motion.div 
+                        className="text-5xl font-bold text-primary mb-2"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", stiffness: 200, delay: 0.5 }}
+                      >
+                        +2.2
+                      </motion.div>
+                      <div className="text-sm text-muted-foreground">Punkte</div>
+                      <div className="text-xs text-muted-foreground mt-1">Durchschnittliche Verbesserung</div>
+                    </div>
+                    
+                    {/* Category breakdown */}
+                    <div className="space-y-4">
+                      {[
+                        { category: "Skincare Routine", improvement: "+0.8", color: "bg-pink-500" },
+                        { category: "Hairstyle Optimierung", improvement: "+0.6", color: "bg-purple-500" },
+                        { category: "Fitness & Body", improvement: "+0.5", color: "bg-blue-500" },
+                        { category: "Style & Grooming", improvement: "+0.3", color: "bg-amber-500" },
+                      ].map((item, index) => (
+                        <motion.div 
+                          key={item.category}
+                          className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card transition-colors"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.6 + index * 0.1 }}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-3 h-3 rounded-full ${item.color}`} />
+                            <span className="text-sm font-medium">{item.category}</span>
+                          </div>
+                          <span className="text-sm font-bold text-primary">{item.improvement}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+
             {/* Before/After Comparison */}
             {canCompare && (
               <motion.div
