@@ -8,12 +8,13 @@ interface ProgressProps extends React.ComponentPropsWithoutRef<typeof ProgressPr
   animationDuration?: number;
   animationDelay?: number;
   glowOnComplete?: boolean;
+  indicatorClassName?: string;
 }
 
 const Progress = React.forwardRef<
   React.ElementRef<typeof ProgressPrimitive.Root>,
   ProgressProps
->(({ className, value, animated = false, animationDuration = 2200, animationDelay = 300, glowOnComplete = false, ...props }, ref) => {
+>(({ className, value, animated = false, animationDuration = 2200, animationDelay = 300, glowOnComplete = false, indicatorClassName, ...props }, ref) => {
   const [displayValue, setDisplayValue] = React.useState(0);
   const [isComplete, setIsComplete] = React.useState(false);
   const hasAnimatedRef = React.useRef(false);
@@ -63,7 +64,8 @@ const Progress = React.forwardRef<
       <ProgressPrimitive.Indicator
         className={cn(
           "h-full w-full flex-1 bg-primary will-change-transform rounded-full",
-          glowOnComplete && isComplete && "animate-progress-glow"
+          glowOnComplete && isComplete && "animate-progress-glow",
+          indicatorClassName
         )}
         style={{ 
           transform: `translateX(-${100 - displayValue}%)`,

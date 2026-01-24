@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Zap, ArrowLeft, Mail, Lock, User, Loader2, Check } from "lucide-react";
+import { Zap, ArrowLeft, Mail, Lock, User, Loader2, Check, AlertCircle } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,6 +32,7 @@ const Register = () => {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
@@ -45,6 +47,25 @@ const Register = () => {
     }
   }, [user, authLoading, navigate]);
 
+  // Password strength calculation
+  const getPasswordStrength = (pwd: string): { score: number; label: string; color: string } => {
+    let score = 0;
+    if (pwd.length >= 8) score += 1;
+    if (pwd.length >= 12) score += 1;
+    if (/[a-z]/.test(pwd) && /[A-Z]/.test(pwd)) score += 1;
+    if (/\d/.test(pwd)) score += 1;
+    if (/[^a-zA-Z0-9]/.test(pwd)) score += 1;
+
+    if (score <= 1) return { score: 20, label: "Sehr schwach", color: "bg-destructive" };
+    if (score === 2) return { score: 40, label: "Schwach", color: "bg-orange-500" };
+    if (score === 3) return { score: 60, label: "Mittel", color: "bg-yellow-500" };
+    if (score === 4) return { score: 80, label: "Stark", color: "bg-primary/70" };
+    return { score: 100, label: "Sehr stark", color: "bg-primary" };
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+  const passwordsMatch = confirmPassword === "" || password === confirmPassword;
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -55,6 +76,17 @@ const Register = () => {
         toast({
           title: "Fehlende Angaben",
           description: "Bitte gib deinen Vor- und Nachnamen ein.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Check password confirmation
+      if (password !== confirmPassword) {
+        toast({
+          title: "Passwörter stimmen nicht überein",
+          description: "Bitte stelle sicher, dass beide Passwörter identisch sind.",
           variant: "destructive",
         });
         setLoading(false);
@@ -291,6 +323,74 @@ const Register = () => {
                   required
                 />
               </div>
+              {/* Password Strength Indicator */}
+              {password && (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Passwortstärke:</span>
+                    <span className={`font-medium ${
+                      passwordStrength.score <= 40 ? "text-destructive" : 
+                      passwordStrength.score <= 60 ? "text-yellow-500" : "text-primary"
+                    }`}>
+                      {passwordStrength.label}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={passwordStrength.score} 
+                    className="h-1.5"
+                    indicatorClassName={passwordStrength.color}
+                  />
+                  <ul className="text-xs text-muted-foreground space-y-0.5 mt-1">
+                    <li className={password.length >= 8 ? "text-primary" : ""}>
+                      {password.length >= 8 ? "✓" : "○"} Mindestens 8 Zeichen
+                    </li>
+                    <li className={/[a-z]/.test(password) && /[A-Z]/.test(password) ? "text-primary" : ""}>
+                      {/[a-z]/.test(password) && /[A-Z]/.test(password) ? "✓" : "○"} Groß- und Kleinbuchstaben
+                    </li>
+                    <li className={/\d/.test(password) ? "text-primary" : ""}>
+                      {/\d/.test(password) ? "✓" : "○"} Mindestens eine Zahl
+                    </li>
+                    <li className={/[^a-zA-Z0-9]/.test(password) ? "text-primary" : ""}>
+                      {/[^a-zA-Z0-9]/.test(password) ? "✓" : "○"} Sonderzeichen (z.B. !@#$)
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  placeholder="Passwort wiederholen"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`pl-10 h-12 bg-card border-border ${
+                    confirmPassword && !passwordsMatch ? "border-destructive focus-visible:ring-destructive" : ""
+                  } ${confirmPassword && passwordsMatch ? "border-primary focus-visible:ring-primary" : ""}`}
+                  minLength={8}
+                  required
+                />
+                {confirmPassword && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    {passwordsMatch ? (
+                      <Check className="h-5 w-5 text-primary" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-destructive" />
+                    )}
+                  </div>
+                )}
+              </div>
+              {confirmPassword && !passwordsMatch && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="h-3 w-3" />
+                  Passwörter stimmen nicht überein
+                </p>
+              )}
             </div>
 
             <Button 
