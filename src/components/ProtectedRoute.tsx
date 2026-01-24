@@ -1,10 +1,12 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
 import { useMaintenanceContext } from "@/components/MaintenanceGate";
+import { useAdminPassword } from "@/hooks/useAdminPassword";
 import { Shield, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AdminPasswordDialog } from "@/components/AdminPasswordDialog";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -21,6 +23,20 @@ export function ProtectedRoute({
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const { loading: maintenanceLoading } = useMaintenanceContext();
+  const { isVerified, loading: adminPasswordLoading } = useAdminPassword();
+  
+  const [showAdminPasswordDialog, setShowAdminPasswordDialog] = useState(false);
+  const [adminPasswordVerified, setAdminPasswordVerified] = useState(false);
+
+  // Check if this route requires admin/owner role
+  const requiresAdminRole = requiredRole && (
+    Array.isArray(requiredRole) 
+      ? requiredRole.some(r => r === "admin" || r === "owner")
+      : requiredRole === "admin" || requiredRole === "owner"
+  );
+
+  // Check if user has admin/owner role
+  const isAdminOrOwner = role === "admin" || role === "owner";
 
   // Redirect when not authenticated (after loading completes)
   useEffect(() => {
@@ -29,10 +45,23 @@ export function ProtectedRoute({
     }
   }, [authLoading, user, navigate, redirectTo]);
 
-  // Loading state - only show while auth is loading
-  // Role loading should be quick since MaintenanceGate already fetched it
-  // But give it a timeout to prevent infinite loading
-  const isLoading = authLoading || (roleLoading && maintenanceLoading);
+  // Show admin password dialog when accessing admin routes
+  useEffect(() => {
+    if (!roleLoading && !adminPasswordLoading && requiresAdminRole && isAdminOrOwner && !isVerified && !adminPasswordVerified) {
+      setShowAdminPasswordDialog(true);
+    }
+  }, [roleLoading, adminPasswordLoading, requiresAdminRole, isAdminOrOwner, isVerified, adminPasswordVerified]);
+
+  // Sync verified state
+  useEffect(() => {
+    if (isVerified) {
+      setAdminPasswordVerified(true);
+      setShowAdminPasswordDialog(false);
+    }
+  }, [isVerified]);
+
+  // Loading state
+  const isLoading = authLoading || (roleLoading && maintenanceLoading) || (requiresAdminRole && isAdminOrOwner && adminPasswordLoading);
   
   if (isLoading) {
     return (
@@ -88,7 +117,56 @@ export function ProtectedRoute({
         </div>
       );
     }
+
+    // Admin password check for admin/owner routes
+    if (requiresAdminRole && isAdminOrOwner && !isVerified && !adminPasswordVerified) {
+      return (
+        <>
+          <div className="min-h-screen bg-background flex items-center justify-center p-4">
+            <div className="text-center max-w-md">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                <Shield className="w-10 h-10 text-primary" />
+              </div>
+              <h1 className="text-2xl font-bold mb-2">Admin-Bereich</h1>
+              <p className="text-muted-foreground mb-6">
+                Für den Zugang zum Admin-Bereich ist ein zusätzliches Passwort erforderlich.
+              </p>
+              <Button onClick={() => setShowAdminPasswordDialog(true)} variant="hero">
+                <Lock className="w-4 h-4" />
+                Passwort eingeben
+              </Button>
+            </div>
+          </div>
+          <AdminPasswordDialog
+            open={showAdminPasswordDialog}
+            onSuccess={() => {
+              setAdminPasswordVerified(true);
+              setShowAdminPasswordDialog(false);
+            }}
+            onCancel={() => {
+              setShowAdminPasswordDialog(false);
+              navigate("/dashboard");
+            }}
+          />
+        </>
+      );
+    }
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <AdminPasswordDialog
+        open={showAdminPasswordDialog}
+        onSuccess={() => {
+          setAdminPasswordVerified(true);
+          setShowAdminPasswordDialog(false);
+        }}
+        onCancel={() => {
+          setShowAdminPasswordDialog(false);
+          navigate("/dashboard");
+        }}
+      />
+    </>
+  );
 }

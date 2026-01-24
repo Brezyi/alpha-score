@@ -83,6 +83,33 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_passwords: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          last_changed_at: string
+          password_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_changed_at?: string
+          password_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_changed_at?: string
+          password_hash?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       analyses: {
         Row: {
           created_at: string
@@ -1183,6 +1210,15 @@ export type Database = {
         Args: { _count?: number; _user_id: string }
         Returns: string[]
       }
+      get_admin_password_status: {
+        Args: never
+        Returns: {
+          days_until_expiry: number
+          has_password: boolean
+          is_expired: boolean
+          last_changed_at: string
+        }[]
+      }
       get_backup_codes_count: { Args: { _user_id: string }; Returns: number }
       get_daily_challenges: {
         Args: { p_user_id: string }
@@ -1224,6 +1260,7 @@ export type Database = {
           remaining_seconds: number
         }[]
       }
+      set_admin_password: { Args: { _password: string }; Returns: boolean }
       update_user_streak: {
         Args: { p_user_id: string }
         Returns: {
@@ -1241,6 +1278,15 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      verify_admin_password: {
+        Args: { _password: string }
+        Returns: {
+          days_until_expiry: number
+          is_expired: boolean
+          is_valid: boolean
+          needs_setup: boolean
+        }[]
       }
       verify_backup_code: {
         Args: { _code: string; _user_id: string }
