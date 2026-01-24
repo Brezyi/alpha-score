@@ -888,6 +888,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_milestones: {
+        Row: {
+          achieved_at: string
+          id: string
+          milestone_key: string
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string
+          id?: string
+          milestone_key: string
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string
+          id?: string
+          milestone_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
