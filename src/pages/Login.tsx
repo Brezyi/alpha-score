@@ -255,7 +255,7 @@ const Login = () => {
             <Alert variant="default" className="mb-6 border-yellow-500/50 bg-yellow-500/10">
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
               <AlertDescription className="text-yellow-500">
-                {5 - failedAttempts} Versuche verbleibend bevor dein Konto gesperrt wird.
+                {5 - failedAttempts} Versuche verbleibend bevor dein Konto für 5 Minuten gesperrt wird.
               </AlertDescription>
             </Alert>
           )}
