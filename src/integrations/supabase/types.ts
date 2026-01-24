@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      achievements: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          icon: string
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          requirement_type: string
+          requirement_value: number
+          xp_reward: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          icon: string
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          requirement_type: string
+          requirement_value?: number
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          requirement_type?: string
+          requirement_value?: number
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       analyses: {
         Row: {
           created_at: string
@@ -187,6 +229,42 @@ export type Database = {
           },
         ]
       }
+      daily_challenges: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          difficulty: string
+          icon: string
+          id: string
+          is_active: boolean
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description: string
+          difficulty?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          difficulty?: string
+          icon?: string
+          id?: string
+          is_active?: boolean
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       failed_login_attempts: {
         Row: {
           attempted_at: string
@@ -277,6 +355,54 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      product_recommendations: {
+        Row: {
+          affiliate_link: string | null
+          brand: string
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          price_range: string | null
+          rating: number | null
+          skin_types: string[] | null
+          target_issues: string[]
+        }
+        Insert: {
+          affiliate_link?: string | null
+          brand: string
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          price_range?: string | null
+          rating?: number | null
+          skin_types?: string[] | null
+          target_issues?: string[]
+        }
+        Update: {
+          affiliate_link?: string | null
+          brand?: string
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          price_range?: string | null
+          rating?: number | null
+          skin_types?: string[] | null
+          target_issues?: string[]
         }
         Relationships: []
       }
@@ -659,6 +785,109 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_challenge_progress: {
+        Row: {
+          assigned_date: string
+          challenge_id: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_date?: string
+          challenge_id: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          assigned_date?: string
+          challenge_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_challenge_progress_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_email_preferences: {
+        Row: {
+          achievement_notifications: boolean
+          challenge_reminders: boolean
+          created_at: string
+          id: string
+          last_weekly_report_sent: string | null
+          marketing_emails: boolean
+          updated_at: string
+          user_id: string
+          weekly_report: boolean
+        }
+        Insert: {
+          achievement_notifications?: boolean
+          challenge_reminders?: boolean
+          created_at?: string
+          id?: string
+          last_weekly_report_sent?: string | null
+          marketing_emails?: boolean
+          updated_at?: string
+          user_id: string
+          weekly_report?: boolean
+        }
+        Update: {
+          achievement_notifications?: boolean
+          challenge_reminders?: boolean
+          created_at?: string
+          id?: string
+          last_weekly_report_sent?: string | null
+          marketing_emails?: boolean
+          updated_at?: string
+          user_id?: string
+          weekly_report?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -808,11 +1037,49 @@ export type Database = {
           },
         ]
       }
+      user_xp: {
+        Row: {
+          created_at: string
+          current_xp: number
+          id: string
+          level: number
+          total_xp: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_xp?: number
+          id?: string
+          level?: number
+          total_xp?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_xp?: number
+          id?: string
+          level?: number
+          total_xp?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      add_user_xp: {
+        Args: { p_reason?: string; p_user_id: string; p_xp_amount: number }
+        Returns: {
+          leveled_up: boolean
+          new_level: number
+          new_xp: number
+        }[]
+      }
       check_account_lockout: {
         Args: { _email: string }
         Returns: {
@@ -832,6 +1099,14 @@ export type Database = {
       }
       cleanup_old_login_attempts: { Args: never; Returns: number }
       clear_failed_logins: { Args: { _email: string }; Returns: undefined }
+      complete_challenge: {
+        Args: { p_challenge_id: string; p_user_id: string }
+        Returns: {
+          message: string
+          success: boolean
+          xp_earned: number
+        }[]
+      }
       create_audit_log: {
         Args: {
           _action_type: string
@@ -850,6 +1125,19 @@ export type Database = {
         Returns: string[]
       }
       get_backup_codes_count: { Args: { _user_id: string }; Returns: number }
+      get_daily_challenges: {
+        Args: { p_user_id: string }
+        Returns: {
+          category: string
+          challenge_id: string
+          completed: boolean
+          description: string
+          difficulty: string
+          icon: string
+          title: string
+          xp_reward: number
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
