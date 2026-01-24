@@ -1,41 +1,41 @@
-import { memo, useMemo } from "react";
+import { memo, useMemo, useState, useEffect, useCallback } from "react";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import scannerStatue from "@/assets/scanner-statue.png";
 
 // Facial analysis measurements with Greek ratios - adjusted for statue
 const measurements = [
-  { id: "fwhr", label: "FWHR", value: "1.92", x: 5, y: 32 },
-  { id: "canthal", label: "Canthal Tilt", value: "+5.1°", x: 78, y: 28 },
-  { id: "ipd", label: "IPD Ratio", value: "0.44", x: 78, y: 38 },
-  { id: "jaw", label: "Jaw Angle", value: "125°", x: 5, y: 58 },
-  { id: "gonion", label: "Gonion", value: "Perfect", x: 78, y: 52 },
-  { id: "symmetry", label: "Symmetry", value: "97.8%", x: 5, y: 18 },
+  { id: "fwhr", label: "FWHR", finalValue: 1.92, decimals: 2, suffix: "", x: 5, y: 32 },
+  { id: "canthal", label: "Canthal Tilt", finalValue: 5.1, decimals: 1, suffix: "°", prefix: "+", x: 78, y: 28 },
+  { id: "ipd", label: "IPD Ratio", finalValue: 0.44, decimals: 2, suffix: "", x: 78, y: 38 },
+  { id: "jaw", label: "Jaw Angle", finalValue: 125, decimals: 0, suffix: "°", x: 5, y: 58 },
+  { id: "gonion", label: "Gonion", finalValue: 98.5, decimals: 1, suffix: "%", x: 78, y: 52 },
+  { id: "symmetry", label: "Symmetry", finalValue: 97.8, decimals: 1, suffix: "%", x: 5, y: 18 },
 ];
 
 // Key facial landmark points - adjusted for the statue's features
 const landmarkPoints = [
   // Eyes - hunter eyes position
-  { id: 1, x: 38, y: 30, size: 5 },  // Left eye inner
-  { id: 2, x: 44, y: 29, size: 5 },  // Left eye outer
-  { id: 3, x: 56, y: 29, size: 5 },  // Right eye inner
-  { id: 4, x: 62, y: 30, size: 5 },  // Right eye outer
+  { id: 1, x: 38, y: 30, size: 5 },
+  { id: 2, x: 44, y: 29, size: 5 },
+  { id: 3, x: 56, y: 29, size: 5 },
+  { id: 4, x: 62, y: 30, size: 5 },
   // Eyebrows - strong brow ridge
   { id: 5, x: 35, y: 25, size: 4 },
   { id: 6, x: 65, y: 25, size: 4 },
-  { id: 7, x: 50, y: 24, size: 3 },  // Glabella
+  { id: 7, x: 50, y: 24, size: 3 },
   // Nose bridge and tip
-  { id: 8, x: 50, y: 35, size: 4 },  // Nose bridge
-  { id: 9, x: 50, y: 42, size: 5 },  // Nose tip
-  { id: 10, x: 46, y: 44, size: 3 }, // Left nostril
-  { id: 11, x: 54, y: 44, size: 3 }, // Right nostril
+  { id: 8, x: 50, y: 35, size: 4 },
+  { id: 9, x: 50, y: 42, size: 5 },
+  { id: 10, x: 46, y: 44, size: 3 },
+  { id: 11, x: 54, y: 44, size: 3 },
   // Lips
-  { id: 12, x: 50, y: 52, size: 4 }, // Upper lip center
-  { id: 13, x: 44, y: 53, size: 3 }, // Left lip corner
-  { id: 14, x: 56, y: 53, size: 3 }, // Right lip corner
+  { id: 12, x: 50, y: 52, size: 4 },
+  { id: 13, x: 44, y: 53, size: 3 },
+  { id: 14, x: 56, y: 53, size: 3 },
   // Jaw - sharp jawline
-  { id: 15, x: 32, y: 52, size: 4 }, // Left gonion
-  { id: 16, x: 68, y: 52, size: 4 }, // Right gonion
-  { id: 17, x: 50, y: 62, size: 5 }, // Chin
+  { id: 15, x: 32, y: 52, size: 4 },
+  { id: 16, x: 68, y: 52, size: 4 },
+  { id: 17, x: 50, y: 62, size: 5 },
   // Cheekbones - high and defined
   { id: 18, x: 28, y: 38, size: 4 },
   { id: 19, x: 72, y: 38, size: 4 },
@@ -45,8 +45,90 @@ const landmarkPoints = [
   { id: 22, x: 65, y: 14, size: 3 },
 ];
 
+// Animated counter hook
+const useAnimatedCounter = (finalValue: number, duration: number = 2000, delay: number = 0, decimals: number = 2) => {
+  const [value, setValue] = useState(0);
+  
+  useEffect(() => {
+    const startTime = Date.now() + delay;
+    const endTime = startTime + duration;
+    
+    const animate = () => {
+      const now = Date.now();
+      if (now < startTime) {
+        requestAnimationFrame(animate);
+        return;
+      }
+      
+      const progress = Math.min((now - startTime) / duration, 1);
+      // Easing function for smooth deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(eased * finalValue);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [finalValue, duration, delay]);
+  
+  return value.toFixed(decimals);
+};
+
+// Single measurement label component with animation
+const AnimatedMeasurement = memo(({ 
+  label, 
+  finalValue, 
+  decimals, 
+  suffix = "", 
+  prefix = "",
+  x, 
+  y, 
+  delay 
+}: { 
+  label: string;
+  finalValue: number;
+  decimals: number;
+  suffix?: string;
+  prefix?: string;
+  x: number;
+  y: number;
+  delay: number;
+}) => {
+  const animatedValue = useAnimatedCounter(finalValue, 2500, delay, decimals);
+  
+  return (
+    <div
+      className="absolute text-[8px] font-mono bg-background/80 px-1.5 py-0.5 rounded border border-primary/30 backdrop-blur-sm transition-opacity duration-300"
+      style={{
+        left: `${x}%`,
+        top: `${y}%`,
+        transform: x < 50 ? "translateY(-50%)" : "translate(-100%, -50%)",
+      }}
+    >
+      <span className="text-muted-foreground">{label}</span>
+      <span className="text-primary ml-1 font-semibold tabular-nums">
+        {prefix}{animatedValue}{suffix}
+      </span>
+    </div>
+  );
+});
+
+AnimatedMeasurement.displayName = "AnimatedMeasurement";
+
 const HeroScanner = memo(() => {
   const shouldReduce = useReducedMotion();
+  const [scanCycle, setScanCycle] = useState(0);
+
+  // Reset animation cycle every 8 seconds
+  useEffect(() => {
+    if (shouldReduce) return;
+    const interval = setInterval(() => {
+      setScanCycle(c => c + 1);
+    }, 8000);
+    return () => clearInterval(interval);
+  }, [shouldReduce]);
 
   const points = useMemo(() => {
     return landmarkPoints.map((point, index) => (
@@ -145,20 +227,19 @@ const HeroScanner = memo(() => {
             <path d="M 35 25 Q 50 22, 65 25" stroke="hsl(var(--primary))" strokeWidth="0.3" strokeOpacity="0.5" fill="none" />
           </svg>
 
-          {/* Measurement Labels */}
-          {measurements.map((m) => (
-            <div
-              key={m.id}
-              className="absolute text-[8px] font-mono bg-background/80 px-1.5 py-0.5 rounded border border-primary/30 backdrop-blur-sm"
-              style={{
-                left: `${m.x}%`,
-                top: `${m.y}%`,
-                transform: m.x < 50 ? "translateY(-50%)" : "translate(-100%, -50%)",
-              }}
-            >
-              <span className="text-muted-foreground">{m.label}</span>
-              <span className="text-primary ml-1 font-semibold">{m.value}</span>
-            </div>
+          {/* Animated Measurement Labels */}
+          {measurements.map((m, index) => (
+            <AnimatedMeasurement
+              key={`${m.id}-${scanCycle}`}
+              label={m.label}
+              finalValue={m.finalValue}
+              decimals={m.decimals}
+              suffix={m.suffix}
+              prefix={m.prefix}
+              x={m.x}
+              y={m.y}
+              delay={index * 400}
+            />
           ))}
         </div>
 
@@ -168,7 +249,7 @@ const HeroScanner = memo(() => {
             <div className={`w-2 h-2 rounded-full bg-green-500 ${!shouldReduce ? 'animate-pulse' : ''}`} />
             <span className="text-[9px] text-primary font-mono uppercase tracking-wider">Analysis Active</span>
           </div>
-          <span className="text-[9px] text-muted-foreground font-mono">17 Landmarks</span>
+          <span className="text-[9px] text-muted-foreground font-mono">22 Landmarks</span>
         </div>
 
         {/* Top status bar */}
