@@ -153,74 +153,75 @@ const PotentialPreview = () => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -20 }}
       transition={{ duration: 0.4 }}
-      className="flex flex-col lg:flex-row gap-8 items-center justify-center"
+      className="flex flex-col items-center gap-8"
     >
-      {/* Before/After Slider */}
-      <div
-        ref={containerRef}
-        className="relative aspect-[3/4] max-w-sm mx-auto rounded-2xl overflow-hidden cursor-ew-resize select-none glow-box"
-        onMouseMove={(e) => handleMove(e.clientX)}
-        onTouchMove={(e) => handleMove(e.touches[0].clientX)}
-        onMouseDown={() => setIsDragging(true)}
-        onTouchStart={() => setIsDragging(true)}
-        onMouseUp={() => setIsDragging(false)}
-        onMouseLeave={() => setIsDragging(false)}
-        onTouchEnd={() => setIsDragging(false)}
-      >
-        {/* Before Image */}
-        <div className="absolute inset-0">
-          <img 
-            src={beforeImage} 
-            alt="Vorher" 
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
-          <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
-            <span className="text-orange-400 text-sm font-bold">Score: 5.2</span>
-          </div>
-        </div>
-
-        {/* After Image */}
+      {/* Top Row: Before/After Slider + Stats Side by Side */}
+      <div className="flex flex-col md:flex-row gap-8 items-center justify-center w-full">
+        {/* Before/After Slider */}
         <div
-          className="absolute inset-0"
-          style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+          ref={containerRef}
+          className="relative aspect-[3/4] w-64 rounded-2xl overflow-hidden cursor-ew-resize select-none glow-box flex-shrink-0"
+          onMouseMove={(e) => handleMove(e.clientX)}
+          onTouchMove={(e) => handleMove(e.touches[0].clientX)}
+          onMouseDown={() => setIsDragging(true)}
+          onTouchStart={() => setIsDragging(true)}
+          onMouseUp={() => setIsDragging(false)}
+          onMouseLeave={() => setIsDragging(false)}
+          onTouchEnd={() => setIsDragging(false)}
         >
-          <img 
-            src={afterImage} 
-            alt="Nachher" 
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
-          <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm">
-            <span className="text-primary-foreground text-sm font-bold">Score: 7.4</span>
-          </div>
-        </div>
-
-        {/* Slider Line */}
-        <div
-          className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
-          style={{ left: `${sliderPosition}%`, transform: "translateX(-50%)" }}
-        >
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
-            <div className="flex gap-0.5">
-              <div className="w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-600" />
-              <div className="w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-600" />
+          {/* Before Image */}
+          <div className="absolute inset-0">
+            <img 
+              src={beforeImage} 
+              alt="Vorher" 
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+            <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
+              <span className="text-orange-400 text-sm font-bold">Score: 5.2</span>
             </div>
           </div>
+
+          {/* After Image */}
+          <div
+            className="absolute inset-0"
+            style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
+          >
+            <img 
+              src={afterImage} 
+              alt="Nachher" 
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+            <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm">
+              <span className="text-primary-foreground text-sm font-bold">Score: 7.4</span>
+            </div>
+          </div>
+
+          {/* Slider Line */}
+          <div
+            className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+            style={{ left: `${sliderPosition}%`, transform: "translateX(-50%)" }}
+          >
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white shadow-lg flex items-center justify-center">
+              <div className="flex gap-0.5">
+                <div className="w-0 h-0 border-t-4 border-b-4 border-r-4 border-transparent border-r-gray-600" />
+                <div className="w-0 h-0 border-t-4 border-b-4 border-l-4 border-transparent border-l-gray-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Labels */}
+          <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white text-sm font-medium">
+            Vorher
+          </div>
+          <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm text-primary-foreground text-sm font-medium">
+            Nachher
+          </div>
         </div>
 
-        {/* Labels */}
-        <div className="absolute bottom-4 left-4 px-3 py-1.5 rounded-lg bg-black/50 backdrop-blur-sm text-white text-sm font-medium">
-          Vorher
-        </div>
-        <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm text-primary-foreground text-sm font-medium">
-          Nachher
-        </div>
-      </div>
-
-      {/* Score Improvement Info */}
-      <div className="space-y-6">
-        <div className="p-6 rounded-2xl glass-card text-center">
+        {/* Score Improvement Info */}
+        <div className="p-6 rounded-2xl glass-card text-center w-full max-w-sm">
           <div className="flex flex-col items-center gap-4 mb-4">
             <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
               <TrendingUp className="w-7 h-7 text-primary" />
@@ -247,11 +248,11 @@ const PotentialPreview = () => {
             ))}
           </div>
         </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Unsere KI zeigt dir, wie du mit den richtigen Verbesserungen aussehen könntest.
-        </p>
       </div>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Unsere KI zeigt dir, wie du mit den richtigen Verbesserungen aussehen könntest.
+      </p>
     </motion.div>
   );
 };
