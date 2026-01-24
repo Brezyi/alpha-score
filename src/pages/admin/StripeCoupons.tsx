@@ -23,22 +23,27 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { ArrowLeft, Plus, Trash2, Copy, ChevronDown, Percent, Euro, Ticket, BarChart3, Loader2 } from "lucide-react";
+  ArrowLeft, 
+  Plus, 
+  Trash2, 
+  Copy, 
+  ChevronDown, 
+  Percent, 
+  Euro, 
+  Ticket, 
+  BarChart3, 
+  Loader2,
+  Sparkles,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Calendar,
+  Zap
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface PromotionCode {
   id: string;
@@ -236,7 +241,7 @@ export default function StripeCoupons() {
       return `${coupon.percent_off}%`;
     }
     if (coupon.amount_off && coupon.currency) {
-      return `${(coupon.amount_off / 100).toFixed(2)} ${coupon.currency.toUpperCase()}`;
+      return `${(coupon.amount_off / 100).toFixed(2)}€`;
     }
     return "-";
   };
@@ -260,9 +265,9 @@ export default function StripeCoupons() {
   if (!isOwner && role !== "admin") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md border-destructive/50">
           <CardHeader>
-            <CardTitle>Zugriff verweigert</CardTitle>
+            <CardTitle className="text-destructive">Zugriff verweigert</CardTitle>
             <CardDescription>Du hast keine Berechtigung für diese Seite.</CardDescription>
           </CardHeader>
         </Card>
@@ -271,30 +276,47 @@ export default function StripeCoupons() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 max-w-6xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Background Effects */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-primary/3 rounded-full blur-3xl" />
+      </div>
+
+      {/* Header */}
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between max-w-6xl">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate("/admin")}
+              className="hover:bg-primary/10"
+            >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Stripe Rabattcodes</h1>
-              <p className="text-muted-foreground">Verwalte Coupons und Aktionscodes</p>
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                <h1 className="text-xl font-bold">Stripe Rabattcodes</h1>
+              </div>
+              <p className="text-sm text-muted-foreground">Verwalte Coupons und Aktionscodes</p>
             </div>
           </div>
           
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Neuer Rabattcode
+              <Button className="gap-2 shadow-lg shadow-primary/20">
+                <Plus className="h-4 w-4" />
+                Neuer Code
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Neuen Rabattcode erstellen</DialogTitle>
+                <DialogTitle className="flex items-center gap-2">
+                  <Ticket className="w-5 h-5 text-primary" />
+                  Neuen Rabattcode erstellen
+                </DialogTitle>
                 <DialogDescription>
                   Erstelle einen neuen Stripe Coupon mit Promocode.
                 </DialogDescription>
@@ -307,7 +329,8 @@ export default function StripeCoupons() {
                     id="name"
                     placeholder="z.B. SOMMER2025"
                     value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
+                    onChange={(e) => setFormName(e.target.value.toUpperCase())}
+                    className="font-mono uppercase"
                   />
                 </div>
 
@@ -319,8 +342,18 @@ export default function StripeCoupons() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="percent">Prozent (%)</SelectItem>
-                        <SelectItem value="amount">Betrag (€)</SelectItem>
+                        <SelectItem value="percent">
+                          <span className="flex items-center gap-2">
+                            <Percent className="h-4 w-4" />
+                            Prozent
+                          </span>
+                        </SelectItem>
+                        <SelectItem value="amount">
+                          <span className="flex items-center gap-2">
+                            <Euro className="h-4 w-4" />
+                            Betrag
+                          </span>
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -333,8 +366,9 @@ export default function StripeCoupons() {
                         placeholder={formType === "percent" ? "20" : "10.00"}
                         value={formValue}
                         onChange={(e) => setFormValue(e.target.value)}
+                        className="pr-8"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
                         {formType === "percent" ? "%" : "€"}
                       </span>
                     </div>
@@ -348,15 +382,34 @@ export default function StripeCoupons() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="once">Einmalig</SelectItem>
-                      <SelectItem value="repeating">Wiederkehrend (X Monate)</SelectItem>
-                      <SelectItem value="forever">Unbegrenzt</SelectItem>
+                      <SelectItem value="once">
+                        <span className="flex items-center gap-2">
+                          <Zap className="h-4 w-4" />
+                          Einmalig
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="repeating">
+                        <span className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          Wiederkehrend
+                        </span>
+                      </SelectItem>
+                      <SelectItem value="forever">
+                        <span className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4" />
+                          Unbegrenzt
+                        </span>
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 {formDuration === "repeating" && (
-                  <div className="space-y-2">
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="space-y-2"
+                  >
                     <Label htmlFor="months">Anzahl Monate</Label>
                     <Input
                       id="months"
@@ -365,7 +418,7 @@ export default function StripeCoupons() {
                       value={formDurationMonths}
                       onChange={(e) => setFormDurationMonths(e.target.value)}
                     />
-                  </div>
+                  </motion.div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
@@ -374,7 +427,7 @@ export default function StripeCoupons() {
                     <Input
                       id="maxRedemptions"
                       type="number"
-                      placeholder="Unbegrenzt"
+                      placeholder="∞"
                       value={formMaxRedemptions}
                       onChange={(e) => setFormMaxRedemptions(e.target.value)}
                     />
@@ -391,229 +444,311 @@ export default function StripeCoupons() {
                 </div>
               </div>
 
-              <DialogFooter>
+              <DialogFooter className="gap-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>
                   Abbrechen
                 </Button>
-                <Button onClick={handleCreateCoupon} disabled={creating}>
-                  {creating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                <Button onClick={handleCreateCoupon} disabled={creating} className="gap-2">
+                  {creating ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="h-4 w-4" />
+                  )}
                   Erstellen
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
+      </header>
 
+      <main className="container mx-auto px-4 py-8 max-w-6xl relative z-10">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-primary/10">
-                  <Ticket className="h-6 w-6 text-primary" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/10 to-transparent overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+              <CardContent className="pt-6 relative">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Aktive Codes</p>
+                    <p className="text-3xl font-bold text-primary">{activeCoupons}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-primary/20">
+                    <Ticket className="h-6 w-6 text-primary" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Aktive Codes</p>
-                  <p className="text-2xl font-bold">{activeCoupons}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="border-border overflow-hidden relative">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Einlösungen gesamt</p>
+                    <p className="text-3xl font-bold">{totalRedemptions}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-secondary">
+                    <BarChart3 className="h-6 w-6 text-muted-foreground" />
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-green-500/10">
-                  <BarChart3 className="h-6 w-6 text-green-500" />
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="border-border overflow-hidden relative">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Codes gesamt</p>
+                    <p className="text-3xl font-bold">{coupons.length}</p>
+                  </div>
+                  <div className="p-3 rounded-xl bg-secondary">
+                    <Percent className="h-6 w-6 text-muted-foreground" />
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Gesamt-Einlösungen</p>
-                  <p className="text-2xl font-bold">{totalRedemptions}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4">
-                <div className="p-3 rounded-lg bg-yellow-500/10">
-                  <Percent className="h-6 w-6 text-yellow-500" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Codes gesamt</p>
-                  <p className="text-2xl font-bold">{coupons.length}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        {/* Coupons Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Alle Rabattcodes</CardTitle>
-            <CardDescription>Übersicht aller Stripe Coupons und Promocodes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : coupons.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <Ticket className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                <p>Noch keine Rabattcodes vorhanden.</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40px]"></TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Rabatt</TableHead>
-                    <TableHead>Dauer</TableHead>
-                    <TableHead>Einlösungen</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Aktionen</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {coupons.map((coupon) => (
-                    <Collapsible key={coupon.id} asChild>
-                      <>
-                        <TableRow className="group">
-                          <TableCell>
-                            <CollapsibleTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => setExpandedCoupon(expandedCoupon === coupon.id ? null : coupon.id)}
-                              >
-                                <ChevronDown
-                                  className={`h-4 w-4 transition-transform ${
-                                    expandedCoupon === coupon.id ? "rotate-180" : ""
-                                  }`}
-                                />
-                              </Button>
-                            </CollapsibleTrigger>
-                          </TableCell>
-                          <TableCell className="font-medium">
+        {/* Coupons List */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <Card>
+            <CardHeader className="border-b border-border">
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                Alle Rabattcodes
+              </CardTitle>
+              <CardDescription>Übersicht aller Stripe Coupons und Promocodes</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground">Lade Rabattcodes...</p>
+                </div>
+              ) : coupons.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-4">
+                  <div className="p-4 rounded-full bg-muted">
+                    <Ticket className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-medium">Noch keine Rabattcodes</p>
+                    <p className="text-sm text-muted-foreground">Erstelle deinen ersten Coupon!</p>
+                  </div>
+                  <Button onClick={() => setDialogOpen(true)} variant="outline" className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Code erstellen
+                  </Button>
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  <AnimatePresence>
+                    {coupons.map((coupon, index) => (
+                      <motion.div
+                        key={coupon.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="group"
+                      >
+                        {/* Coupon Row */}
+                        <div 
+                          className="flex items-center gap-4 p-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => setExpandedCoupon(expandedCoupon === coupon.id ? null : coupon.id)}
+                        >
+                          {/* Icon */}
+                          <div className={`p-2.5 rounded-xl transition-colors ${
+                            coupon.valid 
+                              ? "bg-primary/20 text-primary" 
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            {coupon.percent_off ? (
+                              <Percent className="h-5 w-5" />
+                            ) : (
+                              <Euro className="h-5 w-5" />
+                            )}
+                          </div>
+
+                          {/* Name & Discount */}
+                          <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              {coupon.percent_off ? (
-                                <Percent className="h-4 w-4 text-muted-foreground" />
-                              ) : (
-                                <Euro className="h-4 w-4 text-muted-foreground" />
-                              )}
-                              {coupon.name || coupon.id}
+                              <p className="font-semibold truncate">
+                                {coupon.name || coupon.id}
+                              </p>
+                              <Badge 
+                                variant={coupon.valid ? "default" : "secondary"}
+                                className={coupon.valid ? "bg-primary/20 text-primary hover:bg-primary/30" : ""}
+                              >
+                                {formatDiscount(coupon)}
+                              </Badge>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{formatDiscount(coupon)}</Badge>
-                          </TableCell>
-                          <TableCell>{formatDuration(coupon)}</TableCell>
-                          <TableCell>
-                            {coupon.times_redeemed}
-                            {coupon.max_redemptions && ` / ${coupon.max_redemptions}`}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={coupon.valid ? "default" : "secondary"}>
-                              {coupon.valid ? "Aktiv" : "Inaktiv"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
+                            <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
+                              <span className="flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                {formatDuration(coupon)}
+                              </span>
+                              <span>•</span>
+                              <span>{coupon.times_redeemed} Einlösungen</span>
+                              {coupon.max_redemptions && (
+                                <span className="text-muted-foreground/70">
+                                  / {coupon.max_redemptions}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Status */}
+                          <div className="flex items-center gap-2">
+                            {coupon.valid ? (
+                              <Badge variant="outline" className="border-primary/50 text-primary gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Aktiv
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-muted-foreground gap-1">
+                                <XCircle className="h-3 w-3" />
+                                Inaktiv
+                              </Badge>
+                            )}
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                copyToClipboard(coupon.promotion_codes[0]?.code || coupon.id);
+                              }}
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                            {coupon.valid && (
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => copyToClipboard(coupon.id)}
+                                className="h-8 w-8 text-destructive hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeactivateCoupon(coupon.id);
+                                }}
                               >
-                                <Copy className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />
                               </Button>
-                              {coupon.valid && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-destructive hover:text-destructive"
-                                  onClick={() => handleDeactivateCoupon(coupon.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                        <CollapsibleContent asChild>
-                          <TableRow className="bg-muted/30">
-                            <TableCell colSpan={7} className="p-4">
-                              <div className="space-y-3">
-                                <p className="text-sm font-medium">Promocodes:</p>
-                                {coupon.promotion_codes.length === 0 ? (
-                                  <p className="text-sm text-muted-foreground">Keine Promocodes</p>
-                                ) : (
-                                  <div className="grid gap-2">
-                                    {coupon.promotion_codes.map((pc) => (
-                                      <div
-                                        key={pc.id}
-                                        className="flex items-center justify-between p-3 bg-background rounded-lg border"
-                                      >
-                                        <div className="flex items-center gap-3">
-                                          <code className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                                            {pc.code}
-                                          </code>
-                                          <span className="text-sm text-muted-foreground">
-                                            {pc.times_redeemed} Einlösungen
-                                            {pc.max_redemptions && ` / ${pc.max_redemptions}`}
-                                          </span>
+                            )}
+                            <ChevronDown 
+                              className={`h-4 w-4 text-muted-foreground transition-transform ${
+                                expandedCoupon === coupon.id ? "rotate-180" : ""
+                              }`}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Expanded Details */}
+                        <AnimatePresence>
+                          {expandedCoupon === coupon.id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-4 pb-4 pt-0 ml-[60px] space-y-4">
+                                {/* Promo Codes */}
+                                {coupon.promotion_codes.length > 0 && (
+                                  <div className="space-y-2">
+                                    <p className="text-sm font-medium text-muted-foreground">Promocodes</p>
+                                    <div className="grid gap-2">
+                                      {coupon.promotion_codes.map((pc) => (
+                                        <div
+                                          key={pc.id}
+                                          className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border"
+                                        >
+                                          <div className="flex items-center gap-3">
+                                            <code className="text-sm font-mono font-semibold px-2 py-1 bg-background rounded border">
+                                              {pc.code}
+                                            </code>
+                                            <span className="text-sm text-muted-foreground">
+                                              {pc.times_redeemed} Einlösungen
+                                              {pc.max_redemptions && ` / ${pc.max_redemptions}`}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-3">
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-8 w-8"
+                                              onClick={() => copyToClipboard(pc.code)}
+                                            >
+                                              <Copy className="h-4 w-4" />
+                                            </Button>
+                                            <Switch
+                                              checked={pc.active}
+                                              onCheckedChange={(checked) =>
+                                                handleTogglePromoCode(pc.id, checked)
+                                              }
+                                            />
+                                          </div>
                                         </div>
-                                        <div className="flex items-center gap-3">
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => copyToClipboard(pc.code)}
-                                          >
-                                            <Copy className="h-4 w-4" />
-                                          </Button>
-                                          <Switch
-                                            checked={pc.active}
-                                            onCheckedChange={(checked) =>
-                                              handleTogglePromoCode(pc.id, checked)
-                                            }
-                                          />
-                                        </div>
-                                      </div>
-                                    ))}
+                                      ))}
+                                    </div>
                                   </div>
                                 )}
-                                <div className="text-xs text-muted-foreground pt-2 border-t">
-                                  <span>Coupon ID: {coupon.id}</span>
-                                  <span className="mx-2">•</span>
-                                  <span>
-                                    Erstellt:{" "}
-                                    {new Date(coupon.created * 1000).toLocaleDateString("de-DE")}
+
+                                {/* Meta Info */}
+                                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground pt-2 border-t border-border">
+                                  <span className="flex items-center gap-1">
+                                    <span className="font-medium">ID:</span>
+                                    <code className="font-mono">{coupon.id}</code>
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    Erstellt: {new Date(coupon.created * 1000).toLocaleDateString("de-DE")}
                                   </span>
                                   {coupon.redeem_by && (
-                                    <>
-                                      <span className="mx-2">•</span>
-                                      <span>
-                                        Gültig bis:{" "}
-                                        {new Date(coupon.redeem_by * 1000).toLocaleDateString("de-DE")}
-                                      </span>
-                                    </>
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      Gültig bis: {new Date(coupon.redeem_by * 1000).toLocaleDateString("de-DE")}
+                                    </span>
                                   )}
                                 </div>
                               </div>
-                            </TableCell>
-                          </TableRow>
-                        </CollapsibleContent>
-                      </>
-                    </Collapsible>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </main>
     </div>
   );
 }
