@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Shield, Users, Key, RotateCcw, Check, X, AlertTriangle, Calendar, ArrowLeft, Loader2 } from "lucide-react";
+import { Shield, Users, Key, RotateCcw, Check, X, AlertTriangle, ArrowLeft, Loader2, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,14 +16,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useAdminPasswordManagement } from "@/hooks/useAdminPasswordManagement";
-import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AdminPasswordManagement() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { isOwner, loading: roleLoading } = useUserRole();
-  const { adminUsers, loading, resetPasswordForUser, refetch } = useAdminPasswordManagement();
+  const { adminUsers, loading, maskedEmail, resetPasswordForUser, requestEmailReset, refetch } = useAdminPasswordManagement();
   const [resetTargetUser, setResetTargetUser] = useState<{ id: string; name: string } | null>(null);
   const [isResetting, setIsResetting] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [showSelfResetDialog, setShowSelfResetDialog] = useState(false);
 
   const handleResetPassword = async () => {
     if (!resetTargetUser) return;
@@ -34,6 +37,18 @@ export default function AdminPasswordManagement() {
       setResetTargetUser(null);
     } finally {
       setIsResetting(false);
+    }
+  };
+
+  const handleSelfReset = async () => {
+    setIsSendingEmail(true);
+    try {
+      const success = await requestEmailReset();
+      if (success) {
+        setShowSelfResetDialog(false);
+      }
+    } finally {
+      setIsSendingEmail(false);
     }
   };
 
@@ -58,6 +73,9 @@ export default function AdminPasswordManagement() {
     );
   }
 
+  // Find current user in admin users list
+  const currentUserAdmin = adminUsers.find(u => u.user_id === user?.id);
+
   return (
     <div className="min-h-screen bg-background">
       <div className="container max-w-4xl mx-auto py-8 px-4">
@@ -65,6 +83,57 @@ export default function AdminPasswordManagement() {
           <ArrowLeft className="w-4 h-4 mr-2" />
           Zurück zum Dashboard
         </Button>
+
+        {/* Self-Reset Card for Owner */}
+        <Card className="mb-6 border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                <Mail className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-lg">Dein Admin-Passwort</CardTitle>
+                <CardDescription>
+                  Setze dein eigenes Admin-Passwort per E-Mail zurück
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                {currentUserAdmin?.has_admin_password ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="border-primary text-primary">
+                      <Check className="w-3 h-3 mr-1" />
+                      Passwort eingerichtet
+                    </Badge>
+                    {currentUserAdmin.days_until_expiry <= 14 && (
+                      <Badge variant="outline" className="border-yellow-500 text-yellow-600">
+                        <AlertTriangle className="w-3 h-3 mr-1" />
+                        Läuft in {currentUserAdmin.days_until_expiry} Tagen ab
+                      </Badge>
+                    )}
+                  </div>
+                ) : (
+                  <Badge variant="outline">
+                    <X className="w-3 h-3 mr-1" />
+                    Nicht eingerichtet
+                  </Badge>
+                )}
+                {maskedEmail && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    Reset-Link wird an: {maskedEmail}
+                  </p>
+                )}
+              </div>
+              <Button onClick={() => setShowSelfResetDialog(true)}>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Passwort zurücksetzen
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -193,6 +262,37 @@ export default function AdminPasswordManagement() {
                 <RotateCcw className="w-4 h-4 mr-2" />
               )}
               Zurücksetzen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Self Reset Dialog */}
+      <AlertDialog open={showSelfResetDialog} onOpenChange={setShowSelfResetDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5 text-primary" />
+              Admin-Passwort per E-Mail zurücksetzen
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Ein Reset-Link wird an deine registrierte E-Mail-Adresse gesendet.
+              {maskedEmail && (
+                <span className="block mt-2 font-medium text-foreground">
+                  E-Mail: {maskedEmail}
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSendingEmail}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSelfReset} disabled={isSendingEmail}>
+              {isSendingEmail ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Mail className="w-4 h-4 mr-2" />
+              )}
+              Reset-Link senden
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
