@@ -33,7 +33,7 @@ export default function AGB() {
           <section>
             <h2 className="text-xl font-semibold mb-4 text-foreground">§ 1 Geltungsbereich und Anbieter</h2>
             <p className="text-muted-foreground leading-relaxed">
-              (1) Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") regeln das Vertragsverhältnis zwischen der FaceRank (nachfolgend "Anbieter", "wir" oder "uns") und allen natürlichen oder juristischen Personen (nachfolgend "Nutzer", "Kunde" oder "Sie"), die unsere Webapplikation FaceRank (nachfolgend "App", "Plattform" oder "Dienst") nutzen.
+              (1) Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") regeln das Vertragsverhältnis zwischen der GLOMAXXED AI (nachfolgend "Anbieter", "wir" oder "uns") und allen natürlichen oder juristischen Personen (nachfolgend "Nutzer", "Kunde" oder "Sie"), die unsere Webapplikation GLOMAXXED AI (nachfolgend "App", "Plattform" oder "Dienst") nutzen.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               (2) Die AGB gelten für sämtliche über die App angebotenen Leistungen, einschließlich kostenloser und kostenpflichtiger Funktionen, unabhängig davon, ob der Zugriff über Desktop, Mobilgeräte oder andere Endgeräte erfolgt.
@@ -43,7 +43,7 @@ export default function AGB() {
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               (4) Der Anbieter ist:<br /><br />
-              <strong className="text-foreground">FaceRank</strong><br />
+              <strong className="text-foreground">GLOMAXXED AI</strong><br />
               Max Mustermann<br />
               Musterstraße 123<br />
               12345 Musterstadt<br />

@@ -24,7 +24,7 @@ interface SettingsRow {
 }
 
 const defaultSettings: SystemSettings = {
-  app_name: "FaceRank",
+  app_name: "GLOMAXXED AI",
   app_logo_url: "",
   favicon_url: "",
   maintenance_mode: false,
