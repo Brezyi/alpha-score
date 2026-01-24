@@ -1,18 +1,10 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Check, Play, Pause, RotateCcw, Timer, ChevronDown, ChevronUp, Sparkles, Flame, Target } from "lucide-react";
+import { Check, RotateCcw, Timer, ChevronDown, Sparkles, Flame, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
-// Import exercise videos
-import mewingVideo from "@/assets/face-fitness/mewing-video.mp4";
-import jawlineVideo from "@/assets/face-fitness/jawline-video.mp4";
-import cheekVideo from "@/assets/face-fitness/cheek-video.mp4";
-import neckVideo from "@/assets/face-fitness/neck-video.mp4";
-import foreheadVideo from "@/assets/face-fitness/forehead-video.mp4";
-import lipVideo from "@/assets/face-fitness/lip-video.mp4";
-
-// Import fallback images
+// Import exercise images
 import mewingImg from "@/assets/face-fitness/mewing.jpg";
 import jawlineImg from "@/assets/face-fitness/jawline-exercise.jpg";
 import cheekImg from "@/assets/face-fitness/cheek-exercise.jpg";
@@ -27,7 +19,6 @@ interface Exercise {
   duration: string;
   reps: string;
   image: string;
-  video: string;
   benefits: string[];
   instructions: string[];
   difficulty: "easy" | "medium" | "hard";
@@ -42,7 +33,6 @@ const EXERCISES: Exercise[] = [
     duration: "Ganztägig",
     reps: "Konstant halten",
     image: mewingImg,
-    video: mewingVideo,
     difficulty: "easy",
     targetArea: "Kiefer & Gesicht",
     benefits: [
@@ -66,7 +56,6 @@ const EXERCISES: Exercise[] = [
     duration: "5 Min",
     reps: "3x20 Wiederholungen",
     image: jawlineImg,
-    video: jawlineVideo,
     difficulty: "medium",
     targetArea: "Kiefer",
     benefits: [
@@ -90,7 +79,6 @@ const EXERCISES: Exercise[] = [
     duration: "3 Min",
     reps: "2x15 Wiederholungen",
     image: cheekImg,
-    video: cheekVideo,
     difficulty: "easy",
     targetArea: "Wangen",
     benefits: [
@@ -114,7 +102,6 @@ const EXERCISES: Exercise[] = [
     duration: "5 Min",
     reps: "3x10 Wiederholungen",
     image: neckImg,
-    video: neckVideo,
     difficulty: "medium",
     targetArea: "Nacken & Kinn",
     benefits: [
@@ -138,7 +125,6 @@ const EXERCISES: Exercise[] = [
     duration: "3 Min",
     reps: "2x12 Wiederholungen",
     image: foreheadImg,
-    video: foreheadVideo,
     difficulty: "easy",
     targetArea: "Stirn",
     benefits: [
@@ -162,7 +148,6 @@ const EXERCISES: Exercise[] = [
     duration: "3 Min",
     reps: "2x15 Wiederholungen",
     image: lipImg,
-    video: lipVideo,
     difficulty: "easy",
     targetArea: "Lippen & Mund",
     benefits: [
@@ -194,8 +179,6 @@ interface FaceFitnessExercisesProps {
 export function FaceFitnessExercises({ className }: FaceFitnessExercisesProps) {
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
   const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
-  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
-  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({});
 
   const toggleComplete = (exerciseId: string) => {
     setCompletedExercises(prev => {
@@ -210,34 +193,7 @@ export function FaceFitnessExercises({ className }: FaceFitnessExercisesProps) {
   };
 
   const toggleExpanded = (exerciseId: string) => {
-    setExpandedExercise(prev => {
-      if (prev === exerciseId) {
-        // Stop video when collapsing
-        if (videoRefs.current[exerciseId]) {
-          videoRefs.current[exerciseId]!.pause();
-          setPlayingVideo(null);
-        }
-        return null;
-      }
-      return exerciseId;
-    });
-  };
-
-  const toggleVideo = (exerciseId: string) => {
-    const video = videoRefs.current[exerciseId];
-    if (!video) return;
-
-    if (playingVideo === exerciseId) {
-      video.pause();
-      setPlayingVideo(null);
-    } else {
-      // Pause any other playing video
-      Object.entries(videoRefs.current).forEach(([id, v]) => {
-        if (id !== exerciseId && v) v.pause();
-      });
-      video.play();
-      setPlayingVideo(exerciseId);
-    }
+    setExpandedExercise(prev => prev === exerciseId ? null : exerciseId);
   };
 
   const completedCount = completedExercises.size;
@@ -306,7 +262,6 @@ export function FaceFitnessExercises({ className }: FaceFitnessExercisesProps) {
         {EXERCISES.map((exercise, index) => {
           const isCompleted = completedExercises.has(exercise.id);
           const isExpanded = expandedExercise === exercise.id;
-          const isPlaying = playingVideo === exercise.id;
           const difficulty = difficultyConfig[exercise.difficulty];
 
           return (
@@ -333,24 +288,19 @@ export function FaceFitnessExercises({ className }: FaceFitnessExercisesProps) {
 
                 {/* Main Row */}
                 <div className="relative flex items-center gap-4 p-4">
-                  {/* Video Thumbnail */}
+                  {/* Image Thumbnail */}
                   <div 
                     className={cn(
                       "relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer group",
                       "ring-2 ring-border/50 hover:ring-primary/50 transition-all"
                     )}
-                    onClick={() => {
-                      if (!isExpanded) toggleExpanded(exercise.id);
-                    }}
+                    onClick={() => toggleExpanded(exercise.id)}
                   >
                     <img
                       src={exercise.image}
                       alt={exercise.name}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="w-6 h-6 text-white" fill="white" />
-                    </div>
                     {isCompleted && (
                       <motion.div 
                         initial={{ scale: 0 }}
@@ -444,43 +394,13 @@ export function FaceFitnessExercises({ className }: FaceFitnessExercisesProps) {
                       className="overflow-hidden"
                     >
                       <div className="px-4 pb-5 pt-2 border-t border-border/30">
-                        {/* Video Player */}
-                        <div className="relative rounded-xl overflow-hidden bg-black/90 mb-5 group">
-                          <video
-                            ref={(el) => { videoRefs.current[exercise.id] = el; }}
-                            src={exercise.video}
-                            className="w-full aspect-square object-contain"
-                            loop
-                            playsInline
-                            muted
-                            poster={exercise.image}
-                            onEnded={() => setPlayingVideo(null)}
+                        {/* Large Image */}
+                        <div className="relative rounded-xl overflow-hidden bg-muted mb-5">
+                          <img
+                            src={exercise.image}
+                            alt={exercise.name}
+                            className="w-full h-48 object-contain"
                           />
-                          
-                          {/* Play/Pause Overlay */}
-                          <div 
-                            className={cn(
-                              "absolute inset-0 flex items-center justify-center cursor-pointer transition-opacity",
-                              isPlaying ? "opacity-0 hover:opacity-100" : "opacity-100"
-                            )}
-                            onClick={() => toggleVideo(exercise.id)}
-                          >
-                            <div className={cn(
-                              "w-16 h-16 rounded-full flex items-center justify-center transition-transform hover:scale-110",
-                              "bg-primary/90 backdrop-blur-sm shadow-2xl shadow-primary/50"
-                            )}>
-                              {isPlaying ? (
-                                <Pause className="w-7 h-7 text-primary-foreground" fill="currentColor" />
-                              ) : (
-                                <Play className="w-7 h-7 text-primary-foreground ml-1" fill="currentColor" />
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Video Label */}
-                          <div className="absolute bottom-3 left-3 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-sm text-xs text-white font-medium">
-                            Video-Anleitung
-                          </div>
                         </div>
 
                         {/* Benefits & Instructions Grid */}
