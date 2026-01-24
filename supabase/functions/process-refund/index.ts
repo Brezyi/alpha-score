@@ -275,7 +275,7 @@ serve(async (req) => {
           throw new Error("Keine Berechtigung");
         }
 
-        const { data: requests, error } = await supabaseClient
+        const { data: requests, error: listError } = await supabaseClient
           .from("refund_requests")
           .select(`
             *,
@@ -283,7 +283,7 @@ serve(async (req) => {
           `)
           .order("created_at", { ascending: false });
 
-        if (error) throw error;
+        if (listError) throw new Error(listError.message || "Fehler beim Laden der Anträge");
 
         // Enrich with user email
         const enrichedRequests = await Promise.all(
