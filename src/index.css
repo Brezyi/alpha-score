@@ -323,6 +323,42 @@
   opacity: 0;
 }
 
+/* Scanner line animation for navbar logo */
+@keyframes scanner-line {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.animate-scanner-line {
+  animation: scanner-line 2s ease-in-out infinite;
+}
+
+/* Slow pulse for scanner glow */
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
 /* Reduce motion for accessibility and mobile performance */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
@@ -334,7 +370,8 @@
   .animate-gradient-shift,
   .animate-glow,
   .animate-float,
-  .animate-pulse-slow {
+  .animate-pulse-slow,
+  .animate-scanner-line {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
