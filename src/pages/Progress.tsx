@@ -49,23 +49,19 @@ interface Analysis {
   signedPhotoUrls?: (string | null)[];
 }
 
-interface UserMilestone {
-  milestone_key: string;
-  achieved_at: string;
-  xp_reward?: number;
-}
+// UserMilestone interface removed - using achievements system instead
 
 export default function Progress() {
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
-  const [userMilestones, setUserMilestones] = useState<UserMilestone[]>([]);
+  // userMilestones state removed - using achievements from useGamification
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
   const { currentStreak, longestStreak } = useStreak();
-  const { addXp } = useGamification();
+  const { addXp, achievements, loading: achievementsLoading } = useGamification();
   const { shouldReduce, containerVariants, itemVariants, cardVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -117,55 +113,13 @@ export default function Progress() {
     }
   }, [user]);
 
-  // Fetch user milestones
-  const fetchMilestones = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from("user_milestones")
-        .select("milestone_key, achieved_at")
-        .eq("user_id", user.id);
-      
-      if (!error && data) {
-        setUserMilestones(data);
-      }
-    } catch (err) {
-      console.error("Error fetching milestones:", err);
-    }
-  }, [user]);
-
-  // Save new milestone and award XP
-  const saveMilestone = useCallback(async (key: string, xpReward: number) => {
-    if (!user) return;
-    
-    // Check if already saved
-    if (userMilestones.some(m => m.milestone_key === key)) return;
-    
-    try {
-      const { error } = await supabase
-        .from("user_milestones")
-        .insert({ user_id: user.id, milestone_key: key });
-      
-      if (!error) {
-        setUserMilestones(prev => [...prev, { milestone_key: key, achieved_at: new Date().toISOString(), xp_reward: xpReward }]);
-        
-        // Award XP for milestone achievement
-        if (xpReward > 0) {
-          await addXp(xpReward, `milestone_${key}`);
-        }
-      }
-    } catch (err) {
-      console.error("Error saving milestone:", err);
-    }
-  }, [user, userMilestones, addXp]);
+  // Milestone functions removed - using achievements system from useGamification
 
   useEffect(() => {
     if (user) {
       fetchAnalyses();
-      fetchMilestones();
     }
-  }, [user, fetchAnalyses, fetchMilestones]);
+  }, [user, fetchAnalyses]);
 
   if (authLoading || subscriptionLoading) {
     return (
@@ -905,8 +859,8 @@ export default function Progress() {
               </motion.div>
             )}
 
-            {/* Milestones - Showcase Style */}
-            {completedAnalyses.length > 0 && (
+            {/* Achievements Section - Replaces old Milestones */}
+            {achievements.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -920,146 +874,62 @@ export default function Progress() {
                     >
                       <Crown className="w-5 h-5 text-primary" />
                     </motion.div>
-                    Meilensteine
+                    Achievements
+                    <span className="text-sm font-normal text-muted-foreground ml-2">
+                      {achievements.filter(a => a.unlocked).length}/{achievements.length}
+                    </span>
                   </h3>
                   <motion.div 
-                    className="space-y-3"
+                    className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
                   >
-                    {(() => {
-                      // Define milestone tiers per category with XP rewards
-                      const analysisMilestones = [
-                        { key: "first_analysis", emoji: "🎯", title: "Erste Analyse", threshold: 1, xpReward: 50 },
-                        { key: "5_analyses", emoji: "📊", title: "5 Analysen", threshold: 5, xpReward: 100 },
-                        { key: "10_analyses", emoji: "🔬", title: "10 Analysen", threshold: 10, xpReward: 150 },
-                        { key: "25_analyses", emoji: "🧪", title: "25 Analysen", threshold: 25, xpReward: 250 },
-                        { key: "50_analyses", emoji: "💎", title: "50 Analysen", threshold: 50, xpReward: 500 },
-                      ];
-                      
-                      const streakMilestones = [
-                        { key: "streak_7_days", emoji: "🔥", title: "7-Tage Streak", threshold: 7, xpReward: 75 },
-                        { key: "streak_14_days", emoji: "🔥", title: "14-Tage Streak", threshold: 14, xpReward: 150 },
-                        { key: "streak_30_days", emoji: "🔥", title: "30-Tage Streak", threshold: 30, xpReward: 300 },
-                        { key: "streak_60_days", emoji: "🔥", title: "60-Tage Streak", threshold: 60, xpReward: 500 },
-                        { key: "streak_100_days", emoji: "🔥", title: "100-Tage Streak", threshold: 100, xpReward: 1000 },
-                      ];
-                      
-                      const scoreMilestones = [
-                        { key: "score_6", emoji: "⭐", title: "Score 6.0 erreicht", threshold: 6.0, xpReward: 100 },
-                        { key: "score_7", emoji: "⭐", title: "Score 7.0 erreicht", threshold: 7.0, xpReward: 200 },
-                        { key: "score_8", emoji: "🌟", title: "Score 8.0 erreicht", threshold: 8.0, xpReward: 400 },
-                        { key: "top_10_percent", emoji: "🏆", title: "Top 10% (8.5+)", threshold: 8.5, xpReward: 750 },
-                        { key: "score_9", emoji: "👑", title: "Score 9.0 erreicht", threshold: 9.0, xpReward: 1000 },
-                      ];
-                      
-                      const improvementMilestones = [
-                        { key: "score_improvement_05", emoji: "📈", title: "+0.5 Verbesserung", threshold: 0.5, xpReward: 50 },
-                        { key: "score_improvement_1", emoji: "📈", title: "+1.0 Verbesserung", threshold: 1.0, xpReward: 100 },
-                        { key: "score_improvement_2", emoji: "🚀", title: "+2.0 Verbesserung", threshold: 2.0, xpReward: 250 },
-                        { key: "score_improvement_3", emoji: "💫", title: "+3.0 Verbesserung", threshold: 3.0, xpReward: 500 },
-                      ];
-                      
-                      // Get current values
-                      const analysisCount = completedAnalyses.length;
-                      const maxStreak = Math.max(currentStreak, longestStreak);
-                      const maxScore = highestScore ? parseFloat(highestScore) : 0;
-                      const improvement = totalImprovement ? parseFloat(totalImprovement) : 0;
-                      
-                      // Helper: Get current + next milestone for a category
-                      const getVisibleMilestones = (
-                        milestones: typeof analysisMilestones,
-                        currentValue: number
-                      ) => {
-                        const achieved = milestones.filter(m => currentValue >= m.threshold);
-                        const nextUnachieved = milestones.find(m => currentValue < m.threshold);
-                        
-                        // Show last achieved + next goal
-                        const lastAchieved = achieved[achieved.length - 1];
-                        
-                        if (lastAchieved && nextUnachieved) {
-                          return [
-                            { ...lastAchieved, achieved: true },
-                            { ...nextUnachieved, achieved: false }
-                          ];
-                        } else if (lastAchieved) {
-                          // All achieved, show last one
-                          return [{ ...lastAchieved, achieved: true }];
-                        } else if (nextUnachieved) {
-                          // None achieved, show first goal
-                          return [{ ...nextUnachieved, achieved: false }];
-                        }
-                        return [];
-                      };
-                      
-                      // Build visible milestones
-                      const visibleMilestones = [
-                        ...getVisibleMilestones(analysisMilestones, analysisCount),
-                        ...getVisibleMilestones(streakMilestones, maxStreak),
-                        ...getVisibleMilestones(scoreMilestones, maxScore),
-                        ...getVisibleMilestones(improvementMilestones, improvement),
-                      ];
-                      
-                      return visibleMilestones.map((milestone) => {
-                        const savedMilestone = userMilestones.find(m => m.milestone_key === milestone.key);
-                        const achievedAt = savedMilestone?.achieved_at;
-                        
-                        // Auto-save newly achieved milestones and award XP
-                        if (milestone.achieved && !savedMilestone) {
-                          saveMilestone(milestone.key, milestone.xpReward);
-                        }
-                        
-                        return (
-                          <motion.div 
-                            key={milestone.key}
-                            variants={cardVariants}
-                            whileHover={{ scale: 1.01, x: 3 }}
-                            className={cn(
-                              "flex items-center gap-3 p-3 rounded-xl",
-                              milestone.achieved ? "bg-primary/10" : "bg-muted/30 opacity-60"
-                            )}
+                    {achievements.map((achievement, index) => (
+                      <motion.div 
+                        key={achievement.id}
+                        variants={cardVariants}
+                        whileHover={hoverScaleSmall}
+                        className={cn(
+                          "flex flex-col items-center gap-2 p-4 rounded-xl text-center transition-all",
+                          achievement.unlocked 
+                            ? "bg-primary/10 border border-primary/20" 
+                            : "bg-muted/30 opacity-60"
+                        )}
+                      >
+                        <span className="text-3xl">{achievement.icon}</span>
+                        <div className="flex flex-col gap-0.5">
+                          <span className={cn(
+                            "text-sm font-medium line-clamp-2",
+                            !achievement.unlocked && "text-muted-foreground"
+                          )}>
+                            {achievement.name}
+                          </span>
+                          <span className={cn(
+                            "text-xs",
+                            achievement.unlocked ? "text-primary" : "text-muted-foreground"
+                          )}>
+                            +{achievement.xpReward} XP
+                          </span>
+                        </div>
+                        {achievement.unlocked ? (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring", stiffness: 300, delay: index * 0.05 }}
                           >
-                            <span className="text-2xl">{milestone.emoji}</span>
-                            <div className="flex flex-col flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className={cn("font-medium", !milestone.achieved && "text-muted-foreground")}>
-                                  {milestone.title}
-                                </span>
-                                <span className={cn(
-                                  "text-xs px-1.5 py-0.5 rounded-full font-medium",
-                                  milestone.achieved 
-                                    ? "bg-primary/20 text-primary" 
-                                    : "bg-muted text-muted-foreground"
-                                )}>
-                                  +{milestone.xpReward} XP
-                                </span>
-                              </div>
-                              {achievedAt ? (
-                                <span className="text-xs text-muted-foreground">
-                                  Erreicht am {format(new Date(achievedAt), "dd. MMM yyyy", { locale: de })}
-                                </span>
-                              ) : (
-                                <span className="text-xs text-muted-foreground">
-                                  Nächstes Ziel
-                                </span>
-                              )}
-                            </div>
-                            {milestone.achieved ? (
-                              <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
-                                transition={{ type: "spring", stiffness: 300 }}
-                              >
-                                <Target className="w-5 h-5 text-primary" />
-                              </motion.div>
-                            ) : (
-                              <Lock className="w-4 h-4 text-muted-foreground" />
-                            )}
+                            <Target className="w-4 h-4 text-primary" />
                           </motion.div>
-                        );
-                      });
-                    })()}
+                        ) : (
+                          <Lock className="w-4 h-4 text-muted-foreground" />
+                        )}
+                        {achievement.unlockedAt && (
+                          <span className="text-[10px] text-muted-foreground">
+                            {format(new Date(achievement.unlockedAt), "dd.MM.yy", { locale: de })}
+                          </span>
+                        )}
+                      </motion.div>
+                    ))}
                   </motion.div>
                 </Card>
               </motion.div>
