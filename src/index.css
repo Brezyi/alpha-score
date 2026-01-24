@@ -163,7 +163,7 @@
   }
 
   .glow-box {
-    box-shadow: 0 0 40px hsl(0, 100%, 50%, 0.2);
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.2);
   }
 
   .glass {
@@ -196,10 +196,10 @@
 
 @keyframes glow {
   from {
-    box-shadow: 0 0 20px hsl(0, 100%, 50%, 0.2);
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.2);
   }
   to {
-    box-shadow: 0 0 40px hsl(0, 100%, 50%, 0.4);
+    box-shadow: 0 0 40px hsl(var(--primary) / 0.4);
   }
 }
 

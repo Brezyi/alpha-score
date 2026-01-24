@@ -218,7 +218,7 @@ const PotentialPreview = () => {
               draggable={false}
             />
             <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
-              <span className="text-orange-400 text-sm font-bold">Score: 5.2</span>
+              <span className="text-muted-foreground text-sm font-bold">Score: 5.2</span>
             </div>
           </div>
 
@@ -335,7 +335,7 @@ const AnalysisPreview = () => (
             <defs>
               <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stopColor="hsl(var(--primary))" />
-                <stop offset="100%" stopColor="hsl(153, 100%, 60%)" />
+                <stop offset="100%" stopColor="hsl(var(--primary) / 0.6)" />
               </linearGradient>
             </defs>
           </svg>
@@ -369,11 +369,11 @@ const AnalysisPreview = () => (
     <div className="space-y-4">
       <h3 className="text-xl font-bold mb-4">Detaillierte Analyse</h3>
       {[
-        { label: "Gesichtssymmetrie", score: 7.2, color: "bg-emerald-500" },
-        { label: "Jawline Definition", score: 6.5, color: "bg-blue-500" },
-        { label: "Hautqualität", score: 5.8, color: "bg-orange-500" },
-        { label: "Augenbereich", score: 7.8, color: "bg-purple-500" },
-        { label: "Haare & Styling", score: 6.0, color: "bg-pink-500" },
+        { label: "Gesichtssymmetrie", score: 7.2 },
+        { label: "Jawline Definition", score: 6.5 },
+        { label: "Hautqualität", score: 5.8 },
+        { label: "Augenbereich", score: 7.8 },
+        { label: "Haare & Styling", score: 6.0 },
       ].map((item) => (
         <div key={item.label} className="glass-card p-4 rounded-xl">
           <div className="flex items-center justify-between mb-2">
@@ -385,7 +385,7 @@ const AnalysisPreview = () => (
               initial={{ width: 0 }}
               animate={{ width: `${item.score * 10}%` }}
               transition={{ duration: 1, delay: 0.5 }}
-              className={`h-full rounded-full ${item.color}`}
+              className="h-full rounded-full bg-primary"
             />
           </div>
         </div>
@@ -418,21 +418,21 @@ const PlanPreview = () => (
         {
           icon: Droplets,
           title: "Skincare",
-          color: "bg-cyan-500/10 text-cyan-500",
+          color: "bg-primary/10 text-primary",
           tasks: ["Morgen-Routine etablieren", "SPF 50 täglich", "Retinol 2x/Woche"],
           progress: 45,
         },
         {
           icon: Scissors,
           title: "Haare & Grooming",
-          color: "bg-purple-500/10 text-purple-500",
+          color: "bg-primary/10 text-primary",
           tasks: ["Friseur-Termin buchen", "Augenbrauen zupfen", "Bartpflege optimieren"],
           progress: 30,
         },
         {
           icon: Dumbbell,
           title: "Fitness",
-          color: "bg-orange-500/10 text-orange-500",
+          color: "bg-primary/10 text-primary",
           tasks: ["3x/Woche Training", "Protein-Ziel erreichen", "Körperhaltung verbessern"],
           progress: 60,
         },
@@ -550,14 +550,14 @@ const ProgressPreview = () => (
       
       <div className="space-y-3">
         {[
-          { category: "Skincare Routine", improvement: "+0.8", color: "bg-pink-500" },
-          { category: "Hairstyle Optimierung", improvement: "+0.6", color: "bg-purple-500" },
-          { category: "Fitness & Body", improvement: "+0.5", color: "bg-blue-500" },
-          { category: "Style & Grooming", improvement: "+0.3", color: "bg-emerald-500" },
+          { category: "Skincare Routine", improvement: "+0.8" },
+          { category: "Hairstyle Optimierung", improvement: "+0.6" },
+          { category: "Fitness & Body", improvement: "+0.5" },
+          { category: "Style & Grooming", improvement: "+0.3" },
         ].map((item) => (
           <div key={item.category} className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${item.color}`} />
+              <div className="w-2 h-2 rounded-full bg-primary" />
               <span className="text-sm">{item.category}</span>
             </div>
             <span className="text-sm font-semibold text-primary">{item.improvement}</span>
@@ -607,7 +607,7 @@ const ProgressPreview = () => (
             )}
             
             {achievement.unlocked && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
             )}
           </motion.div>
         ))}
@@ -630,7 +630,7 @@ const CoachPreview = () => (
     className="glass-card p-6 md:p-8 rounded-2xl max-w-2xl mx-auto"
   >
     <div className="flex items-center gap-3 mb-6">
-      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center">
+      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
         <MessageSquare className="w-6 h-6 text-primary-foreground" />
       </div>
       <div>
