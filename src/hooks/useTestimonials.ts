@@ -24,10 +24,10 @@ export function useTestimonials() {
   const fetchApprovedTestimonials = useCallback(async () => {
     setLoading(true);
     try {
+      // Use sanitized public view that excludes user_id and analysis_id
       const { data, error } = await supabase
-        .from("user_testimonials")
+        .from("user_testimonials_public" as any)
         .select("*")
-        .eq("is_approved", true)
         .order("created_at", { ascending: false })
         .limit(6);
 
