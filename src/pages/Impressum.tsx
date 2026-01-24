@@ -105,6 +105,29 @@ export default function Impressum() {
             </p>
           </section>
 
+          <section className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
+            <h2 className="text-xl font-semibold mb-4 text-amber-400">⚠️ Wichtiger Hinweis zum Dienst</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              <strong className="text-foreground">GLOMAXXED AI ist ein Unterhaltungs- und Lifestyle-Produkt.</strong>
+            </p>
+            <p className="text-muted-foreground leading-relaxed mt-3">
+              Die von dieser App bereitgestellten Analysen, Bewertungen und Empfehlungen sind 
+              <strong className="text-foreground"> KI-basierte ästhetische Einschätzungen zu reinen Unterhaltungszwecken</strong>. 
+              Sie stellen <strong className="text-foreground">KEINE</strong>:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4 mt-3">
+              <li>Medizinischen Diagnosen oder Gesundheitsberatungen</li>
+              <li>Dermatologischen Bewertungen oder Behandlungsempfehlungen</li>
+              <li>Psychologischen oder psychiatrischen Gutachten</li>
+              <li>Therapeutischen Maßnahmen jeglicher Art</li>
+              <li>Aussagen über körperliche oder geistige "Defekte"</li>
+            </ul>
+            <p className="text-muted-foreground leading-relaxed mt-4">
+              Bei gesundheitlichen, kosmetischen oder psychischen Anliegen wenden Sie sich bitte 
+              an einen qualifizierten Arzt, Dermatologen, Psychologen oder anderen Fachexperten.
+            </p>
+          </section>
+
           <section>
             <h2 className="text-xl font-semibold mb-4 text-foreground">Haftung für Links</h2>
             <p className="text-muted-foreground leading-relaxed">

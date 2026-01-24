@@ -78,17 +78,34 @@ export default function AGB() {
 
           {/* §3 Leistungsbeschreibung */}
           <section>
-            <h2 className="text-xl font-semibold mb-4 text-foreground">§ 3 Leistungsbeschreibung</h2>
+            <h2 className="text-xl font-semibold mb-4 text-foreground">§ 3 Leistungsbeschreibung und Art der Analyse</h2>
             <p className="text-muted-foreground leading-relaxed">
-              (1) FaceRank ist eine webbasierte Plattform, die Nutzern ermöglicht, ihr äußeres Erscheinungsbild mittels KI-gestützter Analyse zu bewerten und Verbesserungsvorschläge zu erhalten. Die App bietet folgende Funktionen:
+              (1) GLOMAXXED AI ist eine webbasierte Plattform für <strong className="text-foreground">Unterhaltungs- und Lifestyle-Zwecke</strong>, die Nutzern ermöglicht, ihr äußeres Erscheinungsbild mittels KI-gestützter Analyse einschätzen zu lassen und Verbesserungsvorschläge zu erhalten.
+            </p>
+            
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mt-4">
+              <p className="text-amber-400 font-semibold mb-2">⚠️ WICHTIGER HAFTUNGSAUSSCHLUSS</p>
+              <p className="text-muted-foreground leading-relaxed text-sm">
+                Die von GLOMAXXED AI bereitgestellten Analysen und Bewertungen sind <strong className="text-foreground">KI-basierte ästhetische Einschätzungen zu Unterhaltungszwecken</strong>. Sie stellen <strong className="text-foreground">KEINE medizinischen, dermatologischen, psychologischen, psychiatrischen oder therapeutischen Diagnosen, Beratungen oder Behandlungsempfehlungen</strong> dar.
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-3 text-sm">
+                <li>Die App ersetzt <strong className="text-foreground">keinen Arzt, Dermatologen, Psychologen oder anderen Fachexperten</strong></li>
+                <li>Die Ergebnisse sind <strong className="text-foreground">subjektive KI-Einschätzungen</strong> und keine objektiven Diagnosen</li>
+                <li>Es werden <strong className="text-foreground">keine Aussagen über Krankheiten, Störungen oder medizinische Zustände</strong> getroffen</li>
+                <li>Bei gesundheitlichen oder psychischen Bedenken wenden Sie sich bitte an einen qualifizierten Fachmann</li>
+              </ul>
+            </div>
+            
+            <p className="text-muted-foreground leading-relaxed mt-4">
+              (2) Die App bietet folgende Funktionen:
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               <strong className="text-foreground">a) Kostenlose Basisfunktionen:</strong>
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4 mt-2">
               <li>Erstellung und Verwaltung eines Nutzerprofils</li>
-              <li>Upload von Fotos zur Analyse (begrenzte Anzahl)</li>
-              <li>Anzeige eines Basis-Looks-Scores ohne detaillierte Aufschlüsselung</li>
+              <li>Upload von Fotos zur ästhetischen Einschätzung (begrenzte Anzahl)</li>
+              <li>Anzeige eines Basis-Scores ohne detaillierte Aufschlüsselung</li>
               <li>Teaser-Ansicht der Analyseergebnisse</li>
             </ul>
             <p className="text-muted-foreground leading-relaxed mt-4">
@@ -96,21 +113,16 @@ export default function AGB() {
             </p>
             <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4 mt-2">
               <li>Unbegrenzte KI-gestützte Foto-Analysen</li>
-              <li>Detaillierter Looks-Score mit Aufschlüsselung nach Kategorien (Gesicht, Haut, Haare, etc.)</li>
-              <li>Ausführliche Stärken- und Schwächen-Analyse</li>
-              <li>Personalisierter Looksmax-Plan mit konkreten Handlungsempfehlungen</li>
-              <li>KI-Coach für individuelle Beratung im Chat-Format</li>
+              <li>Detaillierte Aufschlüsselung nach ästhetischen Kategorien</li>
+              <li>Personalisierte Lifestyle-Tipps und Stilempfehlungen</li>
+              <li>KI-Coach für individuelle Beratung zu Styling, Hautpflege und Lifestyle</li>
               <li>Progress Tracking und Vorher-/Nachher-Vergleiche</li>
-              <li>Export der Analyseergebnisse</li>
             </ul>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              (2) Die Analyseergebnisse werden durch KI-Algorithmen erstellt und basieren auf statistischen Modellen. Sie stellen keine medizinische, psychologische oder therapeutische Beratung dar und ersetzen nicht den Besuch bei einem Arzt oder Fachexperten.
+              (3) <strong className="text-foreground">Die Analyseergebnisse sind rein algorithmisch generierte Unterhaltungsinhalte.</strong> Sie basieren auf statistischen Modellen und spiegeln keine objektive Realität wider. Der Anbieter garantiert nicht für die Richtigkeit, Vollständigkeit oder Anwendbarkeit der Ergebnisse.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              (3) Der Anbieter bemüht sich um eine hohe Verfügbarkeit der App. Ein Anspruch auf ständige Verfügbarkeit besteht nicht. Wartungsarbeiten, technische Störungen oder höhere Gewalt können zu vorübergehenden Einschränkungen führen. Der Anbieter haftet nicht für Schäden, die durch vorübergehende Nichtverfügbarkeit entstehen.
-            </p>
-            <p className="text-muted-foreground leading-relaxed mt-4">
-              (4) Der Anbieter behält sich vor, den Funktionsumfang der App jederzeit zu erweitern, einzuschränken oder einzustellen, sofern dies für den Nutzer zumutbar ist. Wesentliche Einschränkungen bei kostenpflichtigen Diensten werden den Nutzern rechtzeitig mitgeteilt.
+              (4) Der Anbieter bemüht sich um eine hohe Verfügbarkeit der App. Ein Anspruch auf ständige Verfügbarkeit besteht nicht.
             </p>
           </section>
 
@@ -279,27 +291,52 @@ export default function AGB() {
 
           {/* §10 Haftung */}
           <section>
-            <h2 className="text-xl font-semibold mb-4 text-foreground">§ 10 Haftung und Gewährleistung</h2>
+            <h2 className="text-xl font-semibold mb-4 text-foreground">§ 10 Haftungsausschluss und Gewährleistung</h2>
+            
+            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
+              <p className="text-red-400 font-semibold mb-2">🚨 AUSDRÜCKLICHER HAFTUNGSAUSSCHLUSS</p>
+              <p className="text-muted-foreground leading-relaxed text-sm">
+                <strong className="text-foreground">GLOMAXXED AI ist ein Unterhaltungs- und Lifestyle-Produkt.</strong> Jegliche Äußerungen, Scores, Bewertungen oder Empfehlungen der App sind <strong className="text-foreground">KEINE</strong>:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-2 text-sm">
+                <li>Medizinischen Diagnosen oder Gesundheitsberatungen</li>
+                <li>Psychologischen oder psychiatrischen Bewertungen</li>
+                <li>Aussagen über körperliche oder geistige "Defekte" oder "Störungen"</li>
+                <li>Therapeutische Empfehlungen jeglicher Art</li>
+                <li>Aussagen über den objektiven "Wert" oder die "Attraktivität" einer Person</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed text-sm mt-3">
+                Die App trifft <strong className="text-foreground">keine Aussagen darüber, ob ein Gesicht, Körper oder Erscheinungsbild "schlecht", "krank", "gestört" oder "fehlerhaft" ist</strong>. Alle Ergebnisse sind rein algorithmische Unterhaltungsinhalte ohne jeglichen Anspruch auf medizinische oder wissenschaftliche Validität.
+              </p>
+            </div>
+            
             <p className="text-muted-foreground leading-relaxed">
-              (1) Der Anbieter haftet unbeschränkt für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit, die auf einer vorsätzlichen oder fahrlässigen Pflichtverletzung des Anbieters oder seiner gesetzlichen Vertreter oder Erfüllungsgehilfen beruhen.
+              (1) Der Anbieter haftet unbeschränkt für Schäden aus der Verletzung des Lebens, des Körpers oder der Gesundheit, die auf einer vorsätzlichen oder fahrlässigen Pflichtverletzung des Anbieters beruhen.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              (2) Der Anbieter haftet unbeschränkt für sonstige Schäden, die auf einer vorsätzlichen oder grob fahrlässigen Pflichtverletzung des Anbieters oder seiner gesetzlichen Vertreter oder Erfüllungsgehilfen beruhen.
+              (2) Der Anbieter haftet unbeschränkt für sonstige Schäden, die auf einer vorsätzlichen oder grob fahrlässigen Pflichtverletzung beruhen.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              (3) Bei leichter Fahrlässigkeit haftet der Anbieter nur bei Verletzung wesentlicher Vertragspflichten (Kardinalpflichten). In diesem Fall ist die Haftung auf den vertragstypischen, vorhersehbaren Schaden begrenzt.
+              (3) Bei leichter Fahrlässigkeit haftet der Anbieter nur bei Verletzung wesentlicher Vertragspflichten (Kardinalpflichten). Die Haftung ist auf den vertragstypischen, vorhersehbaren Schaden begrenzt.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              (4) Die Haftung nach dem Produkthaftungsgesetz bleibt unberührt.
+              (4) <strong className="text-foreground">Die Analyseergebnisse und Empfehlungen der App dienen ausschließlich Unterhaltungs- und Lifestyle-Zwecken.</strong> Der Anbieter übernimmt keine Gewähr für die Richtigkeit, Vollständigkeit, Eignung oder Anwendbarkeit der Analyseergebnisse für einen bestimmten Zweck.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              (5) Die Analyseergebnisse und Empfehlungen der App dienen ausschließlich Informations- und Unterhaltungszwecken. Der Anbieter übernimmt keine Gewähr für die Richtigkeit, Vollständigkeit oder Eignung der Analyseergebnisse für einen bestimmten Zweck.
+              (5) Der Anbieter haftet <strong className="text-foreground">ausdrücklich nicht</strong> für:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4 mt-2">
+              <li>Psychische Belastungen durch die Nutzung der App</li>
+              <li>Fehlentscheidungen basierend auf Analyseergebnissen</li>
+              <li>Kosten für medizinische, kosmetische oder therapeutische Behandlungen</li>
+              <li>Schäden durch nicht-professionelle Selbstbehandlung</li>
+              <li>Jegliche gesundheitliche Auswirkungen der Nutzung</li>
+            </ul>
+            <p className="text-muted-foreground leading-relaxed mt-4">
+              (6) <strong className="text-foreground">Die App ersetzt keine medizinische, dermatologische, psychologische oder therapeutische Beratung.</strong> Bei gesundheitlichen, kosmetischen oder psychischen Bedenken wenden Sie sich bitte an einen qualifizierten Fachmann.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              (6) Der Anbieter haftet nicht für Schäden, die dem Nutzer dadurch entstehen, dass er auf Basis der Analyseergebnisse Maßnahmen ergreift oder unterlässt. Insbesondere ersetzt die App keine medizinische, dermatologische oder psychologische Beratung.
-            </p>
-            <p className="text-muted-foreground leading-relaxed mt-4">
-              (7) Der Anbieter haftet nicht für Schäden, die durch höhere Gewalt, Störungen der Telekommunikationsnetze oder durch Handlungen Dritter verursacht werden, es sei denn, den Anbieter trifft ein Verschulden.
+              (7) Die Haftung nach dem Produkthaftungsgesetz bleibt unberührt.
             </p>
           </section>
 
