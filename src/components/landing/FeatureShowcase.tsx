@@ -501,6 +501,32 @@ const ProgressPreview = () => (
       </div>
     </div>
 
+    {/* Improvement Breakdown Card */}
+    <div className="glass-card p-6 rounded-2xl">
+      <div className="text-center mb-4">
+        <div className="text-4xl font-bold text-primary">+2.2</div>
+        <div className="text-lg font-semibold">Punkte</div>
+        <div className="text-sm text-muted-foreground">Durchschnittliche Verbesserung</div>
+      </div>
+      
+      <div className="space-y-3">
+        {[
+          { category: "Skincare Routine", improvement: "+0.8", color: "bg-pink-500" },
+          { category: "Hairstyle Optimierung", improvement: "+0.6", color: "bg-purple-500" },
+          { category: "Fitness & Body", improvement: "+0.5", color: "bg-blue-500" },
+          { category: "Style & Grooming", improvement: "+0.3", color: "bg-emerald-500" },
+        ].map((item) => (
+          <div key={item.category} className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${item.color}`} />
+              <span className="text-sm">{item.category}</span>
+            </div>
+            <span className="text-sm font-semibold text-primary">{item.improvement}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
     {/* Achievements - styled like the in-app AchievementsGrid */}
     <div className="glass-card p-6 rounded-2xl">
       <div className="flex items-center justify-between mb-4">
