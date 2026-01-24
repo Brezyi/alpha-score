@@ -494,16 +494,27 @@ const Dashboard = () => {
         )}
 
         {/* Detaillierte Analyse - Feature Scores */}
-        {completedAnalyses.length > 0 && completedAnalyses[0]?.detailed_results && isPremiumUser && (
-          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "550ms", animationFillMode: "forwards" }}>
+        {completedAnalyses.length > 0 && (
+          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "550ms", animationFillMode: "forwards" }}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold">Detaillierte Analyse</h3>
-              <Link to={`/analysis/${completedAnalyses[0].id}`} className="text-sm text-primary hover:underline flex items-center gap-1 group">
-                Vollständig ansehen
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
+              <h3 className="text-xl font-bold flex items-center gap-2">
+                Detaillierte Analyse
+                {!isPremiumUser && (
+                  <span className="px-2 py-0.5 text-xs font-medium bg-primary/20 text-primary rounded-full flex items-center gap-1">
+                    <Lock className="w-3 h-3" />
+                    Premium
+                  </span>
+                )}
+              </h3>
+              {isPremiumUser && (
+                <Link to={`/analysis/${completedAnalyses[0].id}`} className="text-sm text-primary hover:underline flex items-center gap-1 group">
+                  Vollständig ansehen
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              )}
             </div>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            <div className={`grid md:grid-cols-2 lg:grid-cols-3 gap-4 ${!isPremiumUser ? 'blur-sm pointer-events-none select-none' : ''}`}>
               {(() => {
                 const detailedResults = completedAnalyses[0]?.detailed_results;
                 const baseScore = completedAnalyses[0]?.looks_score || 5;
@@ -518,11 +529,11 @@ const Dashboard = () => {
                 };
                 
                 const featureScores = [
-                  { label: "Gesichtssymmetrie", score: extractScore(detailedResults?.face_symmetry, baseScore + 0.3), color: "bg-emerald-500" },
-                  { label: "Jawline Definition", score: extractScore(detailedResults?.jawline, baseScore - 0.2), color: "bg-blue-500" },
-                  { label: "Hautqualität", score: extractScore(detailedResults?.skin_quality, baseScore - 0.5), color: "bg-orange-500" },
-                  { label: "Augenbereich", score: extractScore(detailedResults?.eye_area, baseScore + 0.5), color: "bg-purple-500" },
-                  { label: "Haare & Styling", score: extractScore(detailedResults?.hair_styling, baseScore - 0.3), color: "bg-pink-500" },
+                  { label: "Gesichtssymmetrie", score: isPremiumUser ? extractScore(detailedResults?.face_symmetry, baseScore + 0.3) : 7.2, color: "bg-emerald-500" },
+                  { label: "Jawline Definition", score: isPremiumUser ? extractScore(detailedResults?.jawline, baseScore - 0.2) : 6.8, color: "bg-blue-500" },
+                  { label: "Hautqualität", score: isPremiumUser ? extractScore(detailedResults?.skin_quality, baseScore - 0.5) : 5.9, color: "bg-orange-500" },
+                  { label: "Augenbereich", score: isPremiumUser ? extractScore(detailedResults?.eye_area, baseScore + 0.5) : 7.5, color: "bg-purple-500" },
+                  { label: "Haare & Styling", score: isPremiumUser ? extractScore(detailedResults?.hair_styling, baseScore - 0.3) : 6.4, color: "bg-pink-500" },
                 ];
                 
                 return featureScores.map((item, index) => (
@@ -545,6 +556,28 @@ const Dashboard = () => {
                 ));
               })()}
             </div>
+            
+            {/* Premium CTA Overlay for Free Users */}
+            {!isPremiumUser && (
+              <div className="absolute inset-0 flex items-center justify-center bg-background/60 backdrop-blur-[2px]">
+                <div className="text-center p-6 max-w-sm">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4">
+                    <Lock className="w-6 h-6 text-primary" />
+                  </div>
+                  <h4 className="text-lg font-bold mb-2">Detaillierte Scores freischalten</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Erhalte präzise Bewertungen für jedes Gesichtsmerkmal und personalisierte Verbesserungstipps.
+                  </p>
+                  <Button 
+                    onClick={() => navigate("/pricing")}
+                    className="bg-gradient-to-r from-primary to-primary/80 hover:opacity-90"
+                  >
+                    <Crown className="w-4 h-4 mr-2" />
+                    Premium freischalten
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
