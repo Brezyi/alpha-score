@@ -62,6 +62,7 @@ import {
   AlertCircle,
   Loader2,
   RotateCcw,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -103,7 +104,7 @@ const BACKGROUND_STYLES_LIGHT = [
 export function ProfileMenu() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
-  const { profile, updateProfile, uploadAvatar } = useProfile();
+  const { profile, updateProfile, uploadAvatar, displayNameChangeStatus } = useProfile();
   const { firstName, lastName, hasData: hasSensitiveData } = useSensitiveData();
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
@@ -376,13 +377,23 @@ export function ProfileMenu() {
             {/* Display Name (editable) */}
             <div className="space-y-2">
               <Label htmlFor="displayName">Anzeigename</Label>
+              {displayNameChangeStatus && !displayNameChangeStatus.allowed && (
+                <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50 border border-border text-sm text-muted-foreground">
+                  <Clock className="h-4 w-4 shrink-0" />
+                  <span>
+                    Nächste Änderung möglich in {displayNameChangeStatus.days_remaining} {displayNameChangeStatus.days_remaining === 1 ? "Tag" : "Tagen"}
+                  </span>
+                </div>
+              )}
               <div className="relative">
                 <Input
                   id="displayName"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   placeholder="Dein Anzeigename"
+                  disabled={displayNameChangeStatus && !displayNameChangeStatus.allowed}
                   className={cn(
+                    displayNameChangeStatus && !displayNameChangeStatus.allowed && "opacity-70",
                     nameAvailable === false && "border-destructive focus-visible:ring-destructive",
                     nameAvailable === true && displayName.trim().toLowerCase() !== profile?.display_name?.toLowerCase() && "border-primary focus-visible:ring-primary"
                   )}
@@ -415,6 +426,9 @@ export function ProfileMenu() {
                   Name ist verfügbar
                 </p>
               )}
+              <p className="text-xs text-muted-foreground">
+                Dein Anzeigename kann einmal pro Monat geändert werden.
+              </p>
             </div>
 
             {/* Email (read-only) */}
