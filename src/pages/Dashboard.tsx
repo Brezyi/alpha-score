@@ -18,7 +18,12 @@ import {
   Calendar,
   X,
   AlertTriangle,
-  Sparkles
+  Sparkles,
+  Hexagon,
+  Square,
+  Droplets,
+  Eye,
+  Scissors
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState, useRef } from "react";
@@ -529,11 +534,11 @@ const Dashboard = () => {
                 };
                 
                 const featureScores = [
-                  { label: "Gesichtssymmetrie", score: isPremiumUser ? extractScore(detailedResults?.face_symmetry, baseScore + 0.3) : 7.2, color: "bg-emerald-500" },
-                  { label: "Jawline Definition", score: isPremiumUser ? extractScore(detailedResults?.jawline, baseScore - 0.2) : 6.8, color: "bg-blue-500" },
-                  { label: "Hautqualität", score: isPremiumUser ? extractScore(detailedResults?.skin_quality, baseScore - 0.5) : 5.9, color: "bg-orange-500" },
-                  { label: "Augenbereich", score: isPremiumUser ? extractScore(detailedResults?.eye_area, baseScore + 0.5) : 7.5, color: "bg-purple-500" },
-                  { label: "Haare & Styling", score: isPremiumUser ? extractScore(detailedResults?.hair_styling, baseScore - 0.3) : 6.4, color: "bg-pink-500" },
+                  { label: "Gesichtssymmetrie", score: isPremiumUser ? extractScore(detailedResults?.face_symmetry, baseScore + 0.3) : 7.2, color: "bg-emerald-500", iconBg: "bg-emerald-500/20", iconColor: "text-emerald-500", Icon: Hexagon },
+                  { label: "Jawline Definition", score: isPremiumUser ? extractScore(detailedResults?.jawline, baseScore - 0.2) : 6.8, color: "bg-blue-500", iconBg: "bg-blue-500/20", iconColor: "text-blue-500", Icon: Square },
+                  { label: "Hautqualität", score: isPremiumUser ? extractScore(detailedResults?.skin_quality, baseScore - 0.5) : 5.9, color: "bg-orange-500", iconBg: "bg-orange-500/20", iconColor: "text-orange-500", Icon: Droplets },
+                  { label: "Augenbereich", score: isPremiumUser ? extractScore(detailedResults?.eye_area, baseScore + 0.5) : 7.5, color: "bg-purple-500", iconBg: "bg-purple-500/20", iconColor: "text-purple-500", Icon: Eye },
+                  { label: "Haare & Styling", score: isPremiumUser ? extractScore(detailedResults?.hair_styling, baseScore - 0.3) : 6.4, color: "bg-pink-500", iconBg: "bg-pink-500/20", iconColor: "text-pink-500", Icon: Scissors },
                 ];
                 
                 return featureScores.map((item, index) => (
@@ -542,9 +547,14 @@ const Dashboard = () => {
                     className="p-4 rounded-xl bg-card border border-border/50 opacity-0 animate-fade-in"
                     style={{ animationDelay: `${600 + index * 50}ms`, animationFillMode: "forwards" }}
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">{item.label}</span>
-                      <span className="font-bold">{Math.min(10, item.score).toFixed(1)}</span>
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center`}>
+                        <item.Icon className={`w-4 h-4 ${item.iconColor}`} />
+                      </div>
+                      <div className="flex-1 flex items-center justify-between">
+                        <span className="text-sm font-medium">{item.label}</span>
+                        <span className="font-bold">{Math.min(10, item.score).toFixed(1)}</span>
+                      </div>
                     </div>
                     <div className="h-2 rounded-full bg-muted overflow-hidden">
                       <div
