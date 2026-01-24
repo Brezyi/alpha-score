@@ -153,20 +153,27 @@ const Register = () => {
 
       if (error) throw error;
 
-      // If we got a user back immediately (auto-confirm enabled), store sensitive data now
+      // Store sensitive data for later (will be processed on first login after email verification)
       if (signUpData?.user) {
-        // We need to store sensitive data after login, so save to localStorage temporarily
-        // This will be processed on first login
         localStorage.setItem('pending_sensitive_data', JSON.stringify({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
         }));
       }
 
-      toast({
-        title: "Konto erstellt!",
-        description: "Du kannst dich jetzt anmelden.",
-      });
+      // Check if email confirmation is required
+      if (signUpData?.user && !signUpData.session) {
+        // Email confirmation required
+        toast({
+          title: "Bestätigungs-E-Mail gesendet!",
+          description: "Bitte überprüfe dein Postfach und klicke auf den Bestätigungslink.",
+        });
+      } else {
+        toast({
+          title: "Konto erstellt!",
+          description: "Du kannst dich jetzt anmelden.",
+        });
+      }
       navigate("/login");
     } catch (error: any) {
       toast({
