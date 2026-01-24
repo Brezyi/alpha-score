@@ -68,6 +68,7 @@ export default function Progress() {
   const [error, setError] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
   const achievementsSectionRef = useRef<HTMLDivElement>(null);
+  const analysesSectionRef = useRef<HTMLDivElement>(null);
   // userMilestones state removed - using achievements from useGamification
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -84,12 +85,18 @@ export default function Progress() {
     }
   }, [user, authLoading, navigate]);
 
-  // Scroll to achievements section when hash is #achievements
+  // Scroll to specific section when hash is present
   useEffect(() => {
-    if (location.hash === "#achievements" && !loading && !achievementsLoading && achievementsSectionRef.current) {
-      setTimeout(() => {
-        achievementsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 100);
+    if (!loading && !achievementsLoading) {
+      if (location.hash === "#achievements" && achievementsSectionRef.current) {
+        setTimeout(() => {
+          achievementsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      } else if (location.hash === "#analyses" && analysesSectionRef.current) {
+        setTimeout(() => {
+          analysesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      }
     }
   }, [location.hash, loading, achievementsLoading]);
 
@@ -1231,6 +1238,8 @@ export default function Progress() {
 
             {/* Analysis History */}
             <motion.div
+              ref={analysesSectionRef}
+              id="analyses"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.9 }}
