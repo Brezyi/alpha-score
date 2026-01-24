@@ -28,7 +28,7 @@ import {
   Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -480,7 +480,7 @@ export default function Progress() {
                     />
                   )}
                   <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                           <BarChart3 className="w-5 h-5 text-primary" />
@@ -490,51 +490,73 @@ export default function Progress() {
                           <p className="text-xs text-muted-foreground">{completedAnalyses.length} Analysen total</p>
                         </div>
                       </div>
+                      <div className="flex items-center gap-3 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                          <span className="text-muted-foreground">Score</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-2.5 h-2.5 rounded-full border border-primary/50 bg-primary/20" />
+                          <span className="text-muted-foreground">Potenzial</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="h-64">
+                    <div className="h-56">
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData}>
-                          <defs>
-                            <linearGradient id="progressScoreGradient" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
+                        <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                           <XAxis 
                             dataKey="date" 
                             stroke="hsl(var(--muted-foreground))"
-                            fontSize={12}
+                            fontSize={11}
                             tickLine={false}
-                            axisLine={false}
+                            axisLine={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
+                            dy={8}
                           />
                           <YAxis 
                             domain={[0, 10]}
                             stroke="hsl(var(--muted-foreground))"
-                            fontSize={12}
+                            fontSize={11}
                             tickLine={false}
                             axisLine={false}
-                            tickFormatter={(value) => value.toFixed(1)}
+                            tickFormatter={(value) => value.toFixed(0)}
+                            ticks={[0, 2.5, 5, 7.5, 10]}
                           />
                           <Tooltip
                             contentStyle={{
-                              backgroundColor: "hsl(var(--card))",
+                              backgroundColor: "hsl(var(--popover))",
                               border: "1px solid hsl(var(--border))",
-                              borderRadius: "12px",
+                              borderRadius: "10px",
                               boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                              padding: "8px 12px",
                             }}
-                            labelStyle={{ color: "hsl(var(--foreground))" }}
-                            formatter={(value: number) => [value.toFixed(1), "Score"]}
+                            labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, marginBottom: 4 }}
+                            formatter={(value: number, name: string) => [
+                              <span key={name} className="font-semibold">{value?.toFixed(1) || "—"}</span>, 
+                              name === "score" ? "Score" : "Potenzial"
+                            ]}
+                            cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
                           />
-                          <Area
+                          {/* Potential Line (dashed) */}
+                          <Line
+                            type="monotone"
+                            dataKey="potential"
+                            stroke="hsl(var(--primary) / 0.4)"
+                            strokeWidth={2}
+                            strokeDasharray="5 5"
+                            dot={false}
+                            activeDot={{ r: 4, fill: "hsl(var(--primary) / 0.5)", stroke: "hsl(var(--primary))", strokeWidth: 1 }}
+                            connectNulls
+                          />
+                          {/* Current Score Line (solid, prominent) */}
+                          <Line
                             type="monotone"
                             dataKey="score"
                             stroke="hsl(var(--primary))"
                             strokeWidth={3}
-                            fill="url(#progressScoreGradient)"
-                            dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
-                            activeDot={{ r: 6, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
+                            dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 5 }}
+                            activeDot={{ r: 7, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
                           />
-                        </AreaChart>
+                        </LineChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
