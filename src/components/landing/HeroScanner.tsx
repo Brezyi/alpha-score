@@ -91,11 +91,12 @@ const HeroScanner = memo(() => {
   const [showScore, setShowScore] = useState(false);
   const [scoreValue, setScoreValue] = useState(0);
 
-  // Scan cycle timer - keeps score visible
+  // Scan cycle timer - resets score animation but keeps it visible
   useEffect(() => {
     if (shouldReduce) return;
     const interval = setInterval(() => {
       setScanCycle(c => c + 1);
+      setScoreValue(0); // Reset value to animate again
     }, 8000);
     return () => clearInterval(interval);
   }, [shouldReduce]);
