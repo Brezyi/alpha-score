@@ -40,6 +40,45 @@ const FeatureShowcase = () => {
       {/* Background */}
       <div className="absolute inset-0 bg-gradient-to-b from-background via-card/30 to-background" />
       
+      {/* Animated Gradient Orbs */}
+      <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
+      <div className="absolute bottom-1/4 left-1/4 w-[400px] h-[400px] bg-primary/8 rounded-full blur-3xl animate-float" style={{ animationDelay: "1s" }} />
+      
+      {/* Floating Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(8)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full animate-float"
+            style={{ 
+              left: `${10 + (i * 12)}%`, 
+              top: `${20 + ((i * 13) % 50)}%`,
+              width: `${3 + (i % 3) * 2}px`,
+              height: `${3 + (i % 3) * 2}px`,
+              backgroundColor: `hsl(var(--primary) / ${0.1 + (i % 4) * 0.05})`,
+              animationDuration: `${5 + (i % 3) * 2}s`,
+              animationDelay: `${i * 0.4}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Pulsing Rings */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-30">
+        {[...Array(2)].map((_, i) => (
+          <div
+            key={`ring-${i}`}
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/20 animate-pulse-ring"
+            style={{
+              width: `${400 + i * 200}px`,
+              height: `${400 + i * 200}px`,
+              animationDelay: `${i * 1}s`,
+              animationDuration: "5s"
+            }}
+          />
+        ))}
+      </div>
+      
       <div className="container relative z-10 px-4">
         {/* Section Header */}
         <motion.div
