@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Shield, Lock, AlertTriangle, Calendar, Eye, EyeOff } from "lucide-react";
+import { Shield, Lock, AlertTriangle, Calendar, Eye, EyeOff, Mail, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAdminPassword } from "@/hooks/useAdminPassword";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface AdminPasswordDialogProps {
@@ -27,6 +28,8 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [sendingResetEmail, setSendingResetEmail] = useState(false);
 
   // Mode: "setup" (create new), "expired" (must renew), or "verify" (enter existing)
   const mode = !status?.hasPassword ? "setup" : status.isExpired ? "expired" : "verify";
@@ -44,8 +47,31 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
       setPasswordValue("");
       setConfirmPassword("");
       setError("");
+      setShowForgotPassword(false);
     }
   }, [open]);
+
+  const handleForgotPassword = async () => {
+    setSendingResetEmail(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-admin-password-reset", {
+        method: "POST",
+      });
+
+      if (error) {
+        toast.error("Fehler beim Senden der E-Mail");
+        console.error("Reset email error:", error);
+      } else {
+        toast.success("Reset-Link wurde per E-Mail gesendet!");
+        setShowForgotPassword(false);
+      }
+    } catch (err) {
+      console.error("Reset email exception:", err);
+      toast.error("Ein Fehler ist aufgetreten");
+    } finally {
+      setSendingResetEmail(false);
+    }
+  };
 
   const handleSetup = async () => {
     setError("");
@@ -226,6 +252,56 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
               <p>• Groß- und Kleinbuchstaben</p>
               <p>• Mindestens eine Zahl</p>
               <p>• Muss alle 3 Monate erneuert werden</p>
+            </div>
+          )}
+
+          {/* Forgot Password Link - only in verify mode */}
+          {mode === "verify" && !showForgotPassword && (
+            <button
+              type="button"
+              onClick={() => setShowForgotPassword(true)}
+              className="text-sm text-primary hover:underline w-full text-center"
+            >
+              Admin-Passwort vergessen?
+            </button>
+          )}
+
+          {/* Forgot Password Form */}
+          {showForgotPassword && (
+            <div className="p-4 rounded-lg bg-muted/50 border space-y-3">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Mail className="w-4 h-4 text-primary" />
+                Passwort per E-Mail zurücksetzen
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Ein Reset-Link wird an deine registrierte E-Mail-Adresse gesendet.
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowForgotPassword(false)}
+                  disabled={sendingResetEmail}
+                  className="flex-1"
+                >
+                  Abbrechen
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleForgotPassword}
+                  disabled={sendingResetEmail}
+                  className="flex-1"
+                >
+                  {sendingResetEmail ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Mail className="w-4 h-4 mr-1" />
+                      Link senden
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           )}
 
