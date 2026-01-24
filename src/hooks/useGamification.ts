@@ -56,6 +56,51 @@ export const useGamification = () => {
     return Math.floor(100 * Math.pow(level, 1.25));
   };
 
+  // Initialize XP record if it doesn't exist
+  const initializeXp = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      // Check if user has XP record
+      const { data, error } = await supabase
+        .from("user_xp")
+        .select("current_xp, total_xp, level")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        // Create initial XP record
+        const { error: insertError } = await supabase
+          .from("user_xp")
+          .insert({ user_id: user.id, current_xp: 0, total_xp: 0, level: 1 });
+
+        if (insertError) throw insertError;
+
+        setXp({
+          currentXp: 0,
+          totalXp: 0,
+          level: 1,
+          xpForNextLevel: 100,
+          progress: 0,
+        });
+      } else {
+        const xpForNext = calculateXpForLevel(data.level);
+        const progressInLevel = data.current_xp % xpForNext;
+        setXp({
+          currentXp: data.current_xp,
+          totalXp: data.total_xp,
+          level: data.level,
+          xpForNextLevel: xpForNext,
+          progress: Math.round((progressInLevel / xpForNext) * 100),
+        });
+      }
+    } catch (error) {
+      console.error("Error initializing XP:", error);
+    }
+  }, [user]);
+
   // Fetch user XP
   const fetchXp = useCallback(async () => {
     if (!user) return;
@@ -241,7 +286,8 @@ export const useGamification = () => {
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchXp(), fetchAchievements(), fetchDailyChallenges()]);
+      await initializeXp();
+      await Promise.all([fetchAchievements(), fetchDailyChallenges()]);
       setLoading(false);
     };
 
@@ -250,7 +296,7 @@ export const useGamification = () => {
     } else {
       setLoading(false);
     }
-  }, [user, fetchXp, fetchAchievements, fetchDailyChallenges]);
+  }, [user, initializeXp, fetchAchievements, fetchDailyChallenges]);
 
   return {
     xp,

@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,43 @@ interface Achievement {
   unlocked: boolean;
   unlockedAt?: string;
 }
+
+// Wrapper component to handle ref forwarding for motion.div inside Tooltip
+const AchievementItem = forwardRef<HTMLDivElement, { 
+  achievement: Achievement; 
+  index: number;
+  children?: React.ReactNode;
+}>(({ achievement, index, ...props }, ref) => (
+  <motion.div
+    ref={ref}
+    initial={{ opacity: 0, scale: 0.8 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ delay: index * 0.05 }}
+    className={cn(
+      "relative aspect-square rounded-xl flex items-center justify-center text-2xl cursor-pointer transition-all",
+      achievement.unlocked
+        ? "bg-primary/10 border-2 border-primary/30 hover:scale-110 hover:border-primary/50"
+        : "bg-muted/50 border-2 border-transparent grayscale opacity-50"
+    )}
+    {...props}
+  >
+    {achievement.unlocked ? (
+      <span>{achievement.icon}</span>
+    ) : (
+      <div className="relative">
+        <span className="blur-[2px]">{achievement.icon}</span>
+        <Lock className="absolute inset-0 m-auto w-4 h-4 text-muted-foreground" />
+      </div>
+    )}
+    
+    {achievement.unlocked && (
+      <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
+    )}
+  </motion.div>
+));
+
+AchievementItem.displayName = "AchievementItem";
+
 
 interface AchievementsGridProps {
   achievements: Achievement[];
@@ -59,30 +97,7 @@ export const AchievementsGrid = ({
         {displayAchievements.map((achievement, index) => (
           <Tooltip key={achievement.id}>
             <TooltipTrigger asChild>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: index * 0.05 }}
-                className={cn(
-                  "relative aspect-square rounded-xl flex items-center justify-center text-2xl cursor-pointer transition-all",
-                  achievement.unlocked
-                    ? "bg-primary/10 border-2 border-primary/30 hover:scale-110 hover:border-primary/50"
-                    : "bg-muted/50 border-2 border-transparent grayscale opacity-50"
-                )}
-              >
-                {achievement.unlocked ? (
-                  <span>{achievement.icon}</span>
-                ) : (
-                  <div className="relative">
-                    <span className="blur-[2px]">{achievement.icon}</span>
-                    <Lock className="absolute inset-0 m-auto w-4 h-4 text-muted-foreground" />
-                  </div>
-                )}
-                
-                {achievement.unlocked && (
-                  <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-green-500 border-2 border-background" />
-                )}
-              </motion.div>
+              <AchievementItem achievement={achievement} index={index} />
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
               <div className="space-y-1">
