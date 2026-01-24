@@ -38,6 +38,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useSubscription } from "@/hooks/useSubscription";
 import { SecuritySettingsDialog } from "@/components/SecuritySettingsDialog";
 import { RedeemCodeDialog } from "@/components/RedeemCodeDialog";
+import { RefundRequestDialog } from "@/components/RefundRequestDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -60,6 +61,7 @@ import {
   Lock,
   AlertCircle,
   Loader2,
+  RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -112,6 +114,7 @@ export function ProfileMenu() {
   const [securityOpen, setSecurityOpen] = useState(false);
   const [deleteAccountOpen, setDeleteAccountOpen] = useState(false);
   const [redeemCodeOpen, setRedeemCodeOpen] = useState(false);
+  const [refundOpen, setRefundOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [isCheckingName, setIsCheckingName] = useState(false);
@@ -578,6 +581,22 @@ export function ProfileMenu() {
               </Button>
             )}
 
+            {/* Refund / Widerruf Button - for premium users with Stripe payments */}
+            {isPremium && !isAdminGranted && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setProfileOpen(false);
+                  setRefundOpen(true);
+                }}
+                className="w-full text-muted-foreground"
+              >
+                <RotateCcw className="w-4 h-4 mr-2" />
+                Widerrufsrecht
+              </Button>
+            )}
+
             {/* Admin-granted subscription hint */}
             {isPremium && isAdminGranted && (
               <div className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary">
@@ -732,6 +751,13 @@ export function ProfileMenu() {
       <RedeemCodeDialog 
         open={redeemCodeOpen} 
         onOpenChange={setRedeemCodeOpen}
+        onSuccess={() => window.location.reload()}
+      />
+
+      {/* Refund Request Dialog */}
+      <RefundRequestDialog
+        open={refundOpen}
+        onOpenChange={setRefundOpen}
         onSuccess={() => window.location.reload()}
       />
     </>

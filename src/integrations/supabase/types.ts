@@ -603,6 +603,57 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          is_within_period: boolean
+          payment_date: string
+          payment_intent_id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string | null
+          request_date: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          is_within_period?: boolean
+          payment_date: string
+          payment_intent_id: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_date?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          is_within_period?: boolean
+          payment_date?: string
+          payment_intent_id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string | null
+          request_date?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           admin_notes: string | null
