@@ -64,19 +64,19 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // GLOMAXXED AI Custom Colors
+        // GLOMAXXED AI Custom Colors - Red Accent
         neon: {
-          DEFAULT: "hsl(153, 100%, 50%)",
-          50: "hsl(153, 100%, 95%)",
-          100: "hsl(153, 100%, 85%)",
-          200: "hsl(153, 100%, 75%)",
-          300: "hsl(153, 100%, 65%)",
-          400: "hsl(153, 100%, 55%)",
-          500: "hsl(153, 100%, 50%)",
-          600: "hsl(153, 100%, 45%)",
-          700: "hsl(153, 100%, 35%)",
-          800: "hsl(153, 100%, 25%)",
-          900: "hsl(153, 100%, 15%)",
+          DEFAULT: "hsl(0, 100%, 50%)",
+          50: "hsl(0, 100%, 95%)",
+          100: "hsl(0, 100%, 85%)",
+          200: "hsl(0, 100%, 75%)",
+          300: "hsl(0, 100%, 65%)",
+          400: "hsl(0, 100%, 55%)",
+          500: "hsl(0, 100%, 50%)",
+          600: "hsl(0, 100%, 45%)",
+          700: "hsl(0, 100%, 35%)",
+          800: "hsl(0, 100%, 25%)",
+          900: "hsl(0, 100%, 15%)",
         },
         surface: {
           DEFAULT: "hsl(0, 0%, 7.8%)",
@@ -133,8 +133,8 @@ export default {
           to: { opacity: "1", transform: "translateY(0)" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px hsl(153, 100%, 50%, 0.2)" },
-          "50%": { boxShadow: "0 0 40px hsl(153, 100%, 50%, 0.4)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(0, 100%, 50%, 0.2)" },
+          "50%": { boxShadow: "0 0 40px hsl(0, 100%, 50%, 0.4)" },
         },
         "progress-glow": {
           "0%, 100%": { 
@@ -222,7 +222,7 @@ export default {
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic": "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
-        "glow-gradient": "radial-gradient(ellipse at center, hsl(153, 100%, 50%, 0.15) 0%, transparent 70%)",
+        "glow-gradient": "radial-gradient(ellipse at center, hsl(0, 100%, 50%, 0.15) 0%, transparent 70%)",
       },
     },
   },
