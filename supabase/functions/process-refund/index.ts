@@ -277,21 +277,25 @@ serve(async (req) => {
 
         const { data: requests, error: listError } = await supabaseClient
           .from("refund_requests")
-          .select(`
-            *,
-            profiles:user_id (display_name)
-          `)
+          .select("*")
           .order("created_at", { ascending: false });
 
         if (listError) throw new Error(listError.message || "Fehler beim Laden der Anträge");
 
-        // Enrich with user email
+        // Enrich with user email and display name
         const enrichedRequests = await Promise.all(
           (requests || []).map(async (req) => {
             const { data: authUser } = await supabaseClient.auth.admin.getUserById(req.user_id);
+            const { data: profile } = await supabaseClient
+              .from("profiles")
+              .select("display_name")
+              .eq("user_id", req.user_id)
+              .maybeSingle();
+            
             return {
               ...req,
               user_email: authUser?.user?.email || "Unbekannt",
+              profiles: profile ? { display_name: profile.display_name } : null,
             };
           })
         );
