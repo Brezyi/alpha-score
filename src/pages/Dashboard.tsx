@@ -1151,7 +1151,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "1200ms", animationFillMode: "forwards" }}>
             <h2 className="text-xl font-bold">Letzte Analysen</h2>
             {analyses.length > 5 && (
-              <Link to="/progress" className="text-sm text-primary hover:underline flex items-center gap-1 group">
+              <Link to="/progress#analyses" className="text-sm text-primary hover:underline flex items-center gap-1 group">
                 Alle {analyses.length} anzeigen
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
