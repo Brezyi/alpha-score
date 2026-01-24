@@ -278,6 +278,21 @@ export default function AGB() {
               Sie können den Status Ihrer Widerrufsanträge jederzeit in Ihrem Profil unter <strong className="text-foreground">"Anträge ansehen"</strong> einsehen. Dort finden Sie eine Übersicht aller eingereichten Anträge mit aktuellem Bearbeitungsstatus und ggf. Anmerkungen unseres Teams.
             </p>
             
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mt-4">
+              <p className="text-green-400 font-semibold mb-2">🔒 Automatische Nachweisführung</p>
+              <p className="text-muted-foreground leading-relaxed text-sm">
+                <strong className="text-foreground">Sie müssen sich nicht um Nachweise kümmern!</strong> Unser System dokumentiert automatisch alle Schritte Ihres Widerrufs:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-3 text-sm">
+                <li><strong className="text-foreground">App-Status:</strong> Jeder Antrag wird mit Zeitstempel, Betrag und Bearbeitungsstatus in Ihrem Profil gespeichert</li>
+                <li><strong className="text-foreground">E-Mail-Bestätigung:</strong> Sie erhalten automatisch eine E-Mail bei Antragstellung sowie bei jeder Statusänderung (Bearbeitung, Genehmigung, Erstattung)</li>
+                <li><strong className="text-foreground">Rechtssicherer Nachweis:</strong> Alle Vorgänge werden serverseitig protokolliert und können bei Bedarf als Nachweis dienen</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed text-sm mt-3">
+                <em>Screenshots oder manuelle Dokumentation sind nicht erforderlich – die App übernimmt die komplette Nachweisführung für Sie.</em>
+              </p>
+            </div>
+            
             <p className="text-muted-foreground leading-relaxed mt-4">
               <strong className="text-foreground">Besondere Hinweise</strong><br />
               Haben Sie verlangt, dass die Dienstleistung während der Widerrufsfrist beginnen soll, so haben Sie uns einen angemessenen Betrag zu zahlen, der dem Anteil der bis zu dem Zeitpunkt, zu dem Sie uns von der Ausübung des Widerrufsrechts hinsichtlich dieses Vertrags unterrichten, bereits erbrachten Dienstleistungen im Vergleich zum Gesamtumfang der im Vertrag vorgesehenen Dienstleistungen entspricht.
