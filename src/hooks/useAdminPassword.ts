@@ -27,8 +27,27 @@ export function useAdminPassword(): UseAdminPasswordReturn {
   const [loading, setLoading] = useState(true);
   const [isVerified, setIsVerified] = useState(false);
 
-  // Check session storage for existing verification
+  // Check session storage for existing verification - but only after we know password status
   useEffect(() => {
+    // Don't restore verification state until we know the password status
+    if (status === null) return;
+    
+    // If user doesn't have a password set up, they can't be verified
+    if (!status.hasPassword) {
+      sessionStorage.removeItem(ADMIN_VERIFIED_KEY);
+      sessionStorage.removeItem(ADMIN_VERIFIED_EXPIRY_KEY);
+      setIsVerified(false);
+      return;
+    }
+    
+    // If password is expired, clear verification
+    if (status.isExpired) {
+      sessionStorage.removeItem(ADMIN_VERIFIED_KEY);
+      sessionStorage.removeItem(ADMIN_VERIFIED_EXPIRY_KEY);
+      setIsVerified(false);
+      return;
+    }
+    
     const verified = sessionStorage.getItem(ADMIN_VERIFIED_KEY);
     const expiry = sessionStorage.getItem(ADMIN_VERIFIED_EXPIRY_KEY);
     
@@ -40,9 +59,10 @@ export function useAdminPassword(): UseAdminPasswordReturn {
         // Expired, clear storage
         sessionStorage.removeItem(ADMIN_VERIFIED_KEY);
         sessionStorage.removeItem(ADMIN_VERIFIED_EXPIRY_KEY);
+        setIsVerified(false);
       }
     }
-  }, []);
+  }, [status]);
 
   const fetchStatus = useCallback(async () => {
     try {
