@@ -12,37 +12,71 @@ interface AdminUser {
   days_until_expiry: number;
 }
 
+interface ResetRequest {
+  id: string;
+  user_id: string;
+  display_name: string;
+  email: string;
+  role: string;
+  requested_at: string;
+  status: string;
+}
+
 interface UseAdminPasswordManagementReturn {
   adminUsers: AdminUser[];
+  resetRequests: ResetRequest[];
   loading: boolean;
   maskedEmail: string | null;
+  hasPendingRequest: boolean;
   resetPasswordForUser: (userId: string) => Promise<boolean>;
   sendResetEmailToUser: (userId: string) => Promise<boolean>;
   requestEmailReset: () => Promise<boolean>;
+  requestResetFromOwner: () => Promise<boolean>;
+  approveResetRequest: (requestId: string, userId: string) => Promise<boolean>;
+  rejectResetRequest: (requestId: string) => Promise<boolean>;
   refetch: () => Promise<void>;
 }
 
 export function useAdminPasswordManagement(): UseAdminPasswordManagementReturn {
   const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [resetRequests, setResetRequests] = useState<ResetRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [maskedEmail, setMaskedEmail] = useState<string | null>(null);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
 
-      // Fetch admin users with password status
+      // Fetch admin users with password status (for owners)
       const { data: usersData, error: usersError } = await supabase.rpc(
         "get_admin_users_password_status"
       );
 
       if (usersError) {
-        // User might not be owner, which is fine
         if (!usersError.message.includes("Unauthorized")) {
           console.error("Error fetching admin users:", usersError);
         }
       } else if (usersData) {
         setAdminUsers(usersData as AdminUser[]);
+      }
+
+      // Fetch pending reset requests (for owners)
+      const { data: requestsData, error: requestsError } = await supabase.rpc(
+        "get_pending_password_reset_requests"
+      );
+
+      if (!requestsError && requestsData) {
+        setResetRequests(requestsData as ResetRequest[]);
+      }
+
+      // Check if current user has a pending request (for admins)
+      const { data: pendingData, error: pendingError } = await supabase.rpc(
+        "has_pending_password_reset_request"
+      );
+
+      if (!pendingError && pendingData !== null) {
+        setHasPendingRequest(pendingData as boolean);
       }
 
       // Fetch masked email for current user
@@ -131,13 +165,112 @@ export function useAdminPasswordManagement(): UseAdminPasswordManagementReturn {
     }
   };
 
+  // For admins to request a reset from the owner
+  const requestResetFromOwner = async (): Promise<boolean> => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("Nicht authentifiziert");
+        return false;
+      }
+
+      const { error } = await supabase
+        .from("admin_password_reset_requests")
+        .insert({ user_id: user.id });
+
+      if (error) {
+        if (error.code === "23505") {
+          toast.error("Du hast bereits eine ausstehende Anfrage");
+        } else {
+          console.error("Error requesting reset:", error);
+          toast.error("Fehler beim Erstellen der Anfrage");
+        }
+        return false;
+      }
+
+      setHasPendingRequest(true);
+      toast.success("Anfrage gesendet! Der Owner wird benachrichtigt.");
+      return true;
+    } catch (err) {
+      console.error("Request reset error:", err);
+      toast.error("Ein Fehler ist aufgetreten");
+      return false;
+    }
+  };
+
+  // For owners to approve a reset request (sends email to the admin)
+  const approveResetRequest = async (requestId: string, userId: string): Promise<boolean> => {
+    try {
+      // Send the reset email
+      const emailSuccess = await sendResetEmailToUser(userId);
+      
+      if (!emailSuccess) {
+        return false;
+      }
+
+      // Mark the request as approved
+      const { error } = await supabase
+        .from("admin_password_reset_requests")
+        .update({ 
+          status: "approved", 
+          processed_at: new Date().toISOString(),
+          processed_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .eq("id", requestId);
+
+      if (error) {
+        console.error("Error updating request:", error);
+      }
+
+      await fetchData();
+      return true;
+    } catch (err) {
+      console.error("Approve request error:", err);
+      toast.error("Ein Fehler ist aufgetreten");
+      return false;
+    }
+  };
+
+  // For owners to reject a reset request
+  const rejectResetRequest = async (requestId: string): Promise<boolean> => {
+    try {
+      const { error } = await supabase
+        .from("admin_password_reset_requests")
+        .update({ 
+          status: "rejected", 
+          processed_at: new Date().toISOString(),
+          processed_by: (await supabase.auth.getUser()).data.user?.id
+        })
+        .eq("id", requestId);
+
+      if (error) {
+        console.error("Error rejecting request:", error);
+        toast.error("Fehler beim Ablehnen der Anfrage");
+        return false;
+      }
+
+      toast.success("Anfrage abgelehnt");
+      await fetchData();
+      return true;
+    } catch (err) {
+      console.error("Reject request error:", err);
+      toast.error("Ein Fehler ist aufgetreten");
+      return false;
+    }
+  };
+
   return {
     adminUsers,
+    resetRequests,
     loading,
     maskedEmail,
+    hasPendingRequest,
     resetPasswordForUser,
     sendResetEmailToUser,
     requestEmailReset,
+    requestResetFromOwner,
+    approveResetRequest,
+    rejectResetRequest,
     refetch: fetchData,
   };
 }
