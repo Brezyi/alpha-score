@@ -647,32 +647,33 @@ export default function Coach() {
       <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
           {messages.length <= 1 && (
-            <div className="text-center py-8">
+            <div className="text-center py-8 animate-fade-in">
               {messages.length === 0 && (
                 <div className="glass-card p-8 rounded-2xl max-w-md mx-auto">
-                  {/* Gradient Avatar like Showcase */}
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/25">
+                  {/* Clean gradient avatar */}
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/20">
                     <Bot className="w-8 h-8 text-primary-foreground" />
                   </div>
-                  <h2 className="text-xl font-bold mb-2">AI Looksmax Coach</h2>
-                  <p className="text-sm text-muted-foreground mb-1">24/7 für deine Fragen da</p>
+                  <h2 className="text-xl font-bold mb-2">Coach Alex</h2>
+                  <p className="text-sm text-muted-foreground mb-1">Dein Personal Trainer für Looks</p>
                   <p className="text-muted-foreground max-w-sm mx-auto text-sm">
                     {userAnalysis 
-                      ? `Score: ${userAnalysis.looks_score}/10 • Ich kenne deine Schwächen und helfe dir konkret.`
-                      : "Lade deine Analyse..."
+                      ? `Score: ${userAnalysis.looks_score}/10 • Los geht's, Champ!`
+                      : "Bereit zum Grinden?"
                     }
                   </p>
                 </div>
               )}
               <div className="mt-6 flex flex-wrap justify-center gap-2">
-                {suggestions.map((suggestion) => (
+                {suggestions.map((suggestion, idx) => (
                   <button
                     key={suggestion}
                     onClick={() => {
                       setInput(suggestion);
                       textareaRef.current?.focus();
                     }}
-                    className="px-4 py-2.5 text-sm rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-primary/5 transition-all duration-200"
+                    className="px-4 py-2.5 text-sm rounded-xl bg-card border border-border hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                    style={{ animationDelay: `${idx * 75}ms` }}
                   >
                     {suggestion}
                   </button>
@@ -685,20 +686,21 @@ export default function Coach() {
             <div
               key={i}
               className={cn(
-                "flex gap-3",
+                "flex gap-3 animate-fade-in",
                 message.role === "user" ? "justify-end" : "justify-start"
               )}
+              style={{ animationDelay: `${Math.min(i * 50, 200)}ms` }}
             >
               {message.role === "assistant" && (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-emerald-400 flex items-center justify-center flex-shrink-0 shadow-md">
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0 shadow-md shadow-primary/20">
                   <Bot className="w-5 h-5 text-primary-foreground" />
                 </div>
               )}
               <div
                 className={cn(
-                  "max-w-[85%] px-4 py-3 shadow-sm",
+                  "max-w-[85%] px-4 py-3",
                   message.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md"
+                    ? "bg-primary text-primary-foreground rounded-2xl rounded-br-md shadow-sm"
                     : "bg-muted rounded-2xl rounded-bl-md"
                 )}
               >
@@ -710,14 +712,14 @@ export default function Coach() {
                           {message.content}
                         </ReactMarkdown>
                         {message.isStreaming && (
-                          <span className="inline-block w-2 h-4 ml-1 bg-primary animate-pulse rounded-sm" />
+                          <span className="inline-block w-1.5 h-4 ml-0.5 bg-primary/70 rounded-sm animate-[pulse_1s_ease-in-out_infinite]" />
                         )}
                       </>
                     ) : (
-                      <span className="inline-flex gap-1 py-1">
-                        <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                        <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                        <span className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                      <span className="inline-flex gap-1.5 py-1 items-center">
+                        <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-[pulse_1.2s_ease-in-out_infinite]" />
+                        <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-[pulse_1.2s_ease-in-out_0.2s_infinite]" />
+                        <span className="w-1.5 h-1.5 bg-muted-foreground/40 rounded-full animate-[pulse_1.2s_ease-in-out_0.4s_infinite]" />
                       </span>
                     )}
                   </div>
@@ -747,11 +749,8 @@ export default function Coach() {
               <Button
                 type="button"
                 size="icon"
-                variant={isListening ? "default" : "outline"}
-                className={cn(
-                  "h-12 w-12 flex-shrink-0 transition-all",
-                  isListening && "bg-destructive hover:bg-destructive/90 animate-pulse"
-                )}
+                variant={isListening ? "destructive" : "outline"}
+                className="h-12 w-12 flex-shrink-0 transition-colors"
                 onClick={toggleListening}
                 disabled={isLoading}
               >
@@ -798,13 +797,13 @@ export default function Coach() {
             )}
           </div>
           {isListening && (
-            <div className="mt-2 text-center">
-              <p className="text-xs text-destructive animate-pulse">
-                Sprich jetzt… Tippe auf das Mikrofon zum Beenden
+            <div className="mt-2 text-center animate-fade-in">
+              <p className="text-xs text-destructive">
+                🎙️ Sprich jetzt… Tippe auf das Mikrofon zum Beenden
               </p>
               {speechPreview && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  {speechPreview}
+                <p className="text-xs text-muted-foreground mt-1 italic">
+                  "{speechPreview}"
                 </p>
               )}
             </div>
