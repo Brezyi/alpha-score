@@ -1204,6 +1204,10 @@ export type Database = {
           remaining_seconds: number
         }[]
       }
+      check_display_name_available: {
+        Args: { p_current_user_id?: string; p_display_name: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           _action_type: string
