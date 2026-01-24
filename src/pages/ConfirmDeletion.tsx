@@ -114,23 +114,72 @@ const ConfirmDeletion = () => {
     );
   }
 
-  // Success state
+  // Success state - detailed deletion confirmation
   if (isDeleted) {
+    const deletedDataCategories = [
+      { icon: "📊", title: "Analysen & Ergebnisse", items: ["Alle Gesichtsanalysen", "Score-Verlauf", "Detaillierte Bewertungen", "Potenzial-Bilder"] },
+      { icon: "📸", title: "Medien & Uploads", items: ["Hochgeladene Fotos", "Profilbilder", "Analyse-Bilder"] },
+      { icon: "💬", title: "Kommunikation", items: ["KI-Coach Gespräche", "Support-Tickets", "Nachrichten"] },
+      { icon: "🎮", title: "Gamification", items: ["XP & Level", "Achievements", "Tägliche Challenges", "Streak-Daten", "Meilensteine"] },
+      { icon: "📝", title: "Nutzerdaten", items: ["Profil & Einstellungen", "Aufgaben & To-Dos", "E-Mail-Präferenzen", "Testimonials"] },
+      { icon: "💳", title: "Zahlungen & Abos", items: ["Zahlungshistorie", "Abonnement-Daten", "Promo-Code-Einlösungen"] },
+      { icon: "🔐", title: "Sicherheit", items: ["2FA & Backup-Codes", "Admin-Passwörter", "Push-Benachrichtigungen", "Sensible Daten"] },
+    ];
+
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="w-full max-w-md">
-          <CardContent className="py-12">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-primary" />
+        <Card className="w-full max-w-2xl">
+          <CardHeader className="text-center pb-2">
+            <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-10 h-10 text-primary" />
+            </div>
+            <CardTitle className="text-2xl">Konto erfolgreich gelöscht</CardTitle>
+            <CardDescription className="text-base mt-2">
+              Dein Konto und alle zugehörigen Daten wurden unwiderruflich entfernt.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-muted/50 rounded-lg p-4">
+              <h3 className="font-semibold mb-4 text-center">Folgende Daten wurden gelöscht:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {deletedDataCategories.map((category, index) => (
+                  <div key={index} className="bg-background rounded-lg p-3 border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">{category.icon}</span>
+                      <h4 className="font-medium text-sm">{category.title}</h4>
+                    </div>
+                    <ul className="text-xs text-muted-foreground space-y-1">
+                      {category.items.map((item, i) => (
+                        <li key={i} className="flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3 h-3 text-primary shrink-0" />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
-              <h2 className="text-xl font-bold">Konto gelöscht</h2>
-              <p className="text-muted-foreground">
-                Dein Konto und alle zugehörigen Daten wurden erfolgreich gelöscht.
+            </div>
+
+            <Alert className="border-primary/30 bg-primary/5">
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+              <AlertDescription className="text-sm">
+                Alle Daten wurden gemäß DSGVO vollständig und unwiderruflich aus unseren Systemen entfernt.
+              </AlertDescription>
+            </Alert>
+
+            <div className="text-center pt-2">
+              <p className="text-sm text-muted-foreground mb-4">
+                Vielen Dank, dass du unseren Service genutzt hast. Du kannst jederzeit ein neues Konto erstellen.
               </p>
-              <Button onClick={() => navigate("/")} className="mt-4">
-                Zur Startseite
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => navigate("/")} className="gap-2">
+                  Zur Startseite
+                </Button>
+                <Button variant="outline" onClick={() => navigate("/register")} className="gap-2">
+                  Neues Konto erstellen
+                </Button>
+              </div>
             </div>
           </CardContent>
         </Card>
