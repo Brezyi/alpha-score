@@ -755,11 +755,13 @@ const Dashboard = () => {
                       border: "1px solid hsl(var(--border))",
                       borderRadius: "10px",
                       boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                      padding: "8px 12px",
+                      padding: "10px 14px",
                     }}
-                    labelStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, marginBottom: 4 }}
+                    labelFormatter={(label) => (
+                      <span className="text-sm font-semibold text-foreground">{label}</span>
+                    )}
                     formatter={(value: number, name: string) => [
-                      <span key={name} className="font-semibold">{value?.toFixed(1) || "—"}</span>, 
+                      <span key={name} className="font-medium">{value?.toFixed(1) || "—"}</span>, 
                       name === "score" ? "Score" : "Potenzial"
                     ]}
                     cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
