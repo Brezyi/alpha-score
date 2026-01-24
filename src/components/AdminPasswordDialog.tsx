@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useAdminPassword } from "@/hooks/useAdminPassword";
+import { useUserRole } from "@/hooks/useUserRole";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ interface AdminPasswordDialogProps {
 
 export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPasswordDialogProps) {
   const { status, loading, setPassword, verifyPassword, isVerified } = useAdminPassword();
+  const { isOwner } = useUserRole();
   const [password, setPasswordValue] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -255,8 +257,8 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
             </div>
           )}
 
-          {/* Forgot Password Link - only in verify mode */}
-          {mode === "verify" && !showForgotPassword && (
+          {/* Forgot Password Link - only for owners in verify mode */}
+          {mode === "verify" && isOwner && !showForgotPassword && (
             <button
               type="button"
               onClick={() => setShowForgotPassword(true)}
@@ -266,8 +268,8 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
             </button>
           )}
 
-          {/* Forgot Password Form */}
-          {showForgotPassword && (
+          {/* Forgot Password Form - only for owners */}
+          {showForgotPassword && isOwner && (
             <div className="p-4 rounded-lg bg-muted/50 border space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Mail className="w-4 h-4 text-primary" />
