@@ -231,8 +231,34 @@ export default function AGB() {
               <strong className="text-foreground">Widerrufsrecht</strong><br />
               Sie haben das Recht, binnen vierzehn Tagen ohne Angabe von Gründen diesen Vertrag zu widerrufen. Die Widerrufsfrist beträgt vierzehn Tage ab dem Tag des Vertragsabschlusses.
             </p>
+            
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mt-4">
+              <p className="text-foreground font-semibold mb-2">✅ Einfaches digitales Widerrufsverfahren</p>
+              <p className="text-muted-foreground leading-relaxed text-sm">
+                Sie können Ihr Widerrufsrecht bequem über unsere App ausüben:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-3 text-sm">
+                <li>Öffnen Sie Ihr <strong className="text-foreground">Profil</strong> in der App</li>
+                <li>Klicken Sie auf <strong className="text-foreground">"Widerrufsrecht"</strong></li>
+                <li>Wählen Sie die betreffende Zahlung aus</li>
+                <li>Bestätigen Sie den Widerruf</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed text-sm mt-3">
+                <strong className="text-foreground">Automatische Erstattung:</strong> Widerrufe innerhalb der 14-Tage-Frist werden automatisch und unverzüglich bearbeitet. Die Erstattung erfolgt über das ursprüngliche Zahlungsmittel.
+              </p>
+              <p className="text-muted-foreground leading-relaxed text-sm mt-2">
+                <strong className="text-foreground">Spätere Anträge:</strong> Widerrufsanträge nach Ablauf der 14-Tage-Frist werden von unserem Team manuell geprüft. Sie erhalten eine E-Mail-Benachrichtigung über den Status Ihres Antrags.
+              </p>
+            </div>
+            
             <p className="text-muted-foreground leading-relaxed mt-4">
-              Um Ihr Widerrufsrecht auszuüben, müssen Sie uns (FaceRank, Musterstraße 123, 12345 Musterstadt, E-Mail: widerruf@facerank.app) mittels einer eindeutigen Erklärung (z.B. ein mit der Post versandter Brief oder E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.
+              Alternativ können Sie uns mittels einer eindeutigen Erklärung (z.B. ein mit der Post versandter Brief oder E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren:
+            </p>
+            <p className="text-muted-foreground leading-relaxed mt-2">
+              <strong className="text-foreground">GLOMAXXED AI</strong><br />
+              Musterstraße 123<br />
+              12345 Musterstadt<br />
+              E-Mail: widerruf@glowup-ai.de
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               Zur Wahrung der Widerrufsfrist reicht es aus, dass Sie die Mitteilung über die Ausübung des Widerrufsrechts vor Ablauf der Widerrufsfrist absenden.
@@ -241,6 +267,17 @@ export default function AGB() {
               <strong className="text-foreground">Folgen des Widerrufs</strong><br />
               Wenn Sie diesen Vertrag widerrufen, haben wir Ihnen alle Zahlungen, die wir von Ihnen erhalten haben, unverzüglich und spätestens binnen vierzehn Tagen ab dem Tag zurückzuzahlen, an dem die Mitteilung über Ihren Widerruf dieses Vertrags bei uns eingegangen ist. Für diese Rückzahlung verwenden wir dasselbe Zahlungsmittel, das Sie bei der ursprünglichen Transaktion eingesetzt haben, es sei denn, mit Ihnen wurde ausdrücklich etwas anderes vereinbart; in keinem Fall werden Ihnen wegen dieser Rückzahlung Entgelte berechnet.
             </p>
+            
+            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">Auswirkungen auf Ihr Abonnement</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Bei erfolgreichem Widerruf wird Ihr Premium-Abonnement automatisch gekündigt. Sie behalten jedoch Zugang zu Ihrem kostenlosen Nutzerkonto und allen gespeicherten Daten (Analysen, Fotos, etc.). Eine erneute Buchung ist jederzeit möglich.
+            </p>
+            
+            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">Status Ihrer Widerrufsanträge</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Sie können den Status Ihrer Widerrufsanträge jederzeit in Ihrem Profil unter <strong className="text-foreground">"Anträge ansehen"</strong> einsehen. Dort finden Sie eine Übersicht aller eingereichten Anträge mit aktuellem Bearbeitungsstatus und ggf. Anmerkungen unseres Teams.
+            </p>
+            
             <p className="text-muted-foreground leading-relaxed mt-4">
               <strong className="text-foreground">Besondere Hinweise</strong><br />
               Haben Sie verlangt, dass die Dienstleistung während der Widerrufsfrist beginnen soll, so haben Sie uns einen angemessenen Betrag zu zahlen, der dem Anteil der bis zu dem Zeitpunkt, zu dem Sie uns von der Ausübung des Widerrufsrechts hinsichtlich dieses Vertrags unterrichten, bereits erbrachten Dienstleistungen im Vergleich zum Gesamtumfang der im Vertrag vorgesehenen Dienstleistungen entspricht.
@@ -248,7 +285,7 @@ export default function AGB() {
             <p className="text-muted-foreground leading-relaxed mt-4">
               <strong className="text-foreground">Muster-Widerrufsformular</strong><br />
               (Wenn Sie den Vertrag widerrufen wollen, dann füllen Sie bitte dieses Formular aus und senden Sie es zurück.)<br /><br />
-              An FaceRank, Musterstraße 123, 12345 Musterstadt, E-Mail: widerruf@facerank.app<br /><br />
+              An GLOMAXXED AI, Musterstraße 123, 12345 Musterstadt, E-Mail: widerruf@glowup-ai.de<br /><br />
               Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über den Kauf der folgenden Dienstleistung: _______________<br />
               Bestellt am (*) / erhalten am (*): _______________<br />
               Name des/der Verbraucher(s): _______________<br />
