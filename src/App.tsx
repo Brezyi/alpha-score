@@ -20,7 +20,6 @@ import CookieConsent from "./components/CookieConsent";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DocumentTitleUpdater } from "./components/DocumentTitleUpdater";
 import { FaviconUpdater } from "./components/FaviconUpdater";
-import { MobileNavigation } from "./components/MobileNavigation";
 
 // Lazy loaded pages - reduces initial bundle size significantly
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -208,7 +207,6 @@ const App = () => (
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                     </Suspense>
-                    <MobileNavigation />
                     <CookieConsent />
                   </MaintenanceCheck>
                 </MaintenanceProvider>

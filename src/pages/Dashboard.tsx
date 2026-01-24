@@ -1067,34 +1067,34 @@ const Dashboard = () => {
         )}
 
         {/* Quick Actions */}
+
+        {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>Schnellzugriff</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => {
               const isLocked = action.premium && !isPremiumUser;
               return (
                 <Link 
                   key={action.title}
                   to={isLocked ? "/pricing" : action.href}
-                  className="group relative p-4 md:p-6 rounded-xl md:rounded-2xl glass-card hover:border-primary/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-primary/5 active:scale-[0.98] touch-manipulation"
+                  className="group relative p-6 rounded-2xl glass-card hover:border-primary/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-primary/5"
                   style={{ animationDelay: `${850 + index * 100}ms`, animationFillMode: "forwards" }}
                 >
                   {isLocked && (
-                    <div className="absolute top-2 right-2 md:top-3 md:right-3 p-1 rounded-full bg-muted/80">
-                      <Lock className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
+                    <div className="absolute top-3 right-3">
+                      <Lock className="w-4 h-4 text-muted-foreground" />
                     </div>
                   )}
-                  <div className={`w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl ${action.color} flex items-center justify-center mb-3 md:mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                    <action.icon className="w-5 h-5 md:w-6 md:h-6" />
+                  <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                    <action.icon className="w-6 h-6" />
                   </div>
-                  <h3 className="font-semibold text-sm md:text-base mb-0.5 md:mb-1 group-hover:text-primary transition-colors">
+                  <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
                     {action.title}
                   </h3>
-                  <p className="text-xs md:text-sm text-muted-foreground line-clamp-2">
+                  <p className="text-sm text-muted-foreground">
                     {action.description}
                   </p>
-                  {/* Subtle arrow indicator on hover */}
-                  <ChevronRight className="absolute bottom-4 right-4 w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all hidden md:block" />
                 </Link>
               );
             })}
