@@ -36,6 +36,15 @@ interface DailyChallenge {
   completed: boolean;
 }
 
+interface UserStats {
+  analysesCount: number;
+  currentStreak: number;
+  highestScore: number;
+  lowestScore: number;
+  completedTasksCount: number;
+  level: number;
+}
+
 export const useGamification = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -307,6 +316,99 @@ export const useGamification = () => {
     [user, toast, fetchXp]
   );
 
+  // Unlock a specific achievement
+  const unlockAchievement = useCallback(
+    async (achievement: Achievement) => {
+      if (!user || achievement.unlocked) return false;
+
+      try {
+        // Insert into user_achievements
+        const { error } = await supabase
+          .from("user_achievements")
+          .insert({ user_id: user.id, achievement_id: achievement.id });
+
+        if (error) {
+          // Already unlocked (unique constraint)
+          if (error.code === "23505") return false;
+          throw error;
+        }
+
+        // Award XP
+        await addXp(achievement.xpReward, `achievement_${achievement.key}`);
+
+        // Show toast
+        toast({
+          title: `🏆 Achievement freigeschaltet!`,
+          description: `${achievement.icon} ${achievement.name} - +${achievement.xpReward} XP`,
+        });
+
+        // Update local state
+        setAchievements((prev) =>
+          prev.map((a) =>
+            a.id === achievement.id
+              ? { ...a, unlocked: true, unlockedAt: new Date().toISOString() }
+              : a
+          )
+        );
+
+        return true;
+      } catch (error) {
+        console.error("Error unlocking achievement:", error);
+        return false;
+      }
+    },
+    [user, addXp, toast]
+  );
+
+  // Check and unlock achievements based on user stats
+  const checkAchievements = useCallback(
+    async (stats: UserStats) => {
+      if (!user || achievements.length === 0) return;
+
+      const unlockedIds: string[] = [];
+
+      for (const achievement of achievements) {
+        if (achievement.unlocked) continue;
+
+        let shouldUnlock = false;
+
+        switch (achievement.requirementType) {
+          case "analyses":
+            shouldUnlock = stats.analysesCount >= achievement.requirementValue;
+            break;
+          case "streak":
+            shouldUnlock = stats.currentStreak >= achievement.requirementValue;
+            break;
+          case "level":
+            shouldUnlock = stats.level >= achievement.requirementValue;
+            break;
+          case "tasks":
+            shouldUnlock = stats.completedTasksCount >= achievement.requirementValue;
+            break;
+          case "improvement":
+            // First improvement - check if highest > lowest
+            shouldUnlock = stats.highestScore > stats.lowestScore && stats.analysesCount > 1;
+            break;
+          case "score_gain":
+            // Score gain is stored as value * 10 (e.g., 10 = 1.0 point improvement)
+            const improvement = stats.highestScore - stats.lowestScore;
+            shouldUnlock = improvement * 10 >= achievement.requirementValue;
+            break;
+        }
+
+        if (shouldUnlock) {
+          const unlocked = await unlockAchievement(achievement);
+          if (unlocked) {
+            unlockedIds.push(achievement.id);
+          }
+        }
+      }
+
+      return unlockedIds;
+    },
+    [user, achievements, unlockAchievement]
+  );
+
   // Initial fetch
   useEffect(() => {
     const loadData = async () => {
@@ -331,6 +433,8 @@ export const useGamification = () => {
     challengesLoading,
     completeChallenge,
     addXp,
+    unlockAchievement,
+    checkAchievements,
     refetch: () => Promise.all([fetchXp(), fetchAchievements(), fetchDailyChallenges()]),
   };
 };

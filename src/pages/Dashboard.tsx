@@ -246,7 +246,7 @@ const Dashboard = () => {
   const { settings } = useGlobalSettings();
   
   // Gamification
-  const { xp, achievements, dailyChallenges, loading: gamificationLoading, challengesLoading, completeChallenge } = useGamification();
+  const { xp, achievements, dailyChallenges, loading: gamificationLoading, challengesLoading, completeChallenge, checkAchievements } = useGamification();
 
   // Format subscription badge
   const getSubscriptionBadge = () => {
@@ -354,6 +354,36 @@ const Dashboard = () => {
       fetchTasks();
     }
   }, [user]);
+
+  // Check achievements when data is loaded
+  useEffect(() => {
+    const checkUserAchievements = async () => {
+      if (!user || analysesLoading || gamificationLoading || achievements.length === 0) return;
+      
+      const completedAnalysesForCheck = analyses.filter(a => a.status === "completed" && a.looks_score !== null);
+      const scores = completedAnalysesForCheck.map(a => a.looks_score).filter((s): s is number => s !== null);
+      const highestScoreForCheck = scores.length > 0 ? Math.max(...scores) : 0;
+      const lowestScoreForCheck = scores.length > 0 ? Math.min(...scores) : 0;
+      
+      // Fetch completed tasks count
+      const { count: tasksCount } = await supabase
+        .from("user_tasks")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("completed", true);
+      
+      await checkAchievements({
+        analysesCount: completedAnalysesForCheck.length,
+        currentStreak: currentStreak,
+        highestScore: highestScoreForCheck,
+        lowestScore: lowestScoreForCheck,
+        completedTasksCount: tasksCount || 0,
+        level: xp.level,
+      });
+    };
+    
+    checkUserAchievements();
+  }, [user, analysesLoading, gamificationLoading, achievements.length, analyses, currentStreak, xp.level, checkAchievements]);
 
   if (loading) {
     return (
