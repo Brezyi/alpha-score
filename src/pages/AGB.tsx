@@ -193,6 +193,23 @@ export default function AGB() {
             <p className="text-muted-foreground leading-relaxed mt-4">
               (4) Nach wirksamer Kündigung eines Abonnements bleiben die Premium-Funktionen bis zum Ende des bezahlten Abrechnungszeitraums nutzbar. Danach wird das Konto auf den kostenlosen Funktionsumfang zurückgesetzt.
             </p>
+            
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mt-4">
+              <p className="text-foreground font-semibold mb-2">ℹ️ Wichtiger Hinweis zur Datenspeicherung bei Kündigung</p>
+              <p className="text-muted-foreground leading-relaxed text-sm">
+                <strong className="text-foreground">Eine Kündigung des Abonnements ist keine Kontolöschung.</strong> Bei einer Abo-Kündigung bleiben alle Ihre Daten (Analysen, Fotos, Fortschritte, Coach-Gespräche, etc.) vollständig erhalten:
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-3 text-sm">
+                <li>Ihre Daten bleiben <strong className="text-foreground">bis zum Ende der bezahlten Laufzeit</strong> vollständig zugänglich</li>
+                <li>Nach Ablauf der Laufzeit bleiben die Daten <strong className="text-foreground">im kostenlosen Konto weiterhin gespeichert</strong></li>
+                <li>Sie können Ihr Konto jederzeit reaktivieren und auf alle historischen Daten zugreifen</li>
+                <li>Eine <strong className="text-foreground">endgültige Datenlöschung</strong> erfolgt nur auf ausdrücklichen Wunsch durch Kontolöschung</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed text-sm mt-3">
+                Zur vollständigen und unwiderruflichen Löschung aller Daten gemäß DSGVO Art. 17 nutzen Sie bitte die Funktion "Konto löschen" in Ihren Profileinstellungen.
+              </p>
+            </div>
+            
             <p className="text-muted-foreground leading-relaxed mt-4">
               (5) Der Lifetime-Zugang ist nicht kündbar und gewährt dem Nutzer dauerhaften Zugang zu den zum Kaufzeitpunkt verfügbaren Premium-Funktionen.
             </p>

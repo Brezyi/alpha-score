@@ -261,6 +261,47 @@ export default function Datenschutz() {
               <li><strong className="text-foreground">Server-Logs:</strong> Maximal 7 Tage</li>
             </ul>
 
+            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">6.1 Datenaufbewahrung bei Abo-Kündigung</h3>
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4">
+              <p className="text-foreground font-semibold mb-2">ℹ️ Wichtig: Abo-Kündigung ≠ Kontolöschung</p>
+              <p className="text-muted-foreground leading-relaxed text-sm">
+                Bei einer <strong className="text-foreground">Kündigung des Premium-Abonnements</strong> bleiben alle Ihre personenbezogenen Daten vollständig erhalten. Dies entspricht dem Grundsatz der Datenminimierung nach Art. 5 Abs. 1 lit. c DSGVO, da die Daten für die weitere Nutzung des kostenlosen Dienstes benötigt werden.
+              </p>
+              <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-3 text-sm">
+                <li><strong className="text-foreground">Während der Laufzeit:</strong> Voller Zugriff auf alle Daten und Premium-Funktionen</li>
+                <li><strong className="text-foreground">Nach Ablauf der Laufzeit:</strong> Daten bleiben im kostenlosen Konto gespeichert und zugänglich</li>
+                <li><strong className="text-foreground">Reaktivierung:</strong> Bei erneuter Premium-Buchung stehen alle historischen Daten sofort wieder zur Verfügung</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed text-sm mt-3">
+                <strong className="text-foreground">Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung des kostenlosen Nutzungsvertrages)
+              </p>
+            </div>
+
+            <h3 className="text-lg font-medium mt-6 mb-3 text-foreground">6.2 Vollständige Datenlöschung (Recht auf Löschung)</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Sie haben gemäß Art. 17 DSGVO das <strong className="text-foreground">Recht auf Löschung</strong> ("Recht auf Vergessenwerden"). Um alle Ihre personenbezogenen Daten unwiderruflich zu löschen:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4 mt-2">
+              <li>Nutzen Sie die Funktion <strong className="text-foreground">"Konto löschen"</strong> in Ihren Profileinstellungen</li>
+              <li>Sie erhalten eine Bestätigungs-E-Mail mit einem Lösch-Link</li>
+              <li>Nach Bestätigung und Passworteingabe werden <strong className="text-foreground">alle Daten unwiderruflich gelöscht</strong></li>
+            </ul>
+            <p className="text-muted-foreground leading-relaxed mt-4">
+              <strong className="text-foreground">Folgende Daten werden bei Kontolöschung entfernt:</strong>
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-4 mt-2 text-sm">
+              <li>Alle Analysen, Scores und Ergebnisse</li>
+              <li>Hochgeladene Fotos und Profilbilder</li>
+              <li>KI-Coach Gespräche und Nachrichten</li>
+              <li>Gamification-Daten (XP, Achievements, Streaks)</li>
+              <li>Profil- und Kontoeinstellungen</li>
+              <li>Support-Tickets und Kommunikation</li>
+              <li>2FA-Backup-Codes und Sicherheitsdaten</li>
+            </ul>
+            <p className="text-muted-foreground leading-relaxed mt-4">
+              <strong className="text-foreground">Ausnahme:</strong> Rechnungsdaten werden aufgrund gesetzlicher Aufbewahrungspflichten (§ 147 AO, § 257 HGB) für 10 Jahre aufbewahrt und danach gelöscht.
+            </p>
+
             <p className="text-muted-foreground leading-relaxed mt-4">
               Nach Ablauf der Speicherdauer werden die Daten unwiderruflich gelöscht oder irreversibel anonymisiert.
             </p>
