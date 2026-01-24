@@ -769,7 +769,7 @@ export default function Progress() {
                   )}>
                     {/* Main improvement stat */}
                     <div className={cn(
-                      "text-center p-6 rounded-xl bg-primary/5 border border-primary/20",
+                      "text-center p-6 rounded-xl bg-primary/5 border border-primary/20 flex flex-col items-center min-h-44",
                       categoryImprovements.improvements.length === 0 && "max-w-xs w-full"
                     )}>
                       <motion.div 
@@ -783,9 +783,12 @@ export default function Progress() {
                       >
                         {categoryImprovements.total}
                       </motion.div>
-                      <div className="text-sm text-muted-foreground">Punkte</div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {categoryImprovements.isPotential ? 'Erreichbares Potenzial' : 'Gesamtverbesserung'}
+
+                      <div className="mt-auto">
+                        <div className="text-sm text-muted-foreground">Punkte</div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {categoryImprovements.isPotential ? 'Erreichbares Potenzial' : 'Gesamtverbesserung'}
+                        </div>
                       </div>
                     </div>
                     
