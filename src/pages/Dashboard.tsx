@@ -574,11 +574,23 @@ const Dashboard = () => {
                         style={{ animationDelay: `${600 + index * 50}ms`, animationFillMode: "forwards" }}
                       >
                         <div className="flex items-center gap-3 mb-3">
-                          <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center`}>
+                          <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center relative`}>
                             <item.Icon className={`w-4 h-4 ${item.iconColor}`} />
+                            {hasDetails && (
+                              <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
+                                <Info className="w-2 h-2 text-primary-foreground" />
+                              </span>
+                            )}
                           </div>
                           <div className="flex-1 flex items-center justify-between">
-                            <span className="text-sm font-medium">{item.label}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{item.label}</span>
+                              {hasDetails && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-primary/15 text-primary rounded-full">
+                                  Details
+                                </span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2">
                               <span className="font-bold">{Math.min(10, item.score).toFixed(1)}</span>
                               {hasDetails && (
