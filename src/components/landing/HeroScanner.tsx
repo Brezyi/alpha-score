@@ -157,9 +157,6 @@ const HeroScanner = memo(() => {
               {!shouldReduce && (
                 <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent animate-scanner-line-slow opacity-90 shadow-[0_0_15px_hsl(var(--primary)),0_0_30px_hsl(var(--primary)/0.5)]" />
               )}
-
-              {/* Landmark Points Only - No Lines */}
-              {points}
             </div>
 
             {/* Bottom status bar */}
