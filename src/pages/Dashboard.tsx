@@ -165,7 +165,7 @@ const AnimatedNumber = React.forwardRef<
 });
 AnimatedNumber.displayName = "AnimatedNumber";
 
-// Motivational quotes
+// Motivational quotes - one for each day, rotates daily
 const motivationalQuotes = [
   { text: "Jeden Tag 1% besser – das ist der Weg.", author: "Atomic Habits" },
   { text: "Dein Aussehen ist eine Investition in dich selbst.", author: "FaceRank" },
@@ -174,6 +174,30 @@ const motivationalQuotes = [
   { text: "Du wirst nie deinen Wert sehen, wenn du ihn nicht entwickelst.", author: "FaceRank" },
   { text: "Erfolg ist die Summe kleiner Anstrengungen, die sich täglich wiederholen.", author: "Robert Collier" },
   { text: "Sei die beste Version deiner selbst.", author: "FaceRank" },
+  { text: "Disziplin ist die Brücke zwischen Zielen und Erfolg.", author: "Jim Rohn" },
+  { text: "Dein Körper kann fast alles. Es ist dein Geist, den du überzeugen musst.", author: "FaceRank" },
+  { text: "Kleine Schritte führen zu großen Veränderungen.", author: "Kaizen" },
+  { text: "Wer aufhört besser zu werden, hat aufgehört gut zu sein.", author: "Philip Rosenthal" },
+  { text: "Gewohnheiten sind der unsichtbare Architekt deines Lebens.", author: "James Clear" },
+  { text: "Erfolg ist kein Zufall, sondern das Ergebnis von Entscheidungen.", author: "FaceRank" },
+  { text: "Die einzige Grenze ist die, die du dir selbst setzt.", author: "FaceRank" },
+  { text: "Starte dort, wo du bist. Nutze, was du hast. Tu, was du kannst.", author: "Arthur Ashe" },
+  { text: "Motivation bringt dich in Gang. Gewohnheit hält dich in Bewegung.", author: "Jim Ryun" },
+  { text: "Perfektion ist nicht erreichbar, aber Exzellenz schon.", author: "Vince Lombardi" },
+  { text: "Du bist das Produkt deiner täglichen Entscheidungen.", author: "FaceRank" },
+  { text: "Ein Jahr von jetzt an wirst du dir wünschen, du hättest heute angefangen.", author: "Karen Lamb" },
+  { text: "Fortschritt, nicht Perfektion.", author: "FaceRank" },
+  { text: "Die Zukunft gehört denen, die an ihre Träume glauben.", author: "Eleanor Roosevelt" },
+  { text: "Härte dich ab – mental und physisch.", author: "David Goggins" },
+  { text: "Jeder Tag ist eine neue Chance, dich zu verbessern.", author: "FaceRank" },
+  { text: "Selbstvertrauen entsteht durch Kompetenz.", author: "FaceRank" },
+  { text: "Was du heute tust, bestimmt wer du morgen bist.", author: "FaceRank" },
+  { text: "Investiere in dich selbst – es zahlt die besten Zinsen.", author: "Benjamin Franklin" },
+  { text: "Geduld ist bitter, aber ihre Früchte sind süß.", author: "Aristoteles" },
+  { text: "Dein einziger Limit bist du selbst.", author: "FaceRank" },
+  { text: "Große Dinge entstehen nie in der Komfortzone.", author: "FaceRank" },
+  { text: "Handle so, als wäre es unmöglich zu scheitern.", author: "Dorothea Brande" },
+  { text: "Wachstum beginnt am Ende deiner Komfortzone.", author: "Neale Donald Walsch" },
 ];
 
 type UserTask = {
