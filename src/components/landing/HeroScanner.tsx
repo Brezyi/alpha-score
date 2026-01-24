@@ -238,24 +238,24 @@ const HeroScanner = memo(() => {
       {showScore && (
         <div className="flex justify-center mt-6 animate-fade-in">
           <div className="relative">
-            {/* Golden glow rings */}
-            <div className="absolute inset-0 -m-6 rounded-full bg-amber-500/25 blur-2xl animate-pulse" />
-            <div className="absolute inset-0 -m-3 rounded-full bg-yellow-500/35 blur-xl" />
+            {/* Glow rings */}
+            <div className="absolute inset-0 -m-6 rounded-full bg-primary/20 blur-2xl animate-pulse" />
+            <div className="absolute inset-0 -m-3 rounded-full bg-primary/30 blur-xl" />
             
-            {/* Score container with golden border */}
-            <div className="relative bg-background/95 backdrop-blur-md px-8 py-5 rounded-2xl border-2 border-amber-500/70 shadow-[0_0_30px_hsl(45,93%,47%,0.4),0_0_60px_hsl(45,93%,47%,0.2)]">
+            {/* Score container */}
+            <div className="relative bg-background/95 backdrop-blur-md px-8 py-5 rounded-2xl border-2 border-primary shadow-[0_0_30px_hsl(var(--primary)/0.4),0_0_60px_hsl(var(--primary)/0.2)]">
               <div className="text-[11px] text-muted-foreground font-mono uppercase tracking-widest text-center mb-1">
                 Looks Score
               </div>
               <div className="flex items-baseline justify-center gap-1">
-                <span className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-yellow-500 to-amber-400 tabular-nums drop-shadow-[0_0_15px_hsl(45,93%,47%,0.6)]">
+                <span className="text-5xl font-bold text-primary tabular-nums drop-shadow-[0_0_10px_hsl(var(--primary))]">
                   {scoreValue.toFixed(1)}
                 </span>
                 <span className="text-xl text-muted-foreground font-medium">/10</span>
               </div>
               <div className="flex items-center justify-center gap-1.5 mt-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                <span className="text-[10px] text-emerald-500 font-mono uppercase tracking-wide">Scan Complete</span>
+                <div className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-[10px] text-green-500 font-mono uppercase tracking-wide">Scan Complete</span>
               </div>
             </div>
           </div>
