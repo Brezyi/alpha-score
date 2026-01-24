@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, memo, useCallback, useMemo } from "react";
 import { ExternalLink, ShoppingBag, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 interface Product {
   id: string;
@@ -22,7 +22,7 @@ interface Product {
   rating?: number;
   affiliateLink?: string | null;
   imageUrl?: string | null;
-  matchScore?: number; // How well this product matches user's issues
+  matchScore?: number;
 }
 
 interface ProductRecommendationsCardProps {
@@ -43,8 +43,8 @@ const categoryIcons: Record<string, string> = {
 };
 
 const priceLabels: Record<string, { label: string; color: string }> = {
-  budget: { label: "€", color: "text-green-500" },
-  medium: { label: "€€", color: "text-yellow-500" },
+  budget: { label: "€", color: "text-emerald-500" },
+  medium: { label: "€€", color: "text-amber-500" },
   premium: { label: "€€€", color: "text-orange-500" },
 };
 
@@ -57,7 +57,89 @@ const categoryNames: Record<string, string> = {
   tool: "Werkzeug",
 };
 
-export const ProductRecommendationsCard = ({
+// Memoized product item component
+const ProductItem = memo(({ 
+  product, 
+  index, 
+  onProductClick,
+  onBuyClick,
+  shouldReduce
+}: { 
+  product: Product; 
+  index: number;
+  onProductClick: (product: Product) => void;
+  onBuyClick: (product: Product, e?: React.MouseEvent) => void;
+  shouldReduce: boolean;
+}) => {
+  const isHighMatch = product.matchScore && product.matchScore >= 5;
+  
+  return (
+    <div
+      onClick={() => onProductClick(product)}
+      className={cn(
+        "flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted/70 transition-colors group cursor-pointer relative",
+        isHighMatch && "ring-1 ring-primary/30 bg-primary/5",
+        !shouldReduce && "animate-fade-in"
+      )}
+      style={shouldReduce ? {} : { animationDelay: `${index * 30}ms` }}
+    >
+      {isHighMatch && (
+        <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+          Top-Match
+        </div>
+      )}
+      
+      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
+        {categoryIcons[product.category] || "📦"}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">{product.name}</h4>
+            <p className="text-xs text-muted-foreground">{product.brand}</p>
+          </div>
+          <span className={cn("text-xs font-medium flex-shrink-0", priceLabels[product.priceRange]?.color)}>
+            {priceLabels[product.priceRange]?.label || "€€"}
+          </span>
+        </div>
+
+        {product.description && (
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+            {product.description}
+          </p>
+        )}
+
+        {product.targetIssues.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {product.targetIssues.slice(0, 3).map((issue) => (
+              <Badge
+                key={issue}
+                variant="secondary"
+                className="text-[10px] px-1.5 py-0"
+              >
+                {issue.replace(/_/g, " ")}
+              </Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={(e) => onBuyClick(product, e)}
+      >
+        <ShoppingCart className="w-4 h-4" />
+      </Button>
+    </div>
+  );
+});
+
+ProductItem.displayName = "ProductItem";
+
+export const ProductRecommendationsCard = memo(({
   products,
   loading,
   maxDisplay = 4,
@@ -66,23 +148,24 @@ export const ProductRecommendationsCard = ({
 }: ProductRecommendationsCardProps) => {
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const displayProducts = products.slice(0, maxDisplay);
+  const shouldReduce = useReducedMotion();
+  
+  const displayProducts = useMemo(() => products.slice(0, maxDisplay), [products, maxDisplay]);
 
-  const handleProductClick = (product: Product) => {
+  const handleProductClick = useCallback((product: Product) => {
     setSelectedProduct(product);
-  };
+  }, []);
 
-  const handleBuyClick = (product: Product, e?: React.MouseEvent) => {
+  const handleBuyClick = useCallback((product: Product, e?: React.MouseEvent) => {
     e?.stopPropagation();
     
-    // Use affiliate link if available, otherwise fallback to Amazon search
     if (product.affiliateLink) {
       window.open(product.affiliateLink, "_blank", "noopener,noreferrer");
     } else {
       const searchQuery = encodeURIComponent(`${product.brand} ${product.name}`);
       window.open(`https://www.amazon.de/s?k=${searchQuery}&tag=looksmaxing-21`, "_blank", "noopener,noreferrer");
     }
-  };
+  }, []);
 
   if (loading) {
     return (
@@ -101,82 +184,9 @@ export const ProductRecommendationsCard = ({
     return null;
   }
 
-  const ProductItem = ({ product, index }: { product: Product; index: number }) => {
-    const isHighMatch = product.matchScore && product.matchScore >= 5;
-    
-    return (
-      <motion.div
-        key={product.id}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ delay: index * 0.05 }}
-        onClick={() => handleProductClick(product)}
-        className={cn(
-          "flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted/70 transition-all group cursor-pointer relative",
-          isHighMatch && "ring-1 ring-primary/30 bg-primary/5"
-        )}
-      >
-        {isHighMatch && (
-          <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded-full font-medium">
-            Top-Match
-          </div>
-        )}
-        
-        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
-          {categoryIcons[product.category] || "📦"}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <h4 className="font-medium text-sm truncate group-hover:text-primary transition-colors">{product.name}</h4>
-              <p className="text-xs text-muted-foreground">{product.brand}</p>
-            </div>
-            <span className={cn("text-xs font-medium flex-shrink-0", priceLabels[product.priceRange]?.color)}>
-              {priceLabels[product.priceRange]?.label || "€€"}
-            </span>
-          </div>
-
-          {product.description && (
-            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-              {product.description}
-            </p>
-          )}
-
-          {product.targetIssues.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {product.targetIssues.slice(0, 3).map((issue) => (
-                <Badge
-                  key={issue}
-                  variant="secondary"
-                  className="text-[10px] px-1.5 py-0"
-                >
-                  {issue.replace(/_/g, " ")}
-                </Badge>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => handleBuyClick(product, e)}
-        >
-          <ShoppingCart className="w-4 h-4" />
-        </Button>
-      </motion.div>
-    );
-  };
-
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="p-5 rounded-2xl glass-card"
-      >
+      <div className="p-5 rounded-2xl glass-card">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-bold text-lg flex items-center gap-2">
@@ -196,7 +206,14 @@ export const ProductRecommendationsCard = ({
 
         <div className="space-y-3">
           {displayProducts.map((product, index) => (
-            <ProductItem key={product.id} product={product} index={index} />
+            <ProductItem 
+              key={product.id} 
+              product={product} 
+              index={index}
+              onProductClick={handleProductClick}
+              onBuyClick={handleBuyClick}
+              shouldReduce={shouldReduce}
+            />
           ))}
         </div>
 
@@ -210,7 +227,7 @@ export const ProductRecommendationsCard = ({
             <ExternalLink className="w-4 h-4 ml-2" />
           </Button>
         )}
-      </motion.div>
+      </div>
 
       {/* All Products Dialog */}
       <Dialog open={showAllProducts} onOpenChange={setShowAllProducts}>
@@ -223,7 +240,14 @@ export const ProductRecommendationsCard = ({
           </DialogHeader>
           <div className="space-y-3 mt-4">
             {products.map((product, index) => (
-              <ProductItem key={product.id} product={product} index={index} />
+              <ProductItem 
+                key={product.id} 
+                product={product} 
+                index={index}
+                onProductClick={handleProductClick}
+                onBuyClick={handleBuyClick}
+                shouldReduce={shouldReduce}
+              />
             ))}
           </div>
         </DialogContent>
@@ -283,4 +307,6 @@ export const ProductRecommendationsCard = ({
       </Dialog>
     </>
   );
-};
+});
+
+ProductRecommendationsCard.displayName = "ProductRecommendationsCard";
