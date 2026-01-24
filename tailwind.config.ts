@@ -64,7 +64,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // FaceRank Custom Colors
+        // GLOMAXXED AI Custom Colors
         neon: {
           DEFAULT: "hsl(153, 100%, 50%)",
           50: "hsl(153, 100%, 95%)",
