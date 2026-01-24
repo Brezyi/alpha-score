@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState, useRef, memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import HeroScanner from "./HeroScanner";
 
 const Hero = memo(() => {
   const [isVisible, setIsVisible] = useState(false);
@@ -142,95 +143,109 @@ const Hero = memo(() => {
       <div className="absolute inset-0 dark:hidden block bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]" />
 
       <div className="container relative z-10 px-4 pt-20">
-        <div className="max-w-4xl mx-auto text-center">
-          {/* Badge */}
-          <div 
-            className={cn(
-              "inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 transition-all",
-              shouldReduce ? "opacity-100" : "duration-500",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-            )}
-            style={shouldReduce ? {} : { transitionDelay: "100ms" }}
-          >
-            <Zap className={cn("w-4 h-4 text-primary", !shouldReduce && "animate-pulse")} />
-            <span className="text-sm text-muted-foreground">KI-gestützte Looksmaxing Analyse</span>
-          </div>
-
-          {/* Main Headline with staggered animation */}
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight mb-6">
-            <span 
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center max-w-7xl mx-auto">
+          {/* Left side - Text content */}
+          <div className="text-center lg:text-left">
+            {/* Badge */}
+            <div 
               className={cn(
-                "text-gradient glow-text inline-block",
-                shouldReduce ? "opacity-100" : "transition-all duration-600",
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                "inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 transition-all",
+                shouldReduce ? "opacity-100" : "duration-500",
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
               )}
-              style={shouldReduce ? {} : { transitionDelay: "200ms" }}
+              style={shouldReduce ? {} : { transitionDelay: "100ms" }}
             >
-              Maximiere
-            </span>
-            <br />
-            <span 
-              className={cn(
-                "text-foreground inline-block",
-                shouldReduce ? "opacity-100" : "transition-all duration-600",
-                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-              )}
-              style={shouldReduce ? {} : { transitionDelay: "350ms" }}
-            >
-              dein Aussehen.
-            </span>
-          </h1>
+              <Zap className={cn("w-4 h-4 text-primary", !shouldReduce && "animate-pulse")} />
+              <span className="text-sm text-muted-foreground">KI-gestützte Looksmaxing Analyse</span>
+            </div>
 
-          {/* Subheadline */}
-          <p 
-            className={cn(
-              "text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto mb-4",
-              shouldReduce ? "opacity-100" : "transition-all duration-500",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-            )}
-            style={shouldReduce ? {} : { transitionDelay: "500ms" }}
-          >
-            Systematisch. Messbar. KI-gestützt.
-          </p>
-
-          <p 
-            className={cn(
-              "text-lg text-muted-foreground/80 max-w-xl mx-auto mb-10",
-              shouldReduce ? "opacity-100" : "transition-all duration-500",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-            )}
-            style={shouldReduce ? {} : { transitionDelay: "600ms" }}
-          >
-            Deine KI für objektive Analyse und einen personalisierten Plan zur Optimierung deines Aussehens.
-          </p>
-
-          {/* CTA Buttons */}
-          <div 
-            className={cn(
-              "flex flex-col sm:flex-row items-center justify-center gap-4 mb-12",
-              shouldReduce ? "opacity-100" : "transition-all duration-500",
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
-            )}
-            style={shouldReduce ? {} : { transitionDelay: "700ms" }}
-          >
-            <Link to="/register">
-              <Button variant="hero" size="xl" className="group relative overflow-hidden">
-                <span className="relative z-10 flex items-center gap-2">
-                  Kostenlos starten
-                  <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                </span>
-                {!shouldReduce && (
-                  <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+            {/* Main Headline with staggered animation */}
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-6">
+              <span 
+                className={cn(
+                  "text-gradient glow-text inline-block",
+                  shouldReduce ? "opacity-100" : "transition-all duration-600",
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
                 )}
-              </Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="glass" size="xl">
-                Anmelden
-              </Button>
-            </Link>
+                style={shouldReduce ? {} : { transitionDelay: "200ms" }}
+              >
+                Maximiere
+              </span>
+              <br />
+              <span 
+                className={cn(
+                  "text-foreground inline-block",
+                  shouldReduce ? "opacity-100" : "transition-all duration-600",
+                  isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+                )}
+                style={shouldReduce ? {} : { transitionDelay: "350ms" }}
+              >
+                dein Aussehen.
+              </span>
+            </h1>
+
+            {/* Subheadline */}
+            <p 
+              className={cn(
+                "text-xl md:text-2xl text-muted-foreground max-w-2xl lg:max-w-none mb-4",
+                shouldReduce ? "opacity-100" : "transition-all duration-500",
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+              )}
+              style={shouldReduce ? {} : { transitionDelay: "500ms" }}
+            >
+              Systematisch. Messbar. KI-gestützt.
+            </p>
+
+            <p 
+              className={cn(
+                "text-lg text-muted-foreground/80 max-w-xl lg:max-w-none mb-10",
+                shouldReduce ? "opacity-100" : "transition-all duration-500",
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+              )}
+              style={shouldReduce ? {} : { transitionDelay: "600ms" }}
+            >
+              Deine KI für objektive Analyse und einen personalisierten Plan zur Optimierung deines Aussehens.
+            </p>
+
+            {/* CTA Buttons */}
+            <div 
+              className={cn(
+                "flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-12 lg:mb-0",
+                shouldReduce ? "opacity-100" : "transition-all duration-500",
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
+              )}
+              style={shouldReduce ? {} : { transitionDelay: "700ms" }}
+            >
+              <Link to="/register">
+                <Button variant="hero" size="xl" className="group relative overflow-hidden">
+                  <span className="relative z-10 flex items-center gap-2">
+                    Kostenlos starten
+                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                  </span>
+                  {!shouldReduce && (
+                    <div className="absolute inset-0 bg-white/20 -translate-x-full group-hover:translate-x-full transition-transform duration-500" />
+                  )}
+                </Button>
+              </Link>
+              <Link to="/login">
+                <Button variant="glass" size="xl">
+                  Anmelden
+                </Button>
+              </Link>
+            </div>
           </div>
 
+          {/* Right side - Scanner visualization */}
+          <div 
+            className={cn(
+              "hidden lg:block",
+              shouldReduce ? "opacity-100" : "transition-all duration-700",
+              isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-10"
+            )}
+            style={shouldReduce ? {} : { transitionDelay: "400ms" }}
+          >
+            <HeroScanner />
+          </div>
         </div>
       </div>
 
