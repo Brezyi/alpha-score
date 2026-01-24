@@ -44,6 +44,7 @@ import AdminPasswordReset from "./pages/AdminPasswordReset";
 import AdminPasswordManagement from "./pages/admin/AdminPasswordManagement";
 import StripeCoupons from "./pages/admin/StripeCoupons";
 import RefundManagement from "./pages/admin/RefundManagement";
+import RefundStatus from "./pages/RefundStatus";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App = () => (
                       <Route path="/plan" element={<Plan />} />
                       <Route path="/progress" element={<Progress />} />
                       <Route path="/support" element={<Support />} />
+                      <Route path="/refund-status" element={<RefundStatus />} />
                       <Route path="/features" element={<Features />} />
                       <Route path="/pricing" element={<PricingPage />} />
                       <Route path="/datenschutz" element={<Datenschutz />} />
