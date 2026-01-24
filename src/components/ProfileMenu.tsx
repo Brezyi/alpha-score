@@ -105,7 +105,7 @@ export function ProfileMenu() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { profile, updateProfile, uploadAvatar, displayNameChangeStatus } = useProfile();
-  const { firstName, lastName, hasData: hasSensitiveData } = useSensitiveData();
+  const { firstName, lastName, hasData: hasSensitiveData, updateSensitiveData } = useSensitiveData();
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
   const { isPremium, subscriptionType, subscriptionEnd, isAdminGranted, openCustomerPortal, createCheckout } = useSubscription();
@@ -118,6 +118,8 @@ export function ProfileMenu() {
   const [refundOpen, setRefundOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [displayName, setDisplayName] = useState("");
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
   const [isCheckingName, setIsCheckingName] = useState(false);
   const [nameAvailable, setNameAvailable] = useState<boolean | null>(null);
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -125,12 +127,16 @@ export function ProfileMenu() {
   
   const debouncedDisplayName = useDebounce(displayName, 300);
 
-  // Initialize display name when profile loads or dialog opens
+  // Initialize fields when dialog opens
   useEffect(() => {
-    if (profileOpen && profile?.display_name) {
-      setDisplayName(profile.display_name);
+    if (profileOpen) {
+      if (profile?.display_name) {
+        setDisplayName(profile.display_name);
+      }
+      setEditFirstName(firstName || "");
+      setEditLastName(lastName || "");
     }
-  }, [profileOpen, profile?.display_name]);
+  }, [profileOpen, profile?.display_name, firstName, lastName]);
 
   // Check display name availability
   useEffect(() => {
@@ -165,6 +171,8 @@ export function ProfileMenu() {
 
   const handleSaveProfile = async () => {
     const trimmedName = displayName.trim();
+    const trimmedFirstName = editFirstName.trim();
+    const trimmedLastName = editLastName.trim();
     
     // Validate display name for forbidden content
     if (trimmedName) {
@@ -180,18 +188,32 @@ export function ProfileMenu() {
       return;
     }
     
-    if (trimmedName && trimmedName !== profile?.display_name) {
-      setIsSavingProfile(true);
-      try {
-        const success = await updateProfile({ display_name: trimmedName });
-        if (success) {
-          setProfileOpen(false);
+    setIsSavingProfile(true);
+    try {
+      // Update sensitive data if changed
+      const firstNameChanged = trimmedFirstName !== (firstName || "");
+      const lastNameChanged = trimmedLastName !== (lastName || "");
+      
+      if ((firstNameChanged || lastNameChanged) && hasSensitiveData) {
+        const sensitiveSuccess = await updateSensitiveData(trimmedFirstName, trimmedLastName);
+        if (!sensitiveSuccess) {
+          toast.error("Fehler beim Speichern des Namens");
+          return;
         }
-      } finally {
-        setIsSavingProfile(false);
+        toast.success("Name erfolgreich aktualisiert");
       }
-    } else {
+      
+      // Update display name if changed
+      if (trimmedName && trimmedName !== profile?.display_name) {
+        const success = await updateProfile({ display_name: trimmedName });
+        if (!success) {
+          return;
+        }
+      }
+      
       setProfileOpen(false);
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
@@ -352,27 +374,29 @@ export function ProfileMenu() {
               </Button>
             </div>
 
-            {/* Private Name - Read-only like email */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Vorname</Label>
-                <Input 
-                  value={firstName || ""} 
-                  disabled 
-                  className="opacity-70" 
-                  placeholder={!hasSensitiveData ? "Nicht angegeben" : ""}
-                />
+            {/* Private Name - Editable */}
+            {hasSensitiveData && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">Vorname</Label>
+                  <Input 
+                    id="firstName"
+                    value={editFirstName} 
+                    onChange={(e) => setEditFirstName(e.target.value)}
+                    placeholder="Vorname eingeben"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Nachname</Label>
+                  <Input 
+                    id="lastName"
+                    value={editLastName} 
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    placeholder="Nachname eingeben"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Nachname</Label>
-                <Input 
-                  value={lastName || ""} 
-                  disabled 
-                  className="opacity-70" 
-                  placeholder={!hasSensitiveData ? "Nicht angegeben" : ""}
-                />
-              </div>
-            </div>
+            )}
 
             {/* Display Name (editable) */}
             <div className="space-y-2">

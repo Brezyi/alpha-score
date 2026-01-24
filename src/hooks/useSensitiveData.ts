@@ -91,12 +91,35 @@ export function useSensitiveData() {
     [user]
   );
 
+  const updateSensitiveData = useCallback(
+    async (firstName: string, lastName: string) => {
+      if (!user) return false;
+
+      try {
+        const { error } = await supabase.rpc('update_user_sensitive_data', {
+          p_first_name: firstName,
+          p_last_name: lastName,
+        });
+
+        if (error) throw error;
+
+        setData({ firstName, lastName });
+        return true;
+      } catch (error: any) {
+        console.error("Error updating sensitive data:", error);
+        return false;
+      }
+    },
+    [user]
+  );
+
   return {
     firstName: data.firstName,
     lastName: data.lastName,
     hasData,
     loading,
     storeSensitiveData,
+    updateSensitiveData,
     refetch: fetchData,
   };
 }
