@@ -18,9 +18,9 @@
     --popover: 0 0% 7.8%;
     --popover-foreground: 0 0% 98%;
 
-    /* Neon Green Accent */
-    --primary: 153 100% 50%;
-    --primary-foreground: 0 0% 4.3%;
+    /* Neon Red Accent */
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 98%;
 
     /* Gray Tones */
     --secondary: 0 0% 12.2%;
@@ -40,34 +40,34 @@
 
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 153 100% 50%;
+    --ring: 0 100% 50%;
 
     --radius: 0.75rem;
 
-    /* Custom FaceRank Variables */
-    --glow-green: 153 100% 50%;
+    /* Custom Variables */
+    --glow-red: 0 100% 50%;
     --surface-dark: 0 0% 7.8%;
     --surface-darker: 0 0% 4.3%;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(153, 100%, 50%) 0%, hsl(153, 100%, 35%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(0, 100%, 50%) 0%, hsl(0, 100%, 35%) 100%);
     --gradient-dark: linear-gradient(180deg, hsl(0, 0%, 7.8%) 0%, hsl(0, 0%, 4.3%) 100%);
-    --gradient-glow: radial-gradient(ellipse at center, hsl(153, 100%, 50%, 0.15) 0%, transparent 70%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(0, 100%, 50%, 0.15) 0%, transparent 70%);
     
     /* Shadows */
-    --shadow-glow: 0 0 40px hsl(153, 100%, 50%, 0.3);
+    --shadow-glow: 0 0 40px hsl(0, 100%, 50%, 0.3);
     --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.4);
     --shadow-elevated: 0 8px 32px hsl(0, 0%, 0%, 0.5);
 
     /* Sidebar */
     --sidebar-background: 0 0% 4.3%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 153 100% 50%;
-    --sidebar-primary-foreground: 0 0% 4.3%;
+    --sidebar-primary: 0 100% 50%;
+    --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 0 0% 12.2%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 14.9%;
-    --sidebar-ring: 153 100% 50%;
+    --sidebar-ring: 0 100% 50%;
   }
 
   /* Light mode - proper contrast */
@@ -78,7 +78,7 @@
     --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
-    --primary: 153 100% 40%;
+    --primary: 0 100% 45%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 94%;
     --secondary-foreground: 0 0% 10%;
@@ -90,27 +90,27 @@
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 85%;
     --input: 0 0% 90%;
-    --ring: 153 100% 40%;
+    --ring: 0 100% 45%;
     
     /* Custom variables for light mode */
-    --glow-green: 153 100% 40%;
+    --glow-red: 0 100% 45%;
     --surface-dark: 0 0% 96%;
     --surface-darker: 0 0% 92%;
     
     /* Shadows for light mode */
-    --shadow-glow: 0 0 40px hsl(153, 100%, 40%, 0.2);
+    --shadow-glow: 0 0 40px hsl(0, 100%, 45%, 0.2);
     --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.08);
     --shadow-elevated: 0 8px 32px hsl(0, 0%, 0%, 0.12);
 
     /* Sidebar for light mode */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 153 100% 40%;
+    --sidebar-primary: 0 100% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 94%;
     --sidebar-accent-foreground: 0 0% 10%;
     --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 153 100% 40%;
+    --sidebar-ring: 0 100% 45%;
   }
 
   /* Dark mode overrides */
@@ -121,8 +121,8 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 7.8%;
     --popover-foreground: 0 0% 98%;
-    --primary: 153 100% 50%;
-    --primary-foreground: 0 0% 4.3%;
+    --primary: 0 100% 50%;
+    --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 12.2%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 12.2%;
@@ -133,7 +133,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
-    --ring: 153 100% 50%;
+    --ring: 0 100% 50%;
   }
 }
 
@@ -154,15 +154,15 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-emerald-400;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-rose-400;
   }
 
   .glow-text {
-    text-shadow: 0 0 20px hsl(153, 100%, 50%, 0.5);
+    text-shadow: 0 0 20px hsl(0, 100%, 50%, 0.5);
   }
 
   .glow-box {
-    box-shadow: 0 0 40px hsl(153, 100%, 50%, 0.2);
+    box-shadow: 0 0 40px hsl(0, 100%, 50%, 0.2);
   }
 
   .glass {
@@ -195,10 +195,10 @@
 
 @keyframes glow {
   from {
-    box-shadow: 0 0 20px hsl(153, 100%, 50%, 0.2);
+    box-shadow: 0 0 20px hsl(0, 100%, 50%, 0.2);
   }
   to {
-    box-shadow: 0 0 40px hsl(153, 100%, 50%, 0.4);
+    box-shadow: 0 0 40px hsl(0, 100%, 50%, 0.4);
   }
 }
 
