@@ -62,7 +62,7 @@ const STATUS_CONFIG: Record<TicketStatus, { label: string; color: string; icon: 
 const Support = () => {
   const { user, loading: authLoading } = useAuth();
   const { tickets, loading, creating, createTicket } = useSupport();
-  const { isPremium } = useSubscription();
+  const { isPremium, subscriptionType } = useSubscription();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [category, setCategory] = useState<TicketCategory>("technical");
@@ -185,7 +185,7 @@ const Support = () => {
                   {isPremium && (
                     <Badge className="bg-primary/20 text-primary border-primary/30 gap-1">
                       <Zap className="w-3 h-3" />
-                      Prioritäts-Support
+                      {subscriptionType === "lifetime" ? "Lifetime" : subscriptionType === "owner" ? "Owner" : "Premium"} Support
                     </Badge>
                   )}
                 </div>
