@@ -57,6 +57,8 @@ export function TestimonialSubmitDialog() {
     setOpen(isOpen);
     if (isOpen) {
       fetchAnalyses();
+      // Reset form data with default 5 stars when opening
+      setFormData({ display_name: "", age: "", testimonial_text: "", analysis_id: "", star_rating: 5 });
     }
   };
 
