@@ -17,7 +17,8 @@ import {
   Star,
   MapPin,
   Ticket,
-  Key
+  Key,
+  Percent
 } from "lucide-react";
 
 interface DashboardStat {
@@ -426,7 +427,20 @@ export default function AdminDashboard() {
                   <Ticket className="w-8 h-8 text-amber-500 mb-3" />
                   <p className="font-semibold">Promocodes</p>
                   <p className="text-sm text-muted-foreground">
-                    Codes für Premium & Lifetime erstellen
+                    Interne Promo-Codes verwalten
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/30 hover:border-primary/50 transition-colors cursor-pointer"
+                onClick={() => navigate("/admin/stripe-coupons")}
+              >
+                <CardContent className="p-6">
+                  <Percent className="w-8 h-8 text-primary mb-3" />
+                  <p className="font-semibold">Stripe Rabattcodes</p>
+                  <p className="text-sm text-muted-foreground">
+                    Stripe Coupons & Promocodes verwalten
                   </p>
                 </CardContent>
               </Card>
