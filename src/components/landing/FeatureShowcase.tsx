@@ -370,10 +370,10 @@ const AnalysisPreview = () => (
       <h3 className="text-xl font-bold mb-4">Detaillierte Analyse</h3>
       {[
         { label: "Gesichtssymmetrie", score: 7.2, color: "bg-emerald-500" },
-        { label: "Jawline Definition", score: 6.5, color: "bg-blue-500" },
-        { label: "Hautqualität", score: 5.8, color: "bg-orange-500" },
-        { label: "Augenbereich", score: 7.8, color: "bg-purple-500" },
-        { label: "Haare & Styling", score: 6.0, color: "bg-pink-500" },
+        { label: "Jawline Definition", score: 6.5, color: "bg-teal-500" },
+        { label: "Hautqualität", score: 5.8, color: "bg-lime-500" },
+        { label: "Augenbereich", score: 8.6, color: "bg-green-500" },
+        { label: "Haare & Styling", score: 6.0, color: "bg-cyan-500" },
       ].map((item) => (
         <div key={item.label} className="glass-card p-4 rounded-xl">
           <div className="flex items-center justify-between mb-2">
