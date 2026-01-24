@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCoachHistory } from "@/hooks/useCoachHistory";
 import { ConversationSidebar } from "@/components/coach/ConversationSidebar";
+import { CrisisHotlineCard } from "@/components/coach/CrisisHotlineCard";
 import { useToast } from "@/hooks/use-toast";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -25,6 +26,16 @@ import {
   Plus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+// Keywords that trigger crisis hotline display
+const CRISIS_KEYWORDS = [
+  'depression', 'depressionen', 'depressiv', 'deprimiert',
+  'suizid', 'selbstmord', 'umbringen', 'sterben wollen', 'nicht mehr leben',
+  'selbstverletzung', 'ritzen', 'cutting',
+  'essstörung', 'magersucht', 'bulimie', 'anorexie',
+  'panikattacke', 'angststörung',
+  'hoffnungslos', 'keinen sinn', 'aufgeben'
+];
 
 interface Message {
   role: "user" | "assistant";
@@ -88,6 +99,7 @@ export default function Coach() {
   const [isListening, setIsListening] = useState(false);
   const [speechPreview, setSpeechPreview] = useState("");
   const [userAnalysis, setUserAnalysis] = useState<UserAnalysis | null>(null);
+  const [showCrisisHotline, setShowCrisisHotline] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([
     "Was sollte ich zuerst verbessern?",
     "Skincare Routine für Anfänger",
@@ -104,6 +116,12 @@ export default function Coach() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
+
+  // Check for crisis keywords in messages
+  const checkForCrisisKeywords = useCallback((text: string) => {
+    const lowerText = text.toLowerCase();
+    return CRISIS_KEYWORDS.some(keyword => lowerText.includes(keyword));
+  }, []);
   
   // Chat history
   const {
@@ -390,6 +408,11 @@ export default function Coach() {
   }, []);
 
   const streamChat = useCallback(async (userMessage: string) => {
+    // Check for crisis keywords in user message
+    if (checkForCrisisKeywords(userMessage)) {
+      setShowCrisisHotline(true);
+    }
+
     const newMessages: Message[] = [...messages, { role: "user", content: userMessage }];
     setMessages(newMessages);
     setIsLoading(true);
@@ -512,6 +535,11 @@ export default function Coach() {
       // Save assistant message after streaming complete
       if (convId && assistantContent) {
         await saveMessage(convId, "assistant", assistantContent);
+        
+        // Check for crisis keywords in AI response
+        if (checkForCrisisKeywords(assistantContent)) {
+          setShowCrisisHotline(true);
+        }
       }
 
     } catch (error: any) {
@@ -736,6 +764,12 @@ export default function Coach() {
               )}
             </div>
           ))}
+          
+          {/* Crisis Hotline Card */}
+          {showCrisisHotline && (
+            <CrisisHotlineCard onDismiss={() => setShowCrisisHotline(false)} />
+          )}
+          
           <div ref={messagesEndRef} />
         </div>
       </main>
