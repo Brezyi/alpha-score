@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import { validateDisplayName } from "@/lib/displayNameValidation";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -112,6 +113,18 @@ const Register = () => {
         toast({
           title: "Passwörter stimmen nicht überein",
           description: "Bitte stelle sicher, dass beide Passwörter identisch sind.",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Validate display name for forbidden content
+      const nameValidation = validateDisplayName(displayName.trim());
+      if (!nameValidation.valid) {
+        toast({
+          title: "Ungültiger Anzeigename",
+          description: nameValidation.error,
           variant: "destructive",
         });
         setLoading(false);

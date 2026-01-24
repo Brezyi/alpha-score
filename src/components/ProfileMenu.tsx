@@ -63,6 +63,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDebounce } from "@/hooks/useDebounce";
+import { validateDisplayName } from "@/lib/displayNameValidation";
 
 // Helper to check if subscription expires within days
 const getExpirationWarning = (subscriptionEnd: string | null): { warning: boolean; daysLeft: number } => {
@@ -160,6 +161,15 @@ export function ProfileMenu() {
 
   const handleSaveProfile = async () => {
     const trimmedName = displayName.trim();
+    
+    // Validate display name for forbidden content
+    if (trimmedName) {
+      const nameValidation = validateDisplayName(trimmedName);
+      if (!nameValidation.valid) {
+        toast.error(nameValidation.error || "Dieser Anzeigename ist nicht erlaubt");
+        return;
+      }
+    }
     
     if (trimmedName && trimmedName.toLowerCase() !== profile?.display_name?.toLowerCase() && nameAvailable === false) {
       toast.error("Dieser Anzeigename ist bereits vergeben");
