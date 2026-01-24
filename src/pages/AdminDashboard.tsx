@@ -50,15 +50,45 @@ export default function AdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        // Calculate date ranges
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+        const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
         // Fetch total analyses count
         const { count: analysesCount } = await supabase
           .from('analyses')
           .select('*', { count: 'exact', head: true });
 
+        // Fetch analyses from this week
+        const { count: analysesThisWeek } = await supabase
+          .from('analyses')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', oneWeekAgo);
+
+        // Fetch analyses from last week (for comparison)
+        const { count: analysesLastWeek } = await supabase
+          .from('analyses')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', twoWeeksAgo)
+          .lt('created_at', oneWeekAgo);
+
+        // Calculate week-over-week percentage change for analyses
+        const analysesWeekChange = analysesLastWeek && analysesLastWeek > 0
+          ? Math.round(((analysesThisWeek || 0) - analysesLastWeek) / analysesLastWeek * 100)
+          : analysesThisWeek || 0;
+
         // Fetch total users with roles
         const { count: usersCount } = await supabase
           .from('user_roles')
           .select('*', { count: 'exact', head: true });
+
+        // Fetch users registered today
+        const { count: usersToday } = await supabase
+          .from('user_roles')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', todayStart);
 
         // Fetch open support tickets
         const { count: ticketsCount } = await supabase
@@ -103,18 +133,27 @@ export default function AdminDashboard() {
           setRegionStats(sortedRegions);
         }
 
+        // Format change strings with real data
+        const analysesChangeStr = analysesWeekChange >= 0 
+          ? `+${analysesWeekChange}% diese Woche` 
+          : `${analysesWeekChange}% diese Woche`;
+
+        const usersTodayStr = (usersToday || 0) > 0 
+          ? `+${usersToday} heute` 
+          : "Keine heute";
+
         setStats([
           { 
             label: "Gesamt-Analysen", 
             value: analysesCount || 0, 
             icon: BarChart3,
-            change: "+12% diese Woche"
+            change: analysesChangeStr
           },
           { 
             label: "Registrierte Nutzer", 
             value: usersCount || 0, 
             icon: Users,
-            change: "+5 heute"
+            change: usersTodayStr
           },
           { 
             label: "Support-Tickets", 
