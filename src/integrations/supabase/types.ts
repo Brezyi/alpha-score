@@ -1471,6 +1471,10 @@ export type Database = {
         Args: { p_first_name: string; p_last_name: string }
         Returns: boolean
       }
+      update_user_sensitive_data: {
+        Args: { p_first_name: string; p_last_name: string }
+        Returns: boolean
+      }
       update_user_streak: {
         Args: { p_user_id: string }
         Returns: {
