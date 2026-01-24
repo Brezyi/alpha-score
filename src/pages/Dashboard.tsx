@@ -707,74 +707,108 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Score Chart */}
+        {/* Score Chart - Clean Style */}
         {chartData.length >= 2 && (
           <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-scale-in" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Score-Verlauf</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Score-Entwicklung
+              </h2>
               <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-0.5 rounded-full bg-primary" />
+                  <div className="w-3 h-3 rounded-full bg-primary" />
                   <span className="text-muted-foreground">Aktuell</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-3 h-0.5 rounded-full bg-primary/40 border-dashed border border-primary" />
+                  <div className="w-3 h-3 rounded-full bg-primary/30 border border-dashed border-primary" />
                   <span className="text-muted-foreground">Potenzial</span>
                 </div>
               </div>
             </div>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData}>
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <YAxis 
-                    domain={[0, 10]}
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => value.toFixed(1)}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                    }}
-                    labelStyle={{ color: "hsl(var(--foreground))" }}
-                    formatter={(value: number, name: string) => [
-                      value?.toFixed(1) || "—", 
-                      name === "score" ? "Aktuell" : "Potenzial"
-                    ]}
-                  />
-                  {/* Potential Line (dashed, behind) */}
-                  <Line
-                    type="monotone"
-                    dataKey="potential"
-                    stroke="hsl(var(--primary) / 0.4)"
-                    strokeWidth={2}
-                    strokeDasharray="6 4"
-                    dot={{ fill: "hsl(var(--primary) / 0.4)", strokeWidth: 0, r: 3 }}
-                    activeDot={{ r: 5, fill: "hsl(var(--primary) / 0.6)" }}
-                    connectNulls
-                  />
-                  {/* Current Score Line (solid, front) */}
-                  <Line
-                    type="monotone"
-                    dataKey="score"
+            
+            <div className="relative h-48">
+              {/* Y-axis labels */}
+              <div className="absolute left-0 top-0 bottom-6 w-8 flex flex-col justify-between text-xs text-muted-foreground">
+                <span>10</span>
+                <span>7.5</span>
+                <span>5</span>
+                <span>2.5</span>
+                <span>0</span>
+              </div>
+              
+              {/* Chart area */}
+              <div className="absolute left-10 right-0 top-0 bottom-6 border-l border-b border-border/50">
+                {/* Grid lines */}
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="absolute left-0 right-0 border-t border-border/20" style={{ top: `${i * 25}%` }} />
+                ))}
+                
+                {/* Data visualization */}
+                <svg className="absolute inset-0 w-full h-full overflow-visible" preserveAspectRatio="none">
+                  {/* Potential line (dashed) */}
+                  {chartData.length > 1 && (
+                    <polyline
+                      fill="none"
+                      stroke="hsl(var(--primary) / 0.3)"
+                      strokeWidth="2"
+                      strokeDasharray="6 4"
+                      points={chartData.map((d, i) => {
+                        const x = (i / (chartData.length - 1)) * 100;
+                        const y = d.potential ? (1 - d.potential / 10) * 100 : 50;
+                        return `${x}%,${y}%`;
+                      }).join(' ')}
+                    />
+                  )}
+                  
+                  {/* Score line (solid) */}
+                  <polyline
+                    fill="none"
                     stroke="hsl(var(--primary))"
-                    strokeWidth={3}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 4 }}
-                    activeDot={{ r: 6, fill: "hsl(var(--primary))" }}
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    points={chartData.map((d, i) => {
+                      const x = (i / (chartData.length - 1)) * 100;
+                      const y = d.score ? (1 - d.score / 10) * 100 : 50;
+                      return `${x}%,${y}%`;
+                    }).join(' ')}
+                    className={hasAnimated ? '[stroke-dasharray:1000] [stroke-dashoffset:0] animate-[draw_1.5s_ease-out_forwards]' : ''}
                   />
-                </LineChart>
-              </ResponsiveContainer>
+                  
+                  {/* Data points */}
+                  {chartData.map((d, i) => {
+                    const x = (i / (chartData.length - 1)) * 100;
+                    const y = d.score ? (1 - d.score / 10) * 100 : 50;
+                    return (
+                      <g key={i}>
+                        <circle
+                          cx={`${x}%`}
+                          cy={`${y}%`}
+                          r="6"
+                          fill="hsl(var(--primary))"
+                          className="transition-transform hover:scale-125"
+                        />
+                        <circle
+                          cx={`${x}%`}
+                          cy={`${y}%`}
+                          r="3"
+                          fill="hsl(var(--background))"
+                        />
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+              
+              {/* X-axis labels (dates) */}
+              <div className="absolute left-10 right-0 bottom-0 flex justify-between text-xs text-muted-foreground">
+                {chartData.map((d, i) => (
+                  <span key={i} className={i === chartData.length - 1 ? "text-primary font-medium" : ""}>
+                    {d.date}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
         )}
