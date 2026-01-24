@@ -972,14 +972,21 @@ export default function Progress() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={shouldReduce ? { duration: 0.2 } : { delay: 0.6 }}
               >
-                <Card className="p-6 mb-8 bg-gradient-to-br from-primary/10 to-card border-primary/20 relative overflow-hidden">
-                  {/* Animated gradient background - only on desktop */}
+                <Card className="p-6 mb-8 bg-card border-primary/20 relative overflow-hidden">
+                  {/* Subtle corner glow effects */}
                   {!shouldReduce && (
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"
-                      animate={{ x: ["-100%", "100%"] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                    />
+                    <>
+                      <motion.div
+                        className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-primary/10 blur-3xl"
+                        animate={{ opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                      />
+                      <motion.div
+                        className="absolute -bottom-20 -left-20 w-40 h-40 rounded-full bg-primary/5 blur-3xl"
+                        animate={{ opacity: [0.2, 0.4, 0.2] }}
+                        transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+                      />
+                    </>
                   )}
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-4">
