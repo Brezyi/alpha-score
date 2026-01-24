@@ -371,7 +371,43 @@ const Login = () => {
       <div className="hidden lg:flex flex-1 relative bg-card overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 bg-gradient-radial from-primary/20 via-transparent to-transparent opacity-50" />
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl animate-pulse-slow" />
+        <div className="absolute bottom-1/4 right-1/4 w-[300px] h-[300px] bg-primary/8 rounded-full blur-3xl animate-float" style={{ animationDelay: "1s" }} />
+        
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(10)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full animate-float"
+              style={{ 
+                left: `${10 + (i * 9)}%`, 
+                top: `${15 + ((i * 13) % 60)}%`,
+                width: `${3 + (i % 3) * 2}px`,
+                height: `${3 + (i % 3) * 2}px`,
+                backgroundColor: `hsl(var(--primary) / ${0.15 + (i % 4) * 0.08})`,
+                animationDuration: `${4 + (i % 3) * 2}s`,
+                animationDelay: `${i * 0.4}s`
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Pulsing Rings */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          {[...Array(3)].map((_, i) => (
+            <div
+              key={`ring-${i}`}
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/10 animate-pulse-ring"
+              style={{
+                width: `${200 + i * 150}px`,
+                height: `${200 + i * 150}px`,
+                animationDelay: `${i * 0.8}s`,
+                animationDuration: "4s"
+              }}
+            />
+          ))}
+        </div>
         
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-16">
