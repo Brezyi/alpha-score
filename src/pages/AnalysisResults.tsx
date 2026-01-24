@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -21,9 +22,16 @@ import {
   Camera,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   X,
   Zap,
-  ArrowRight
+  ArrowRight,
+  Hexagon,
+  Square,
+  Droplets,
+  Eye,
+  Scissors,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,7 +46,22 @@ export default function AnalysisResults() {
   const [potentialImageUrl, setPotentialImageUrl] = useState<string | null>(null);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [viewedDetails, setViewedDetails] = useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem('analysis-viewed-details');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
   const { isPremium, loading: subscriptionLoading } = useSubscription();
+
+  // Persist viewed details to localStorage
+  useEffect(() => {
+    if (viewedDetails.size > 0) {
+      localStorage.setItem('analysis-viewed-details', JSON.stringify([...viewedDetails]));
+    }
+  }, [viewedDetails]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -832,57 +855,168 @@ export default function AnalysisResults() {
                   if (typeof value === 'string') return parseFloat(value) || fallback;
                   return fallback;
                 };
+
+                // Helper to extract issues array
+                const extractIssues = (value: any): string[] => {
+                  if (value && typeof value === 'object' && 'issues' in value && Array.isArray(value.issues)) {
+                    return value.issues;
+                  }
+                  return [];
+                };
+
+                // Helper to extract details string
+                const extractDetails = (value: any): string => {
+                  if (value && typeof value === 'object' && 'details' in value && typeof value.details === 'string') {
+                    return value.details;
+                  }
+                  return '';
+                };
                 
                 const featureScores = [
                   { 
+                    key: "face_symmetry",
                     label: "Gesichtssymmetrie", 
                     score: extractScore(detailedResults?.face_symmetry, Math.min(10, baseScore + 0.3)),
-                    color: "bg-emerald-500" 
+                    color: "bg-emerald-500",
+                    iconBg: "bg-emerald-500/20",
+                    iconColor: "text-emerald-500",
+                    Icon: Hexagon,
+                    issues: extractIssues(detailedResults?.face_symmetry),
+                    details: extractDetails(detailedResults?.face_symmetry)
                   },
                   { 
+                    key: "jawline",
                     label: "Jawline Definition", 
                     score: extractScore(detailedResults?.jawline, Math.min(10, baseScore - 0.2)),
-                    color: "bg-blue-500" 
+                    color: "bg-blue-500",
+                    iconBg: "bg-blue-500/20",
+                    iconColor: "text-blue-500",
+                    Icon: Square,
+                    issues: extractIssues(detailedResults?.jawline),
+                    details: extractDetails(detailedResults?.jawline)
                   },
                   { 
+                    key: "skin_quality",
                     label: "Hautqualität", 
                     score: extractScore(detailedResults?.skin_quality, Math.min(10, baseScore - 0.5)),
-                    color: "bg-orange-500" 
+                    color: "bg-orange-500",
+                    iconBg: "bg-orange-500/20",
+                    iconColor: "text-orange-500",
+                    Icon: Droplets,
+                    issues: extractIssues(detailedResults?.skin_quality),
+                    details: extractDetails(detailedResults?.skin_quality)
                   },
                   { 
+                    key: "eye_area",
                     label: "Augenbereich", 
                     score: extractScore(detailedResults?.eye_area, Math.min(10, baseScore + 0.5)),
-                    color: "bg-purple-500" 
+                    color: "bg-purple-500",
+                    iconBg: "bg-purple-500/20",
+                    iconColor: "text-purple-500",
+                    Icon: Eye,
+                    issues: extractIssues(detailedResults?.eye_area),
+                    details: extractDetails(detailedResults?.eye_area)
                   },
                   { 
+                    key: "hair_styling",
                     label: "Haare & Styling", 
                     score: extractScore(detailedResults?.hair_styling, Math.min(10, baseScore - 0.3)),
-                    color: "bg-pink-500" 
+                    color: "bg-pink-500",
+                    iconBg: "bg-pink-500/20",
+                    iconColor: "text-pink-500",
+                    Icon: Scissors,
+                    issues: extractIssues(detailedResults?.hair_styling),
+                    details: extractDetails(detailedResults?.hair_styling)
                   },
                 ];
                 
-                return featureScores.map((item, index) => (
-                  <motion.div 
-                    key={item.label} 
-                    className="glass-card p-4 rounded-xl bg-card border border-border/50"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.6 + index * 0.1 }}
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium">{item.label}</span>
-                      <span className="font-bold">{item.score.toFixed(1)}</span>
-                    </div>
-                    <div className="h-2 rounded-full bg-muted overflow-hidden">
-                      <motion.div
-                        initial={{ width: 0 }}
-                        animate={{ width: `${item.score * 10}%` }}
-                        transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
-                        className={`h-full rounded-full ${item.color}`}
-                      />
-                    </div>
-                  </motion.div>
-                ));
+                return featureScores.map((item, index) => {
+                  const hasDetails = item.issues.length > 0 || item.details;
+                  const hasBeenViewed = viewedDetails.has(item.key);
+                  const showPulse = hasDetails && !hasBeenViewed;
+                  
+                  const handleOpenChange = (open: boolean) => {
+                    if (open && !hasBeenViewed) {
+                      setViewedDetails(prev => new Set([...prev, item.key]));
+                    }
+                  };
+                  
+                  return (
+                    <Collapsible key={item.key} onOpenChange={handleOpenChange}>
+                      <motion.div 
+                        className="glass-card p-4 rounded-xl bg-card border border-border/50"
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.6 + index * 0.1 }}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center relative`}>
+                            <item.Icon className={`w-4 h-4 ${item.iconColor}`} />
+                            {hasDetails && (
+                              <>
+                                {showPulse && (
+                                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full animate-ping opacity-75" />
+                                )}
+                                <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full flex items-center justify-center">
+                                  <Info className="w-2 h-2 text-primary-foreground" />
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          <div className="flex-1 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">{item.label}</span>
+                              {hasDetails && !hasBeenViewed && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-primary/15 text-primary rounded-full">
+                                  Details
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold">{item.score.toFixed(1)}</span>
+                              {hasDetails && (
+                                <CollapsibleTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hover:bg-muted">
+                                    <ChevronDown className="w-4 h-4 transition-transform duration-200 data-[state=open]:rotate-180" />
+                                  </Button>
+                                </CollapsibleTrigger>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="h-2 rounded-full bg-muted overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${item.score * 10}%` }}
+                            transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
+                            className={`h-full rounded-full ${item.color}`}
+                          />
+                        </div>
+                        
+                        {hasDetails && (
+                          <CollapsibleContent className="mt-3 pt-3 border-t border-border/50">
+                            {item.details && (
+                              <p className="text-xs text-muted-foreground mb-2">{item.details}</p>
+                            )}
+                            {item.issues.length > 0 && (
+                              <div className="space-y-1">
+                                <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
+                                  <Info className="w-3 h-3" />
+                                  Verbesserungspotenzial:
+                                </span>
+                                <ul className="text-xs text-muted-foreground space-y-0.5 pl-4">
+                                  {item.issues.map((issue, i) => (
+                                    <li key={i} className="list-disc">{issue}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </CollapsibleContent>
+                        )}
+                      </motion.div>
+                    </Collapsible>
+                  );
+                });
               })()}
             </div>
           ) : (
