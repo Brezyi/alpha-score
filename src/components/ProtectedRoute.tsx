@@ -23,7 +23,7 @@ export function ProtectedRoute({
   const { user, loading: authLoading } = useAuth();
   const { role, loading: roleLoading } = useUserRole();
   const { loading: maintenanceLoading } = useMaintenanceContext();
-  const { isVerified, loading: adminPasswordLoading } = useAdminPassword();
+  const { isVerified, loading: adminPasswordLoading, status: adminPasswordStatus } = useAdminPassword();
   
   const [showAdminPasswordDialog, setShowAdminPasswordDialog] = useState(false);
   const [adminPasswordVerified, setAdminPasswordVerified] = useState(false);
@@ -38,6 +38,10 @@ export function ProtectedRoute({
   // Check if user has admin/owner role
   const isAdminOrOwner = role === "admin" || role === "owner";
 
+  // Determine if admin password verification is needed
+  // User needs verification if: route requires admin, user is admin/owner, and not yet verified
+  const needsAdminPasswordVerification = requiresAdminRole && isAdminOrOwner && !isVerified && !adminPasswordVerified;
+
   // Redirect when not authenticated (after loading completes)
   useEffect(() => {
     if (!authLoading && !user) {
@@ -47,18 +51,19 @@ export function ProtectedRoute({
 
   // Show admin password dialog when accessing admin routes
   useEffect(() => {
-    if (!roleLoading && !adminPasswordLoading && requiresAdminRole && isAdminOrOwner && !isVerified && !adminPasswordVerified) {
+    if (!roleLoading && !adminPasswordLoading && needsAdminPasswordVerification) {
+      // Always show dialog - either for setup (if no password) or verification
       setShowAdminPasswordDialog(true);
     }
-  }, [roleLoading, adminPasswordLoading, requiresAdminRole, isAdminOrOwner, isVerified, adminPasswordVerified]);
+  }, [roleLoading, adminPasswordLoading, needsAdminPasswordVerification]);
 
-  // Sync verified state
+  // Sync verified state - only when truly verified via the hook
   useEffect(() => {
-    if (isVerified) {
+    if (isVerified && !adminPasswordVerified) {
       setAdminPasswordVerified(true);
       setShowAdminPasswordDialog(false);
     }
-  }, [isVerified]);
+  }, [isVerified, adminPasswordVerified]);
 
   // Loading state
   const isLoading = authLoading || (roleLoading && maintenanceLoading) || (requiresAdminRole && isAdminOrOwner && adminPasswordLoading);
