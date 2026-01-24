@@ -35,6 +35,49 @@ const HowItWorks = () => {
 
   return (
     <section className="relative py-24 overflow-hidden" id="how-it-works" ref={ref}>
+      {/* Background Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-background via-primary/5 to-background" />
+      
+      {/* Animated Orbs */}
+      <div className="absolute top-1/3 left-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-3xl animate-pulse-slow" />
+      <div className="absolute bottom-1/3 right-1/4 w-[350px] h-[350px] bg-primary/8 rounded-full blur-3xl animate-float" style={{ animationDelay: "1.5s" }} />
+      
+      {/* Floating Particles */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(10)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full animate-float"
+            style={{ 
+              left: `${5 + (i * 10)}%`, 
+              top: `${15 + ((i * 17) % 60)}%`,
+              width: `${3 + (i % 3)}px`,
+              height: `${3 + (i % 3)}px`,
+              backgroundColor: `hsl(var(--primary) / ${0.12 + (i % 3) * 0.06})`,
+              animationDuration: `${4 + (i % 4) * 1.5}s`,
+              animationDelay: `${i * 0.3}s`
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Animated Lines */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(2)].map((_, i) => (
+          <div
+            key={`line-${i}`}
+            className="absolute h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent animate-shimmer"
+            style={{
+              top: `${35 + i * 30}%`,
+              left: 0,
+              right: 0,
+              animationDuration: `${4 + i}s`,
+              animationDelay: `${i * 0.7}s`
+            }}
+          />
+        ))}
+      </div>
+      
       <div className="container relative z-10 px-4">
         {/* Section Header */}
         <motion.div 
