@@ -583,18 +583,31 @@ export function ProfileMenu() {
 
             {/* Refund / Widerruf Button - for premium users with Stripe payments */}
             {isPremium && !isAdminGranted && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setProfileOpen(false);
-                  setRefundOpen(true);
-                }}
-                className="w-full text-muted-foreground"
-              >
-                <RotateCcw className="w-4 h-4 mr-2" />
-                Widerrufsrecht
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setProfileOpen(false);
+                    setRefundOpen(true);
+                  }}
+                  className="flex-1 text-muted-foreground"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Widerrufsrecht
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setProfileOpen(false);
+                    navigate("/refund-status");
+                  }}
+                  className="flex-1 text-muted-foreground"
+                >
+                  Anträge ansehen
+                </Button>
+              </div>
             )}
 
             {/* Admin-granted subscription hint */}
