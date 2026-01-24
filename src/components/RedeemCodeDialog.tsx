@@ -133,11 +133,8 @@ export function RedeemCodeDialog({ open, onOpenChange, onSuccess }: RedeemCodeDi
 
       if (redemptionError) throw redemptionError;
 
-      // Increment the usage count using SECURITY DEFINER function
-      const { error: incrementError } = await supabase
-        .rpc('increment_promo_code_usage', { promo_code_id: promoCode.id });
-
-      if (incrementError) console.error("Error updating usage count:", incrementError);
+      // Note: Promo code usage count is now auto-incremented via database trigger
+      // on promo_code_redemptions insert - no RPC call needed
 
       // Show success
       setSuccess(true);

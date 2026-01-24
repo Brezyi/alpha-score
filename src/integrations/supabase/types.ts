@@ -1090,7 +1090,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      user_testimonials_public: {
+        Row: {
+          age: number | null
+          created_at: string | null
+          display_name: string | null
+          id: string | null
+          is_approved: boolean | null
+          is_featured: boolean | null
+          score_after: number | null
+          score_before: number | null
+          star_rating: number | null
+          testimonial_text: string | null
+        }
+        Insert: {
+          age?: number | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          score_after?: number | null
+          score_before?: number | null
+          star_rating?: number | null
+          testimonial_text?: string | null
+        }
+        Update: {
+          age?: number | null
+          created_at?: string | null
+          display_name?: string | null
+          id?: string | null
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          score_after?: number | null
+          score_before?: number | null
+          star_rating?: number | null
+          testimonial_text?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       add_user_xp: {
