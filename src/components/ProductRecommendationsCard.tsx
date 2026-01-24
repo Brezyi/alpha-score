@@ -19,9 +19,10 @@ interface Product {
   description: string | null;
   targetIssues: string[];
   priceRange: string;
-  rating?: number; // Optional - not displayed since links go to search results
+  rating?: number;
   affiliateLink?: string | null;
   imageUrl?: string | null;
+  matchScore?: number; // How well this product matches user's issues
 }
 
 interface ProductRecommendationsCardProps {
@@ -29,6 +30,7 @@ interface ProductRecommendationsCardProps {
   loading: boolean;
   maxDisplay?: number;
   title?: string;
+  hasPersonalizedResults?: boolean;
 }
 
 const categoryIcons: Record<string, string> = {
@@ -60,6 +62,7 @@ export const ProductRecommendationsCard = ({
   loading,
   maxDisplay = 4,
   title = "Für dich empfohlen",
+  hasPersonalizedResults = false,
 }: ProductRecommendationsCardProps) => {
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -98,18 +101,30 @@ export const ProductRecommendationsCard = ({
     return null;
   }
 
-  const ProductItem = ({ product, index }: { product: Product; index: number }) => (
-    <motion.div
-      key={product.id}
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.05 }}
-      onClick={() => handleProductClick(product)}
-      className="flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted/70 transition-all group cursor-pointer"
-    >
-      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
-        {categoryIcons[product.category] || "📦"}
-      </div>
+  const ProductItem = ({ product, index }: { product: Product; index: number }) => {
+    const isHighMatch = product.matchScore && product.matchScore >= 5;
+    
+    return (
+      <motion.div
+        key={product.id}
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: index * 0.05 }}
+        onClick={() => handleProductClick(product)}
+        className={cn(
+          "flex items-start gap-3 p-3 rounded-xl bg-muted/50 hover:bg-muted/70 transition-all group cursor-pointer relative",
+          isHighMatch && "ring-1 ring-primary/30 bg-primary/5"
+        )}
+      >
+        {isHighMatch && (
+          <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded-full font-medium">
+            Top-Match
+          </div>
+        )}
+        
+        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-xl flex-shrink-0">
+          {categoryIcons[product.category] || "📦"}
+        </div>
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
@@ -120,39 +135,40 @@ export const ProductRecommendationsCard = ({
             <span className={cn("text-xs font-medium flex-shrink-0", priceLabels[product.priceRange]?.color)}>
               {priceLabels[product.priceRange]?.label || "€€"}
             </span>
+          </div>
+
+          {product.description && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+              {product.description}
+            </p>
+          )}
+
+          {product.targetIssues.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {product.targetIssues.slice(0, 3).map((issue) => (
+                <Badge
+                  key={issue}
+                  variant="secondary"
+                  className="text-[10px] px-1.5 py-0"
+                >
+                  {issue.replace(/_/g, " ")}
+                </Badge>
+              ))}
+            </div>
+          )}
         </div>
 
-        {product.description && (
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-            {product.description}
-          </p>
-        )}
-
-        {product.targetIssues.length > 0 && (
-          <div className="flex flex-wrap gap-1 mt-2">
-            {product.targetIssues.slice(0, 3).map((issue) => (
-              <Badge
-                key={issue}
-                variant="secondary"
-                className="text-[10px] px-1.5 py-0"
-              >
-                {issue.replace(/_/g, " ")}
-              </Badge>
-            ))}
-          </div>
-        )}
-      </div>
-
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-        onClick={(e) => handleBuyClick(product, e)}
-      >
-        <ShoppingCart className="w-4 h-4" />
-      </Button>
-    </motion.div>
-  );
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => handleBuyClick(product, e)}
+        >
+          <ShoppingCart className="w-4 h-4" />
+        </Button>
+      </motion.div>
+    );
+  };
 
   return (
     <>
@@ -162,10 +178,17 @@ export const ProductRecommendationsCard = ({
         className="p-5 rounded-2xl glass-card"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-lg flex items-center gap-2">
-            <ShoppingBag className="w-5 h-5 text-primary" />
-            {title}
-          </h3>
+          <div>
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <ShoppingBag className="w-5 h-5 text-primary" />
+              {title}
+            </h3>
+            {hasPersonalizedResults && (
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Basierend auf deiner Analyse
+              </p>
+            )}
+          </div>
           <Badge variant="outline" className="text-xs">
             {products.length} Produkte
           </Badge>
