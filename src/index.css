@@ -341,8 +341,46 @@
   }
 }
 
+/* Slower scanner line for hero section */
+@keyframes scanner-line-slow {
+  0% {
+    top: 0;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+/* Scanner point pulse animation */
+@keyframes scanner-point {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.5);
+    opacity: 1;
+  }
+}
+
 .animate-scanner-line {
   animation: scanner-line 2s ease-in-out infinite;
+}
+
+.animate-scanner-line-slow {
+  animation: scanner-line-slow 4s ease-in-out infinite;
+}
+
+.animate-scanner-point {
+  animation: scanner-point 2s ease-in-out infinite;
 }
 
 /* Slow pulse for scanner glow */
