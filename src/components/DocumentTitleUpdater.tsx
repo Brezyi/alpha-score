@@ -9,7 +9,7 @@ export const DocumentTitleUpdater = () => {
   const { settings } = useGlobalSettings();
 
   useEffect(() => {
-    const appName = settings.app_name || "GLOMAXXED AI";
+    const appName = settings.app_name || "GLOWMAXXED AI";
     document.title = appName;
   }, [settings.app_name]);
 

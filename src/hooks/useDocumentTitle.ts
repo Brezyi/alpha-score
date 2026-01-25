@@ -5,7 +5,7 @@ export const useDocumentTitle = (pageTitle?: string) => {
   const { settings } = useGlobalSettings();
 
   useEffect(() => {
-    const appName = settings.app_name || "GLOMAXXED AI";
+    const appName = settings.app_name || "GLOWMAXXED AI";
     
     if (pageTitle) {
       document.title = `${pageTitle} | ${appName}`;

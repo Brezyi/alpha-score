@@ -33,7 +33,7 @@ export default function AGB() {
           <section>
             <h2 className="text-xl font-semibold mb-4 text-foreground">§ 1 Geltungsbereich und Anbieter</h2>
             <p className="text-muted-foreground leading-relaxed">
-              (1) Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") regeln das Vertragsverhältnis zwischen der GLOMAXXED AI (nachfolgend "Anbieter", "wir" oder "uns") und allen natürlichen oder juristischen Personen (nachfolgend "Nutzer", "Kunde" oder "Sie"), die unsere Webapplikation GLOMAXXED AI (nachfolgend "App", "Plattform" oder "Dienst") nutzen.
+              (1) Diese Allgemeinen Geschäftsbedingungen (nachfolgend "AGB") regeln das Vertragsverhältnis zwischen der GLOWMAXXED AI (nachfolgend "Anbieter", "wir" oder "uns") und allen natürlichen oder juristischen Personen (nachfolgend "Nutzer", "Kunde" oder "Sie"), die unsere Webapplikation GLOWMAXXED AI (nachfolgend "App", "Plattform" oder "Dienst") nutzen.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               (2) Die AGB gelten für sämtliche über die App angebotenen Leistungen, einschließlich kostenloser und kostenpflichtiger Funktionen, unabhängig davon, ob der Zugriff über Desktop, Mobilgeräte oder andere Endgeräte erfolgt.
@@ -43,7 +43,7 @@ export default function AGB() {
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               (4) Der Anbieter ist:<br /><br />
-              <strong className="text-foreground">GLOMAXXED AI</strong><br />
+              <strong className="text-foreground">GLOWMAXXED AI</strong><br />
               Max Mustermann<br />
               Musterstraße 123<br />
               12345 Musterstadt<br />
@@ -80,13 +80,13 @@ export default function AGB() {
           <section>
             <h2 className="text-xl font-semibold mb-4 text-foreground">§ 3 Leistungsbeschreibung und Art der Analyse</h2>
             <p className="text-muted-foreground leading-relaxed">
-              (1) GLOMAXXED AI ist eine webbasierte Plattform für <strong className="text-foreground">Unterhaltungs- und Lifestyle-Zwecke</strong>, die Nutzern ermöglicht, ihr äußeres Erscheinungsbild mittels KI-gestützter Analyse einschätzen zu lassen und Verbesserungsvorschläge zu erhalten.
+              (1) GLOWMAXXED AI ist eine webbasierte Plattform für <strong className="text-foreground">Unterhaltungs- und Lifestyle-Zwecke</strong>, die Nutzern ermöglicht, ihr äußeres Erscheinungsbild mittels KI-gestützter Analyse einschätzen zu lassen und Verbesserungsvorschläge zu erhalten.
             </p>
             
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mt-4">
               <p className="text-amber-400 font-semibold mb-2">⚠️ WICHTIGER HAFTUNGSAUSSCHLUSS</p>
               <p className="text-muted-foreground leading-relaxed text-sm">
-                Die von GLOMAXXED AI bereitgestellten Analysen und Bewertungen sind <strong className="text-foreground">KI-basierte ästhetische Einschätzungen zu Unterhaltungszwecken</strong>. Sie stellen <strong className="text-foreground">KEINE medizinischen, dermatologischen, psychologischen, psychiatrischen oder therapeutischen Diagnosen, Beratungen oder Behandlungsempfehlungen</strong> dar.
+                Die von GLOWMAXXED AI bereitgestellten Analysen und Bewertungen sind <strong className="text-foreground">KI-basierte ästhetische Einschätzungen zu Unterhaltungszwecken</strong>. Sie stellen <strong className="text-foreground">KEINE medizinischen, dermatologischen, psychologischen, psychiatrischen oder therapeutischen Diagnosen, Beratungen oder Behandlungsempfehlungen</strong> dar.
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-3 text-sm">
                 <li>Die App ersetzt <strong className="text-foreground">keinen Arzt, Dermatologen, Psychologen oder anderen Fachexperten</strong></li>
@@ -255,7 +255,7 @@ export default function AGB() {
               Alternativ können Sie uns mittels einer eindeutigen Erklärung (z.B. ein mit der Post versandter Brief oder E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren:
             </p>
             <p className="text-muted-foreground leading-relaxed mt-2">
-              <strong className="text-foreground">GLOMAXXED AI</strong><br />
+              <strong className="text-foreground">GLOWMAXXED AI</strong><br />
               Musterstraße 123<br />
               12345 Musterstadt<br />
               E-Mail: widerruf@glowup-ai.de
@@ -335,7 +335,7 @@ export default function AGB() {
                     <div className="border-b border-border pb-3 print:border-gray-300">
                       <p className="text-foreground font-medium print:text-black">An:</p>
                       <p className="text-muted-foreground print:text-gray-700">
-                        GLOMAXXED AI<br />
+                        GLOWMAXXED AI<br />
                         Musterstraße 123<br />
                         12345 Musterstadt<br />
                         E-Mail: widerruf@glowup-ai.de
@@ -437,7 +437,7 @@ export default function AGB() {
             <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4">
               <p className="text-red-400 font-semibold mb-2">🚨 AUSDRÜCKLICHER HAFTUNGSAUSSCHLUSS</p>
               <p className="text-muted-foreground leading-relaxed text-sm">
-                <strong className="text-foreground">GLOMAXXED AI ist ein Unterhaltungs- und Lifestyle-Produkt.</strong> Jegliche Äußerungen, Scores, Bewertungen oder Empfehlungen der App sind <strong className="text-foreground">KEINE</strong>:
+                <strong className="text-foreground">GLOWMAXXED AI ist ein Unterhaltungs- und Lifestyle-Produkt.</strong> Jegliche Äußerungen, Scores, Bewertungen oder Empfehlungen der App sind <strong className="text-foreground">KEINE</strong>:
               </p>
               <ul className="list-disc list-inside text-muted-foreground space-y-1 ml-2 mt-2 text-sm">
                 <li>Medizinischen Diagnosen oder Gesundheitsberatungen</li>
