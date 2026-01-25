@@ -12,6 +12,7 @@ import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { MFAVerification } from "@/components/MFAVerification";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSecurityAlerts } from "@/hooks/useSecurityAlerts";
+import { Capacitor } from "@capacitor/core";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -36,6 +37,9 @@ const Login = () => {
   const { user, loading: authLoading } = useAuth();
   const { settings } = useGlobalSettings();
   const { sendSecurityAlert } = useSecurityAlerts();
+  
+  // Check if running as native app
+  const isNative = Capacitor.isNativePlatform();
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -210,6 +214,172 @@ const Login = () => {
     }
   };
 
+  // Native app layout - simplified, full screen form
+  if (isNative) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col safe-area-inset">
+        <div className="flex-1 flex flex-col justify-center px-6 py-8">
+          <div className="w-full max-w-sm mx-auto">
+            {/* Logo */}
+            <div className="mb-8 flex justify-center">
+              <ScannerLogo size="lg" labelSize="lg" />
+            </div>
+
+            {/* Header */}
+            <div className="mb-8 text-center">
+              <h1 className="text-2xl font-bold mb-2">Willkommen zurück</h1>
+              <p className="text-muted-foreground text-sm">
+                Melde dich an, um fortzufahren
+              </p>
+            </div>
+
+            {/* Lockout Warning */}
+            {isLocked && (
+              <Alert variant="destructive" className="mb-6">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription>
+                  Dein Konto ist vorübergehend gesperrt. Bitte warte{" "}
+                  <span className="font-bold">{formatTime(lockoutSeconds)}</span>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Failed Attempts Warning */}
+            {!isLocked && failedAttempts > 0 && failedAttempts < 5 && (
+              <Alert variant="default" className="mb-6 border-yellow-500/50 bg-yellow-500/10">
+                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                <AlertDescription className="text-yellow-500">
+                  {5 - failedAttempts} Versuche verbleibend
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="email">E-Mail</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onBlur={() => checkLockout(email)}
+                    className="pl-10 h-12 bg-card border-border text-base"
+                    disabled={isLocked}
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Passwort</Label>
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                    Vergessen?
+                  </Link>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 h-12 bg-card border-border text-base"
+                    disabled={isLocked}
+                    required
+                    autoComplete="current-password"
+                  />
+                </div>
+              </div>
+
+              <Button 
+                type="submit" 
+                variant="hero" 
+                size="lg" 
+                className="w-full h-12"
+                disabled={loading || googleLoading || isLocked}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Anmelden...
+                  </>
+                ) : (
+                  "Anmelden"
+                )}
+              </Button>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    oder
+                  </span>
+                </div>
+              </div>
+
+              {/* Google Login */}
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full h-12"
+                onClick={handleGoogleLogin}
+                disabled={loading || googleLoading}
+              >
+                {googleLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Verbinde...
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon />
+                    Mit Google anmelden
+                  </>
+                )}
+              </Button>
+            </form>
+
+            {/* Register Link */}
+            <p className="text-center text-muted-foreground mt-8 text-sm">
+              Noch kein Konto?{" "}
+              <Link to="/register" className="text-primary hover:underline font-medium">
+                Jetzt registrieren
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        {/* MFA Verification Dialog */}
+        <MFAVerification 
+          open={showMFADialog}
+          onVerified={() => {
+            setShowMFADialog(false);
+            toast({
+              title: "Willkommen zurück!",
+              description: "Du wirst zum Dashboard weitergeleitet.",
+            });
+            navigate("/dashboard");
+          }}
+          onCancel={() => {
+            setShowMFADialog(false);
+          }}
+        />
+      </div>
+    );
+  }
+
+  // Desktop/Web layout - two column design
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Side - Form */}
