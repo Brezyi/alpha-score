@@ -407,7 +407,10 @@ export type Database = {
           exercise_minutes: number | null
           id: string
           notes: string | null
+          sleep_bedtime: string | null
           sleep_hours: number | null
+          sleep_quality: number | null
+          sleep_waketime: string | null
           updated_at: string
           user_id: string
           water_liters: number | null
@@ -418,7 +421,10 @@ export type Database = {
           exercise_minutes?: number | null
           id?: string
           notes?: string | null
+          sleep_bedtime?: string | null
           sleep_hours?: number | null
+          sleep_quality?: number | null
+          sleep_waketime?: string | null
           updated_at?: string
           user_id: string
           water_liters?: number | null
@@ -429,7 +435,10 @@ export type Database = {
           exercise_minutes?: number | null
           id?: string
           notes?: string | null
+          sleep_bedtime?: string | null
           sleep_hours?: number | null
+          sleep_quality?: number | null
+          sleep_waketime?: string | null
           updated_at?: string
           user_id?: string
           water_liters?: number | null
@@ -1326,6 +1335,36 @@ export type Database = {
           first_name_encrypted?: string
           id?: string
           last_name_encrypted?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sleep_goals: {
+        Row: {
+          created_at: string
+          id: string
+          target_bedtime: string | null
+          target_hours: number
+          target_waketime: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          target_bedtime?: string | null
+          target_hours?: number
+          target_waketime?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          target_bedtime?: string | null
+          target_hours?: number
+          target_waketime?: string | null
           updated_at?: string
           user_id?: string
         }
