@@ -1664,6 +1664,63 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_logs_safe: {
+        Row: {
+          action_type: string | null
+          actor_id: string | null
+          created_at: string | null
+          id: string | null
+          metadata: Json | null
+          record_id: string | null
+          table_name: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type?: string | null
+          actor_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          metadata?: never
+          record_id?: string | null
+          table_name?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string | null
+          actor_id?: string | null
+          created_at?: string | null
+          id?: string | null
+          metadata?: never
+          record_id?: string | null
+          table_name?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
+      failed_login_attempts_masked: {
+        Row: {
+          attempted_at: string | null
+          created_at: string | null
+          email_masked: string | null
+          id: string | null
+          ip_masked: string | null
+        }
+        Insert: {
+          attempted_at?: string | null
+          created_at?: string | null
+          email_masked?: never
+          id?: string | null
+          ip_masked?: never
+        }
+        Update: {
+          attempted_at?: string | null
+          created_at?: string | null
+          email_masked?: never
+          id?: string | null
+          ip_masked?: never
+        }
+        Relationships: []
+      }
       mfa_backup_codes_safe: {
         Row: {
           created_at: string | null
@@ -1685,6 +1742,51 @@ export type Database = {
           used?: boolean | null
           used_at?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      product_recommendations_safe: {
+        Row: {
+          brand: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          image_url: string | null
+          is_active: boolean | null
+          name: string | null
+          price_range: string | null
+          rating: number | null
+          skin_types: string[] | null
+          target_issues: string[] | null
+        }
+        Insert: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          price_range?: string | null
+          rating?: number | null
+          skin_types?: string[] | null
+          target_issues?: string[] | null
+        }
+        Update: {
+          brand?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string | null
+          price_range?: string | null
+          rating?: number | null
+          skin_types?: string[] | null
+          target_issues?: string[] | null
         }
         Relationships: []
       }
@@ -1861,6 +1963,14 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_public_branding: {
+        Args: never
+        Returns: {
+          app_logo_url: string
+          app_name: string
+          favicon_url: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1877,6 +1987,7 @@ export type Database = {
         Args: { promo_code_id: string }
         Returns: undefined
       }
+      is_maintenance_mode: { Args: never; Returns: boolean }
       log_security_event: {
         Args: { _details?: Json; _event_type: string }
         Returns: undefined
