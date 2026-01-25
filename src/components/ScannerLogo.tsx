@@ -1,7 +1,14 @@
-import { ScanFace } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
-import glowmaxxedLogo from "@/assets/glowmaxxed-logo.png";
+import { useTheme } from "@/contexts/ThemeContext";
+
+// Import all colored logo variants
+import logoGreen from "@/assets/logo-green.png";
+import logoCyan from "@/assets/logo-cyan.png";
+import logoRed from "@/assets/logo-red.png";
+import logoYellow from "@/assets/logo-yellow.png";
+import logoPurple from "@/assets/logo-purple.png";
+import logoPink from "@/assets/logo-pink.png";
 
 interface ScannerLogoProps {
   size?: "sm" | "md" | "lg";
@@ -17,16 +24,20 @@ const sizeClasses = {
   lg: "w-12 h-12",
 };
 
-const iconSizeClasses = {
-  sm: "w-4 h-4",
-  md: "w-5 h-5",
-  lg: "w-6 h-6",
-};
-
 const labelSizeClasses = {
   sm: "text-sm",
   md: "text-lg",
   lg: "text-xl",
+};
+
+// Map accent colors to logo variants
+const logoMap: Record<string, string> = {
+  "#00FF88": logoGreen,
+  "#00D4FF": logoCyan,
+  "#FF6B6B": logoRed,
+  "#FFD93D": logoYellow,
+  "#C084FC": logoPurple,
+  "#F472B6": logoPink,
 };
 
 export function ScannerLogo({ 
@@ -37,7 +48,11 @@ export function ScannerLogo({
   animated = true 
 }: ScannerLogoProps) {
   const { settings } = useGlobalSettings();
+  const { accentColor } = useTheme();
   const [scannerActive, setScannerActive] = useState(animated);
+
+  // Get the correct logo based on accent color
+  const currentLogo = logoMap[accentColor] || logoGreen;
 
   // Cycle scanner animation
   useEffect(() => {
@@ -63,7 +78,7 @@ export function ScannerLogo({
             />
           ) : (
             <img 
-              src={glowmaxxedLogo} 
+              src={currentLogo} 
               alt={settings.app_name} 
               className={`${sizeClasses[size]} rounded-lg object-cover relative z-10`}
             />
