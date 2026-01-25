@@ -31,6 +31,11 @@ import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOptimizedAnimations } from "@/hooks/useReducedMotion";
 import { FaceFitnessExercises } from "@/components/FaceFitnessExercises";
+import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
+import { MobilePlanContent } from "@/components/mobile/MobilePlanContent";
+import { Capacitor } from "@capacitor/core";
+
+const isNative = Capacitor.isNativePlatform();
 
 type Task = {
   id: string;
@@ -235,6 +240,22 @@ const Plan = () => {
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </motion.div>
       </div>
+    );
+  }
+
+  // Native mobile layout
+  if (isNative && isPremium) {
+    return (
+      <MobileAppLayout title="Plan" showLogo={false}>
+        <MobilePlanContent
+          tasks={tasks}
+          loading={tasksLoading}
+          generating={generating}
+          latestScore={latestAnalysis?.looks_score ?? null}
+          onToggleTask={toggleTask}
+          onGeneratePlan={generatePersonalizedPlan}
+        />
+      </MobileAppLayout>
     );
   }
 
