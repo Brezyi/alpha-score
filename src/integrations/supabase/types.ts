@@ -1616,6 +1616,78 @@ export type Database = {
       }
     }
     Views: {
+      account_deletion_tokens_safe: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          used: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      admin_passwords_safe: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string | null
+          last_changed_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          last_changed_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string | null
+          last_changed_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      mfa_backup_codes_safe: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          used: boolean | null
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          used?: boolean | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          used?: boolean | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_testimonials_public: {
         Row: {
           age: number | null
@@ -1691,6 +1763,14 @@ export type Database = {
           _max_actions?: number
           _time_window?: unknown
           _user_id: string
+        }
+        Returns: boolean
+      }
+      check_sensitive_rate_limit: {
+        Args: {
+          _action_type: string
+          _max_actions?: number
+          _time_window?: unknown
         }
         Returns: boolean
       }
