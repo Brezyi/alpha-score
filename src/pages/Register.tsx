@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { validateDisplayName } from "@/lib/displayNameValidation";
+import { Capacitor } from "@capacitor/core";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -41,6 +42,7 @@ const Register = () => {
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { settings } = useGlobalSettings();
+  const isNative = Capacitor.isNativePlatform();
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -220,6 +222,217 @@ const Register = () => {
       setGoogleLoading(false);
     }
   };
+
+  // Native app layout - simplified, full screen form
+  if (isNative) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col safe-area-inset">
+        <div className="flex-1 overflow-y-auto px-6 py-6">
+          <div className="w-full max-w-sm mx-auto">
+            {/* Logo */}
+            <div className="mb-6 flex justify-center">
+              <ScannerLogo size="lg" labelSize="lg" />
+            </div>
+
+            {/* Header */}
+            <div className="mb-6 text-center">
+              <h1 className="text-2xl font-bold mb-2">Konto erstellen</h1>
+              <p className="text-muted-foreground text-sm">
+                Starte kostenlos – keine Kreditkarte nötig
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleRegister} className="space-y-4">
+              {/* Name Row */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="firstName" className="text-sm">Vorname</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="Max"
+                    value={firstName}
+                    onChange={(e) => handleNameChange(e.target.value, setFirstName)}
+                    className="h-11 bg-card border-border text-base"
+                    minLength={2}
+                    maxLength={50}
+                    required
+                    autoComplete="given-name"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="lastName" className="text-sm">Nachname</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Mustermann"
+                    value={lastName}
+                    onChange={(e) => handleNameChange(e.target.value, setLastName)}
+                    className="h-11 bg-card border-border text-base"
+                    minLength={2}
+                    maxLength={50}
+                    required
+                    autoComplete="family-name"
+                  />
+                </div>
+              </div>
+
+              {/* Display Name */}
+              <div className="space-y-1.5">
+                <Label htmlFor="displayName" className="text-sm">Anzeigename</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="displayName"
+                    type="text"
+                    placeholder="Dein Anzeigename"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    className="pl-10 h-11 bg-card border-border text-base"
+                    minLength={2}
+                    maxLength={30}
+                    required
+                    autoComplete="nickname"
+                  />
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-sm">E-Mail</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="pl-10 h-11 bg-card border-border text-base"
+                    required
+                    autoComplete="email"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-sm">Passwort</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Mind. 8 Zeichen"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="pl-10 h-11 bg-card border-border text-base"
+                    minLength={8}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+                {password && (
+                  <div className="space-y-1">
+                    <Progress value={passwordStrength.score} className="h-1" />
+                    <span className="text-xs text-muted-foreground">{passwordStrength.label}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Confirm Password */}
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword" className="text-sm">Passwort bestätigen</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    placeholder="Passwort wiederholen"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={`pl-10 h-11 bg-card border-border text-base ${!passwordsMatch ? "border-destructive" : ""}`}
+                    required
+                    autoComplete="new-password"
+                  />
+                </div>
+                {!passwordsMatch && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Passwörter stimmen nicht überein
+                  </p>
+                )}
+              </div>
+
+              <Button 
+                type="submit" 
+                variant="hero" 
+                size="lg" 
+                className="w-full h-12 mt-2"
+                disabled={loading || googleLoading || !passwordsMatch}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Registrieren...
+                  </>
+                ) : (
+                  "Registrieren"
+                )}
+              </Button>
+
+              {/* Divider */}
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">oder</span>
+                </div>
+              </div>
+
+              {/* Google */}
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                className="w-full h-12"
+                onClick={handleGoogleSignup}
+                disabled={loading || googleLoading}
+              >
+                {googleLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Verbinde...
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon />
+                    Mit Google registrieren
+                  </>
+                )}
+              </Button>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Mit der Registrierung akzeptierst du unsere{" "}
+                <Link to="/agb" className="text-primary hover:underline">AGB</Link> und{" "}
+                <Link to="/datenschutz" className="text-primary hover:underline">Datenschutz</Link>.
+              </p>
+            </form>
+
+            {/* Login Link */}
+            <p className="text-center text-muted-foreground mt-6 text-sm">
+              Bereits registriert?{" "}
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                Jetzt anmelden
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex">
