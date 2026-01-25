@@ -10,6 +10,15 @@ import logoYellow from "@/assets/logo-yellow.png";
 import logoPurple from "@/assets/logo-purple.png";
 import logoPink from "@/assets/logo-pink.png";
 
+// Preload all logos immediately
+const preloadLogos = () => {
+  [logoGreen, logoCyan, logoRed, logoYellow, logoPurple, logoPink].forEach((src) => {
+    const img = new Image();
+    img.src = src;
+  });
+};
+preloadLogos();
+
 interface ScannerLogoProps {
   size?: "sm" | "md" | "lg";
   showLabel?: boolean;
@@ -80,7 +89,8 @@ export function ScannerLogo({
             <img 
               src={currentLogo} 
               alt={settings.app_name} 
-              className={`${sizeClasses[size]} rounded-lg object-cover relative z-10`}
+              className={`${sizeClasses[size]} rounded-lg object-cover relative z-10 transition-none`}
+              key={accentColor}
             />
           )}
           
