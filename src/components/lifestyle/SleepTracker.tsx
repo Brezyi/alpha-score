@@ -14,13 +14,14 @@ import {
   Check, 
   Loader2,
   Settings2,
-  TrendingUp,
   Bed,
   Bell,
-  BellOff
+  BellOff,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -70,9 +71,6 @@ export function SleepTracker({ className }: SleepTrackerProps) {
   const [targetWaketime, setTargetWaketime] = useState("07:00");
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderMinutes, setReminderMinutes] = useState(30);
-  
-  // Weekly entries for stats
-  const [weeklyEntries, setWeeklyEntries] = useState<SleepEntry[]>([]);
 
   // Calculate sleep duration from bedtime and waketime
   const calculatedHours = useMemo(() => {
@@ -98,14 +96,6 @@ export function SleepTracker({ className }: SleepTrackerProps) {
     if (!sleepGoal?.target_hours) return 0;
     return Math.min(100, Math.round((calculatedHours / sleepGoal.target_hours) * 100));
   }, [calculatedHours, sleepGoal?.target_hours]);
-
-  // Weekly average
-  const weeklyAverage = useMemo(() => {
-    const entriesWithSleep = weeklyEntries.filter(e => e.sleep_hours && e.sleep_hours > 0);
-    if (entriesWithSleep.length === 0) return 0;
-    const total = entriesWithSleep.reduce((acc, e) => acc + (e.sleep_hours || 0), 0);
-    return Math.round((total / entriesWithSleep.length) * 10) / 10;
-  }, [weeklyEntries]);
 
   // Fetch data on mount
   useEffect(() => {
@@ -145,18 +135,6 @@ export function SleepTracker({ className }: SleepTrackerProps) {
         if (goalData.reminder_enabled !== undefined) setReminderEnabled(goalData.reminder_enabled);
         if (goalData.reminder_minutes_before) setReminderMinutes(goalData.reminder_minutes_before);
       }
-      
-      // Fetch last 7 days
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const { data: weekData } = await supabase
-        .from("lifestyle_entries")
-        .select("sleep_hours, sleep_bedtime, sleep_waketime, sleep_quality, entry_date")
-        .eq("user_id", user.id)
-        .gte("entry_date", weekAgo.toISOString().split("T")[0])
-        .order("entry_date", { ascending: false });
-      
-      if (weekData) setWeeklyEntries(weekData);
       
       setLoading(false);
     };
@@ -230,8 +208,7 @@ export function SleepTracker({ className }: SleepTrackerProps) {
       toast({ title: "Fehler beim Speichern", variant: "destructive" });
     } else {
       toast({ 
-        title: "Schlafziel gespeichert ✓",
-        description: reminderEnabled ? `Erinnerung ${reminderMinutes} Min vor Bettzeit aktiv` : undefined
+        title: "Schlafziel gespeichert ✓"
       });
       setSleepGoal({
         id: sleepGoal?.id || "",
@@ -264,175 +241,155 @@ export function SleepTracker({ className }: SleepTrackerProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg">
             <Bed className="w-5 h-5 text-indigo-400" />
-            Sleep Tracker
+            Schlaf
           </CardTitle>
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
+            size="sm" 
+            className="h-8 text-xs gap-1"
             onClick={() => setShowGoalSettings(!showGoalSettings)}
           >
-            <Settings2 className="w-4 h-4" />
+            <Settings2 className="w-3.5 h-3.5" />
+            Ziel
+            {showGoalSettings ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
           </Button>
         </div>
       </CardHeader>
       
-      <CardContent className="space-y-5">
+      <CardContent className="space-y-4">
         {/* Goal Settings Panel */}
-        {showGoalSettings && (
-          <motion.div 
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            className="bg-muted/50 rounded-lg p-4 space-y-4"
-          >
-            <h4 className="text-sm font-medium flex items-center gap-2">
-              <Target className="w-4 h-4 text-primary" />
-              Schlafziel einstellen
-            </h4>
-            
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs">Ziel (Stunden)</Label>
-                <Input
-                  type="number"
-                  value={targetHours}
-                  onChange={(e) => setTargetHours(Number(e.target.value))}
-                  min={4}
-                  max={12}
-                  step={0.5}
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Bettzeit</Label>
-                <Input
-                  type="time"
-                  value={targetBedtime}
-                  onChange={(e) => setTargetBedtime(e.target.value)}
-                  className="h-9"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Aufstehen</Label>
-                <Input
-                  type="time"
-                  value={targetWaketime}
-                  onChange={(e) => setTargetWaketime(e.target.value)}
-                  className="h-9"
-                />
-              </div>
-            </div>
-            
-            {/* Reminder Settings */}
-            {isSupported && (
-              <div className="border-t pt-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm flex items-center gap-2">
-                    {reminderEnabled ? (
-                      <Bell className="w-4 h-4 text-primary" />
-                    ) : (
-                      <BellOff className="w-4 h-4 text-muted-foreground" />
-                    )}
-                    Bettzeit-Erinnerung
-                  </Label>
-                  <Switch
-                    checked={reminderEnabled}
-                    onCheckedChange={setReminderEnabled}
-                  />
+        <AnimatePresence>
+          {showGoalSettings && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="bg-muted/50 rounded-lg p-4 space-y-4 mb-4">
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Target className="w-4 h-4 text-primary" />
+                  Schlafziel
                 </div>
                 
-                {reminderEnabled && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="flex items-center gap-3"
-                  >
-                    <Label className="text-xs text-muted-foreground whitespace-nowrap">
-                      Erinnere mich
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Stunden</Label>
+                    <Input
+                      type="number"
+                      value={targetHours}
+                      onChange={(e) => setTargetHours(Number(e.target.value))}
+                      min={4}
+                      max={12}
+                      step={0.5}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Bettzeit</Label>
+                    <Input
+                      type="time"
+                      value={targetBedtime}
+                      onChange={(e) => setTargetBedtime(e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Aufstehen</Label>
+                    <Input
+                      type="time"
+                      value={targetWaketime}
+                      onChange={(e) => setTargetWaketime(e.target.value)}
+                      className="h-9"
+                    />
+                  </div>
+                </div>
+                
+                {/* Reminder Settings */}
+                {isSupported && (
+                  <div className="flex items-center justify-between pt-2 border-t">
+                    <Label className="text-sm flex items-center gap-2">
+                      {reminderEnabled ? (
+                        <Bell className="w-4 h-4 text-primary" />
+                      ) : (
+                        <BellOff className="w-4 h-4 text-muted-foreground" />
+                      )}
+                      Erinnerung
                     </Label>
-                    <select
-                      value={reminderMinutes}
-                      onChange={(e) => setReminderMinutes(Number(e.target.value))}
-                      className="flex-1 h-9 rounded-md border bg-background px-3 text-sm"
-                    >
-                      <option value={15}>15 Min</option>
-                      <option value={30}>30 Min</option>
-                      <option value={45}>45 Min</option>
-                      <option value={60}>1 Stunde</option>
-                    </select>
-                    <span className="text-xs text-muted-foreground">vorher</span>
-                  </motion.div>
+                    <Switch
+                      checked={reminderEnabled}
+                      onCheckedChange={setReminderEnabled}
+                    />
+                  </div>
                 )}
+                
+                <Button onClick={handleSaveGoal} size="sm" className="w-full" disabled={saving}>
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                  Speichern
+                </Button>
               </div>
-            )}
-            
-            <Button onClick={handleSaveGoal} size="sm" className="w-full" disabled={saving}>
-              {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              Ziel speichern
-            </Button>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Main Sleep Input */}
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm flex items-center gap-2">
-                <Moon className="w-4 h-4 text-indigo-400" />
-                Eingeschlafen
-              </Label>
-              <Input
-                type="time"
-                value={bedtime}
-                onChange={(e) => setBedtime(e.target.value)}
-                className="text-center"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm flex items-center gap-2">
-                <Sun className="w-4 h-4 text-amber-400" />
-                Aufgewacht
-              </Label>
-              <Input
-                type="time"
-                value={waketime}
-                onChange={(e) => setWaketime(e.target.value)}
-                className="text-center"
-              />
-            </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <Moon className="w-3.5 h-3.5 text-indigo-400" />
+              Eingeschlafen
+            </Label>
+            <Input
+              type="time"
+              value={bedtime}
+              onChange={(e) => setBedtime(e.target.value)}
+              className="text-center"
+            />
           </div>
-          
-          {/* Calculated Duration */}
-          <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg p-4 text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <Clock className="w-4 h-4 text-indigo-400" />
-              <span className="text-sm text-muted-foreground">Schlafdauer</span>
-            </div>
-            <div className="text-3xl font-bold text-foreground">{calculatedHours}h</div>
-            
-            {sleepGoal && (
-              <div className="mt-3 space-y-1.5">
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Ziel: {sleepGoal.target_hours}h</span>
-                  <span className={cn(
-                    goalProgress >= 100 ? "text-green-500" : goalProgress >= 80 ? "text-amber-500" : "text-red-500"
-                  )}>
-                    {goalProgress}%
-                  </span>
-                </div>
-                <Progress value={goalProgress} className="h-2" />
-              </div>
-            )}
+          <div className="space-y-1.5">
+            <Label className="text-xs flex items-center gap-1.5">
+              <Sun className="w-3.5 h-3.5 text-amber-400" />
+              Aufgewacht
+            </Label>
+            <Input
+              type="time"
+              value={waketime}
+              onChange={(e) => setWaketime(e.target.value)}
+              className="text-center"
+            />
           </div>
         </div>
+        
+        {/* Calculated Duration */}
+        <div className="bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-lg p-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <Clock className="w-4 h-4 text-indigo-400" />
+            <span className="text-xs text-muted-foreground">Schlafdauer</span>
+          </div>
+          <div className="text-3xl font-bold">{calculatedHours}h</div>
+          
+          {sleepGoal && (
+            <div className="mt-3 space-y-1.5">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Ziel: {sleepGoal.target_hours}h</span>
+                <span className={cn(
+                  goalProgress >= 100 ? "text-green-500" : goalProgress >= 80 ? "text-amber-500" : "text-red-500"
+                )}>
+                  {goalProgress}%
+                </span>
+              </div>
+              <Progress value={goalProgress} className="h-1.5" />
+            </div>
+          )}
+        </div>
 
-        {/* Sleep Quality */}
+        {/* Sleep Quality - Simplified */}
         <div className="space-y-2">
-          <Label className="text-sm flex items-center gap-2">
-            <Star className="w-4 h-4 text-amber-400" />
-            Schlafqualität
+          <Label className="text-xs flex items-center gap-1.5">
+            <Star className="w-3.5 h-3.5 text-amber-400" />
+            Qualität
           </Label>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {[1, 2, 3, 4, 5].map((rating) => (
               <button
                 key={rating}
@@ -446,47 +403,28 @@ export function SleepTracker({ className }: SleepTrackerProps) {
               >
                 <Star 
                   className={cn(
-                    "w-5 h-5 mx-auto",
+                    "w-4 h-4 mx-auto",
                     quality >= rating ? "text-amber-400 fill-amber-400" : "text-muted-foreground"
                   )} 
                 />
               </button>
             ))}
           </div>
-          <div className="flex justify-between text-xs text-muted-foreground px-1">
-            <span>Schlecht</span>
-            <span>Perfekt</span>
-          </div>
         </div>
 
-        {/* Weekly Stats */}
-        {weeklyAverage > 0 && (
-          <div className="bg-muted/30 rounded-lg p-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 text-muted-foreground">
-                <TrendingUp className="w-4 h-4" />
-                Ø letzte 7 Tage
-              </span>
-              <span className="font-medium">{weeklyAverage}h</span>
-            </div>
-          </div>
-        )}
-
         {/* Save Button */}
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button 
-            onClick={handleSaveSleep} 
-            className="w-full"
-            disabled={saving}
-          >
-            {saving ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Check className="w-4 h-4 mr-2" />
-            )}
-            {todayEntry?.sleep_bedtime ? "Aktualisieren" : "Schlaf speichern"}
-          </Button>
-        </motion.div>
+        <Button 
+          onClick={handleSaveSleep} 
+          className="w-full"
+          disabled={saving}
+        >
+          {saving ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <Check className="w-4 h-4 mr-2" />
+          )}
+          {todayEntry?.sleep_bedtime ? "Aktualisieren" : "Speichern"}
+        </Button>
       </CardContent>
     </Card>
   );
