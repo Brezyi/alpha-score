@@ -60,7 +60,7 @@ export function ScannerLogo({
     
     const interval = setInterval(() => {
       setScannerActive(prev => !prev);
-    }, 4000);
+    }, 1500);
     return () => clearInterval(interval);
   }, [animated]);
 
