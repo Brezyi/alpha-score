@@ -60,7 +60,7 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-  // Fetch open tasks for additional context
+    // Fetch open tasks for additional context
     const { data: openTasks } = await supabaseClient
       .from('user_tasks')
       .select('title, category')
@@ -72,10 +72,19 @@ serve(async (req) => {
     const today = new Date().toISOString().split('T')[0];
     const { data: lifestyleData } = await supabaseClient
       .from('lifestyle_entries')
-      .select('sleep_hours, water_liters, exercise_minutes')
+      .select('sleep_hours, sleep_quality, water_liters, exercise_minutes')
       .eq('user_id', user.id)
       .eq('entry_date', today)
       .maybeSingle();
+
+    // Fetch last 7 days lifestyle for trends
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const { data: weekLifestyle } = await supabaseClient
+      .from('lifestyle_entries')
+      .select('sleep_hours, water_liters, exercise_minutes')
+      .eq('user_id', user.id)
+      .gte('entry_date', weekAgo)
+      .order('entry_date', { ascending: false });
 
     // Fetch current goals
     const { data: activeGoal } = await supabaseClient
@@ -86,6 +95,31 @@ serve(async (req) => {
       .is('achieved_at', null)
       .maybeSingle();
 
+    // Fetch face fitness sessions this week
+    const { data: faceFitnessSessions } = await supabaseClient
+      .from('face_fitness_sessions')
+      .select('exercise_key, duration_seconds')
+      .eq('user_id', user.id)
+      .gte('completed_at', weekAgo);
+
+    // Fetch user streaks
+    const { data: streakData } = await supabaseClient
+      .from('user_streaks')
+      .select('current_streak, longest_streak')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    // Calculate lifestyle averages
+    const avgSleep = weekLifestyle?.length 
+      ? (weekLifestyle.reduce((sum, d) => sum + (d.sleep_hours || 0), 0) / weekLifestyle.length).toFixed(1)
+      : null;
+    const avgWater = weekLifestyle?.length 
+      ? (weekLifestyle.reduce((sum, d) => sum + (d.water_liters || 0), 0) / weekLifestyle.length).toFixed(1)
+      : null;
+    const avgExercise = weekLifestyle?.length 
+      ? Math.round(weekLifestyle.reduce((sum, d) => sum + (d.exercise_minutes || 0), 0) / weekLifestyle.length)
+      : null;
+
     logStep("Context fetched", { 
       hasAnalysis: !!latestAnalysis, 
       hasProfile: !!profile,
@@ -93,33 +127,60 @@ serve(async (req) => {
       country: profile?.country,
       hasLifestyle: !!lifestyleData,
       hasGoal: !!activeGoal,
+      faceFitnessSessions: faceFitnessSessions?.length || 0,
+      streak: streakData?.current_streak || 0,
       openTasksCount: openTasks?.length || 0 
     });
 
-    // Build focused weakness list with details
+    // Build detailed weakness analysis with specific recommendations
+    const weaknessDetails: Record<string, string> = {
+      'Jawline': 'Mewing 20min/Tag, Jawline-Übungen, weniger Salz für weniger Wassereinlagerungen',
+      'Haut': 'Retinol Abends, Vitamin C Morgens, SPF 50 täglich, 3L Wasser minimum',
+      'Symmetrie': 'Schlafen auf dem Rücken, bewusst auf Körperhaltung achten, Nackendehnung',
+      'Haare': 'Minoxidil wenn Geheimratsecken, Biotin + Zink Supplements, weniger Hitze',
+      'Augen': '8h Schlaf minimum, weniger Screen-Zeit abends, Augencreme mit Koffein',
+      'Körper': 'Krafttraining 4x/Woche, Protein 1.6g/kg, Kaloriendefizit wenn nötig',
+      'Akne': 'Salicylsäure Cleanser, Benzoylperoxid Spots, Finger aus dem Gesicht',
+      'Lippen': 'Lippenbalsam mit SPF, viel Wasser, Peeling 2x/Woche',
+      'Nase': 'Konturierung mit Make-up möglich, sonst Akzeptanz oder Rhinoplastik',
+      'Augenbrauen': 'Professionelles Zupfen/Waxing, Castor Oil für Wachstum',
+      'Körperhaltung': 'Face Pulls, Rear Delt Flyes, Wandsitzen 5min täglich',
+      'Muskulatur': 'Progressive Overload, Compound-Übungen, ausreichend Schlaf für Regeneration'
+    };
+
     const weaknessList = latestAnalysis?.weaknesses?.length 
-      ? latestAnalysis.weaknesses.map((w: string, i: number) => `${i + 1}. ${w}`).join('\n')
-      : 'Noch keine Analyse';
+      ? latestAnalysis.weaknesses.map((w: string, i: number) => {
+          const detail = weaknessDetails[w] || '';
+          return `${i + 1}. ${w}${detail ? ` → ${detail}` : ''}`;
+        }).join('\n')
+      : 'Noch keine Analyse vorhanden';
     
     const priorityList = latestAnalysis?.priorities?.slice(0, 3).join(', ') || 'Nicht definiert';
-    const taskList = openTasks?.length 
-      ? openTasks.map((t: any) => t.title).join(', ')
-      : 'Keine';
 
-    // Gender-specific context
+    // Gender-specific detailed context
     const genderContext = profile?.gender === 'male' 
-      ? 'männlich - Fokus auf Maskulinität, Jawline, Körperbau, Ausstrahlung'
+      ? 'MÄNNLICH - Fokus auf: definierte Jawline, V-förmiger Oberkörper, tiefe Stimme, maskuline Ausstrahlung, Hunter Eyes, breite Schultern'
       : profile?.gender === 'female'
-      ? 'weiblich - Fokus auf feminine Harmonie, Symmetrie, Ausstrahlung'
-      : 'unbekannt';
+      ? 'WEIBLICH - Fokus auf: harmonische Proportionen, gepflegte Haut, feminine Gesichtszüge, Körperform, Ausstrahlung'
+      : 'Geschlecht unbekannt';
 
-    // Ethnic/regional context
+    // Regional context for beauty standards
+    const regionalContext: Record<string, string> = {
+      'Germany': 'Deutsche Standards: natürliches Aussehen bevorzugt, gepflegt aber nicht overdone',
+      'Austria': 'Österreichische Standards: ähnlich Deutschland, klassisch-gepflegt',
+      'Switzerland': 'Schweizer Standards: dezent-elegant, qualitätsbewusst',
+      'Turkey': 'Türkische Standards: gepflegter Bart bei Männern, volle Augenbrauen geschätzt',
+      'Russia': 'Russische Standards: klassische Schönheit, bei Frauen femininer Look wichtig',
+      'USA': 'US Standards: oft mehr Fokus auf Fitness/Körper, strahlend weiße Zähne'
+    };
     const ethnicContext = profile?.country 
-      ? `Herkunft: ${profile.country} - berücksichtige ethnische Merkmale und Standards`
+      ? regionalContext[profile.country] || `Region: ${profile.country}`
       : '';
 
-    // Build detailed scoring breakdown if available
+    // Build detailed scoring breakdown
     let scoringBreakdown = '';
+    let worstCategory = '';
+    let worstScore = 10;
     if (latestAnalysis?.detailed_results) {
       const results = latestAnalysis.detailed_results as Record<string, any>;
       const categories = ['symmetry', 'jawline', 'eyes', 'skin', 'hair', 'body'];
@@ -134,58 +195,113 @@ serve(async (req) => {
       
       const scores = categories
         .filter(cat => results[cat]?.score !== undefined)
-        .map(cat => `${categoryNames[cat]}: ${results[cat].score}/10`)
+        .map(cat => {
+          if (results[cat].score < worstScore) {
+            worstScore = results[cat].score;
+            worstCategory = categoryNames[cat];
+          }
+          return `${categoryNames[cat]}: ${results[cat].score}/10`;
+        })
         .join(', ');
       
       if (scores) {
-        scoringBreakdown = `\nDETAILLIERTE SCORES: ${scores}`;
+        scoringBreakdown = `\nDETAIL-SCORES: ${scores}`;
+        if (worstCategory) {
+          scoringBreakdown += `\nSCHWÄCHSTE KATEGORIE: ${worstCategory} (${worstScore}/10) - hier liegt das größte Potenzial!`;
+        }
       }
     }
 
-    const systemPrompt = `Du bist Alex, ein Kumpel der im Gym arbeitet und dir beim Aussehen hilft. Schreib wie ein normaler Mensch per WhatsApp – locker, kurz, echt.
+    // Build lifestyle context
+    let lifestyleContext = '';
+    if (lifestyleData) {
+      const issues: string[] = [];
+      if (lifestyleData.sleep_hours && lifestyleData.sleep_hours < 7) {
+        issues.push(`NUR ${lifestyleData.sleep_hours}h SCHLAF HEUTE - das zerstört deine Gains und Hautregeneration`);
+      }
+      if (lifestyleData.water_liters && lifestyleData.water_liters < 2) {
+        issues.push(`NUR ${lifestyleData.water_liters}L WASSER - viel zu wenig für gute Haut`);
+      }
+      if (lifestyleData.exercise_minutes && lifestyleData.exercise_minutes < 20) {
+        issues.push(`NUR ${lifestyleData.exercise_minutes}min Training - zu wenig für Körperverbesserung`);
+      }
+      
+      lifestyleContext = issues.length > 0 
+        ? `\n⚠️ KRITISCHE LIFESTYLE-PROBLEME HEUTE:\n${issues.join('\n')}`
+        : `\nLIFESTYLE HEUTE: ${lifestyleData.sleep_hours || '?'}h Schlaf, ${lifestyleData.water_liters || '?'}L Wasser, ${lifestyleData.exercise_minutes || 0}min Training`;
+    }
 
-SO SCHREIBST DU:
-- Wie ein echter Freund, nicht wie ein Bot
-- Kurz und knapp, max 1-2 Sätze
-- Keine Aufzählungen oder Listen
-- Kleine Rechtschreibfehler sind ok
-- Emojis sparsam (1 max pro Nachricht)
+    // Weekly averages context
+    let weeklyContext = '';
+    if (avgSleep || avgWater || avgExercise) {
+      weeklyContext = `\nWOCHEN-DURCHSCHNITT: ${avgSleep || '?'}h Schlaf, ${avgWater || '?'}L Wasser, ${avgExercise || 0}min Training/Tag`;
+    }
 
-BEISPIELE:
-- "ey jawline geht klar aber mewing würde helfen, probier das mal aus"
-- "haut ist easy zu fixen, hol dir ne gute creme und bleib dran 💪"
-- "jo dein score ist solide, mit bisschen arbeit packst du locker 7+"
-- "alter geh mal zum barber der macht das schon"
+    // Face fitness context
+    let faceFitnessContext = '';
+    if (faceFitnessSessions && faceFitnessSessions.length > 0) {
+      const totalMinutes = Math.round(faceFitnessSessions.reduce((sum, s) => sum + s.duration_seconds, 0) / 60);
+      faceFitnessContext = `\nFACE FITNESS DIESE WOCHE: ${faceFitnessSessions.length} Sessions, ${totalMinutes} Minuten total`;
+    } else {
+      faceFitnessContext = '\nFACE FITNESS: Macht keine Übungen - sollte damit anfangen!';
+    }
+
+    // Streak context
+    const streakContext = streakData?.current_streak 
+      ? `\nSTREAK: ${streakData.current_streak} Tage am Stück aktiv (Rekord: ${streakData.longest_streak})`
+      : '';
+
+    const systemPrompt = `Du bist Alex, ein brutaler aber hilfreicher Coach der im Gym arbeitet. Du gibst KEINE generischen 0815-Tipps sondern SPEZIFISCHE, PERSONALISIERTE Ratschläge basierend auf den echten Daten dieser Person.
+
+DEIN STIL:
+- Kurz und direkt, max 2-3 Sätze
+- Wie ein ehrlicher Freund per WhatsApp
+- Sprich KONKRETE Schwächen an, keine Allgemeinplätze
+- Wenn Lifestyle-Daten schlecht sind, sag es direkt
+- Gib EXAKTE Tipps (z.B. "2g Kreatin täglich" statt "nimm Supplements")
+
+❌ NIEMALS SAGEN:
+- "Trink genug Wasser" → stattdessen "Du trinkst nur 1.5L, brauchst mindestens 2.5L"
+- "Mach Face Exercises" → stattdessen "Deine Jawline ist 5/10, mach Mewing 20min täglich"
+- "Schlaf mehr" → stattdessen "6h Schlaf = dein Cortisol geht hoch, Haut wird schlechter"
+- "Achte auf deine Ernährung" → stattdessen "Bei Akne: kein Zucker, keine Milch für 2 Wochen"
+
+✅ SO ANTWORTEST DU:
+- "deine jawline ist 5/10 - mewing 3x20min am tag, in 3 monaten siehst du unterschied"
+- "haut bei 4/10, das ist fixbar: retinol abends, vitamin c morgens, 3L wasser"
+- "du schläfst zu wenig, bei 6h regeneriert deine haut nicht - mindestens 7.5h"
+- "face fitness machst du nicht - fang mit mewing an, 20min morgens"
 
 KONTEXT DIESER PERSON:
-- Geschlecht: ${genderContext}
-${ethnicContext ? `- ${ethnicContext}` : ''}
-- Score: ${latestAnalysis?.looks_score || '?'}/10${scoringBreakdown}
-- Schwächen: ${weaknessList}
-- Prioritäten: ${priorityList}
-${lifestyleData ? `
-LIFESTYLE HEUTE:
-- Schlaf: ${lifestyleData.sleep_hours ? `${lifestyleData.sleep_hours}h` : 'nicht getrackt'}
-- Wasser: ${lifestyleData.water_liters ? `${lifestyleData.water_liters}L` : 'nicht getrackt'}
-- Training: ${lifestyleData.exercise_minutes ? `${lifestyleData.exercise_minutes} Min` : 'nicht getrackt'}` : ''}
-${activeGoal ? `\nAKTIVES ZIEL: ${activeGoal.target_score}/10 Score erreichen` : ''}
+═══════════════════════════════════════
+${genderContext}
+${ethnicContext ? ethnicContext : ''}
 
-PERSONALISIERTE BERATUNG:
-- Beziehe dich auf die Schwächen dieser Person
-- Wenn Lifestyle-Daten schlecht sind (z.B. <6h Schlaf, <2L Wasser), sprich das an
-- Gib konkrete Tipps die zu den Schwächen passen
-- Berücksichtige Geschlecht und Herkunft bei Empfehlungen
+AKTUELLER SCORE: ${latestAnalysis?.looks_score || '?'}/10
+${scoringBreakdown}
 
-GRENZEN - Bei diesen Themen SOFORT abbrechen:
-- Depressionen, Suizidgedanken, Selbstverletzung → "ey das ist nicht mein bereich, dafür gibts profis die dir helfen können. red mal mit jemandem darüber 🙏"
-- Essstörungen, psychische Probleme → "sorry aber da bin ich der falsche, such dir bitte professionelle hilfe"
-- Medizinische Probleme → "da musst du zum arzt gehen, kann ich dir nicht helfen"
+SCHWÄCHEN MIT LÖSUNGEN:
+${weaknessList}
 
-WICHTIG:
-- Max 1-2 Sätze, mehr nicht
-- Keine förmliche Sprache
-- Kein "Bruder/Bro" in jedem Satz
-- Sei ehrlich aber nicht übertrieben motivierend`;
+PRIORITÄTEN: ${priorityList}
+${lifestyleContext}
+${weeklyContext}
+${faceFitnessContext}
+${streakContext}
+${activeGoal ? `\nZIEL: ${activeGoal.target_score}/10 erreichen` : ''}
+═══════════════════════════════════════
+
+WICHTIGE REGELN:
+1. Bezieh dich IMMER auf die konkreten Daten oben
+2. Nenne EXAKTE Zahlen wenn verfügbar (Score, Schlafstunden, etc.)
+3. Gib SPEZIFISCHE Produktempfehlungen (z.B. "CeraVe Cleanser" statt "gute Creme")
+4. Wenn jemand zu wenig schläft/trinkt, sprich das SOFORT an
+5. Keine motivierenden Floskeln - sei direkt und ehrlich
+
+GRENZEN (sofort abbrechen bei):
+- Depression/Suizid → "ey das ist ernst, dafür gibts profis. telefonseelsorge: 0800 111 0 111"
+- Essstörungen → "das ist medizinisch, geh bitte zum arzt"
+- Medizinische Fragen → "da kann ich nicht helfen, ab zum doc"`;
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) {
