@@ -3,6 +3,7 @@ import { ArrowLeft, Crown } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { LifestyleTracker } from "@/components/lifestyle/LifestyleTracker";
+import { SleepTracker } from "@/components/lifestyle/SleepTracker";
 import { SupplementTracker } from "@/components/lifestyle/SupplementTracker";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeeklyChallengeCard } from "@/components/challenges/WeeklyChallengeCard";
@@ -87,18 +88,22 @@ export default function Lifestyle() {
 
         <div className="grid md:grid-cols-2 gap-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <LifestyleTracker />
+            <SleepTracker />
           </motion.div>
           
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <GoalCard currentScore={currentScore} />
+            <LifestyleTracker />
           </motion.div>
           
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-            <WeeklyChallengeCard />
+            <GoalCard currentScore={currentScore} />
           </motion.div>
           
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <WeeklyChallengeCard />
+          </motion.div>
+          
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="md:col-span-2">
             <SupplementTracker />
           </motion.div>
         </div>
