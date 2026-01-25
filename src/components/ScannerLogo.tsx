@@ -1,7 +1,7 @@
 import { ScanFace } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
-import glomaxxedLogo from "@/assets/glomaxxed-logo-white.png";
+import glowmaxxedLogo from "@/assets/glowmaxxed-logo.png";
 
 interface ScannerLogoProps {
   size?: "sm" | "md" | "lg";
@@ -62,16 +62,11 @@ export function ScannerLogo({
               className={`${sizeClasses[size]} rounded-lg object-contain relative z-10`}
             />
           ) : (
-            <div className={`${sizeClasses[size]} rounded-lg relative z-10 overflow-hidden`}>
-              {/* Primary color background layer */}
-              <div className="absolute inset-0 bg-primary" />
-              {/* Logo with mask effect - white parts become transparent, showing primary color */}
-              <img 
-                src={glomaxxedLogo} 
-                alt={settings.app_name} 
-                className="w-full h-full object-contain relative z-10 mix-blend-screen"
-              />
-            </div>
+            <img 
+              src={glowmaxxedLogo} 
+              alt={settings.app_name} 
+              className={`${sizeClasses[size]} rounded-lg object-cover relative z-10`}
+            />
           )}
           
           {/* Scanner Line Animation */}
