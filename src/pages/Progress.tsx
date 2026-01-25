@@ -10,6 +10,9 @@ import { useGamification } from "@/hooks/useGamification";
 import { generateSignedUrls } from "@/hooks/useSignedImageUrl";
 import { ProgressImage } from "@/components/ProgressImage";
 import { AchievementsFullGrid } from "@/components/gamification/AchievementsFullGrid";
+import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
+import { MobileProgressContent } from "@/components/mobile/MobileProgressContent";
+import { Capacitor } from "@capacitor/core";
 import { 
   ArrowLeft, 
   TrendingUp, 
@@ -36,6 +39,8 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOptimizedAnimations } from "@/hooks/useReducedMotion";
+
+const isNative = Capacitor.isNativePlatform();
 
 interface DetailedResults {
   skin?: { score: number; details: string; issues?: string[] };
@@ -163,6 +168,21 @@ export default function Progress() {
           <p className="text-muted-foreground">Wird geladen...</p>
         </motion.div>
       </div>
+    );
+  }
+
+  // Native mobile layout
+  if (isNative && isPremium) {
+    return (
+      <MobileAppLayout title="Progress" showLogo={false}>
+        <MobileProgressContent
+          analyses={analyses}
+          loading={loading}
+          currentStreak={currentStreak}
+          longestStreak={longestStreak}
+          onRefresh={fetchAnalyses}
+        />
+      </MobileAppLayout>
     );
   }
 
