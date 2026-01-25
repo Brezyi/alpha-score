@@ -62,11 +62,14 @@ export function ScannerLogo({
               className={`${sizeClasses[size]} rounded-lg object-contain relative z-10`}
             />
           ) : (
-            <div className={`${sizeClasses[size]} rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center relative z-10 shadow-lg shadow-primary/20 p-1.5`}>
+            <div className={`${sizeClasses[size]} rounded-lg relative z-10 overflow-hidden`}>
+              {/* Primary color background layer */}
+              <div className="absolute inset-0 bg-primary" />
+              {/* Logo with mask effect - white parts become transparent, showing primary color */}
               <img 
                 src={glomaxxedLogo} 
                 alt={settings.app_name} 
-                className="w-full h-full object-contain brightness-0 invert"
+                className="w-full h-full object-contain relative z-10 mix-blend-screen"
               />
             </div>
           )}
