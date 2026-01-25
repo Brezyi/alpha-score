@@ -156,6 +156,9 @@ export function useLifestyle() {
       }
 
       await fetchTodayEntry();
+      toast({
+        title: "Gespeichert ✓"
+      });
       return true;
     } catch (error) {
       console.error("Error updating entry:", error);
@@ -186,8 +189,7 @@ export function useLifestyle() {
       
       await fetchTodaySupplements();
       toast({
-        title: "Erfolgreich",
-        description: "Supplement wurde protokolliert."
+        title: "Supplement protokolliert ✓"
       });
       return true;
     } catch (error) {
@@ -195,6 +197,34 @@ export function useLifestyle() {
       toast({
         title: "Fehler",
         description: "Supplement konnte nicht protokolliert werden.",
+        variant: "destructive"
+      });
+      return false;
+    }
+  };
+
+  const deleteSupplementLog = async (logId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from("supplement_logs")
+        .delete()
+        .eq("id", logId)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      
+      await fetchTodaySupplements();
+      toast({
+        title: "Eintrag gelöscht ✓"
+      });
+      return true;
+    } catch (error) {
+      console.error("Error deleting supplement log:", error);
+      toast({
+        title: "Fehler",
+        description: "Eintrag konnte nicht gelöscht werden.",
         variant: "destructive"
       });
       return false;
@@ -221,8 +251,7 @@ export function useLifestyle() {
       
       await fetchSupplements();
       toast({
-        title: "Erfolgreich",
-        description: `${name} wurde hinzugefügt.`
+        title: `${name} hinzugefügt ✓`
       });
       return data;
     } catch (error) {
@@ -264,6 +293,7 @@ export function useLifestyle() {
     loading,
     updateTodayEntry,
     logSupplement,
+    deleteSupplementLog,
     createCustomSupplement,
     refetch: async () => {
       await Promise.all([
