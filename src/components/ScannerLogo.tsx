@@ -1,6 +1,7 @@
 import { ScanFace } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
+import glomaxxedLogo from "@/assets/glomaxxed-logo.png";
 
 interface ScannerLogoProps {
   size?: "sm" | "md" | "lg";
@@ -54,9 +55,9 @@ export function ScannerLogo({
         {/* Scanner Container */}
         <div className={`relative ${sizeClasses[size]}`}>
           {/* Base Logo */}
-          {settings.app_logo_url ? (
+          {(settings.app_logo_url || glomaxxedLogo) ? (
             <img 
-              src={settings.app_logo_url} 
+              src={settings.app_logo_url || glomaxxedLogo} 
               alt={settings.app_name} 
               className={`${sizeClasses[size]} rounded-lg object-contain relative z-10`}
             />
