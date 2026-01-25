@@ -15,7 +15,7 @@ const buttonVariants = cva(
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
-        // GLOMAXXED AI Premium Variants
+        // GLOWMAXXED AI Premium Variants
         hero: "bg-primary text-primary-foreground font-bold hover:bg-primary/90 shadow-[0_0_30px_hsl(var(--primary)/0.3)] hover:shadow-[0_0_50px_hsl(var(--primary)/0.5)] hover:scale-105",
         premium: "bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-bold shadow-[0_0_20px_hsl(var(--primary)/0.2)] hover:shadow-[0_0_40px_hsl(var(--primary)/0.4)] hover:scale-105",
         glass: "backdrop-blur-xl bg-white/10 border border-white/20 text-foreground hover:bg-white/20 hover:border-primary/50",

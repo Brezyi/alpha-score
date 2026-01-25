@@ -32,7 +32,7 @@ export default function Impressum() {
           <section>
             <h2 className="text-xl font-semibold mb-4 text-foreground">Anbieter und Verantwortlicher</h2>
             <p className="text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">GLOMAXXED AI</strong><br />
+              <strong className="text-foreground">GLOWMAXXED AI</strong><br />
               Max Mustermann<br />
               Musterstraße 123<br />
               12345 Musterstadt<br />
@@ -108,7 +108,7 @@ export default function Impressum() {
           <section className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-6">
             <h2 className="text-xl font-semibold mb-4 text-amber-400">⚠️ Wichtiger Hinweis zum Dienst</h2>
             <p className="text-muted-foreground leading-relaxed">
-              <strong className="text-foreground">GLOMAXXED AI ist ein Unterhaltungs- und Lifestyle-Produkt.</strong>
+              <strong className="text-foreground">GLOWMAXXED AI ist ein Unterhaltungs- und Lifestyle-Produkt.</strong>
             </p>
             <p className="text-muted-foreground leading-relaxed mt-3">
               Die von dieser App bereitgestellten Analysen, Bewertungen und Empfehlungen sind 

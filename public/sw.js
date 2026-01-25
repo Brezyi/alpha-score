@@ -26,7 +26,7 @@ self.addEventListener('push', function(event) {
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || 'GLOMAXXED AI', options)
+    self.registration.showNotification(data.title || 'GLOWMAXXED AI', options)
   );
 });
 

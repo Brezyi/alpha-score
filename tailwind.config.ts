@@ -64,7 +64,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // GLOMAXXED AI Custom Colors - Red Accent
+        // GLOWMAXXED AI Custom Colors - Red Accent
         neon: {
           DEFAULT: "hsl(0, 100%, 50%)",
           50: "hsl(0, 100%, 95%)",

@@ -32,7 +32,7 @@ export default function Datenschutz() {
           {/* Einleitung */}
           <section>
             <p className="text-muted-foreground leading-relaxed">
-              Der Schutz Ihrer personenbezogenen Daten ist uns ein wichtiges Anliegen. In dieser Datenschutzerklärung informieren wir Sie darüber, welche personenbezogenen Daten wir bei der Nutzung unserer Webapplikation GLOMAXXED AI (nachfolgend "App") erheben, wie wir diese Daten verwenden und welche Rechte Ihnen zustehen.
+              Der Schutz Ihrer personenbezogenen Daten ist uns ein wichtiges Anliegen. In dieser Datenschutzerklärung informieren wir Sie darüber, welche personenbezogenen Daten wir bei der Nutzung unserer Webapplikation GLOWMAXXED AI (nachfolgend "App") erheben, wie wir diese Daten verwenden und welche Rechte Ihnen zustehen.
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
               Die Verarbeitung personenbezogener Daten erfolgt stets im Einklang mit der Datenschutz-Grundverordnung (DSGVO), dem Bundesdatenschutzgesetz (BDSG) und anderen anwendbaren datenschutzrechtlichen Bestimmungen.
@@ -46,7 +46,7 @@ export default function Datenschutz() {
               Verantwortlicher im Sinne der Datenschutz-Grundverordnung (DSGVO) ist:
             </p>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              <strong className="text-foreground">GLOMAXXED AI</strong><br />
+              <strong className="text-foreground">GLOWMAXXED AI</strong><br />
               Max Mustermann<br />
               Musterstraße 123<br />
               12345 Musterstadt<br />
