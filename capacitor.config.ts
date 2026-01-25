@@ -13,7 +13,7 @@ const config: CapacitorConfig = {
     allowMixedContent: true,
     backgroundColor: '#0B0B0B',
     // Enable edge-to-edge display
-    webContentsDebuggingEnabled: false
+    webContentsDebuggingEnabled: true
   },
   ios: {
     backgroundColor: '#0B0B0B',
