@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.d30bdb3d7c6b4134bde13d141f10bbeb',
+  appId: 'app.glowmaxxed.ai',
   appName: 'GLOWMAXXED AI',
   webDir: 'dist',
   server: {
@@ -9,13 +9,34 @@ const config: CapacitorConfig = {
     cleartext: true
   },
   android: {
-    allowMixedContent: true
+    allowMixedContent: true,
+    backgroundColor: '#0B0B0B',
+    // Enable edge-to-edge display
+    webContentsDebuggingEnabled: false
+  },
+  ios: {
+    backgroundColor: '#0B0B0B',
+    contentInset: 'automatic',
+    preferredContentMode: 'mobile',
+    scrollEnabled: true
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
+      launchAutoHide: true,
       backgroundColor: '#0B0B0B',
-      showSpinner: false
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true
+    },
+    StatusBar: {
+      style: 'dark',
+      backgroundColor: '#0B0B0B'
+    },
+    Keyboard: {
+      resize: 'body',
+      resizeOnFullScreen: true
     }
   }
 };

@@ -6,6 +6,15 @@
 
 /* GLOWMAXXED AI Design System - Masculine, High-End, Minimal */
 
+/* Native App Safe Areas */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --keyboard-height: 0px;
+}
+
 @layer base {
   :root {
     /* Core Dark Theme */
@@ -144,11 +153,36 @@
 
   html {
     @apply scroll-smooth;
+    /* Prevent overscroll on iOS */
+    overscroll-behavior: none;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    /* Safe area padding for native apps */
+    padding-top: var(--sat);
+    padding-right: var(--sar);
+    padding-bottom: max(var(--sab), var(--keyboard-height));
+    padding-left: var(--sal);
+    /* Prevent pull-to-refresh on mobile */
+    overscroll-behavior-y: contain;
+    /* Prevent text selection on touch */
+    -webkit-user-select: none;
+    user-select: none;
+    /* Smooth scrolling on iOS */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Allow text selection in input fields */
+  input, textarea, [contenteditable="true"] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Native app tap highlight */
+  a, button {
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
