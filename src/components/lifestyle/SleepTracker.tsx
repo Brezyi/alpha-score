@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { 
   Moon, 
   Sun,
@@ -14,13 +15,16 @@ import {
   Loader2,
   Settings2,
   TrendingUp,
-  Bed
+  Bed,
+  Bell,
+  BellOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 interface SleepTrackerProps {
   className?: string;
@@ -32,6 +36,8 @@ interface SleepGoal {
   target_hours: number;
   target_bedtime: string | null;
   target_waketime: string | null;
+  reminder_enabled?: boolean;
+  reminder_minutes_before?: number;
 }
 
 interface SleepEntry {
@@ -45,6 +51,7 @@ interface SleepEntry {
 export function SleepTracker({ className }: SleepTrackerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isSubscribed, isSupported, subscribe } = usePushNotifications();
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -61,6 +68,8 @@ export function SleepTracker({ className }: SleepTrackerProps) {
   const [targetHours, setTargetHours] = useState(8);
   const [targetBedtime, setTargetBedtime] = useState("23:00");
   const [targetWaketime, setTargetWaketime] = useState("07:00");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderMinutes, setReminderMinutes] = useState(30);
   
   // Weekly entries for stats
   const [weeklyEntries, setWeeklyEntries] = useState<SleepEntry[]>([]);
@@ -133,6 +142,8 @@ export function SleepTracker({ className }: SleepTrackerProps) {
         setTargetHours(goalData.target_hours);
         if (goalData.target_bedtime) setTargetBedtime(goalData.target_bedtime);
         if (goalData.target_waketime) setTargetWaketime(goalData.target_waketime);
+        if (goalData.reminder_enabled !== undefined) setReminderEnabled(goalData.reminder_enabled);
+        if (goalData.reminder_minutes_before) setReminderMinutes(goalData.reminder_minutes_before);
       }
       
       // Fetch last 7 days
@@ -190,25 +201,46 @@ export function SleepTracker({ className }: SleepTrackerProps) {
     if (!user) return;
     setSaving(true);
     
+    // If enabling reminders and not subscribed to push, subscribe first
+    if (reminderEnabled && !isSubscribed && isSupported) {
+      const subscribed = await subscribe();
+      if (!subscribed) {
+        toast({ 
+          title: "Benachrichtigungen erforderlich", 
+          description: "Bitte erlaube Benachrichtigungen für Schlaf-Erinnerungen.",
+          variant: "destructive" 
+        });
+        setSaving(false);
+        return;
+      }
+    }
+    
     const { error } = await supabase
       .from("user_sleep_goals")
       .upsert({
         user_id: user.id,
         target_hours: targetHours,
         target_bedtime: targetBedtime,
-        target_waketime: targetWaketime
+        target_waketime: targetWaketime,
+        reminder_enabled: reminderEnabled,
+        reminder_minutes_before: reminderMinutes
       }, { onConflict: "user_id" });
     
     if (error) {
       toast({ title: "Fehler beim Speichern", variant: "destructive" });
     } else {
-      toast({ title: "Schlafziel gespeichert ✓" });
+      toast({ 
+        title: "Schlafziel gespeichert ✓",
+        description: reminderEnabled ? `Erinnerung ${reminderMinutes} Min vor Bettzeit aktiv` : undefined
+      });
       setSleepGoal({
         id: sleepGoal?.id || "",
         user_id: user.id,
         target_hours: targetHours,
         target_bedtime: targetBedtime,
-        target_waketime: targetWaketime
+        target_waketime: targetWaketime,
+        reminder_enabled: reminderEnabled,
+        reminder_minutes_before: reminderMinutes
       });
       setShowGoalSettings(false);
     }
@@ -290,6 +322,49 @@ export function SleepTracker({ className }: SleepTrackerProps) {
                 />
               </div>
             </div>
+            
+            {/* Reminder Settings */}
+            {isSupported && (
+              <div className="border-t pt-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm flex items-center gap-2">
+                    {reminderEnabled ? (
+                      <Bell className="w-4 h-4 text-primary" />
+                    ) : (
+                      <BellOff className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    Bettzeit-Erinnerung
+                  </Label>
+                  <Switch
+                    checked={reminderEnabled}
+                    onCheckedChange={setReminderEnabled}
+                  />
+                </div>
+                
+                {reminderEnabled && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="flex items-center gap-3"
+                  >
+                    <Label className="text-xs text-muted-foreground whitespace-nowrap">
+                      Erinnere mich
+                    </Label>
+                    <select
+                      value={reminderMinutes}
+                      onChange={(e) => setReminderMinutes(Number(e.target.value))}
+                      className="flex-1 h-9 rounded-md border bg-background px-3 text-sm"
+                    >
+                      <option value={15}>15 Min</option>
+                      <option value={30}>30 Min</option>
+                      <option value={45}>45 Min</option>
+                      <option value={60}>1 Stunde</option>
+                    </select>
+                    <span className="text-xs text-muted-foreground">vorher</span>
+                  </motion.div>
+                )}
+              </div>
+            )}
             
             <Button onClick={handleSaveGoal} size="sm" className="w-full" disabled={saving}>
               {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}

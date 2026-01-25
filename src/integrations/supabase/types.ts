@@ -1344,6 +1344,8 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          reminder_enabled: boolean | null
+          reminder_minutes_before: number | null
           target_bedtime: string | null
           target_hours: number
           target_waketime: string | null
@@ -1353,6 +1355,8 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          reminder_enabled?: boolean | null
+          reminder_minutes_before?: number | null
           target_bedtime?: string | null
           target_hours?: number
           target_waketime?: string | null
@@ -1362,6 +1366,8 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          reminder_enabled?: boolean | null
+          reminder_minutes_before?: number | null
           target_bedtime?: string | null
           target_hours?: number
           target_waketime?: string | null
