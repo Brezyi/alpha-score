@@ -58,6 +58,8 @@ import { DailyChallengesCard } from "@/components/gamification/DailyChallengesCa
 import { AchievementsGrid } from "@/components/gamification/AchievementsGrid";
 import { useProductRecommendations } from "@/hooks/useProductRecommendations";
 import { ProductRecommendationsCard } from "@/components/ProductRecommendationsCard";
+import { PersonalizedInsights } from "@/components/dashboard/PersonalizedInsights";
+import { useLifestyle } from "@/hooks/useLifestyle";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -253,6 +255,9 @@ const Dashboard = () => {
   const { isAdminOrOwner, role } = useUserRole();
   const { currentStreak, longestStreak, isActiveToday, loading: streakLoading } = useStreak();
   const { settings } = useGlobalSettings();
+  
+  // Lifestyle data for personalized insights
+  const { todayEntry: lifestyleData, loading: lifestyleLoading } = useLifestyle();
   
   // Gamification
   const { xp, achievements, dailyChallenges, loading: gamificationLoading, challengesLoading, completeChallenge, checkAchievements } = useGamification();
@@ -763,6 +768,16 @@ const Dashboard = () => {
               </Link>
             </div>
           </div>
+        )}
+
+        {/* Personalized Insights based on weaknesses and lifestyle */}
+        {isPremiumUser && completedAnalyses.length > 0 && (
+          <PersonalizedInsights
+            weaknesses={completedAnalyses[0]?.weaknesses || []}
+            priorities={completedAnalyses[0]?.detailed_results?.priorities || []}
+            lifestyleData={lifestyleData}
+            gender={profile?.gender}
+          />
         )}
 
         {/* Detaillierte Analyse - Feature Scores */}

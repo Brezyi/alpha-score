@@ -60,7 +60,7 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    // Fetch open tasks for additional context
+  // Fetch open tasks for additional context
     const { data: openTasks } = await supabaseClient
       .from('user_tasks')
       .select('title, category')
@@ -68,11 +68,31 @@ serve(async (req) => {
       .eq('completed', false)
       .limit(5);
 
+    // Fetch today's lifestyle data
+    const today = new Date().toISOString().split('T')[0];
+    const { data: lifestyleData } = await supabaseClient
+      .from('lifestyle_entries')
+      .select('sleep_hours, water_liters, exercise_minutes')
+      .eq('user_id', user.id)
+      .eq('entry_date', today)
+      .maybeSingle();
+
+    // Fetch current goals
+    const { data: activeGoal } = await supabaseClient
+      .from('user_goals')
+      .select('target_score, category')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .is('achieved_at', null)
+      .maybeSingle();
+
     logStep("Context fetched", { 
       hasAnalysis: !!latestAnalysis, 
       hasProfile: !!profile,
       gender: profile?.gender,
       country: profile?.country,
+      hasLifestyle: !!lifestyleData,
+      hasGoal: !!activeGoal,
       openTasksCount: openTasks?.length || 0 
     });
 
@@ -137,12 +157,24 @@ BEISPIELE:
 - "jo dein score ist solide, mit bisschen arbeit packst du locker 7+"
 - "alter geh mal zum barber der macht das schon"
 
-KONTEXT:
+KONTEXT DIESER PERSON:
 - Geschlecht: ${genderContext}
 ${ethnicContext ? `- ${ethnicContext}` : ''}
 - Score: ${latestAnalysis?.looks_score || '?'}/10${scoringBreakdown}
 - Schwächen: ${weaknessList}
 - Prioritäten: ${priorityList}
+${lifestyleData ? `
+LIFESTYLE HEUTE:
+- Schlaf: ${lifestyleData.sleep_hours ? `${lifestyleData.sleep_hours}h` : 'nicht getrackt'}
+- Wasser: ${lifestyleData.water_liters ? `${lifestyleData.water_liters}L` : 'nicht getrackt'}
+- Training: ${lifestyleData.exercise_minutes ? `${lifestyleData.exercise_minutes} Min` : 'nicht getrackt'}` : ''}
+${activeGoal ? `\nAKTIVES ZIEL: ${activeGoal.target_score}/10 Score erreichen` : ''}
+
+PERSONALISIERTE BERATUNG:
+- Beziehe dich auf die Schwächen dieser Person
+- Wenn Lifestyle-Daten schlecht sind (z.B. <6h Schlaf, <2L Wasser), sprich das an
+- Gib konkrete Tipps die zu den Schwächen passen
+- Berücksichtige Geschlecht und Herkunft bei Empfehlungen
 
 GRENZEN - Bei diesen Themen SOFORT abbrechen:
 - Depressionen, Suizidgedanken, Selbstverletzung → "ey das ist nicht mein bereich, dafür gibts profis die dir helfen können. red mal mit jemandem darüber 🙏"
