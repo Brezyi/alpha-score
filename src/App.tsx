@@ -31,6 +31,7 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Coach = lazy(() => import("./pages/Coach"));
 const Plan = lazy(() => import("./pages/Plan"));
 const Progress = lazy(() => import("./pages/Progress"));
+const Lifestyle = lazy(() => import("./pages/Lifestyle"));
 const Features = lazy(() => import("./pages/Features"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const Datenschutz = lazy(() => import("./pages/Datenschutz"));
@@ -103,6 +104,7 @@ const App = () => (
                         <Route path="/coach" element={<Coach />} />
                         <Route path="/plan" element={<Plan />} />
                         <Route path="/progress" element={<Progress />} />
+                        <Route path="/lifestyle" element={<Lifestyle />} />
                         <Route path="/support" element={<Support />} />
                         <Route path="/refund-status" element={<RefundStatus />} />
                         <Route path="/features" element={<Features />} />
