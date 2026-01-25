@@ -20,21 +20,23 @@ const preloadLogos = () => {
 preloadLogos();
 
 interface ScannerLogoProps {
-  size?: "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg";
   showLabel?: boolean;
-  labelSize?: "sm" | "md" | "lg";
+  labelSize?: "xs" | "sm" | "md" | "lg";
   className?: string;
   animated?: boolean;
 }
 
 const sizeClasses = {
+  xs: "w-6 h-6",
   sm: "w-8 h-8",
   md: "w-10 h-10",
   lg: "w-12 h-12",
 };
 
 const labelSizeClasses = {
-  sm: "text-sm",
+  xs: "text-sm",
+  sm: "text-base",
   md: "text-lg",
   lg: "text-xl",
 };

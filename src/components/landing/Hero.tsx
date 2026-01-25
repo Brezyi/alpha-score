@@ -142,25 +142,25 @@ const Hero = memo(() => {
       {/* Grid Pattern - Light Mode */}
       <div className="absolute inset-0 dark:hidden block bg-[linear-gradient(rgba(0,0,0,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(0,0,0,0.04)_1px,transparent_1px)] bg-[size:100px_100px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_70%)]" />
 
-      <div className="container relative z-10 px-4 pt-20">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center max-w-7xl mx-auto">
+      <div className="container relative z-10 px-4 sm:px-6 pt-24 pb-8 md:pt-28">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center max-w-7xl mx-auto">
           {/* Left side - Text content */}
           <div className="text-center lg:text-left">
             {/* Badge */}
             <div 
               className={cn(
-                "inline-flex items-center gap-2 px-4 py-2 rounded-full glass mb-8 transition-all",
+                "inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full glass mb-6 sm:mb-8 transition-all",
                 shouldReduce ? "opacity-100" : "duration-500",
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
               )}
               style={shouldReduce ? {} : { transitionDelay: "100ms" }}
             >
-              <Zap className={cn("w-4 h-4 text-primary", !shouldReduce && "animate-pulse")} />
-              <span className="text-sm text-muted-foreground">KI-gestützte Looksmaxing Analyse</span>
+              <Zap className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary", !shouldReduce && "animate-pulse")} />
+              <span className="text-xs sm:text-sm text-muted-foreground">KI-gestützte Looksmaxing Analyse</span>
             </div>
 
             {/* Main Headline with staggered animation */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-4 sm:mb-6">
               <span 
                 className={cn(
                   "text-gradient glow-text inline-block",
@@ -187,7 +187,7 @@ const Hero = memo(() => {
             {/* Subheadline */}
             <p 
               className={cn(
-                "text-xl md:text-2xl text-muted-foreground max-w-2xl lg:max-w-none mb-4",
+                "text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto lg:mx-0 lg:max-w-none mb-3 sm:mb-4",
                 shouldReduce ? "opacity-100" : "transition-all duration-500",
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
               )}
@@ -198,7 +198,7 @@ const Hero = memo(() => {
 
             <p 
               className={cn(
-                "text-lg text-muted-foreground/80 max-w-xl lg:max-w-none mb-10",
+                "text-base sm:text-lg text-muted-foreground/80 max-w-xl mx-auto lg:mx-0 lg:max-w-none mb-8 sm:mb-10",
                 shouldReduce ? "opacity-100" : "transition-all duration-500",
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
               )}
@@ -210,15 +210,15 @@ const Hero = memo(() => {
             {/* CTA Buttons */}
             <div 
               className={cn(
-                "flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-4 mb-12 lg:mb-0",
+                "flex flex-col sm:flex-row items-center lg:items-start justify-center lg:justify-start gap-3 sm:gap-4 mb-8 lg:mb-0",
                 shouldReduce ? "opacity-100" : "transition-all duration-500",
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"
               )}
               style={shouldReduce ? {} : { transitionDelay: "700ms" }}
             >
-              <Link to="/register">
-                <Button variant="hero" size="xl" className="group relative overflow-hidden">
-                  <span className="relative z-10 flex items-center gap-2">
+              <Link to="/register" className="w-full sm:w-auto">
+                <Button variant="hero" size="xl" className="group relative overflow-hidden w-full sm:w-auto min-h-[48px]">
+                  <span className="relative z-10 flex items-center justify-center gap-2">
                     Kostenlos starten
                     <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                   </span>
@@ -227,20 +227,20 @@ const Hero = memo(() => {
                   )}
                 </Button>
               </Link>
-              <Link to="/login">
-                <Button variant="glass" size="xl">
+              <Link to="/login" className="w-full sm:w-auto">
+                <Button variant="glass" size="xl" className="w-full sm:w-auto min-h-[48px]">
                   Anmelden
                 </Button>
               </Link>
             </div>
           </div>
 
-          {/* Right side - Scanner visualization */}
+          {/* Right side - Scanner visualization - visible on all screens */}
           <div 
             className={cn(
-              "hidden lg:block",
+              "order-first lg:order-last",
               shouldReduce ? "opacity-100" : "transition-all duration-700",
-              isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-10"
+              isVisible ? "opacity-100 translate-y-0 lg:translate-x-0" : "opacity-0 translate-y-5 lg:translate-y-0 lg:translate-x-10"
             )}
             style={shouldReduce ? {} : { transitionDelay: "400ms" }}
           >

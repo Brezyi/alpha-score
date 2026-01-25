@@ -134,17 +134,17 @@ const HeroScanner = memo(() => {
   }, [shouldReduce]);
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto">
-      <div className="flex items-center gap-4">
-        {/* Left measurements */}
-        <div className="hidden sm:flex flex-col gap-3 w-24">
+    <div className="relative w-full max-w-lg lg:max-w-2xl mx-auto px-2 sm:px-0">
+      <div className="flex items-center gap-2 sm:gap-4">
+        {/* Left measurements - hidden on mobile */}
+        <div className="hidden md:flex flex-col gap-2 lg:gap-3 w-20 lg:w-24">
           {measurements.filter(m => m.x < 50).map((m, index) => (
             <div
               key={`${m.id}-${scanCycle}`}
-              className="text-right font-mono bg-background/95 px-3 py-2 rounded-lg border border-primary/40 backdrop-blur-sm"
+              className="text-right font-mono bg-background/95 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg border border-primary/40 backdrop-blur-sm"
             >
-              <div className="text-muted-foreground text-[10px] uppercase tracking-wider">{m.label}</div>
-              <div className="text-primary font-bold tabular-nums text-sm">
+              <div className="text-muted-foreground text-[9px] lg:text-[10px] uppercase tracking-wider">{m.label}</div>
+              <div className="text-primary font-bold tabular-nums text-xs lg:text-sm">
                 {m.prefix || ""}<AnimatedValue finalValue={m.finalValue} decimals={m.decimals} delay={index * 250} />{m.suffix}
               </div>
             </div>
@@ -152,16 +152,16 @@ const HeroScanner = memo(() => {
         </div>
 
         {/* Scanner Frame */}
-        <div className="relative flex-1 aspect-[3/4] max-w-sm mx-auto">
-          <div className="absolute inset-0 rounded-2xl border-2 border-primary/60 bg-background/95 overflow-hidden backdrop-blur-sm shadow-2xl shadow-primary/10">
+        <div className="relative flex-1 aspect-[3/4] max-w-[280px] sm:max-w-sm mx-auto">
+          <div className="absolute inset-0 rounded-xl sm:rounded-2xl border-2 border-primary/60 bg-background/95 overflow-hidden backdrop-blur-sm shadow-2xl shadow-primary/10">
             {/* Corner Brackets */}
-            <div className="absolute top-2 left-2 w-6 h-6 border-l-2 border-t-2 border-primary rounded-tl" />
-            <div className="absolute top-2 right-2 w-6 h-6 border-r-2 border-t-2 border-primary rounded-tr" />
-            <div className="absolute bottom-2 left-2 w-6 h-6 border-l-2 border-b-2 border-primary rounded-bl" />
-            <div className="absolute bottom-2 right-2 w-6 h-6 border-r-2 border-b-2 border-primary rounded-br" />
+            <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 w-4 h-4 sm:w-6 sm:h-6 border-l-2 border-t-2 border-primary rounded-tl" />
+            <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 w-4 h-4 sm:w-6 sm:h-6 border-r-2 border-t-2 border-primary rounded-tr" />
+            <div className="absolute bottom-1.5 left-1.5 sm:bottom-2 sm:left-2 w-4 h-4 sm:w-6 sm:h-6 border-l-2 border-b-2 border-primary rounded-bl" />
+            <div className="absolute bottom-1.5 right-1.5 sm:bottom-2 sm:right-2 w-4 h-4 sm:w-6 sm:h-6 border-r-2 border-b-2 border-primary rounded-br" />
 
             {/* Face Image Container */}
-            <div className="absolute inset-3 rounded-xl overflow-hidden">
+            <div className="absolute inset-2 sm:inset-3 rounded-lg sm:rounded-xl overflow-hidden">
               <img 
                 src={scannerStatue} 
                 alt="Face Analysis" 
@@ -178,36 +178,36 @@ const HeroScanner = memo(() => {
             </div>
 
             {/* Bottom status bar */}
-            <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <div className={`w-2 h-2 rounded-full bg-primary ${!shouldReduce ? 'animate-pulse' : ''}`} />
-                <span className="text-[9px] text-primary/80 font-mono uppercase tracking-wider">Scanning</span>
+            <div className="absolute bottom-1.5 sm:bottom-2 left-2 sm:left-3 right-2 sm:right-3 flex items-center justify-between">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <div className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary ${!shouldReduce ? 'animate-pulse' : ''}`} />
+                <span className="text-[8px] sm:text-[9px] text-primary/80 font-mono uppercase tracking-wider">Scanning</span>
               </div>
-              <span className="text-[9px] text-muted-foreground font-mono">15 Landmarks</span>
+              <span className="text-[8px] sm:text-[9px] text-muted-foreground font-mono">15 Landmarks</span>
             </div>
 
             {/* Top status bar */}
-            <div className="absolute top-2 left-3 right-3 flex items-center justify-between">
-              <span className="text-[9px] text-muted-foreground font-mono uppercase tracking-wider">AI Analysis</span>
-              <div className="flex items-center gap-1 bg-primary/20 px-2 py-0.5 rounded border border-primary/30">
-                <span className="text-[10px] text-primary font-mono font-bold">φ 1.618</span>
+            <div className="absolute top-1.5 sm:top-2 left-2 sm:left-3 right-2 sm:right-3 flex items-center justify-between">
+              <span className="text-[8px] sm:text-[9px] text-muted-foreground font-mono uppercase tracking-wider">AI Analysis</span>
+              <div className="flex items-center gap-1 bg-primary/20 px-1.5 sm:px-2 py-0.5 rounded border border-primary/30">
+                <span className="text-[9px] sm:text-[10px] text-primary font-mono font-bold">φ 1.618</span>
               </div>
             </div>
           </div>
 
-          {/* Outer glow effect */}
-          <div className="absolute -inset-6 rounded-3xl bg-primary/8 blur-3xl -z-10" />
+          {/* Outer glow effect - smaller on mobile */}
+          <div className="absolute -inset-4 sm:-inset-6 rounded-2xl sm:rounded-3xl bg-primary/8 blur-2xl sm:blur-3xl -z-10" />
         </div>
 
-        {/* Right measurements */}
-        <div className="hidden sm:flex flex-col gap-3 w-24">
+        {/* Right measurements - hidden on mobile */}
+        <div className="hidden md:flex flex-col gap-2 lg:gap-3 w-20 lg:w-24">
           {measurements.filter(m => m.x >= 50).map((m, index) => (
             <div
               key={`${m.id}-${scanCycle}`}
-              className="text-left font-mono bg-background/95 px-3 py-2 rounded-lg border border-primary/40 backdrop-blur-sm"
+              className="text-left font-mono bg-background/95 px-2 lg:px-3 py-1.5 lg:py-2 rounded-lg border border-primary/40 backdrop-blur-sm"
             >
-              <div className="text-muted-foreground text-[10px] uppercase tracking-wider">{m.label}</div>
-              <div className="text-primary font-bold tabular-nums text-sm">
+              <div className="text-muted-foreground text-[9px] lg:text-[10px] uppercase tracking-wider">{m.label}</div>
+              <div className="text-primary font-bold tabular-nums text-xs lg:text-sm">
                 {m.prefix || ""}<AnimatedValue finalValue={m.finalValue} decimals={m.decimals} delay={index * 250} />{m.suffix}
               </div>
             </div>
@@ -215,16 +215,29 @@ const HeroScanner = memo(() => {
         </div>
       </div>
 
-      {/* Mobile measurements - below image */}
-      <div className="flex sm:hidden flex-wrap justify-center gap-2 mt-4">
-        {measurements.map((m, index) => (
+      {/* Mobile measurements - below image - compact grid */}
+      <div className="grid grid-cols-3 md:hidden gap-1.5 sm:gap-2 mt-4">
+        {measurements.slice(0, 3).map((m, index) => (
           <div
             key={`${m.id}-mobile-${scanCycle}`}
-            className="font-mono bg-background/95 px-3 py-2 rounded-lg border border-primary/40 backdrop-blur-sm"
+            className="font-mono bg-background/95 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-primary/40 backdrop-blur-sm text-center"
           >
-            <div className="text-muted-foreground text-[9px] uppercase tracking-wider">{m.label}</div>
-            <div className="text-primary font-bold tabular-nums text-xs">
+            <div className="text-muted-foreground text-[8px] sm:text-[9px] uppercase tracking-wider truncate">{m.label}</div>
+            <div className="text-primary font-bold tabular-nums text-[11px] sm:text-xs">
               {m.prefix || ""}<AnimatedValue finalValue={m.finalValue} decimals={m.decimals} delay={index * 150} />{m.suffix}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 md:hidden gap-1.5 sm:gap-2 mt-1.5 sm:mt-2 max-w-[200px] sm:max-w-[240px] mx-auto">
+        {measurements.slice(3).map((m, index) => (
+          <div
+            key={`${m.id}-mobile2-${scanCycle}`}
+            className="font-mono bg-background/95 px-2 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-primary/40 backdrop-blur-sm text-center"
+          >
+            <div className="text-muted-foreground text-[8px] sm:text-[9px] uppercase tracking-wider truncate">{m.label}</div>
+            <div className="text-primary font-bold tabular-nums text-[11px] sm:text-xs">
+              {m.prefix || ""}<AnimatedValue finalValue={m.finalValue} decimals={m.decimals} delay={(index + 3) * 150} />{m.suffix}
             </div>
           </div>
         ))}
@@ -232,26 +245,26 @@ const HeroScanner = memo(() => {
 
       {/* Final Score - Below Scanner */}
       {showScore && (
-        <div className="flex justify-center mt-6 animate-fade-in">
+        <div className="flex justify-center mt-4 sm:mt-6 animate-fade-in">
           <div className="relative">
-            {/* Glow rings */}
-            <div className="absolute inset-0 -m-6 rounded-full bg-primary/20 blur-2xl animate-pulse" />
-            <div className="absolute inset-0 -m-3 rounded-full bg-primary/30 blur-xl" />
+            {/* Glow rings - smaller on mobile */}
+            <div className="absolute inset-0 -m-4 sm:-m-6 rounded-full bg-primary/20 blur-xl sm:blur-2xl animate-pulse" />
+            <div className="absolute inset-0 -m-2 sm:-m-3 rounded-full bg-primary/30 blur-lg sm:blur-xl" />
             
             {/* Score container */}
-            <div className="relative bg-background/95 backdrop-blur-md px-8 py-5 rounded-2xl border-2 border-primary shadow-[0_0_30px_hsl(var(--primary)/0.4),0_0_60px_hsl(var(--primary)/0.2)]">
-              <div className="text-[11px] text-muted-foreground font-mono uppercase tracking-widest text-center mb-1">
+            <div className="relative bg-background/95 backdrop-blur-md px-5 sm:px-8 py-3 sm:py-5 rounded-xl sm:rounded-2xl border-2 border-primary shadow-[0_0_20px_hsl(var(--primary)/0.4),0_0_40px_hsl(var(--primary)/0.2)] sm:shadow-[0_0_30px_hsl(var(--primary)/0.4),0_0_60px_hsl(var(--primary)/0.2)]">
+              <div className="text-[10px] sm:text-[11px] text-muted-foreground font-mono uppercase tracking-widest text-center mb-0.5 sm:mb-1">
                 Looks Score
               </div>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-5xl font-bold text-primary tabular-nums drop-shadow-[0_0_10px_hsl(var(--primary))]">
+              <div className="flex items-baseline justify-center gap-0.5 sm:gap-1">
+                <span className="text-4xl sm:text-5xl font-bold text-primary tabular-nums drop-shadow-[0_0_10px_hsl(var(--primary))]">
                   {scoreValue.toFixed(1)}
                 </span>
-                <span className="text-xl text-muted-foreground font-medium">/10</span>
+                <span className="text-lg sm:text-xl text-muted-foreground font-medium">/10</span>
               </div>
-              <div className="flex items-center justify-center gap-1.5 mt-2">
-                <div className="w-2 h-2 rounded-full bg-primary" />
-                <span className="text-[10px] text-primary font-mono uppercase tracking-wide">Scan Complete</span>
+              <div className="flex items-center justify-center gap-1 sm:gap-1.5 mt-1.5 sm:mt-2">
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary" />
+                <span className="text-[9px] sm:text-[10px] text-primary font-mono uppercase tracking-wide">Scan Complete</span>
               </div>
             </div>
           </div>
