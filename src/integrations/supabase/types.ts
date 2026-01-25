@@ -352,6 +352,30 @@ export type Database = {
         }
         Relationships: []
       }
+      face_fitness_sessions: {
+        Row: {
+          completed_at: string
+          duration_seconds: number
+          exercise_key: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          duration_seconds: number
+          exercise_key: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          duration_seconds?: number
+          exercise_key?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       failed_login_attempts: {
         Row: {
           attempted_at: string
@@ -373,6 +397,42 @@ export type Database = {
           email?: string
           id?: string
           ip_address?: string | null
+        }
+        Relationships: []
+      }
+      lifestyle_entries: {
+        Row: {
+          created_at: string
+          entry_date: string
+          exercise_minutes: number | null
+          id: string
+          notes: string | null
+          sleep_hours: number | null
+          updated_at: string
+          user_id: string
+          water_liters: number | null
+        }
+        Insert: {
+          created_at?: string
+          entry_date?: string
+          exercise_minutes?: number | null
+          id?: string
+          notes?: string | null
+          sleep_hours?: number | null
+          updated_at?: string
+          user_id: string
+          water_liters?: number | null
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          exercise_minutes?: number | null
+          id?: string
+          notes?: string | null
+          sleep_hours?: number | null
+          updated_at?: string
+          user_id?: string
+          water_liters?: number | null
         }
         Relationships: []
       }
@@ -819,6 +879,74 @@ export type Database = {
         }
         Relationships: []
       }
+      supplement_logs: {
+        Row: {
+          dosage: string | null
+          id: string
+          notes: string | null
+          supplement_id: string | null
+          taken_at: string
+          user_id: string
+        }
+        Insert: {
+          dosage?: string | null
+          id?: string
+          notes?: string | null
+          supplement_id?: string | null
+          taken_at?: string
+          user_id: string
+        }
+        Update: {
+          dosage?: string | null
+          id?: string
+          notes?: string | null
+          supplement_id?: string | null
+          taken_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplement_logs_supplement_id_fkey"
+            columns: ["supplement_id"]
+            isOneToOne: false
+            referencedRelation: "supplements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplements: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          default_dosage: string | null
+          description: string | null
+          id: string
+          is_system: boolean | null
+          name: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_dosage?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          name: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          default_dosage?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          name?: string
+        }
+        Relationships: []
+      }
       support_tickets: {
         Row: {
           admin_notes: string | null
@@ -929,6 +1057,69 @@ export type Database = {
           },
         ]
       }
+      transformation_submissions: {
+        Row: {
+          admin_notes: string | null
+          after_analysis_id: string | null
+          before_analysis_id: string | null
+          description: string | null
+          id: string
+          is_approved: boolean | null
+          is_featured: boolean | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          score_after: number | null
+          score_before: number | null
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          after_analysis_id?: string | null
+          before_analysis_id?: string | null
+          description?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score_after?: number | null
+          score_before?: number | null
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          after_analysis_id?: string | null
+          before_analysis_id?: string | null
+          description?: string | null
+          id?: string
+          is_approved?: boolean | null
+          is_featured?: boolean | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          score_after?: number | null
+          score_before?: number | null
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transformation_submissions_after_analysis_id_fkey"
+            columns: ["after_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transformation_submissions_before_analysis_id_fkey"
+            columns: ["before_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_achievements: {
         Row: {
           achievement_id: string
@@ -1029,6 +1220,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           weekly_report?: boolean
+        }
+        Relationships: []
+      }
+      user_goals: {
+        Row: {
+          achieved_at: string | null
+          category: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          target_date: string | null
+          target_score: number
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          target_date?: string | null
+          target_score: number
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string | null
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          target_date?: string | null
+          target_score?: number
+          user_id?: string
         }
         Relationships: []
       }
@@ -1232,6 +1456,50 @@ export type Database = {
           },
         ]
       }
+      user_weekly_challenges: {
+        Row: {
+          challenge_id: string | null
+          completed: boolean | null
+          completed_at: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          progress: number | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          progress?: number | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string | null
+          completed?: boolean | null
+          completed_at?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          progress?: number | null
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_weekly_challenges_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "weekly_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_xp: {
         Row: {
           created_at: string
@@ -1259,6 +1527,45 @@ export type Database = {
           total_xp?: number
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_challenges: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string
+          difficulty: string | null
+          duration_days: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          title: string
+          xp_reward: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description: string
+          difficulty?: string | null
+          duration_days?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          title: string
+          xp_reward?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string
+          difficulty?: string | null
+          duration_days?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          title?: string
+          xp_reward?: number | null
         }
         Relationships: []
       }
