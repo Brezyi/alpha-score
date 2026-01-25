@@ -80,10 +80,10 @@ export const useProductRecommendations = (userIssues?: string[]) => {
 
   const fetchRecommendations = useCallback(async () => {
     try {
+      // Use safe view that excludes affiliate links (served via edge function for tracking)
       const { data, error } = await supabase
-        .from("product_recommendations")
+        .from("product_recommendations_safe")
         .select("*")
-        .eq("is_active", true)
         .order("rating", { ascending: false });
 
       if (error) throw error;
@@ -97,7 +97,7 @@ export const useProductRecommendations = (userIssues?: string[]) => {
         targetIssues: p.target_issues || [],
         skinTypes: p.skin_types || [],
         priceRange: p.price_range,
-        affiliateLink: p.affiliate_link,
+        affiliateLink: null, // Affiliate links now served via edge function
         imageUrl: p.image_url,
         rating: p.rating,
         matchScore: 0,
