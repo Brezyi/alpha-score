@@ -15,6 +15,22 @@
   --keyboard-height: 0px;
 }
 
+/* Safe Area Utility Classes */
+.safe-area-top {
+  padding-top: max(var(--sat), 12px);
+}
+
+.safe-area-bottom {
+  padding-bottom: max(var(--sab), 8px);
+}
+
+.safe-area-inset {
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+}
+
 @layer base {
   :root {
     /* Core Dark Theme */
