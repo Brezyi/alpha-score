@@ -4,10 +4,11 @@ const config: CapacitorConfig = {
   appId: 'app.glowmaxxed.ai',
   appName: 'GLOWMAXXED AI',
   webDir: 'dist',
-  server: {
-    url: 'https://d30bdb3d-7c6b-4134-bde1-3d141f10bbeb.lovableproject.com?forceHideBadge=true',
-    cleartext: true
-  },
+  // Server URL removed for local builds - uncomment for hot reload development
+  // server: {
+  //   url: 'https://d30bdb3d-7c6b-4134-bde1-3d141f10bbeb.lovableproject.com?forceHideBadge=true',
+  //   cleartext: true
+  // },
   android: {
     allowMixedContent: true,
     backgroundColor: '#0B0B0B',
