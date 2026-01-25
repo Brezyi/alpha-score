@@ -54,28 +54,20 @@ export function ScannerLogo({
       <div className="relative">
         {/* Scanner Container */}
         <div className={`relative ${sizeClasses[size]}`}>
-          {/* Base Logo with Accent Color Overlay */}
-          <div className="relative">
-            {settings.app_logo_url ? (
-              <img 
-                src={settings.app_logo_url} 
-                alt={settings.app_name} 
-                className={`${sizeClasses[size]} rounded-lg object-contain relative z-10`}
-              />
-            ) : (
-              <>
-                <img 
-                  src={glowmaxxedLogo} 
-                  alt={settings.app_name} 
-                  className={`${sizeClasses[size]} rounded-lg object-cover relative z-10 brightness-0 invert`}
-                />
-                {/* Accent Color Overlay */}
-                <div 
-                  className={`absolute inset-0 ${sizeClasses[size]} rounded-lg bg-primary mix-blend-multiply z-10 pointer-events-none`}
-                />
-              </>
-            )}
-          </div>
+          {/* Base Logo */}
+          {settings.app_logo_url ? (
+            <img 
+              src={settings.app_logo_url} 
+              alt={settings.app_name} 
+              className={`${sizeClasses[size]} rounded-lg object-contain relative z-10`}
+            />
+          ) : (
+            <img 
+              src={glowmaxxedLogo} 
+              alt={settings.app_name} 
+              className={`${sizeClasses[size]} rounded-lg object-cover relative z-10`}
+            />
+          )}
           
           {/* Scanner Line Animation */}
           {animated && (
