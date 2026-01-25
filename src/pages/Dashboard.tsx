@@ -27,7 +27,8 @@ import {
   Info,
   Quote,
   CheckCircle2,
-  Circle
+  Circle,
+  Heart
 } from "lucide-react";
 import {
   Collapsible,
@@ -95,6 +96,14 @@ const quickActions = [
     description: "Dein personalisierter Looksmax-Plan",
     href: "/plan",
     color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    premium: true,
+  },
+  {
+    icon: Heart,
+    title: "Lifestyle",
+    description: "Tracke Schlaf, Wasser & Supplements",
+    href: "/lifestyle",
+    color: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
     premium: true,
   },
   {
