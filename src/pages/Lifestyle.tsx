@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Crown, AlertTriangle, Droplets, Moon, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -15,6 +15,9 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { Capacitor } from "@capacitor/core";
+import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
+import { MobileLifestyleContent } from "@/components/mobile/MobileLifestyleContent";
 
 // Health Alert Component
 function HealthAlerts() {
@@ -104,7 +107,12 @@ function HealthAlerts() {
 export default function Lifestyle() {
   const { user, loading: authLoading } = useAuth();
   const { isPremium, loading: subLoading, createCheckout } = useSubscription();
+  const { todayEntry, updateTodayEntry, loading: lifestyleLoading } = useLifestyle();
   const [currentScore, setCurrentScore] = useState<number | null>(null);
+  const [showSleepTracker, setShowSleepTracker] = useState(false);
+  const [showSupplements, setShowSupplements] = useState(false);
+  const isNative = Capacitor.isNativePlatform();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchLatestScore = async () => {
@@ -152,6 +160,28 @@ export default function Lifestyle() {
           </motion.div>
         </div>
       </div>
+    );
+  }
+
+  // Native mobile layout
+  if (isNative) {
+    return (
+      <MobileAppLayout title="Lifestyle" showLogo={false} showBack>
+        <MobileLifestyleContent
+          todayEntry={todayEntry ? {
+            sleep_hours: todayEntry.sleep_hours,
+            sleep_quality: null,
+            water_liters: todayEntry.water_liters,
+            exercise_minutes: todayEntry.exercise_minutes,
+            sleep_bedtime: null,
+            sleep_waketime: null
+          } : null}
+          onUpdateSleep={(hours) => updateTodayEntry({ sleep_hours: hours })}
+          onUpdateWater={(liters) => updateTodayEntry({ water_liters: liters })}
+          onOpenSleepTracker={() => setShowSleepTracker(true)}
+          onOpenSupplements={() => setShowSupplements(true)}
+        />
+      </MobileAppLayout>
     );
   }
 

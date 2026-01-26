@@ -26,6 +26,9 @@ import {
   Plus
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Capacitor } from "@capacitor/core";
+import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
+import { MobileCoachContent } from "@/components/mobile/MobileCoachContent";
 
 // Keywords that trigger crisis hotline display
 const CRISIS_KEYWORDS = [
@@ -93,6 +96,7 @@ interface UserAnalysis {
 }
 
 export default function Coach() {
+  const isNative = Capacitor.isNativePlatform();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -659,6 +663,28 @@ export default function Coach() {
           </Card>
         </main>
       </div>
+    );
+  }
+
+  // Native mobile layout
+  if (isNative) {
+    return (
+      <MobileAppLayout title="AI Coach" showLogo={false} showBack>
+        <MobileCoachContent
+          messages={messages}
+          isLoading={isLoading}
+          isListening={isListening}
+          speechSupported={isSpeechSupported}
+          suggestions={suggestions}
+          onSend={streamChat}
+          onStopStreaming={stopStreaming}
+          onToggleListening={toggleListening}
+          onNewConversation={handleNewConversation}
+        />
+        {showCrisisHotline && (
+          <CrisisHotlineCard onDismiss={() => setShowCrisisHotline(false)} />
+        )}
+      </MobileAppLayout>
     );
   }
 
