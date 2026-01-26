@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,27 +13,41 @@ import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
 import { Loader2 } from "lucide-react";
 
+// Check native platform immediately at module level (before React renders)
+const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
+const NATIVE_PLATFORM = Capacitor.getPlatform();
+
+console.log("[Index] Platform detection:", { IS_NATIVE_PLATFORM, NATIVE_PLATFORM });
+
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const isNative = Capacitor.isNativePlatform();
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
+    console.log("[Index] useEffect:", { IS_NATIVE_PLATFORM, loading, user: !!user, hasRedirected });
+    
     // On native platforms, skip landing page and go directly to app
-    if (isNative && !loading) {
+    if (IS_NATIVE_PLATFORM && !loading && !hasRedirected) {
+      setHasRedirected(true);
       if (user) {
+        console.log("[Index] Redirecting to dashboard");
         navigate("/dashboard", { replace: true });
       } else {
+        console.log("[Index] Redirecting to login");
         navigate("/login", { replace: true });
       }
     }
-  }, [isNative, user, loading, navigate]);
+  }, [loading, user, navigate, hasRedirected]);
 
-  // Show loading on native while checking auth
-  if (isNative) {
+  // On native platforms, show loading immediately and wait for redirect
+  if (IS_NATIVE_PLATFORM) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-muted-foreground text-sm">
+          {loading ? "Lade..." : "Weiterleitung..."}
+        </p>
       </div>
     );
   }
