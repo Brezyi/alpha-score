@@ -24,6 +24,9 @@ import {
 import { cn } from "@/lib/utils";
 import { PhotoGuidelinesModal } from "@/components/PhotoGuidelinesModal";
 import { PhotoTutorial } from "@/components/PhotoTutorial";
+import { Capacitor } from "@capacitor/core";
+import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
+import { MobileUploadContent } from "@/components/mobile/MobileUploadContent";
 
 interface UploadedPhoto {
   file: File;
@@ -40,6 +43,7 @@ const photoTypes = [
 const FREE_ANALYSIS_LIMIT = 1;
 
 export default function AnalysisUpload() {
+  const isNative = Capacitor.isNativePlatform();
   const [photos, setPhotos] = useState<UploadedPhoto[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -136,6 +140,14 @@ export default function AnalysisUpload() {
     if (currentIndex < photoTypes.length - 1) {
       setActiveType(photoTypes[currentIndex + 1].id);
     }
+  };
+
+  const addPhoto = (file: File, type: "front" | "side" | "body") => {
+    const preview = URL.createObjectURL(file);
+    setPhotos(prev => {
+      const filtered = prev.filter(p => p.type !== type);
+      return [...filtered, { file, preview, type }];
+    });
   };
 
   const removePhoto = (type: "front" | "side" | "body") => {
@@ -299,6 +311,22 @@ export default function AnalysisUpload() {
           </Link>
         </main>
       </div>
+    );
+  }
+
+  // Native mobile layout
+  if (isNative) {
+    return (
+      <MobileAppLayout title="KI-Analyse" showLogo={false} showBack>
+        <MobileUploadContent
+          photos={photos}
+          isUploading={isUploading}
+          isPremium={isPremium}
+          onAddPhoto={addPhoto}
+          onRemovePhoto={removePhoto}
+          onUpload={uploadPhotos}
+        />
+      </MobileAppLayout>
     );
   }
 
