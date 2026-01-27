@@ -28,7 +28,7 @@ const AnalysisResults = lazy(() => import("./pages/AnalysisResults"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
-const Coach = lazy(() => import("./pages/Coach"));
+
 const Plan = lazy(() => import("./pages/Plan"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Lifestyle = lazy(() => import("./pages/Lifestyle"));
@@ -101,7 +101,7 @@ const App = () => (
                         <Route path="/upload" element={<AnalysisUpload />} />
                         <Route path="/analysis/:id" element={<AnalysisResults />} />
                         <Route path="/payment-success" element={<PaymentSuccess />} />
-                        <Route path="/coach" element={<Coach />} />
+                        
                         <Route path="/plan" element={<Plan />} />
                         <Route path="/progress" element={<Progress />} />
                         <Route path="/lifestyle" element={<Lifestyle />} />
