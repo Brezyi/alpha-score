@@ -109,14 +109,21 @@ export function WeeklyChallengeCard({ className }: WeeklyChallengeCardProps) {
   const daysRemaining = getDaysRemaining();
   const isCompletable = canComplete();
 
-  // Calculate progress based on days passed (7 day challenge)
-  const getProgressFromDays = () => {
+  // Calculate progress and days passed
+  const getDaysPassed = () => {
     if (!currentChallenge) return 0;
     const startedAt = new Date(currentChallenge.started_at);
     const now = new Date();
-    const daysPassed = Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.min(7, Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24)));
+  };
+
+  const getProgressFromDays = () => {
+    const daysPassed = getDaysPassed();
     return Math.min(100, Math.round((daysPassed / 7) * 100));
   };
+
+  const daysPassed = getDaysPassed();
+  const progressPercent = getProgressFromDays();
 
   if (loading) {
     return (
@@ -181,10 +188,16 @@ export function WeeklyChallengeCard({ className }: WeeklyChallengeCardProps) {
 
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
-                      <span>Fortschritt (Zeit)</span>
-                      <span className="font-medium">{getProgressFromDays()}%</span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
+                        Tag {daysPassed} von 7
+                      </span>
+                      <span className="font-medium text-primary">{progressPercent}%</span>
                     </div>
-                    <Progress value={getProgressFromDays()} className="h-2" />
+                    <Progress value={progressPercent} className="h-2" />
+                    <p className="text-xs text-muted-foreground">
+                      +{Math.round(100/7)}% pro Tag
+                    </p>
                   </div>
 
                   <div className="flex items-center justify-between">
