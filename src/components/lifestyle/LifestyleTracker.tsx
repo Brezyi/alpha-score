@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { startOfWeek, addDays, isSameDay, isToday, isBefore, format, subDays } from "date-fns";
+import { startOfWeek, addDays, isSameDay, isToday, isBefore, format, subDays, addWeeks, subWeeks, endOfWeek } from "date-fns";
 import { de } from "date-fns/locale";
 
 interface LifestyleTrackerProps {
@@ -67,7 +67,8 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
   const [saving, setSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   
-  // Selected day state
+  // Week and day navigation state
+  const [currentWeekStart, setCurrentWeekStart] = useState<Date>(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // Form state for selected day
@@ -155,10 +156,9 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
   // Calculate week days with their status
   const weekDays = useMemo((): DayStatus[] => {
     const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
     
     return DAYS.map((label, index) => {
-      const date = addDays(weekStart, index);
+      const date = addDays(currentWeekStart, index);
       const dateStr = format(date, "yyyy-MM-dd");
       const entry = entries.find(e => e.entry_date === dateStr);
       
@@ -171,6 +171,9 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
       const waterGoalMet = water !== null && water >= 2;
       const exerciseGoalMet = exercise !== null && exercise >= 30;
       
+      const isPast = isBefore(date, today) && !isToday(date);
+      const isFuture = isBefore(today, date);
+      
       return {
         date,
         label,
@@ -179,14 +182,14 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
         exercise,
         sleepQuality: quality,
         isToday: isToday(date),
-        isPast: isBefore(date, today) && !isToday(date),
+        isPast,
         sleepGoalMet,
         waterGoalMet,
         exerciseGoalMet,
         allGoalsMet: sleepGoalMet && waterGoalMet && exerciseGoalMet,
       };
     });
-  }, [entries]);
+  }, [entries, currentWeekStart]);
 
   // Calculate weekly stats
   const weeklyStats = useMemo(() => {
@@ -307,6 +310,38 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
     }
   };
 
+  // Navigate weeks
+  const goToPreviousWeek = () => {
+    const newWeekStart = subWeeks(currentWeekStart, 1);
+    setCurrentWeekStart(newWeekStart);
+  };
+
+  const goToNextWeek = () => {
+    const today = new Date();
+    const thisWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+    // Only allow navigating to current week or past weeks
+    if (isBefore(currentWeekStart, thisWeekStart)) {
+      const newWeekStart = addWeeks(currentWeekStart, 1);
+      setCurrentWeekStart(newWeekStart);
+    }
+  };
+
+  // Check if we're on the current week
+  const isCurrentWeek = useMemo(() => {
+    const today = new Date();
+    const thisWeekStart = startOfWeek(today, { weekStartsOn: 1 });
+    return isSameDay(currentWeekStart, thisWeekStart);
+  }, [currentWeekStart]);
+
+  // Format week label
+  const weekLabel = useMemo(() => {
+    const weekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 1 });
+    if (isCurrentWeek) {
+      return "Diese Woche";
+    }
+    return `${format(currentWeekStart, "dd. MMM", { locale: de })} - ${format(weekEnd, "dd. MMM", { locale: de })}`;
+  }, [currentWeekStart, isCurrentWeek]);
+
   if (loading) {
     return (
       <Card className={cn("", className)}>
@@ -383,9 +418,31 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
       <CardContent className="space-y-5">
         {/* Weekly Overview */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>Diese Woche</span>
-            <span className="flex items-center gap-3">
+          {/* Week Navigation */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={goToPreviousWeek}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <span className="text-sm font-medium min-w-[140px] text-center">
+                {weekLabel}
+              </span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={goToNextWeek}
+                disabled={isCurrentWeek}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+            <span className="flex items-center gap-3 text-xs text-muted-foreground">
               <span className="flex items-center gap-1">
                 <Moon className="w-3 h-3 text-indigo-400" />
                 {weeklyStats.sleepDays}/7
