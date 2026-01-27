@@ -202,37 +202,41 @@ export default function Lifestyle() {
 
         <motion.div className="mb-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-bold mb-1">Lifestyle Tracker</h1>
-          <p className="text-sm text-muted-foreground">Tracke Schlaf, Wasser & Supplements</p>
+          <p className="text-sm text-muted-foreground">Tracke Schlaf, Wasser & Training</p>
+        </motion.div>
+
+        {/* Weekly Tracker - Full Width at Top */}
+        <motion.div 
+          className="mb-6" 
+          initial={{ opacity: 0, y: 20 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          transition={{ delay: 0.05 }}
+        >
+          <LifestyleTracker />
         </motion.div>
 
         {/* Health Alerts */}
         <HealthAlerts />
 
-        {/* Main Grid - Simplified Layout */}
+        {/* Main Grid */}
         <div className="grid gap-6">
-          {/* Row 1: Sleep & Lifestyle side by side on desktop */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <SleepTracker />
-            </motion.div>
-            
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <LifestyleTracker />
-            </motion.div>
-          </div>
+          {/* Sleep Tracker */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <SleepTracker />
+          </motion.div>
           
-          {/* Row 2: Supplements full width */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+          {/* Supplements */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
             <SupplementTracker />
           </motion.div>
 
-          {/* Row 3: Goals & Challenges */}
+          {/* Goals & Challenges */}
           <div className="grid md:grid-cols-2 gap-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <GoalCard currentScore={currentScore} />
             </motion.div>
             
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
               <WeeklyChallengeCard />
             </motion.div>
           </div>
