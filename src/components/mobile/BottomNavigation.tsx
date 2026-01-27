@@ -1,4 +1,4 @@
-import { Home, Camera, TrendingUp, MessageSquare, User } from "lucide-react";
+import { Home, Camera, TrendingUp, Heart, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
@@ -8,8 +8,8 @@ const navItems = [
   { icon: Home, label: "Home", path: "/dashboard" },
   { icon: TrendingUp, label: "Progress", path: "/progress" },
   { icon: Camera, label: "Scan", path: "/upload", isMain: true },
-  { icon: MessageSquare, label: "Coach", path: "/coach" },
-  { icon: User, label: "Profil", path: "/plan" },
+  { icon: Heart, label: "Lifestyle", path: "/lifestyle" },
+  { icon: User, label: "Plan", path: "/plan" },
 ];
 
 export const BottomNavigation = () => {
