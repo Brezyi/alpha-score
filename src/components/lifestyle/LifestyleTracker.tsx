@@ -2,7 +2,11 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { useLifestyle } from "@/hooks/useLifestyle";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Droplets, 
   Dumbbell, 
@@ -10,11 +14,16 @@ import {
   Loader2,
   Activity,
   Moon,
-  X
+  Sun,
+  Star,
+  X,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { startOfWeek, addDays, isSameDay, isToday, isBefore } from "date-fns";
+import { startOfWeek, addDays, isSameDay, isToday, isBefore, format, subDays } from "date-fns";
+import { de } from "date-fns/locale";
 
 interface LifestyleTrackerProps {
   className?: string;
@@ -29,6 +38,7 @@ interface DayStatus {
   sleep: number | null;
   water: number | null;
   exercise: number | null;
+  sleepQuality: number | null;
   isToday: boolean;
   isPast: boolean;
   sleepGoalMet: boolean;
@@ -37,15 +47,110 @@ interface DayStatus {
   allGoalsMet: boolean;
 }
 
+interface LifestyleEntry {
+  id?: string;
+  entry_date: string;
+  sleep_hours: number | null;
+  sleep_bedtime: string | null;
+  sleep_waketime: string | null;
+  sleep_quality: number | null;
+  water_liters: number | null;
+  exercise_minutes: number | null;
+}
+
 export function LifestyleTracker({ className, compact = false }: LifestyleTrackerProps) {
-  const { todayEntry, entries, loading, updateTodayEntry } = useLifestyle();
-  const [sleepHours, setSleepHours] = useState(7);
-  const [waterLiters, setWaterLiters] = useState(2);
-  const [exerciseMinutes, setExerciseMinutes] = useState(0);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  const [entries, setEntries] = useState<LifestyleEntry[]>([]);
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
-  const [initialized, setInitialized] = useState(false);
+  
+  // Selected day state
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  
+  // Form state for selected day
+  const [sleepHours, setSleepHours] = useState(7);
+  const [bedtime, setBedtime] = useState("23:00");
+  const [waketime, setWaketime] = useState("07:00");
+  const [sleepQuality, setSleepQuality] = useState(3);
+  const [waterLiters, setWaterLiters] = useState(2);
+  const [exerciseMinutes, setExerciseMinutes] = useState(0);
+  
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch entries
+  const fetchEntries = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from("lifestyle_entries")
+        .select("id, entry_date, sleep_hours, sleep_bedtime, sleep_waketime, sleep_quality, water_liters, exercise_minutes")
+        .eq("user_id", user.id)
+        .order("entry_date", { ascending: false })
+        .limit(30);
+      
+      if (error) throw error;
+      setEntries(data || []);
+    } catch (error) {
+      console.error("Error fetching entries:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchEntries();
+  }, [fetchEntries]);
+
+  // Calculate sleep duration from times
+  const calculateSleepFromTimes = useCallback((bed: string, wake: string): number => {
+    if (!bed || !wake) return 0;
+    
+    const [bedH, bedM] = bed.split(":").map(Number);
+    const [wakeH, wakeM] = wake.split(":").map(Number);
+    
+    let bedMinutes = bedH * 60 + bedM;
+    let wakeMinutes = wakeH * 60 + wakeM;
+    
+    if (wakeMinutes < bedMinutes) {
+      wakeMinutes += 24 * 60;
+    }
+    
+    const durationMinutes = wakeMinutes - bedMinutes;
+    return Math.round((durationMinutes / 60) * 10) / 10;
+  }, []);
+
+  // Load entry data when selected date changes
+  useEffect(() => {
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const entry = entries.find(e => e.entry_date === dateStr);
+    
+    if (entry) {
+      setSleepHours(entry.sleep_hours ?? 7);
+      setBedtime(entry.sleep_bedtime ?? "23:00");
+      setWaketime(entry.sleep_waketime ?? "07:00");
+      setSleepQuality(entry.sleep_quality ?? 3);
+      setWaterLiters(entry.water_liters ?? 2);
+      setExerciseMinutes(entry.exercise_minutes ?? 0);
+    } else {
+      // Reset to defaults for new entry
+      setSleepHours(7);
+      setBedtime("23:00");
+      setWaketime("07:00");
+      setSleepQuality(3);
+      setWaterLiters(2);
+      setExerciseMinutes(0);
+    }
+  }, [selectedDate, entries]);
+
+  // Update sleep hours when times change
+  useEffect(() => {
+    const calculated = calculateSleepFromTimes(bedtime, waketime);
+    setSleepHours(calculated);
+  }, [bedtime, waketime, calculateSleepFromTimes]);
 
   // Calculate week days with their status
   const weekDays = useMemo((): DayStatus[] => {
@@ -54,11 +159,13 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
     
     return DAYS.map((label, index) => {
       const date = addDays(weekStart, index);
-      const entry = entries.find(e => isSameDay(new Date(e.entry_date), date));
+      const dateStr = format(date, "yyyy-MM-dd");
+      const entry = entries.find(e => e.entry_date === dateStr);
       
       const sleep = entry?.sleep_hours ?? null;
       const water = entry?.water_liters ?? null;
       const exercise = entry?.exercise_minutes ?? null;
+      const quality = entry?.sleep_quality ?? null;
       
       const sleepGoalMet = sleep !== null && sleep >= 7;
       const waterGoalMet = water !== null && water >= 2;
@@ -70,6 +177,7 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
         sleep,
         water,
         exercise,
+        sleepQuality: quality,
         isToday: isToday(date),
         isPast: isBefore(date, today) && !isToday(date),
         sleepGoalMet,
@@ -82,63 +190,82 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
 
   // Calculate weekly stats
   const weeklyStats = useMemo(() => {
-    const daysWithAllGoals = weekDays.filter(d => d.allGoalsMet).length;
     const daysWithSleep = weekDays.filter(d => d.sleepGoalMet).length;
     const daysWithWater = weekDays.filter(d => d.waterGoalMet).length;
     const daysWithExercise = weekDays.filter(d => d.exerciseGoalMet).length;
     
     return {
-      perfectDays: daysWithAllGoals,
       sleepDays: daysWithSleep,
       waterDays: daysWithWater,
       exerciseDays: daysWithExercise,
     };
   }, [weekDays]);
 
-  // Update local state when todayEntry changes
-  useEffect(() => {
-    if (todayEntry && !initialized) {
-      setSleepHours(todayEntry.sleep_hours ?? 7);
-      setWaterLiters(todayEntry.water_liters ?? 2);
-      setExerciseMinutes(todayEntry.exercise_minutes ?? 0);
-      setInitialized(true);
-    }
-  }, [todayEntry, initialized]);
-
-  // Auto-save with debounce
-  const autoSave = useCallback(async (sleep: number, water: number, exercise: number) => {
-    if (!initialized) return;
+  // Save entry
+  const saveEntry = useCallback(async () => {
+    if (!user) return;
     
     setSaving(true);
-    const success = await updateTodayEntry({
-      sleep_hours: sleep,
-      water_liters: water,
-      exercise_minutes: exercise
-    });
-    setSaving(false);
+    const dateStr = format(selectedDate, "yyyy-MM-dd");
     
-    if (success) {
+    try {
+      const { error } = await supabase
+        .from("lifestyle_entries")
+        .upsert({
+          user_id: user.id,
+          entry_date: dateStr,
+          sleep_hours: sleepHours,
+          sleep_bedtime: bedtime,
+          sleep_waketime: waketime,
+          sleep_quality: sleepQuality,
+          water_liters: waterLiters,
+          exercise_minutes: exerciseMinutes
+        }, { onConflict: "user_id,entry_date" });
+      
+      if (error) throw error;
+      
+      await fetchEntries();
       setShowSaved(true);
       setTimeout(() => setShowSaved(false), 2000);
+    } catch (error) {
+      console.error("Error saving:", error);
+      toast({
+        title: "Fehler beim Speichern",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
     }
-  }, [updateTodayEntry, initialized]);
+  }, [user, selectedDate, sleepHours, bedtime, waketime, sleepQuality, waterLiters, exerciseMinutes, fetchEntries, toast]);
 
-  const handleValueChange = (type: 'sleep' | 'water' | 'exercise', value: number) => {
-    if (type === 'sleep') setSleepHours(value);
-    if (type === 'water') setWaterLiters(value);
-    if (type === 'exercise') setExerciseMinutes(value);
+  // Debounced auto-save
+  const handleValueChange = useCallback((type: string, value: number | string) => {
+    switch (type) {
+      case 'bedtime':
+        setBedtime(value as string);
+        break;
+      case 'waketime':
+        setWaketime(value as string);
+        break;
+      case 'quality':
+        setSleepQuality(value as number);
+        break;
+      case 'water':
+        setWaterLiters(value as number);
+        break;
+      case 'exercise':
+        setExerciseMinutes(value as number);
+        break;
+    }
     
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     
     saveTimeoutRef.current = setTimeout(() => {
-      const newSleep = type === 'sleep' ? value : sleepHours;
-      const newWater = type === 'water' ? value : waterLiters;
-      const newExercise = type === 'exercise' ? value : exerciseMinutes;
-      autoSave(newSleep, newWater, newExercise);
-    }, 800);
-  };
+      saveEntry();
+    }, 1000);
+  }, [saveEntry]);
 
   useEffect(() => {
     return () => {
@@ -147,6 +274,38 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
       }
     };
   }, []);
+
+  // Check if selected date can be edited (today or past 7 days)
+  const canEdit = useMemo(() => {
+    const today = new Date();
+    const sevenDaysAgo = subDays(today, 7);
+    return !isBefore(selectedDate, sevenDaysAgo) && !isBefore(today, selectedDate);
+  }, [selectedDate]);
+
+  // Select day
+  const handleDaySelect = (date: Date) => {
+    const today = new Date();
+    if (!isBefore(today, date)) {
+      setSelectedDate(date);
+    }
+  };
+
+  // Navigate days
+  const goToPreviousDay = () => {
+    const newDate = subDays(selectedDate, 1);
+    const sevenDaysAgo = subDays(new Date(), 7);
+    if (!isBefore(newDate, sevenDaysAgo)) {
+      setSelectedDate(newDate);
+    }
+  };
+
+  const goToNextDay = () => {
+    const newDate = addDays(selectedDate, 1);
+    const today = new Date();
+    if (!isBefore(today, newDate)) {
+      setSelectedDate(newDate);
+    }
+  };
 
   if (loading) {
     return (
@@ -167,21 +326,21 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
               <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto mb-1">
                 <Moon className="w-4 h-4 text-indigo-400" />
               </div>
-              <div className="text-sm font-bold">{todayEntry?.sleep_hours ?? "-"}h</div>
+              <div className="text-sm font-bold">{entries.find(e => e.entry_date === format(new Date(), "yyyy-MM-dd"))?.sleep_hours ?? "-"}h</div>
               <div className="text-[10px] text-muted-foreground">Schlaf</div>
             </div>
             <div className="text-center">
               <div className="w-9 h-9 rounded-full bg-cyan-500/20 flex items-center justify-center mx-auto mb-1">
                 <Droplets className="w-4 h-4 text-cyan-400" />
               </div>
-              <div className="text-sm font-bold">{todayEntry?.water_liters ?? "-"}L</div>
+              <div className="text-sm font-bold">{entries.find(e => e.entry_date === format(new Date(), "yyyy-MM-dd"))?.water_liters ?? "-"}L</div>
               <div className="text-[10px] text-muted-foreground">Wasser</div>
             </div>
             <div className="text-center">
               <div className="w-9 h-9 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-1">
                 <Dumbbell className="w-4 h-4 text-orange-400" />
               </div>
-              <div className="text-sm font-bold">{todayEntry?.exercise_minutes ?? "-"}m</div>
+              <div className="text-sm font-bold">{entries.find(e => e.entry_date === format(new Date(), "yyyy-MM-dd"))?.exercise_minutes ?? "-"}m</div>
               <div className="text-[10px] text-muted-foreground">Training</div>
             </div>
           </div>
@@ -242,14 +401,23 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
             </span>
           </div>
           
-          {/* Week Grid */}
+          {/* Week Grid - Clickable */}
           <div className="grid grid-cols-7 gap-1.5">
             {weekDays.map((day) => {
-              const goalsCount = [day.sleepGoalMet, day.waterGoalMet, day.exerciseGoalMet].filter(Boolean).length;
-              const hasAnyData = day.sleep !== null || day.water !== null || day.exercise !== null;
+              const isSelected = isSameDay(day.date, selectedDate);
+              const canSelect = day.isPast || day.isToday;
               
               return (
-                <div key={day.label} className="text-center">
+                <button
+                  key={day.label}
+                  onClick={() => canSelect && handleDaySelect(day.date)}
+                  disabled={!canSelect}
+                  className={cn(
+                    "text-center transition-all",
+                    canSelect && "cursor-pointer hover:opacity-80",
+                    !canSelect && "opacity-40 cursor-not-allowed"
+                  )}
+                >
                   <div className={cn(
                     "text-[10px] font-medium mb-1",
                     day.isToday ? "text-primary font-bold" : "text-muted-foreground"
@@ -258,16 +426,15 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
                   </div>
                   <div className={cn(
                     "aspect-square rounded-lg p-1 flex flex-col items-center justify-center gap-0.5 transition-all",
-                    day.isToday && "ring-2 ring-primary ring-offset-1 ring-offset-background",
-                    day.allGoalsMet && "bg-green-500/10",
-                    !day.isPast && !day.isToday && "opacity-40"
+                    isSelected && "ring-2 ring-primary ring-offset-1 ring-offset-background",
+                    day.allGoalsMet && "bg-green-500/10"
                   )}>
                     {/* Sleep */}
                     <div className={cn(
                       "w-4 h-4 rounded flex items-center justify-center",
                       day.sleepGoalMet 
                         ? "bg-indigo-500/30" 
-                        : hasAnyData || day.isPast || day.isToday
+                        : (day.isPast || day.isToday)
                           ? "bg-muted/80"
                           : "bg-muted/30"
                     )}>
@@ -286,7 +453,7 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
                       "w-4 h-4 rounded flex items-center justify-center",
                       day.waterGoalMet 
                         ? "bg-cyan-500/30" 
-                        : hasAnyData || day.isPast || day.isToday
+                        : (day.isPast || day.isToday)
                           ? "bg-muted/80"
                           : "bg-muted/30"
                     )}>
@@ -305,7 +472,7 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
                       "w-4 h-4 rounded flex items-center justify-center",
                       day.exerciseGoalMet 
                         ? "bg-orange-500/30" 
-                        : hasAnyData || day.isPast || day.isToday
+                        : (day.isPast || day.isToday)
                           ? "bg-muted/80"
                           : "bg-muted/30"
                     )}>
@@ -320,7 +487,7 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
                       ) : null}
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -344,94 +511,163 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
 
         <div className="h-px bg-border" />
 
-        {/* Today's Input */}
-        <div className="space-y-4">
-          <div className="text-sm font-medium text-center text-muted-foreground">Heute eintragen</div>
-          
-          {/* Sleep */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="flex items-center gap-2 text-sm">
+        {/* Day Selector Header */}
+        <div className="flex items-center justify-between">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={goToPreviousDay}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          <div className="text-center">
+            <div className="text-sm font-medium">
+              {isToday(selectedDate) ? "Heute" : format(selectedDate, "EEEE", { locale: de })}
+            </div>
+            <div className="text-xs text-muted-foreground">
+              {format(selectedDate, "d. MMMM", { locale: de })}
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="h-8 w-8"
+            onClick={goToNextDay}
+            disabled={isToday(selectedDate)}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {canEdit ? (
+          <div className="space-y-5">
+            {/* Sleep Section */}
+            <div className="space-y-3 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10">
+              <div className="flex items-center gap-2 text-sm font-medium">
                 <Moon className="w-4 h-4 text-indigo-400" />
                 Schlaf
-              </Label>
-              <span className="text-sm font-bold">{sleepHours}h</span>
+                <span className="ml-auto text-lg font-bold">{sleepHours}h</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Moon className="w-3 h-3 text-indigo-400" />
+                    Eingeschlafen
+                  </Label>
+                  <Input
+                    type="time"
+                    value={bedtime}
+                    onChange={(e) => handleValueChange('bedtime', e.target.value)}
+                    className="text-center h-9"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs flex items-center gap-1">
+                    <Sun className="w-3 h-3 text-amber-400" />
+                    Aufgewacht
+                  </Label>
+                  <Input
+                    type="time"
+                    value={waketime}
+                    onChange={(e) => handleValueChange('waketime', e.target.value)}
+                    className="text-center h-9"
+                  />
+                </div>
+              </div>
+              
+              {/* Sleep Quality */}
+              <div className="space-y-1.5">
+                <Label className="text-xs flex items-center gap-1">
+                  <Star className="w-3 h-3 text-amber-400" />
+                  Qualität
+                </Label>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => handleValueChange('quality', rating)}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-md transition-all",
+                        sleepQuality >= rating 
+                          ? "bg-amber-500/20 border-amber-500/50 border" 
+                          : "bg-muted border border-transparent hover:border-muted-foreground/30"
+                      )}
+                    >
+                      <Star 
+                        className={cn(
+                          "w-3.5 h-3.5 mx-auto",
+                          sleepQuality >= rating ? "text-amber-400 fill-amber-400" : "text-muted-foreground"
+                        )} 
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-            <Slider
-              value={[sleepHours]}
-              onValueChange={([v]) => handleValueChange('sleep', v)}
-              min={0}
-              max={12}
-              step={0.5}
-              className="py-1"
-            />
-            <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>0h</span>
-              <span className={cn(
-                sleepHours >= 7 ? "text-green-400" : sleepHours >= 6 ? "text-amber-400" : "text-red-400"
-              )}>
-                {sleepHours >= 7 ? "✓ Optimal" : sleepHours >= 6 ? "OK" : "Zu wenig"}
-              </span>
-              <span>12h</span>
-            </div>
-          </div>
 
-          {/* Water */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="flex items-center gap-2 text-sm">
-                <Droplets className="w-4 h-4 text-cyan-400" />
-                Wasser
-              </Label>
-              <span className="text-sm font-bold">{waterLiters}L</span>
+            {/* Water */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 text-sm">
+                  <Droplets className="w-4 h-4 text-cyan-400" />
+                  Wasser
+                </Label>
+                <span className="text-sm font-bold">{waterLiters}L</span>
+              </div>
+              <Slider
+                value={[waterLiters]}
+                onValueChange={([v]) => handleValueChange('water', v)}
+                min={0}
+                max={5}
+                step={0.25}
+                className="py-1"
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>0L</span>
+                <span className={cn(
+                  waterLiters >= 2 ? "text-green-400" : waterLiters >= 1.5 ? "text-amber-400" : "text-red-400"
+                )}>
+                  {waterLiters >= 2 ? "✓ Optimal" : waterLiters >= 1.5 ? "OK" : "Zu wenig"}
+                </span>
+                <span>5L</span>
+              </div>
             </div>
-            <Slider
-              value={[waterLiters]}
-              onValueChange={([v]) => handleValueChange('water', v)}
-              min={0}
-              max={5}
-              step={0.25}
-              className="py-1"
-            />
-            <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>0L</span>
-              <span className={cn(
-                waterLiters >= 2 ? "text-green-400" : waterLiters >= 1.5 ? "text-amber-400" : "text-red-400"
-              )}>
-                {waterLiters >= 2 ? "✓ Optimal" : waterLiters >= 1.5 ? "OK" : "Zu wenig"}
-              </span>
-              <span>5L</span>
-            </div>
-          </div>
 
-          {/* Exercise */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label className="flex items-center gap-2 text-sm">
-                <Dumbbell className="w-4 h-4 text-orange-400" />
-                Training
-              </Label>
-              <span className="text-sm font-bold">{exerciseMinutes} Min</span>
-            </div>
-            <Slider
-              value={[exerciseMinutes]}
-              onValueChange={([v]) => handleValueChange('exercise', v)}
-              min={0}
-              max={120}
-              step={5}
-              className="py-1"
-            />
-            <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>0</span>
-              <span className={cn(
-                exerciseMinutes >= 30 ? "text-green-400" : exerciseMinutes > 0 ? "text-amber-400" : "text-muted-foreground"
-              )}>
-                {exerciseMinutes >= 30 ? "✓ Super!" : exerciseMinutes > 0 ? "Weiter so" : ""}
-              </span>
-              <span>2h</span>
+            {/* Exercise */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-2 text-sm">
+                  <Dumbbell className="w-4 h-4 text-orange-400" />
+                  Training
+                </Label>
+                <span className="text-sm font-bold">{exerciseMinutes} Min</span>
+              </div>
+              <Slider
+                value={[exerciseMinutes]}
+                onValueChange={([v]) => handleValueChange('exercise', v)}
+                min={0}
+                max={120}
+                step={5}
+                className="py-1"
+              />
+              <div className="flex justify-between text-[10px] text-muted-foreground">
+                <span>0</span>
+                <span className={cn(
+                  exerciseMinutes >= 30 ? "text-green-400" : exerciseMinutes > 0 ? "text-amber-400" : "text-muted-foreground"
+                )}>
+                  {exerciseMinutes >= 30 ? "✓ Super!" : exerciseMinutes > 0 ? "Weiter so" : ""}
+                </span>
+                <span>2h</span>
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="text-center text-sm text-muted-foreground py-4">
+            Du kannst nur die letzten 7 Tage bearbeiten.
+          </div>
+        )}
       </CardContent>
     </Card>
   );
