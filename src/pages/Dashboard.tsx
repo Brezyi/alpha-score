@@ -60,9 +60,9 @@ import { useProductRecommendations } from "@/hooks/useProductRecommendations";
 import { ProductRecommendationsCard } from "@/components/ProductRecommendationsCard";
 import { PersonalizedInsights } from "@/components/dashboard/PersonalizedInsights";
 import { useLifestyle } from "@/hooks/useLifestyle";
-import { Capacitor } from "@capacitor/core";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
+import { useNativePlatform } from "@/hooks/useNativePlatform";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -223,7 +223,7 @@ type UserTask = {
 };
 
 const Dashboard = () => {
-  const isNative = Capacitor.isNativePlatform();
+  const { shouldUseMobileLayout } = useNativePlatform();
   const { user, loading } = useAuth();
   const { profile, updateProfile, loading: profileLoading } = useProfile();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
@@ -413,8 +413,8 @@ const Dashboard = () => {
     );
   }
 
-  // On native platforms, use the mobile-optimized layout
-  if (isNative) {
+  // On native platforms or mobile preview, use the mobile-optimized layout
+  if (shouldUseMobileLayout) {
     return (
       <MobileAppLayout showLogo showSettings showNotifications>
         <MobileDashboardContent />
