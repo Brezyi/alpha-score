@@ -171,83 +171,7 @@ const AnimatedNumber = React.forwardRef<
 });
 AnimatedNumber.displayName = "AnimatedNumber";
 
-// Motivational quotes - one for each day, rotates daily
-const motivationalQuotes = [
-  { text: "Jeden Tag 1% besser – das ist der Weg.", author: "Atomic Habits" },
-  { text: "Dein Aussehen ist eine Investition in dich selbst.", author: "GLOWMAXXED AI" },
-  { text: "Konsistenz schlägt Intensität. Immer.", author: "James Clear" },
-  { text: "Der beste Zeitpunkt war gestern. Der zweitbeste ist jetzt.", author: "Chinesisches Sprichwort" },
-  { text: "Du wirst nie deinen Wert sehen, wenn du ihn nicht entwickelst.", author: "GLOWMAXXED AI" },
-  { text: "Erfolg ist die Summe kleiner Anstrengungen, die sich täglich wiederholen.", author: "Robert Collier" },
-  { text: "Sei die beste Version deiner selbst.", author: "GLOWMAXXED AI" },
-  { text: "Disziplin ist die Brücke zwischen Zielen und Erfolg.", author: "Jim Rohn" },
-  { text: "Dein Körper kann fast alles. Es ist dein Geist, den du überzeugen musst.", author: "GLOWMAXXED AI" },
-  { text: "Kleine Schritte führen zu großen Veränderungen.", author: "Kaizen" },
-  { text: "Wer aufhört besser zu werden, hat aufgehört gut zu sein.", author: "Philip Rosenthal" },
-  { text: "Gewohnheiten sind der unsichtbare Architekt deines Lebens.", author: "James Clear" },
-  { text: "Erfolg ist kein Zufall, sondern das Ergebnis von Entscheidungen.", author: "GLOWMAXXED AI" },
-  { text: "Die einzige Grenze ist die, die du dir selbst setzt.", author: "GLOWMAXXED AI" },
-  { text: "Starte dort, wo du bist. Nutze, was du hast. Tu, was du kannst.", author: "Arthur Ashe" },
-  { text: "Motivation bringt dich in Gang. Gewohnheit hält dich in Bewegung.", author: "Jim Ryun" },
-  { text: "Perfektion ist nicht erreichbar, aber Exzellenz schon.", author: "Vince Lombardi" },
-  { text: "Du bist das Produkt deiner täglichen Entscheidungen.", author: "GLOWMAXXED AI" },
-  { text: "Ein Jahr von jetzt an wirst du dir wünschen, du hättest heute angefangen.", author: "Karen Lamb" },
-  { text: "Fortschritt, nicht Perfektion.", author: "GLOWMAXXED AI" },
-  { text: "Die Zukunft gehört denen, die an ihre Träume glauben.", author: "Eleanor Roosevelt" },
-  { text: "Härte dich ab – mental und physisch.", author: "David Goggins" },
-  { text: "Jeder Tag ist eine neue Chance, dich zu verbessern.", author: "GLOWMAXXED AI" },
-  { text: "Selbstvertrauen entsteht durch Kompetenz.", author: "GLOWMAXXED AI" },
-  { text: "Was du heute tust, bestimmt wer du morgen bist.", author: "GLOWMAXXED AI" },
-  { text: "Investiere in dich selbst – es zahlt die besten Zinsen.", author: "Benjamin Franklin" },
-  { text: "Geduld ist bitter, aber ihre Früchte sind süß.", author: "Aristoteles" },
-  { text: "Dein einziger Limit bist du selbst.", author: "GLOWMAXXED AI" },
-  { text: "Große Dinge entstehen nie in der Komfortzone.", author: "GLOWMAXXED AI" },
-  { text: "Handle so, als wäre es unmöglich zu scheitern.", author: "Dorothea Brande" },
-  { text: "Wachstum beginnt am Ende deiner Komfortzone.", author: "Neale Donald Walsch" },
-  // Additional motivational quotes
-  { text: "Deine Ausstrahlung beginnt von innen.", author: "GLOWMAXXED AI" },
-  { text: "Wer nicht wagt, der nicht gewinnt.", author: "Deutsches Sprichwort" },
-  { text: "Der Schmerz von Disziplin wiegt weniger als der Schmerz des Bedauerns.", author: "Jim Rohn" },
-  { text: "Sei stärker als deine stärkste Ausrede.", author: "GLOWMAXXED AI" },
-  { text: "Erfolg ist nicht final, Scheitern ist nicht fatal – was zählt ist der Mut weiterzumachen.", author: "Winston Churchill" },
-  { text: "Dein Spiegelbild sollte dein größter Fan sein.", author: "GLOWMAXXED AI" },
-  { text: "Die beste Rache ist massiver Erfolg.", author: "Frank Sinatra" },
-  { text: "Tu jeden Tag etwas, das dich deinem Ziel näher bringt.", author: "GLOWMAXXED AI" },
-  { text: "Schweiß ist Fett, das weint.", author: "GLOWMAXXED AI" },
-  { text: "Du musst tun, was andere nicht tun, um zu haben, was andere nicht haben.", author: "GLOWMAXXED AI" },
-  { text: "Träume groß, arbeite hart, bleib fokussiert.", author: "GLOWMAXXED AI" },
-  { text: "Niemand kann dich ohne deine Erlaubnis minderwertig fühlen lassen.", author: "Eleanor Roosevelt" },
-  { text: "Der Unterschied zwischen gewöhnlich und außergewöhnlich ist das kleine Extra.", author: "Jimmy Johnson" },
-  { text: "Steh auf, kleide dich, zeig dich, gib niemals auf.", author: "GLOWMAXXED AI" },
-  { text: "Dein Körper ist dein Tempel – behandle ihn entsprechend.", author: "GLOWMAXXED AI" },
-  { text: "Erfolgreiche Menschen machen Dinge, die erfolglose Menschen nicht tun wollen.", author: "Jim Rohn" },
-  { text: "Glow up ist ein Marathon, kein Sprint.", author: "GLOWMAXXED AI" },
-  { text: "Sei die Energie, die du anziehen willst.", author: "GLOWMAXXED AI" },
-  { text: "Deine einzige Konkurrenz bist du selbst von gestern.", author: "GLOWMAXXED AI" },
-  { text: "Routine ist der Schlüssel zur Transformation.", author: "GLOWMAXXED AI" },
-  { text: "Wer kämpft kann verlieren, wer nicht kämpft hat schon verloren.", author: "Bertolt Brecht" },
-  { text: "Skincare ist Selfcare.", author: "GLOWMAXXED AI" },
-  { text: "Mache dich zu deiner höchsten Priorität.", author: "GLOWMAXXED AI" },
-  { text: "Schönheit kommt von gesunden Gewohnheiten.", author: "GLOWMAXXED AI" },
-  { text: "Schlaf ist die beste Meditation.", author: "Dalai Lama" },
-  { text: "Wasser ist die Grundlage für strahlende Haut.", author: "GLOWMAXXED AI" },
-  { text: "Deine Zukunft wird durch das erschaffen, was du heute tust.", author: "GLOWMAXXED AI" },
-  { text: "Je mehr du schwitzt im Training, desto weniger blutest du im Kampf.", author: "Richard Marcinko" },
-  { text: "Selbstliebe ist die beste Pflege.", author: "GLOWMAXXED AI" },
-  { text: "Mewing ist nicht nur eine Übung, es ist eine Lebensweise.", author: "GLOWMAXXED AI" },
-  { text: "Sonnenschutz heute, jugendliche Haut morgen.", author: "GLOWMAXXED AI" },
-  { text: "Deine Jawline wird durch Konsistenz geformt, nicht durch Wünsche.", author: "GLOWMAXXED AI" },
-  { text: "Fortschritt sieht man nicht jeden Tag, aber er passiert jeden Tag.", author: "GLOWMAXXED AI" },
-  { text: "Vergleiche dich nur mit dir selbst von letzter Woche.", author: "GLOWMAXXED AI" },
-  { text: "Geduld + Beständigkeit = Transformation.", author: "GLOWMAXXED AI" },
-  { text: "Dein Gesicht ist deine Visitenkarte – investiere weise.", author: "GLOWMAXXED AI" },
-  { text: "Positive Gedanken, positive Ausstrahlung.", author: "GLOWMAXXED AI" },
-  { text: "Stress altert. Entspann dich öfter.", author: "GLOWMAXXED AI" },
-  { text: "Haltung ist alles – buchstäblich und figurativ.", author: "GLOWMAXXED AI" },
-  { text: "Trinke Wasser wie es dein Job wäre.", author: "GLOWMAXXED AI" },
-  { text: "Morgenroutine heute, Ergebnisse morgen.", author: "GLOWMAXXED AI" },
-  { text: "Dein bestes Selbst wartet auf dich.", author: "GLOWMAXXED AI" },
-];
+import { motivationalQuotes, getDailyQuote } from "@/data/motivationalQuotes";
 
 type UserTask = {
   id: string;
@@ -268,11 +192,7 @@ const Dashboard = () => {
   const [hasAnimated, setHasAnimated] = useState(false);
   const [tasks, setTasks] = useState<UserTask[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
-  const [dailyQuote] = useState(() => {
-    // Get quote based on day of year for consistency within a day
-    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
-    return motivationalQuotes[dayOfYear % motivationalQuotes.length];
-  });
+  const [dailyQuote] = useState(() => getDailyQuote());
   const [viewedDetails, setViewedDetails] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem('dashboard-viewed-details');
