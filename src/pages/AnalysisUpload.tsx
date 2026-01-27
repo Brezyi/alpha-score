@@ -367,16 +367,6 @@ export default function AnalysisUpload() {
       )}
 
       <main className="container mx-auto px-4 py-8 max-w-2xl">
-        {/* Legal Disclaimer */}
-        <div className="bg-muted/50 border border-border rounded-xl p-4 mb-6">
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            <strong className="text-foreground">Hinweis:</strong> Diese App bietet eine{" "}
-            <strong className="text-foreground">KI-basierte ästhetische Einschätzung zu Unterhaltungszwecken</strong>. 
-            Die Ergebnisse stellen keine medizinische, dermatologische oder psychologische Beratung dar. 
-            Bei gesundheitlichen Anliegen wende dich bitte an einen Fachexperten.
-          </p>
-        </div>
-
         {/* Photo Tutorial */}
         <PhotoTutorial className="mb-6" />
 
