@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, isToday } from "date-fns";
+import { format, isToday, setHours, setMinutes } from "date-fns";
 import { de } from "date-fns/locale";
 import {
   Dialog,
@@ -35,6 +35,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 interface SupplementTrackerProps {
   className?: string;
@@ -53,6 +54,13 @@ const categoryColors: Record<string, string> = {
   general: "bg-muted text-muted-foreground border-border",
 };
 
+interface LogDialogState {
+  open: boolean;
+  supplementId: string;
+  supplementName: string;
+  defaultDosage: string;
+}
+
 export function SupplementTracker({ className, selectedDate }: SupplementTrackerProps) {
   const { supplements, todaySupplements, loading, logSupplement, deleteSupplementLog, createCustomSupplement, fetchSupplementsForDate } = useLifestyle();
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -61,6 +69,16 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
   const [creating, setCreating] = useState(false);
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  
+  // State for log dialog with dosage and time
+  const [logDialog, setLogDialog] = useState<LogDialogState>({
+    open: false,
+    supplementId: "",
+    supplementName: "",
+    defaultDosage: ""
+  });
+  const [logDosage, setLogDosage] = useState("");
+  const [logTime, setLogTime] = useState("");
   
   // State for selected date supplements
   const [dateSupplements, setDateSupplements] = useState<SupplementLog[]>([]);
@@ -87,15 +105,37 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
     loadSupplementsForDate();
   }, [loadSupplementsForDate]);
 
-  const handleLogSupplement = async (supplementId: string) => {
-    setLoggingId(supplementId);
-    await logSupplement(supplementId, displayDate);
+  const openLogDialog = (supplementId: string, supplementName: string, defaultDosage: string | null) => {
+    const now = new Date();
+    setLogDosage(defaultDosage || "");
+    setLogTime(format(now, "HH:mm"));
+    setLogDialog({
+      open: true,
+      supplementId,
+      supplementName,
+      defaultDosage: defaultDosage || ""
+    });
+  };
+
+  const handleLogSupplement = async () => {
+    if (!logDialog.supplementId) return;
+    
+    setLoggingId(logDialog.supplementId);
+    
+    // Create the date with the selected time
+    const [hours, minutes] = logTime.split(":").map(Number);
+    const logDate = setMinutes(setHours(displayDate, hours), minutes);
+    
+    await logSupplement(logDialog.supplementId, logDate, logDosage || undefined);
+    
     // Refresh the list
     if (!isDisplayingToday) {
       const data = await fetchSupplementsForDate(displayDate);
       setDateSupplements(data);
     }
+    
     setLoggingId(null);
+    setLogDialog({ open: false, supplementId: "", supplementName: "", defaultDosage: "" });
   };
 
   const handleCreateSupplement = async () => {
@@ -231,7 +271,13 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
                     className="group flex items-center gap-1.5 bg-background/50 rounded-md px-2 py-1 border border-border"
                   >
                     <span className="text-sm">{log.supplement?.name || "Unbekannt"}</span>
-                    <span className="text-xs text-muted-foreground">
+                    {log.dosage && (
+                      <span className="text-xs text-primary font-medium">
+                        {log.dosage}
+                      </span>
+                    )}
+                    <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                      <Clock className="w-3 h-3" />
                       {format(new Date(log.taken_at), "HH:mm")}
                     </span>
                     <button
@@ -290,7 +336,7 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
                               variant={taken ? "ghost" : "outline"}
                               size="sm"
                               className="h-7 w-7 p-0"
-                              onClick={() => handleLogSupplement(supplement.id)}
+                              onClick={() => openLogDialog(supplement.id, supplement.name, supplement.default_dosage)}
                               disabled={isLogging}
                             >
                               {isLogging ? (
@@ -312,6 +358,59 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {/* Log Supplement Dialog with Dosage and Time */}
+      <Dialog open={logDialog.open} onOpenChange={(open) => !open && setLogDialog({ open: false, supplementId: "", supplementName: "", defaultDosage: "" })}>
+        <DialogContent className="sm:max-w-[350px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pill className="w-5 h-5 text-primary" />
+              {logDialog.supplementName}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {/* Dosage Input */}
+            <div className="space-y-2">
+              <Label htmlFor="dosage">Dosierung</Label>
+              <Input
+                id="dosage"
+                placeholder="z.B. 1000mg, 2 Kapseln"
+                value={logDosage}
+                onChange={(e) => setLogDosage(e.target.value)}
+              />
+              {logDialog.defaultDosage && (
+                <p className="text-xs text-muted-foreground">
+                  Standard: {logDialog.defaultDosage}
+                </p>
+              )}
+            </div>
+
+            {/* Time Input */}
+            <div className="space-y-2">
+              <Label htmlFor="time">Uhrzeit</Label>
+              <Input
+                id="time"
+                type="time"
+                value={logTime}
+                onChange={(e) => setLogTime(e.target.value)}
+              />
+            </div>
+
+            <Button 
+              onClick={handleLogSupplement} 
+              className="w-full"
+              disabled={loggingId === logDialog.supplementId}
+            >
+              {loggingId === logDialog.supplementId ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Check className="w-4 h-4 mr-2" />
+              )}
+              Einnahme speichern
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteLogId} onOpenChange={(open) => !open && setDeleteLogId(null)}>
