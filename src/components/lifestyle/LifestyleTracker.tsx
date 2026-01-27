@@ -28,6 +28,7 @@ import { de } from "date-fns/locale";
 interface LifestyleTrackerProps {
   className?: string;
   compact?: boolean;
+  onDateChange?: (date: Date) => void;
 }
 
 const DAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
@@ -58,7 +59,7 @@ interface LifestyleEntry {
   exercise_minutes: number | null;
 }
 
-export function LifestyleTracker({ className, compact = false }: LifestyleTrackerProps) {
+export function LifestyleTracker({ className, compact = false, onDateChange }: LifestyleTrackerProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   
@@ -290,6 +291,7 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
     const today = new Date();
     if (!isBefore(today, date)) {
       setSelectedDate(date);
+      onDateChange?.(date);
     }
   };
 

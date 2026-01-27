@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useLifestyle } from "@/hooks/useLifestyle";
+import { useLifestyle, SupplementLog } from "@/hooks/useLifestyle";
 import { 
   Pill, 
   Plus, 
@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
+import { de } from "date-fns/locale";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ import {
 
 interface SupplementTrackerProps {
   className?: string;
+  selectedDate?: Date;
 }
 
 const categoryColors: Record<string, string> = {
@@ -51,18 +53,48 @@ const categoryColors: Record<string, string> = {
   general: "bg-muted text-muted-foreground border-border",
 };
 
-export function SupplementTracker({ className }: SupplementTrackerProps) {
-  const { supplements, todaySupplements, loading, logSupplement, deleteSupplementLog, createCustomSupplement } = useLifestyle();
+export function SupplementTracker({ className, selectedDate }: SupplementTrackerProps) {
+  const { supplements, todaySupplements, loading, logSupplement, deleteSupplementLog, createCustomSupplement, fetchSupplementsForDate } = useLifestyle();
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newSupplementName, setNewSupplementName] = useState("");
   const [loggingId, setLoggingId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  
+  // State for selected date supplements
+  const [dateSupplements, setDateSupplements] = useState<SupplementLog[]>([]);
+  const [loadingDate, setLoadingDate] = useState(false);
+
+  // Current date being displayed
+  const displayDate = selectedDate || new Date();
+  const isDisplayingToday = isToday(displayDate);
+
+  // Fetch supplements for selected date
+  const loadSupplementsForDate = useCallback(async () => {
+    if (isDisplayingToday) {
+      setDateSupplements(todaySupplements);
+      return;
+    }
+    
+    setLoadingDate(true);
+    const data = await fetchSupplementsForDate(displayDate);
+    setDateSupplements(data);
+    setLoadingDate(false);
+  }, [displayDate, isDisplayingToday, todaySupplements, fetchSupplementsForDate]);
+
+  useEffect(() => {
+    loadSupplementsForDate();
+  }, [loadSupplementsForDate]);
 
   const handleLogSupplement = async (supplementId: string) => {
     setLoggingId(supplementId);
-    await logSupplement(supplementId);
+    await logSupplement(supplementId, displayDate);
+    // Refresh the list
+    if (!isDisplayingToday) {
+      const data = await fetchSupplementsForDate(displayDate);
+      setDateSupplements(data);
+    }
     setLoggingId(null);
   };
 
@@ -81,15 +113,24 @@ export function SupplementTracker({ className }: SupplementTrackerProps) {
     if (!deleteLogId) return;
     setDeleting(true);
     await deleteSupplementLog(deleteLogId);
+    // Refresh the list for non-today dates
+    if (!isDisplayingToday) {
+      const data = await fetchSupplementsForDate(displayDate);
+      setDateSupplements(data);
+    }
     setDeleting(false);
     setDeleteLogId(null);
   };
 
-  const isTakenToday = (supplementId: string) => {
-    return todaySupplements.some(s => s.supplement_id === supplementId);
+  const isTakenOnDate = (supplementId: string) => {
+    const supps = isDisplayingToday ? todaySupplements : dateSupplements;
+    return supps.some(s => s.supplement_id === supplementId);
   };
 
-  if (loading) {
+  // Use the correct supplements list based on date
+  const displaySupplements = isDisplayingToday ? todaySupplements : dateSupplements;
+
+  if (loading || loadingDate) {
     return (
       <Card className={cn("", className)}>
         <CardContent className="flex items-center justify-center py-8">
@@ -164,18 +205,27 @@ export function SupplementTracker({ className }: SupplementTrackerProps) {
           </div>
         </CardHeader>
         <CardContent>
+          {/* Date indicator if not today */}
+          {!isDisplayingToday && (
+            <div className="mb-3 text-xs text-muted-foreground">
+              Supplements für {format(displayDate, "EEEE, dd. MMM", { locale: de })}
+            </div>
+          )}
+
           {/* Today's Log - with delete option */}
-          {todaySupplements.length > 0 && (
+          {displaySupplements.length > 0 && (
             <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
               <div className="flex items-center gap-2 mb-2">
                 <Check className="w-4 h-4 text-primary" />
-                <span className="text-sm font-medium">Heute eingenommen</span>
+                <span className="text-sm font-medium">
+                  {isDisplayingToday ? "Heute eingenommen" : "Eingenommen"}
+                </span>
                 <Badge variant="outline" className="ml-auto">
-                  {todaySupplements.length}
+                  {displaySupplements.length}
                 </Badge>
               </div>
               <div className="flex flex-wrap gap-2">
-                {todaySupplements.map((log) => (
+                {displaySupplements.map((log) => (
                   <div 
                     key={log.id} 
                     className="group flex items-center gap-1.5 bg-background/50 rounded-md px-2 py-1 border border-border"
@@ -207,7 +257,7 @@ export function SupplementTracker({ className }: SupplementTrackerProps) {
                   <div className="grid gap-2">
                     <AnimatePresence>
                       {supps.map((supplement) => {
-                        const taken = isTakenToday(supplement.id);
+                        const taken = isTakenOnDate(supplement.id);
                         const isLogging = loggingId === supplement.id;
                         
                         return (
