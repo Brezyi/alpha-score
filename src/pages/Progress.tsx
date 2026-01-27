@@ -763,8 +763,8 @@ export default function Progress() {
               </motion.div>
             )}
 
-            {/* Improvement Breakdown Card */}
-            {completedAnalyses.length >= 1 && categoryImprovements && (
+            {/* Detaillierte Analyse Section - moved from Dashboard */}
+            {completedAnalyses.length > 0 && completedAnalyses[0]?.detailed_results && (
               <motion.div
                 initial={shouldReduce ? false : { opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -772,114 +772,92 @@ export default function Progress() {
                 className="mb-8"
               >
                 <Card className="p-6 glass-card">
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <TrendingUp className="w-5 h-5 text-primary" />
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <Eye className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-lg font-bold">Detaillierte Analyse</h2>
+                        <p className="text-xs text-muted-foreground">Bewertung nach Kategorie</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-lg font-bold">
-                        {categoryImprovements.isPotential ? 'Dein Verbesserungspotenzial' : 'Verbesserung nach Kategorie'}
-                      </h2>
-                      <p className="text-xs text-muted-foreground">
-                        {categoryImprovements.isPotential 
-                          ? 'Mögliche Steigerung basierend auf Analyse' 
-                          : `Steigerung über ${completedAnalyses.length} Analysen`}
-                      </p>
-                    </div>
+                    <Link 
+                      to={`/analysis/${completedAnalyses[0].id}`} 
+                      className="text-sm text-primary hover:underline flex items-center gap-1 group"
+                    >
+                      Vollständig ansehen
+                      <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </Link>
                   </div>
                   
-                  <div className={cn(
-                    "grid gap-6",
-                    categoryImprovements.improvements.length > 0
-                      ? "md:grid-cols-2"
-                      : "flex justify-center"
-                  )}>
-                    {/* Main improvement stat with circular design */}
-                    <div className={cn(
-                      "flex flex-col items-center justify-center p-6",
-                      categoryImprovements.improvements.length === 0 && "w-full"
-                    )}>
-                      <div className="relative">
-                        {/* Circular ring background */}
-                        <svg className="w-32 h-32 -rotate-90" viewBox="0 0 100 100">
-                          <circle
-                            cx="50"
-                            cy="50"
-                            r="42"
-                            fill="none"
-                            stroke="hsl(var(--muted))"
-                            strokeWidth="6"
-                            className="opacity-20"
-                          />
-                          <motion.circle
-                            cx="50"
-                            cy="50"
-                            r="42"
-                            fill="none"
-                            stroke="hsl(var(--primary))"
-                            strokeWidth="6"
-                            strokeLinecap="round"
-                            initial={{ pathLength: 0 }}
-                            animate={{ pathLength: Math.min(parseFloat(categoryImprovements.total) / 5, 1) }}
-                            transition={{ duration: 1.2, delay: 0.5, ease: "easeOut" }}
-                            style={{
-                              filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.4))"
-                            }}
-                          />
-                        </svg>
-                        {/* Center content */}
-                        <div className="absolute inset-0 flex flex-col items-center justify-center">
-                          <motion.span
-                            className={cn(
-                              "text-3xl font-bold",
-                              parseFloat(categoryImprovements.total) > 0 ? "text-primary" : "text-muted-foreground"
-                            )}
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ type: "spring", stiffness: 200, delay: 0.6 }}
-                          >
-                            {categoryImprovements.total}
-                          </motion.span>
-                          <span className="text-xs text-muted-foreground">Punkte</span>
-                        </div>
-                      </div>
-                      <div className="mt-4 text-center">
-                        <div className="text-sm font-medium">
-                          {categoryImprovements.isPotential ? 'Erreichbares Potenzial' : 'Gesamtverbesserung'}
-                        </div>
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {categoryImprovements.isPotential 
-                            ? 'Basierend auf deiner Analyse'
-                            : `Über ${completedAnalyses.length} Analysen`}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Category breakdown - only show if there are improvements */}
-                    {categoryImprovements.improvements.length > 0 && (
-                      <div className="space-y-4">
-                        {categoryImprovements.improvements.map((item, index) => (
-                          <motion.div 
-                            key={item.category}
-                            className="flex items-center justify-between p-3 rounded-lg bg-card/50 hover:bg-card transition-colors"
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.6 + index * 0.1 }}
-                          >
-                            <div className="flex items-center gap-3">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {(() => {
+                      const detailedResults = completedAnalyses[0]?.detailed_results;
+                      const baseScore = completedAnalyses[0]?.looks_score || 5;
+                      
+                      const extractScore = (value: any, fallback: number): number => {
+                        if (value === null || value === undefined) return fallback;
+                        if (typeof value === 'number') return value;
+                        if (typeof value === 'object' && 'score' in value) return Number(value.score) || fallback;
+                        if (typeof value === 'string') return parseFloat(value) || fallback;
+                        return fallback;
+                      };
+
+                      const extractIssues = (value: any): string[] => {
+                        if (value && typeof value === 'object' && 'issues' in value && Array.isArray(value.issues)) {
+                          return value.issues;
+                        }
+                        return [];
+                      };
+
+                      const extractDetails = (value: any): string => {
+                        if (value && typeof value === 'object' && 'details' in value && typeof value.details === 'string') {
+                          return value.details;
+                        }
+                        return '';
+                      };
+                      
+                      const featureScores = [
+                        { key: "face_symmetry", label: "Gesichtssymmetrie", score: extractScore(detailedResults?.face_symmetry, baseScore + 0.3), color: "bg-emerald-500", iconBg: "bg-emerald-500/20", iconColor: "text-emerald-500", issues: extractIssues(detailedResults?.face_symmetry), details: extractDetails(detailedResults?.face_symmetry) },
+                        { key: "jawline", label: "Jawline Definition", score: extractScore(detailedResults?.jawline, baseScore - 0.2), color: "bg-blue-500", iconBg: "bg-blue-500/20", iconColor: "text-blue-500", issues: extractIssues(detailedResults?.jawline), details: extractDetails(detailedResults?.jawline) },
+                        { key: "eyes", label: "Augenbereich", score: extractScore(detailedResults?.eyes, baseScore + 0.5), color: "bg-purple-500", iconBg: "bg-purple-500/20", iconColor: "text-purple-500", issues: extractIssues(detailedResults?.eyes), details: extractDetails(detailedResults?.eyes) },
+                        { key: "skin", label: "Hautqualität", score: extractScore(detailedResults?.skin, baseScore - 0.5), color: "bg-orange-500", iconBg: "bg-orange-500/20", iconColor: "text-orange-500", issues: extractIssues(detailedResults?.skin), details: extractDetails(detailedResults?.skin) },
+                        { key: "hair", label: "Haare & Styling", score: extractScore(detailedResults?.hair, baseScore - 0.3), color: "bg-pink-500", iconBg: "bg-pink-500/20", iconColor: "text-pink-500", issues: extractIssues(detailedResults?.hair), details: extractDetails(detailedResults?.hair) },
+                        { key: "overall_vibe", label: "Ausstrahlung", score: extractScore(detailedResults?.overall_vibe, baseScore), color: "bg-amber-500", iconBg: "bg-amber-500/20", iconColor: "text-amber-500", issues: extractIssues(detailedResults?.overall_vibe), details: extractDetails(detailedResults?.overall_vibe) },
+                      ];
+                      
+                      return featureScores.map((item, index) => (
+                        <motion.div 
+                          key={item.key}
+                          className="p-4 rounded-xl bg-card border border-border/50"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.5 + index * 0.05 }}
+                        >
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className={`w-8 h-8 rounded-lg ${item.iconBg} flex items-center justify-center`}>
                               <div className={`w-3 h-3 rounded-full ${item.color}`} />
-                              <span className="text-sm font-medium">{item.category}</span>
                             </div>
-                            <span className={cn(
-                              "text-sm font-bold",
-                              parseFloat(item.improvement) > 0 ? "text-primary" : "text-muted-foreground"
-                            )}>
-                              {parseFloat(item.improvement) > 0 ? `+${parseFloat(item.improvement).toFixed(1)}` : item.improvement}
-                            </span>
-                          </motion.div>
-                        ))}
-                      </div>
-                    )}
+                            <div className="flex-1 flex items-center justify-between">
+                              <span className="text-sm font-medium">{item.label}</span>
+                              <span className="font-bold">{Math.min(10, item.score).toFixed(1)}</span>
+                            </div>
+                          </div>
+                          <div className="h-2 rounded-full bg-muted overflow-hidden">
+                            <motion.div
+                              className={`h-full rounded-full ${item.color}`}
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.min(100, item.score * 10)}%` }}
+                              transition={{ duration: 0.8, delay: 0.6 + index * 0.05 }}
+                            />
+                          </div>
+                          {item.details && (
+                            <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{item.details}</p>
+                          )}
+                        </motion.div>
+                      ));
+                    })()}
                   </div>
                 </Card>
               </motion.div>
