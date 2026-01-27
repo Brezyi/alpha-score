@@ -12,7 +12,6 @@ import Pricing from "@/components/landing/Pricing";
 import CTA from "@/components/landing/CTA";
 import Footer from "@/components/landing/Footer";
 import { Loader2 } from "lucide-react";
-import { useNativePlatform } from "@/hooks/useNativePlatform";
 
 // Check native platform immediately at module level (before React renders)
 const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
@@ -23,17 +22,13 @@ console.log("[Index] Platform detection:", { IS_NATIVE_PLATFORM, NATIVE_PLATFORM
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
-  const { shouldUseMobileLayout, isMobilePreview } = useNativePlatform();
   const [hasRedirected, setHasRedirected] = useState(false);
 
-  // Determine if we should use mobile behavior (native OR mobile preview mode)
-  const useMobileBehavior = IS_NATIVE_PLATFORM || isMobilePreview;
-
   useEffect(() => {
-    console.log("[Index] useEffect:", { IS_NATIVE_PLATFORM, isMobilePreview, loading, user: !!user, hasRedirected });
+    console.log("[Index] useEffect:", { IS_NATIVE_PLATFORM, loading, user: !!user, hasRedirected });
     
-    // On native platforms or mobile preview, skip landing page and go directly to app
-    if (useMobileBehavior && !loading && !hasRedirected) {
+    // On native platforms, skip landing page and go directly to app
+    if (IS_NATIVE_PLATFORM && !loading && !hasRedirected) {
       setHasRedirected(true);
       if (user) {
         console.log("[Index] Redirecting to dashboard");
@@ -43,10 +38,10 @@ const Index = () => {
         navigate("/login", { replace: true });
       }
     }
-  }, [loading, user, navigate, hasRedirected, useMobileBehavior, isMobilePreview]);
+  }, [loading, user, navigate, hasRedirected]);
 
-  // On native platforms or mobile preview, show loading immediately and wait for redirect
-  if (useMobileBehavior) {
+  // On native platforms, show loading immediately and wait for redirect
+  if (IS_NATIVE_PLATFORM) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
