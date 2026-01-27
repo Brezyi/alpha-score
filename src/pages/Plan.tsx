@@ -18,7 +18,7 @@ import {
   AlertCircle,
   Flame
 } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -72,11 +72,32 @@ const Plan = () => {
   const [latestAnalysis, setLatestAnalysis] = useState<Analysis | null>(null);
   const [activeCategory, setActiveCategory] = useState("skincare");
   const [focusAreas, setFocusAreas] = useState<string[]>([]);
+  const [initialExercise, setInitialExercise] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { isPremium, loading: subLoading } = useSubscription();
   const { settings } = useGlobalSettings();
   const { shouldReduce, containerVariants, itemVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
+
+  // Handle scroll to face-fitness section and auto-expand exercise
+  useEffect(() => {
+    if (location.hash === "#face-fitness") {
+      const params = new URLSearchParams(location.search);
+      const exercise = params.get("exercise");
+      if (exercise) {
+        setInitialExercise(exercise);
+      }
+      
+      // Small delay to ensure DOM is ready
+      setTimeout(() => {
+        const element = document.getElementById("face-fitness");
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 300);
+    }
+  }, [location]);
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
@@ -781,12 +802,13 @@ const Plan = () => {
 
             {/* Face Fitness Section */}
             <motion.div
+              id="face-fitness"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              className="glass-card p-6 rounded-2xl mb-6"
+              className="glass-card p-6 rounded-2xl mb-6 scroll-mt-20"
             >
-              <FaceFitnessExercises />
+              <FaceFitnessExercises initialExpandedExercise={initialExercise} />
             </motion.div>
 
             {/* Regenerate Button */}
