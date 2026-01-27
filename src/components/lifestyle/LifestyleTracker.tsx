@@ -1,17 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { 
   Droplets, 
   Dumbbell, 
-  Check, 
+  Check,
   Loader2,
   Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LifestyleTrackerProps {
   className?: string;
@@ -23,29 +23,72 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
   const [waterLiters, setWaterLiters] = useState(2);
   const [exerciseMinutes, setExerciseMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [showSaved, setShowSaved] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update local state when todayEntry changes
   useEffect(() => {
     if (todayEntry && !initialized) {
-      setWaterLiters(todayEntry.water_liters || 2);
-      setExerciseMinutes(todayEntry.exercise_minutes || 0);
+      setWaterLiters(todayEntry.water_liters ?? 2);
+      setExerciseMinutes(todayEntry.exercise_minutes ?? 0);
       setInitialized(true);
     }
   }, [todayEntry, initialized]);
 
-  const handleSave = async () => {
+  // Auto-save with debounce
+  const autoSave = useCallback(async (water: number, exercise: number) => {
+    if (!initialized) return;
+    
     setSaving(true);
-    await updateTodayEntry({
-      water_liters: waterLiters,
-      exercise_minutes: exerciseMinutes
+    const success = await updateTodayEntry({
+      water_liters: water,
+      exercise_minutes: exercise
     });
     setSaving(false);
+    
+    if (success) {
+      setShowSaved(true);
+      setTimeout(() => setShowSaved(false), 2000);
+    }
+  }, [updateTodayEntry, initialized]);
+
+  const handleWaterChange = (value: number) => {
+    setWaterLiters(value);
+    
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set new debounced save
+    saveTimeoutRef.current = setTimeout(() => {
+      autoSave(value, exerciseMinutes);
+    }, 800);
   };
 
-  const hasChanges = 
-    waterLiters !== (todayEntry?.water_liters || 0) ||
-    exerciseMinutes !== (todayEntry?.exercise_minutes || 0);
+  const handleExerciseChange = (value: number) => {
+    setExerciseMinutes(value);
+    
+    // Clear existing timeout
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    // Set new debounced save
+    saveTimeoutRef.current = setTimeout(() => {
+      autoSave(waterLiters, value);
+    }, 800);
+  };
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -66,14 +109,14 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
               <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center mx-auto mb-1">
                 <Droplets className="w-5 h-5 text-cyan-400" />
               </div>
-              <div className="text-lg font-bold">{todayEntry?.water_liters || "-"}L</div>
+              <div className="text-lg font-bold">{todayEntry?.water_liters ?? "-"}L</div>
               <div className="text-xs text-muted-foreground">Wasser</div>
             </div>
             <div className="text-center">
               <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-1">
                 <Dumbbell className="w-5 h-5 text-orange-400" />
               </div>
-              <div className="text-lg font-bold">{todayEntry?.exercise_minutes || "-"}m</div>
+              <div className="text-lg font-bold">{todayEntry?.exercise_minutes ?? "-"}m</div>
               <div className="text-xs text-muted-foreground">Training</div>
             </div>
           </div>
@@ -88,6 +131,29 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
         <CardTitle className="flex items-center gap-2 text-lg">
           <Activity className="w-5 h-5 text-primary" />
           Heute
+          <AnimatePresence>
+            {saving && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="ml-auto"
+              >
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              </motion.span>
+            )}
+            {showSaved && !saving && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="ml-auto flex items-center gap-1 text-xs text-green-500 font-normal"
+              >
+                <Check className="w-3 h-3" />
+                Gespeichert
+              </motion.span>
+            )}
+          </AnimatePresence>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -102,7 +168,7 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
           </div>
           <Slider
             value={[waterLiters]}
-            onValueChange={([v]) => setWaterLiters(v)}
+            onValueChange={([v]) => handleWaterChange(v)}
             min={0}
             max={5}
             step={0.25}
@@ -130,7 +196,7 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
           </div>
           <Slider
             value={[exerciseMinutes]}
-            onValueChange={([v]) => setExerciseMinutes(v)}
+            onValueChange={([v]) => handleExerciseChange(v)}
             min={0}
             max={120}
             step={5}
@@ -146,19 +212,6 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
             <span>2h</span>
           </div>
         </div>
-
-        <Button 
-          onClick={handleSave} 
-          className="w-full"
-          disabled={saving || !hasChanges}
-        >
-          {saving ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <Check className="w-4 h-4 mr-2" />
-          )}
-          {todayEntry ? "Aktualisieren" : "Speichern"}
-        </Button>
       </CardContent>
     </Card>
   );

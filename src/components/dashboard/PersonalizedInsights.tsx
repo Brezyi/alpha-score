@@ -181,7 +181,7 @@ export function PersonalizedInsights({
         <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
           <Lightbulb className="w-4 h-4 text-primary" />
         </div>
-        <h2 className="font-semibold">Personalisierte Tipps</h2>
+        <h2 className="font-semibold">Tipps</h2>
       </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
