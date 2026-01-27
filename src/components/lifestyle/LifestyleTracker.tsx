@@ -9,12 +9,12 @@ import {
   Check,
   Loader2,
   Activity,
+  Moon,
   X
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, startOfWeek, addDays, isSameDay, isToday, isBefore } from "date-fns";
-import { de } from "date-fns/locale";
+import { startOfWeek, addDays, isSameDay, isToday, isBefore } from "date-fns";
 
 interface LifestyleTrackerProps {
   className?: string;
@@ -26,16 +26,20 @@ const DAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 interface DayStatus {
   date: Date;
   label: string;
+  sleep: number | null;
   water: number | null;
   exercise: number | null;
   isToday: boolean;
   isPast: boolean;
+  sleepGoalMet: boolean;
   waterGoalMet: boolean;
   exerciseGoalMet: boolean;
+  allGoalsMet: boolean;
 }
 
 export function LifestyleTracker({ className, compact = false }: LifestyleTrackerProps) {
   const { todayEntry, entries, loading, updateTodayEntry } = useLifestyle();
+  const [sleepHours, setSleepHours] = useState(7);
   const [waterLiters, setWaterLiters] = useState(2);
   const [exerciseMinutes, setExerciseMinutes] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -46,44 +50,55 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
   // Calculate week days with their status
   const weekDays = useMemo((): DayStatus[] => {
     const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
+    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
     
     return DAYS.map((label, index) => {
       const date = addDays(weekStart, index);
       const entry = entries.find(e => isSameDay(new Date(e.entry_date), date));
       
+      const sleep = entry?.sleep_hours ?? null;
       const water = entry?.water_liters ?? null;
       const exercise = entry?.exercise_minutes ?? null;
+      
+      const sleepGoalMet = sleep !== null && sleep >= 7;
+      const waterGoalMet = water !== null && water >= 2;
+      const exerciseGoalMet = exercise !== null && exercise >= 30;
       
       return {
         date,
         label,
+        sleep,
         water,
         exercise,
         isToday: isToday(date),
         isPast: isBefore(date, today) && !isToday(date),
-        waterGoalMet: water !== null && water >= 2,
-        exerciseGoalMet: exercise !== null && exercise >= 30,
+        sleepGoalMet,
+        waterGoalMet,
+        exerciseGoalMet,
+        allGoalsMet: sleepGoalMet && waterGoalMet && exerciseGoalMet,
       };
     });
   }, [entries]);
 
   // Calculate weekly stats
   const weeklyStats = useMemo(() => {
-    const daysWithWaterGoal = weekDays.filter(d => d.waterGoalMet).length;
-    const daysWithExerciseGoal = weekDays.filter(d => d.exerciseGoalMet).length;
-    const pastDays = weekDays.filter(d => d.isPast || d.isToday).length;
+    const daysWithAllGoals = weekDays.filter(d => d.allGoalsMet).length;
+    const daysWithSleep = weekDays.filter(d => d.sleepGoalMet).length;
+    const daysWithWater = weekDays.filter(d => d.waterGoalMet).length;
+    const daysWithExercise = weekDays.filter(d => d.exerciseGoalMet).length;
     
     return {
-      waterDays: daysWithWaterGoal,
-      exerciseDays: daysWithExerciseGoal,
-      totalDays: pastDays,
+      perfectDays: daysWithAllGoals,
+      sleepDays: daysWithSleep,
+      waterDays: daysWithWater,
+      exerciseDays: daysWithExercise,
     };
   }, [weekDays]);
 
   // Update local state when todayEntry changes
   useEffect(() => {
     if (todayEntry && !initialized) {
+      setSleepHours(todayEntry.sleep_hours ?? 7);
       setWaterLiters(todayEntry.water_liters ?? 2);
       setExerciseMinutes(todayEntry.exercise_minutes ?? 0);
       setInitialized(true);
@@ -91,11 +106,12 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
   }, [todayEntry, initialized]);
 
   // Auto-save with debounce
-  const autoSave = useCallback(async (water: number, exercise: number) => {
+  const autoSave = useCallback(async (sleep: number, water: number, exercise: number) => {
     if (!initialized) return;
     
     setSaving(true);
     const success = await updateTodayEntry({
+      sleep_hours: sleep,
       water_liters: water,
       exercise_minutes: exercise
     });
@@ -107,27 +123,20 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
     }
   }, [updateTodayEntry, initialized]);
 
-  const handleWaterChange = (value: number) => {
-    setWaterLiters(value);
+  const handleValueChange = (type: 'sleep' | 'water' | 'exercise', value: number) => {
+    if (type === 'sleep') setSleepHours(value);
+    if (type === 'water') setWaterLiters(value);
+    if (type === 'exercise') setExerciseMinutes(value);
     
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
     
     saveTimeoutRef.current = setTimeout(() => {
-      autoSave(value, exerciseMinutes);
-    }, 800);
-  };
-
-  const handleExerciseChange = (value: number) => {
-    setExerciseMinutes(value);
-    
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    saveTimeoutRef.current = setTimeout(() => {
-      autoSave(waterLiters, value);
+      const newSleep = type === 'sleep' ? value : sleepHours;
+      const newWater = type === 'water' ? value : waterLiters;
+      const newExercise = type === 'exercise' ? value : exerciseMinutes;
+      autoSave(newSleep, newWater, newExercise);
     }, 800);
   };
 
@@ -153,20 +162,27 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
     return (
       <Card className={cn("", className)}>
         <CardContent className="p-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div className="text-center">
-              <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center mx-auto mb-1">
-                <Droplets className="w-5 h-5 text-cyan-400" />
+              <div className="w-9 h-9 rounded-full bg-indigo-500/20 flex items-center justify-center mx-auto mb-1">
+                <Moon className="w-4 h-4 text-indigo-400" />
               </div>
-              <div className="text-lg font-bold">{todayEntry?.water_liters ?? "-"}L</div>
-              <div className="text-xs text-muted-foreground">Wasser</div>
+              <div className="text-sm font-bold">{todayEntry?.sleep_hours ?? "-"}h</div>
+              <div className="text-[10px] text-muted-foreground">Schlaf</div>
             </div>
             <div className="text-center">
-              <div className="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-1">
-                <Dumbbell className="w-5 h-5 text-orange-400" />
+              <div className="w-9 h-9 rounded-full bg-cyan-500/20 flex items-center justify-center mx-auto mb-1">
+                <Droplets className="w-4 h-4 text-cyan-400" />
               </div>
-              <div className="text-lg font-bold">{todayEntry?.exercise_minutes ?? "-"}m</div>
-              <div className="text-xs text-muted-foreground">Training</div>
+              <div className="text-sm font-bold">{todayEntry?.water_liters ?? "-"}L</div>
+              <div className="text-[10px] text-muted-foreground">Wasser</div>
+            </div>
+            <div className="text-center">
+              <div className="w-9 h-9 rounded-full bg-orange-500/20 flex items-center justify-center mx-auto mb-1">
+                <Dumbbell className="w-4 h-4 text-orange-400" />
+              </div>
+              <div className="text-sm font-bold">{todayEntry?.exercise_minutes ?? "-"}m</div>
+              <div className="text-[10px] text-muted-foreground">Training</div>
             </div>
           </div>
         </CardContent>
@@ -179,7 +195,7 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
           <Activity className="w-5 h-5 text-primary" />
-          Heute
+          Lifestyle Tracker
           <AnimatePresence>
             {saving && (
               <motion.span
@@ -210,7 +226,11 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
         <div className="space-y-3">
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>Diese Woche</span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-3">
+              <span className="flex items-center gap-1">
+                <Moon className="w-3 h-3 text-indigo-400" />
+                {weeklyStats.sleepDays}/7
+              </span>
               <span className="flex items-center gap-1">
                 <Droplets className="w-3 h-3 text-cyan-400" />
                 {weeklyStats.waterDays}/7
@@ -222,119 +242,194 @@ export function LifestyleTracker({ className, compact = false }: LifestyleTracke
             </span>
           </div>
           
-          <div className="grid grid-cols-7 gap-1">
-            {weekDays.map((day) => (
-              <div key={day.label} className="text-center">
-                <div className={cn(
-                  "text-[10px] font-medium mb-1",
-                  day.isToday ? "text-primary" : "text-muted-foreground"
-                )}>
-                  {day.label}
-                </div>
-                <div className={cn(
-                  "w-full aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 text-[8px]",
-                  day.isToday && "ring-2 ring-primary ring-offset-1 ring-offset-background",
-                  !day.isPast && !day.isToday && "opacity-40"
-                )}>
-                  {/* Water indicator */}
+          {/* Week Grid */}
+          <div className="grid grid-cols-7 gap-1.5">
+            {weekDays.map((day) => {
+              const goalsCount = [day.sleepGoalMet, day.waterGoalMet, day.exerciseGoalMet].filter(Boolean).length;
+              const hasAnyData = day.sleep !== null || day.water !== null || day.exercise !== null;
+              
+              return (
+                <div key={day.label} className="text-center">
                   <div className={cn(
-                    "w-5 h-5 rounded-md flex items-center justify-center",
-                    day.waterGoalMet 
-                      ? "bg-cyan-500/20" 
-                      : day.isPast || day.isToday
-                        ? "bg-muted"
-                        : "bg-muted/50"
+                    "text-[10px] font-medium mb-1",
+                    day.isToday ? "text-primary font-bold" : "text-muted-foreground"
                   )}>
-                    {day.water !== null ? (
-                      day.waterGoalMet ? (
-                        <Check className="w-3 h-3 text-cyan-400" />
-                      ) : (
-                        <span className="text-[8px] text-muted-foreground">{day.water}</span>
-                      )
-                    ) : (day.isPast || day.isToday) ? (
-                      <X className="w-3 h-3 text-muted-foreground/50" />
-                    ) : null}
+                    {day.label}
                   </div>
-                  {/* Exercise indicator */}
                   <div className={cn(
-                    "w-5 h-5 rounded-md flex items-center justify-center",
-                    day.exerciseGoalMet 
-                      ? "bg-orange-500/20" 
-                      : day.isPast || day.isToday
-                        ? "bg-muted"
-                        : "bg-muted/50"
+                    "aspect-square rounded-lg p-1 flex flex-col items-center justify-center gap-0.5 transition-all",
+                    day.isToday && "ring-2 ring-primary ring-offset-1 ring-offset-background",
+                    day.allGoalsMet && "bg-green-500/10",
+                    !day.isPast && !day.isToday && "opacity-40"
                   )}>
-                    {day.exercise !== null ? (
-                      day.exerciseGoalMet ? (
-                        <Check className="w-3 h-3 text-orange-400" />
-                      ) : (
-                        <span className="text-[8px] text-muted-foreground">{day.exercise}</span>
-                      )
-                    ) : (day.isPast || day.isToday) ? (
-                      <X className="w-3 h-3 text-muted-foreground/50" />
-                    ) : null}
+                    {/* Sleep */}
+                    <div className={cn(
+                      "w-4 h-4 rounded flex items-center justify-center",
+                      day.sleepGoalMet 
+                        ? "bg-indigo-500/30" 
+                        : hasAnyData || day.isPast || day.isToday
+                          ? "bg-muted/80"
+                          : "bg-muted/30"
+                    )}>
+                      {day.sleep !== null ? (
+                        day.sleepGoalMet ? (
+                          <Check className="w-2.5 h-2.5 text-indigo-400" />
+                        ) : (
+                          <X className="w-2.5 h-2.5 text-muted-foreground/60" />
+                        )
+                      ) : (day.isPast || day.isToday) ? (
+                        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                      ) : null}
+                    </div>
+                    {/* Water */}
+                    <div className={cn(
+                      "w-4 h-4 rounded flex items-center justify-center",
+                      day.waterGoalMet 
+                        ? "bg-cyan-500/30" 
+                        : hasAnyData || day.isPast || day.isToday
+                          ? "bg-muted/80"
+                          : "bg-muted/30"
+                    )}>
+                      {day.water !== null ? (
+                        day.waterGoalMet ? (
+                          <Check className="w-2.5 h-2.5 text-cyan-400" />
+                        ) : (
+                          <X className="w-2.5 h-2.5 text-muted-foreground/60" />
+                        )
+                      ) : (day.isPast || day.isToday) ? (
+                        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                      ) : null}
+                    </div>
+                    {/* Exercise */}
+                    <div className={cn(
+                      "w-4 h-4 rounded flex items-center justify-center",
+                      day.exerciseGoalMet 
+                        ? "bg-orange-500/30" 
+                        : hasAnyData || day.isPast || day.isToday
+                          ? "bg-muted/80"
+                          : "bg-muted/30"
+                    )}>
+                      {day.exercise !== null ? (
+                        day.exerciseGoalMet ? (
+                          <Check className="w-2.5 h-2.5 text-orange-400" />
+                        ) : (
+                          <X className="w-2.5 h-2.5 text-muted-foreground/60" />
+                        )
+                      ) : (day.isPast || day.isToday) ? (
+                        <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
+          </div>
+          
+          {/* Legend */}
+          <div className="flex items-center justify-center gap-4 text-[10px] text-muted-foreground pt-1">
+            <span className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-indigo-500/30" />
+              ≥7h Schlaf
+            </span>
+            <span className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-cyan-500/30" />
+              ≥2L Wasser
+            </span>
+            <span className="flex items-center gap-1">
+              <div className="w-3 h-3 rounded bg-orange-500/30" />
+              ≥30min
+            </span>
           </div>
         </div>
 
         <div className="h-px bg-border" />
 
-        {/* Water */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="flex items-center gap-2 text-sm">
-              <Droplets className="w-4 h-4 text-cyan-400" />
-              Wasser
-            </Label>
-            <span className="text-sm font-bold">{waterLiters}L</span>
+        {/* Today's Input */}
+        <div className="space-y-4">
+          <div className="text-sm font-medium text-center text-muted-foreground">Heute eintragen</div>
+          
+          {/* Sleep */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2 text-sm">
+                <Moon className="w-4 h-4 text-indigo-400" />
+                Schlaf
+              </Label>
+              <span className="text-sm font-bold">{sleepHours}h</span>
+            </div>
+            <Slider
+              value={[sleepHours]}
+              onValueChange={([v]) => handleValueChange('sleep', v)}
+              min={0}
+              max={12}
+              step={0.5}
+              className="py-1"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>0h</span>
+              <span className={cn(
+                sleepHours >= 7 ? "text-green-400" : sleepHours >= 6 ? "text-amber-400" : "text-red-400"
+              )}>
+                {sleepHours >= 7 ? "✓ Optimal" : sleepHours >= 6 ? "OK" : "Zu wenig"}
+              </span>
+              <span>12h</span>
+            </div>
           </div>
-          <Slider
-            value={[waterLiters]}
-            onValueChange={([v]) => handleWaterChange(v)}
-            min={0}
-            max={5}
-            step={0.25}
-            className="py-1"
-          />
-          <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>0L</span>
-            <span className={cn(
-              waterLiters >= 2 ? "text-green-400" : waterLiters >= 1.5 ? "text-amber-400" : "text-red-400"
-            )}>
-              {waterLiters >= 2 ? "✓ Optimal" : waterLiters >= 1.5 ? "OK" : "Zu wenig"}
-            </span>
-            <span>5L</span>
-          </div>
-        </div>
 
-        {/* Exercise */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <Label className="flex items-center gap-2 text-sm">
-              <Dumbbell className="w-4 h-4 text-orange-400" />
-              Training
-            </Label>
-            <span className="text-sm font-bold">{exerciseMinutes} Min</span>
+          {/* Water */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2 text-sm">
+                <Droplets className="w-4 h-4 text-cyan-400" />
+                Wasser
+              </Label>
+              <span className="text-sm font-bold">{waterLiters}L</span>
+            </div>
+            <Slider
+              value={[waterLiters]}
+              onValueChange={([v]) => handleValueChange('water', v)}
+              min={0}
+              max={5}
+              step={0.25}
+              className="py-1"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>0L</span>
+              <span className={cn(
+                waterLiters >= 2 ? "text-green-400" : waterLiters >= 1.5 ? "text-amber-400" : "text-red-400"
+              )}>
+                {waterLiters >= 2 ? "✓ Optimal" : waterLiters >= 1.5 ? "OK" : "Zu wenig"}
+              </span>
+              <span>5L</span>
+            </div>
           </div>
-          <Slider
-            value={[exerciseMinutes]}
-            onValueChange={([v]) => handleExerciseChange(v)}
-            min={0}
-            max={120}
-            step={5}
-            className="py-1"
-          />
-          <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>0</span>
-            <span className={cn(
-              exerciseMinutes >= 30 ? "text-green-400" : exerciseMinutes > 0 ? "text-amber-400" : "text-muted-foreground"
-            )}>
-              {exerciseMinutes >= 30 ? "✓ Super!" : exerciseMinutes > 0 ? "Weiter so" : ""}
-            </span>
-            <span>2h</span>
+
+          {/* Exercise */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="flex items-center gap-2 text-sm">
+                <Dumbbell className="w-4 h-4 text-orange-400" />
+                Training
+              </Label>
+              <span className="text-sm font-bold">{exerciseMinutes} Min</span>
+            </div>
+            <Slider
+              value={[exerciseMinutes]}
+              onValueChange={([v]) => handleValueChange('exercise', v)}
+              min={0}
+              max={120}
+              step={5}
+              className="py-1"
+            />
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>0</span>
+              <span className={cn(
+                exerciseMinutes >= 30 ? "text-green-400" : exerciseMinutes > 0 ? "text-amber-400" : "text-muted-foreground"
+              )}>
+                {exerciseMinutes >= 30 ? "✓ Super!" : exerciseMinutes > 0 ? "Weiter so" : ""}
+              </span>
+              <span>2h</span>
+            </div>
           </div>
         </div>
       </CardContent>
