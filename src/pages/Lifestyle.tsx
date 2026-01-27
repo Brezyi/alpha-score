@@ -110,6 +110,7 @@ export default function Lifestyle() {
   const [currentScore, setCurrentScore] = useState<number | null>(null);
   const [showSleepTracker, setShowSleepTracker] = useState(false);
   const [showSupplements, setShowSupplements] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const isNative = Capacitor.isNativePlatform();
   const navigate = useNavigate();
 
@@ -211,7 +212,7 @@ export default function Lifestyle() {
           animate={{ opacity: 1, y: 0 }} 
           transition={{ delay: 0.05 }}
         >
-          <LifestyleTracker />
+          <LifestyleTracker onDateChange={setSelectedDate} />
         </motion.div>
 
         {/* Health Alerts */}
@@ -221,7 +222,7 @@ export default function Lifestyle() {
         <div className="grid gap-6">
           {/* Supplements */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <SupplementTracker />
+            <SupplementTracker selectedDate={selectedDate} />
           </motion.div>
 
           {/* Goals & Challenges */}

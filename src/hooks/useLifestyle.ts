@@ -105,13 +105,13 @@ export function useLifestyle() {
     }
   }, [user]);
 
-  const fetchTodaySupplements = useCallback(async () => {
-    if (!user) return;
+  const fetchSupplementsForDate = useCallback(async (date: Date) => {
+    if (!user) return [];
 
     try {
-      const startOfDay = new Date();
+      const startOfDay = new Date(date);
       startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date();
+      const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
       const { data, error } = await supabase
@@ -126,11 +126,19 @@ export function useLifestyle() {
         .order("taken_at", { ascending: false });
 
       if (error) throw error;
-      setTodaySupplements(data || []);
+      return data || [];
     } catch (error) {
-      console.error("Error fetching today's supplements:", error);
+      console.error("Error fetching supplements for date:", error);
+      return [];
     }
   }, [user]);
+
+  const fetchTodaySupplements = useCallback(async () => {
+    if (!user) return;
+
+    const data = await fetchSupplementsForDate(new Date());
+    setTodaySupplements(data);
+  }, [user, fetchSupplementsForDate]);
 
   const updateTodayEntry = async (updates: Partial<LifestyleEntry>) => {
     if (!user) return false;
@@ -171,8 +179,10 @@ export function useLifestyle() {
     }
   };
 
-  const logSupplement = async (supplementId: string, dosage?: string, notes?: string) => {
+  const logSupplement = async (supplementId: string, date?: Date, dosage?: string, notes?: string) => {
     if (!user) return false;
+
+    const takenAt = date || new Date();
 
     try {
       const { error } = await supabase
@@ -182,7 +192,7 @@ export function useLifestyle() {
           supplement_id: supplementId,
           dosage,
           notes,
-          taken_at: new Date().toISOString()
+          taken_at: takenAt.toISOString()
         });
 
       if (error) throw error;
@@ -295,6 +305,7 @@ export function useLifestyle() {
     logSupplement,
     deleteSupplementLog,
     createCustomSupplement,
+    fetchSupplementsForDate,
     refetch: async () => {
       await Promise.all([
         fetchTodayEntry(),
