@@ -2037,6 +2037,7 @@ export type Database = {
         }
       }
       validate_display_name: { Args: { p_name: string }; Returns: boolean }
+      validate_promo_code: { Args: { p_code: string }; Returns: Json }
       verify_admin_password: {
         Args: { _password: string }
         Returns: {
