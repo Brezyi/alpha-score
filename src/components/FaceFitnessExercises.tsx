@@ -286,94 +286,97 @@ export function FaceFitnessExercises({ className }: FaceFitnessExercisesProps) {
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary/5 pointer-events-none" />
                 )}
 
-                {/* Main Row */}
-                <div className="relative flex items-center gap-4 p-4">
-                  {/* Image Thumbnail */}
-                  <div 
-                    className={cn(
-                      "relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer group",
-                      "ring-2 ring-border/50 hover:ring-primary/50 transition-all"
-                    )}
-                    onClick={() => toggleExpanded(exercise.id)}
-                  >
-                    <img
-                      src={exercise.image}
-                      alt={exercise.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                    />
-                    {isCompleted && (
-                      <motion.div 
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        className="absolute inset-0 bg-primary/90 flex items-center justify-center"
-                      >
-                        <Check className="w-8 h-8 text-primary-foreground" strokeWidth={3} />
-                      </motion.div>
-                    )}
-                  </div>
-
-                  {/* Exercise Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h4 className={cn(
-                        "font-bold text-base transition-colors",
-                        isCompleted && "text-primary"
-                      )}>
-                        {exercise.name}
-                      </h4>
-                      <span className={cn(
-                        "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                        difficulty.bg, difficulty.color
-                      )}>
-                        {difficulty.label}
-                      </span>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-                      {exercise.description}
-                    </p>
-                    <div className="flex items-center gap-4 text-xs">
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        <Timer className="w-3.5 h-3.5 text-primary/70" />
-                        {exercise.duration}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        <RotateCcw className="w-3.5 h-3.5 text-primary/70" />
-                        {exercise.reps}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-muted-foreground">
-                        <Target className="w-3.5 h-3.5 text-primary/70" />
-                        {exercise.targetArea}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9 rounded-full hover:bg-primary/10"
+                {/* Main Row - Mobile Optimized */}
+                <div className="relative p-3 sm:p-4">
+                  <div className="flex items-start gap-3 sm:gap-4">
+                    {/* Image Thumbnail */}
+                    <div 
+                      className={cn(
+                        "relative w-14 h-14 sm:w-20 sm:h-20 rounded-xl overflow-hidden flex-shrink-0 cursor-pointer group",
+                        "ring-2 ring-border/50 hover:ring-primary/50 transition-all"
+                      )}
                       onClick={() => toggleExpanded(exercise.id)}
                     >
-                      <motion.div
-                        animate={{ rotate: isExpanded ? 180 : 0 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <ChevronDown className="w-5 h-5" />
-                      </motion.div>
-                    </Button>
+                      <img
+                        src={exercise.image}
+                        alt={exercise.name}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                      />
+                      {isCompleted && (
+                        <motion.div 
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute inset-0 bg-primary/90 flex items-center justify-center"
+                        >
+                          <Check className="w-6 h-6 sm:w-8 sm:h-8 text-primary-foreground" strokeWidth={3} />
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {/* Exercise Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className={cn(
+                            "font-bold text-sm sm:text-base transition-colors",
+                            isCompleted && "text-primary"
+                          )}>
+                            {exercise.name}
+                          </h4>
+                          <span className={cn(
+                            "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                            difficulty.bg, difficulty.color
+                          )}>
+                            {difficulty.label}
+                          </span>
+                        </div>
+                        {/* Expand Button - Mobile */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 sm:h-9 sm:w-9 rounded-full hover:bg-primary/10 flex-shrink-0"
+                          onClick={() => toggleExpanded(exercise.id)}
+                        >
+                          <motion.div
+                            animate={{ rotate: isExpanded ? 180 : 0 }}
+                            transition={{ duration: 0.3 }}
+                          >
+                            <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                          </motion.div>
+                        </Button>
+                      </div>
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-1 mb-2">
+                        {exercise.description}
+                      </p>
+                      
+                      {/* Stats - Wrapped for mobile */}
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-xs">
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <Timer className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary/70" />
+                          {exercise.duration}
+                        </span>
+                        <span className="flex items-center gap-1 text-muted-foreground">
+                          <RotateCcw className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary/70" />
+                          <span className="truncate max-w-[80px] sm:max-w-none">{exercise.reps}</span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Button - Full width on mobile */}
+                  <div className="mt-3 flex justify-end">
                     <Button
                       variant={isCompleted ? "default" : "outline"}
                       size="sm"
                       className={cn(
-                        "h-9 rounded-full font-medium transition-all",
+                        "h-8 sm:h-9 rounded-full font-medium transition-all text-xs sm:text-sm",
                         isCompleted && "shadow-lg shadow-primary/25"
                       )}
                       onClick={() => toggleComplete(exercise.id)}
                     >
                       {isCompleted ? (
                         <>
-                          <Check className="w-4 h-4 mr-1" />
+                          <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
                           Erledigt
                         </>
                       ) : (
