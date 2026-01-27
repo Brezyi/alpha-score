@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { LifestyleTracker } from "@/components/lifestyle/LifestyleTracker";
-import { SleepTracker } from "@/components/lifestyle/SleepTracker";
 import { SupplementTracker } from "@/components/lifestyle/SupplementTracker";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeeklyChallengeCard } from "@/components/challenges/WeeklyChallengeCard";
@@ -220,23 +219,18 @@ export default function Lifestyle() {
 
         {/* Main Grid */}
         <div className="grid gap-6">
-          {/* Sleep Tracker */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <SleepTracker />
-          </motion.div>
-          
           {/* Supplements */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
             <SupplementTracker />
           </motion.div>
 
           {/* Goals & Challenges */}
           <div className="grid md:grid-cols-2 gap-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
               <GoalCard currentScore={currentScore} />
             </motion.div>
             
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <WeeklyChallengeCard />
             </motion.div>
           </div>
