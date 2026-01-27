@@ -12,7 +12,7 @@ import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { MFAVerification } from "@/components/MFAVerification";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useSecurityAlerts } from "@/hooks/useSecurityAlerts";
-import { Capacitor } from "@capacitor/core";
+import { useNativePlatform } from "@/hooks/useNativePlatform";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -38,8 +38,8 @@ const Login = () => {
   const { settings } = useGlobalSettings();
   const { sendSecurityAlert } = useSecurityAlerts();
   
-  // Check if running as native app
-  const isNative = Capacitor.isNativePlatform();
+  // Check if running as native app or mobile preview
+  const { shouldUseMobileLayout } = useNativePlatform();
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -214,8 +214,8 @@ const Login = () => {
     }
   };
 
-  // Native app layout - simplified, full screen form
-  if (isNative) {
+  // Native app or mobile preview layout - simplified, full screen form
+  if (shouldUseMobileLayout) {
     return (
       <div className="min-h-screen bg-background flex flex-col safe-area-inset">
         <div className="flex-1 flex flex-col justify-center px-6 py-8">
