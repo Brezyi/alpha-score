@@ -119,14 +119,6 @@ const quickActions = [
     color: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
     premium: true,
   },
-  {
-    icon: MessageSquare,
-    title: "AI Coach",
-    description: "Stelle Fragen an deinen Coach",
-    href: "/coach",
-    color: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
-    premium: true,
-  },
 ];
 
 // Animated number (60fps) without React re-renders
