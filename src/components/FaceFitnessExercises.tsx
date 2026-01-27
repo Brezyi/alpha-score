@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, RotateCcw, Timer, ChevronDown, Sparkles, Flame, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -174,11 +174,19 @@ const difficultyConfig = {
 
 interface FaceFitnessExercisesProps {
   className?: string;
+  initialExpandedExercise?: string | null;
 }
 
-export function FaceFitnessExercises({ className }: FaceFitnessExercisesProps) {
+export function FaceFitnessExercises({ className, initialExpandedExercise }: FaceFitnessExercisesProps) {
   const [completedExercises, setCompletedExercises] = useState<Set<string>>(new Set());
-  const [expandedExercise, setExpandedExercise] = useState<string | null>(null);
+  const [expandedExercise, setExpandedExercise] = useState<string | null>(initialExpandedExercise || null);
+
+  // Update expanded exercise when initialExpandedExercise changes
+  useEffect(() => {
+    if (initialExpandedExercise) {
+      setExpandedExercise(initialExpandedExercise);
+    }
+  }, [initialExpandedExercise]);
 
   const toggleComplete = (exerciseId: string) => {
     setCompletedExercises(prev => {

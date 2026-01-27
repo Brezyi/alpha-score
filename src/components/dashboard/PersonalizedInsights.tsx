@@ -53,7 +53,7 @@ const WEAKNESS_TIPS: Record<string, Tip[]> = {
     { id: "acne-diet", icon: Apple, title: "Ernährung anpassen", description: "Weniger Zucker und Milchprodukte", category: "nutrition", priority: 2, color: "text-green-400" },
   ],
   "Jawline": [
-    { id: "jaw-mewing", icon: Dumbbell, title: "Mewing üben", description: "Zungenhaltung für bessere Kieferform", category: "exercise", priority: 1, link: "/plan", color: "text-orange-400" },
+    { id: "jaw-mewing", icon: Dumbbell, title: "Mewing üben", description: "Zungenhaltung für bessere Kieferform", category: "exercise", priority: 1, link: "/plan?exercise=mewing#face-fitness", color: "text-orange-400" },
     { id: "jaw-bodyfat", icon: Apple, title: "Körperfett reduzieren", description: "Niedrigerer KFA macht Jawline sichtbarer", category: "nutrition", priority: 2, color: "text-green-400" },
   ],
   "Körperbau": [
