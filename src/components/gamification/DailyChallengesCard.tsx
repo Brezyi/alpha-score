@@ -119,12 +119,12 @@ const ChallengeItem = memo(({
       )}
       style={shouldReduce ? {} : { animationDelay: `${index * 50}ms` }}
     >
-      <span className="text-2xl">{challenge.icon}</span>
+      <span className="text-2xl flex-shrink-0">{challenge.icon}</span>
       
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <h4 className={cn(
-            "font-medium truncate",
+            "font-medium text-sm sm:text-base",
             challenge.completed && "line-through text-muted-foreground"
           )}>
             {challenge.title}
@@ -141,7 +141,7 @@ const ChallengeItem = memo(({
             </span>
           )}
         </div>
-        <p className="text-xs text-muted-foreground truncate">
+        <p className="text-xs text-muted-foreground line-clamp-2">
           {challenge.description}
         </p>
       </div>
