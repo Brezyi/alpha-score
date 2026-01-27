@@ -140,27 +140,39 @@ export function useWeeklyChallenges() {
     }
   };
 
-  const updateProgress = async (progressIncrement: number) => {
+  const completeChallenge = async (success: boolean) => {
     if (!user || !currentChallenge) return false;
 
     try {
-      const newProgress = Math.min((currentChallenge.progress || 0) + progressIncrement, 100);
-      const isCompleted = newProgress >= 100;
+      // Check if 7 days have passed
+      const startedAt = new Date(currentChallenge.started_at);
+      const now = new Date();
+      const daysPassed = Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysPassed < 7) {
+        toast({
+          title: "Noch nicht möglich",
+          description: `Du kannst die Challenge erst nach 7 Tagen abschließen. Noch ${7 - daysPassed} Tag(e) verbleibend.`,
+          variant: "destructive"
+        });
+        return false;
+      }
 
-      const { error } = await supabase
-        .from("user_weekly_challenges")
-        .update({
-          progress: newProgress,
-          completed: isCompleted,
-          completed_at: isCompleted ? new Date().toISOString() : null
-        })
-        .eq("id", currentChallenge.id);
-
-      if (error) throw error;
-
-      if (isCompleted) {
+      if (success) {
+        // Successfully completed - award XP
         const xpReward = currentChallenge.challenge?.xp_reward || 100;
         
+        const { error } = await supabase
+          .from("user_weekly_challenges")
+          .update({
+            progress: 100,
+            completed: true,
+            completed_at: new Date().toISOString()
+          })
+          .eq("id", currentChallenge.id);
+
+        if (error) throw error;
+
         // Add XP via RPC
         await supabase.rpc("add_user_xp", {
           p_user_id: user.id,
@@ -172,14 +184,52 @@ export function useWeeklyChallenges() {
           title: "Challenge abgeschlossen! 🎉",
           description: `+${xpReward} XP verdient!`
         });
+      } else {
+        // Failed - no XP, mark as not completed
+        const { error } = await supabase
+          .from("user_weekly_challenges")
+          .update({
+            progress: 0,
+            completed: true,
+            completed_at: new Date().toISOString()
+          })
+          .eq("id", currentChallenge.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Schade!",
+          description: "Beim nächsten Mal klappt es bestimmt. Starte eine neue Challenge!"
+        });
       }
 
       await Promise.all([fetchCurrentChallenge(), fetchCompletedChallenges()]);
       return true;
     } catch (error) {
-      console.error("Error updating progress:", error);
+      console.error("Error completing challenge:", error);
+      toast({
+        title: "Fehler",
+        description: "Challenge konnte nicht abgeschlossen werden.",
+        variant: "destructive"
+      });
       return false;
     }
+  };
+
+  const canComplete = () => {
+    if (!currentChallenge) return false;
+    const startedAt = new Date(currentChallenge.started_at);
+    const now = new Date();
+    const daysPassed = Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24));
+    return daysPassed >= 7;
+  };
+
+  const getDaysRemaining = () => {
+    if (!currentChallenge) return 0;
+    const startedAt = new Date(currentChallenge.started_at);
+    const now = new Date();
+    const daysPassed = Math.floor((now.getTime() - startedAt.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, 7 - daysPassed);
   };
 
   const abandonChallenge = async () => {
@@ -225,7 +275,9 @@ export function useWeeklyChallenges() {
     completedChallenges,
     loading,
     startChallenge,
-    updateProgress,
+    completeChallenge,
+    canComplete,
+    getDaysRemaining,
     abandonChallenge,
     refetch: async () => {
       await Promise.all([
