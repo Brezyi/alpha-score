@@ -21,7 +21,6 @@ const plans = [
     limitations: [
       "Keine detaillierte Auswertung",
       "Kein personalisierter Plan",
-      "Kein AI Coach",
     ],
     cta: "Kostenlos starten",
     variant: "outline" as const,
@@ -36,9 +35,9 @@ const plans = [
       "Unbegrenzte KI-Analysen",
       "Detaillierter Looks Score",
       "Personalisierter Verbesserungsplan",
-      "AI Coach ohne Limits",
       "Progress Tracking",
       "Lifestyle Tracking",
+      "Face Fitness Übungen",
     ],
     limitations: [],
     cta: "Premium werden",
@@ -54,8 +53,8 @@ const plans = [
     features: [
       "Alle Premium-Features",
       "Unbegrenzte KI-Analysen",
-      "AI Coach ohne Limits",
       "Lebenslanger Zugang",
+      "Einmalzahlung",
       "Keine monatlichen Kosten",
     ],
     limitations: [],
