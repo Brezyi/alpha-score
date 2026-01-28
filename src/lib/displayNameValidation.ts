@@ -75,8 +75,8 @@ export const displayNameSchema = z
   .trim()
   .min(2, { message: "Anzeigename muss mindestens 2 Zeichen haben" })
   .max(30, { message: "Anzeigename darf maximal 30 Zeichen haben" })
-  .regex(/^[a-zA-Z0-9äöüÄÖÜß\s._-]+$/, {
-    message: "Nur Buchstaben, Zahlen, Leerzeichen, Punkte, Unterstriche und Bindestriche erlaubt"
+  .regex(/^[a-zA-ZäöüÄÖÜß][a-zA-Z0-9äöüÄÖÜß\s._-]*$/, {
+    message: "Muss mit einem Buchstaben beginnen. Nur Buchstaben, Zahlen, Leerzeichen, Punkte, Unterstriche und Bindestriche erlaubt"
   })
   .refine((name) => !containsForbiddenContent(name), {
     message: "Dieser Anzeigename ist nicht erlaubt"
