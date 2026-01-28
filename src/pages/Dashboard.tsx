@@ -386,11 +386,15 @@ const Dashboard = () => {
 
   const isPremiumUser = isPremium;
 
-  // Calculate stats
+  // Calculate stats - but ONLY if not locked (prevent JS manipulation)
   const completedAnalyses = analyses.filter(a => a.status === "completed" && a.looks_score !== null);
-  const latestScore = completedAnalyses[0]?.looks_score ?? null;
-  const latestPotential = completedAnalyses[0]?.potential_score ?? null;
-  const previousScore = completedAnalyses[1]?.looks_score ?? null;
+  
+  // Security: Don't expose real values when locked - use null/placeholder
+  const shouldHideData = isResultsLocked && completedAnalyses.length > 0;
+  
+  const latestScore = shouldHideData ? null : (completedAnalyses[0]?.looks_score ?? null);
+  const latestPotential = shouldHideData ? null : (completedAnalyses[0]?.potential_score ?? null);
+  const previousScore = shouldHideData ? null : (completedAnalyses[1]?.looks_score ?? null);
   const scoreDiff = latestScore !== null && previousScore !== null 
     ? (latestScore - previousScore).toFixed(1) 
     : null;
@@ -404,16 +408,17 @@ const Dashboard = () => {
     : null;
   
   // Check if current score is the personal best
-  const allScores = completedAnalyses.map(a => a.looks_score).filter((s): s is number => s !== null);
+  const allScores = shouldHideData ? [] : completedAnalyses.map(a => a.looks_score).filter((s): s is number => s !== null);
   const highestScore = allScores.length > 0 ? Math.max(...allScores) : null;
   const isPersonalBest = latestScore !== null && highestScore !== null && latestScore >= highestScore && completedAnalyses.length > 1;
 
-  // Get user's weaknesses for product recommendations
-  const userWeaknesses = completedAnalyses[0]?.weaknesses || [];
+  // Get user's weaknesses for product recommendations (hide if locked)
+  const userWeaknesses = shouldHideData ? [] : (completedAnalyses[0]?.weaknesses || []);
   const { products: recommendedProducts, loading: productsLoading, hasPersonalizedResults } = useProductRecommendations(userWeaknesses);
 
   // Chart data (last 10 analyses, reversed for chronological order) with potential and change
-  const chartDataRaw = completedAnalyses.slice(0, 10).reverse();
+  // Security: Empty chart data when locked
+  const chartDataRaw = shouldHideData ? [] : completedAnalyses.slice(0, 10).reverse();
   const chartData = chartDataRaw.map((a, index) => {
     const prevScore = index > 0 ? chartDataRaw[index - 1].looks_score : null;
     const change = a.looks_score !== null && prevScore !== null ? a.looks_score - prevScore : null;
@@ -512,9 +517,9 @@ const Dashboard = () => {
               <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
               
               {/* Locked state for free users without referrals */}
-              {isResultsLocked && completedAnalyses.length > 0 ? (
+              {shouldHideData ? (
                 <div className="relative">
-                  {/* Blurred score circle */}
+                  {/* Blurred score circle - no real data exposed */}
                   <div className="relative inline-flex items-center justify-center blur-lg opacity-50 pointer-events-none select-none">
                     <svg
                       className="w-32 h-32 transform -rotate-90 overflow-visible"
@@ -538,11 +543,11 @@ const Dashboard = () => {
                         fill="none"
                         strokeLinecap="round"
                         strokeDasharray={352}
-                        strokeDashoffset={352 - (352 * 7.5) / 10}
+                        strokeDashoffset={352 - (352 * 5) / 10}
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-4xl font-black text-primary">?.?</span>
+                      <span className="text-4xl font-black text-primary">—</span>
                       <span className="text-xs text-muted-foreground">von 10</span>
                     </div>
                   </div>
@@ -631,10 +636,10 @@ const Dashboard = () => {
 
           {/* Potential & Stats */}
           <div className="md:col-span-2 space-y-4">
-            {/* Potential Card */}
-            {latestPotential !== null && (
+            {/* Potential Card - only render when not locked AND has data */}
+            {completedAnalyses.length > 0 && completedAnalyses[0]?.potential_score !== null && (
               <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
-                {isResultsLocked && completedAnalyses.length > 0 ? (
+                {shouldHideData ? (
                   <>
                     <div className="blur-md opacity-50 pointer-events-none select-none">
                       <div className="flex items-center justify-between">
@@ -642,17 +647,17 @@ const Dashboard = () => {
                           <Sparkles className="w-5 h-5 text-primary" />
                           <span className="font-medium">Dein Potenzial</span>
                         </div>
-                        <span className="text-2xl font-bold text-primary">?.?</span>
+                        <span className="text-2xl font-bold text-primary">—</span>
                       </div>
                       <div className="mt-2 text-sm text-muted-foreground">
-                        Noch <span className="text-primary font-semibold">+?.? Punkte</span> erreichbar
+                        Noch <span className="text-primary font-semibold">+— Punkte</span> erreichbar
                       </div>
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Lock className="w-5 h-5 text-primary" />
                     </div>
                   </>
-                ) : (
+                ) : latestPotential !== null ? (
                   <>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -667,7 +672,7 @@ const Dashboard = () => {
                       </div>
                     )}
                   </>
-                )}
+                ) : null}
               </div>
             )}
 
@@ -706,10 +711,10 @@ const Dashboard = () => {
               </div>
               {/* Ranking - Locked for free users */}
               <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform relative" style={{ animationDelay: "350ms", animationFillMode: "forwards" }}>
-                {isResultsLocked && completedAnalyses.length > 0 ? (
+                {shouldHideData ? (
                   <>
                     <div className="blur-md opacity-50 pointer-events-none select-none">
-                      <div className="text-2xl font-bold text-primary">Top ?%</div>
+                      <div className="text-2xl font-bold text-primary">Top —%</div>
                       <div className="text-xs text-muted-foreground">Ranking</div>
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -805,7 +810,7 @@ const Dashboard = () => {
         {/* Potential Progress Bar */}
         {potentialProgress !== null && latestPotential !== null && (
           <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "500ms", animationFillMode: "forwards" }}>
-            {isResultsLocked && completedAnalyses.length > 0 ? (
+            {shouldHideData ? (
               <>
                 <div className="blur-md opacity-50 pointer-events-none select-none">
                   <div className="flex items-center justify-between mb-3">
@@ -814,15 +819,15 @@ const Dashboard = () => {
                       <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      <span className="text-foreground font-bold">?.?</span>
+                      <span className="text-foreground font-bold">—</span>
                       <span className="mx-1">/</span>
-                      <span className="text-primary font-bold">?.?</span>
+                      <span className="text-primary font-bold">—</span>
                     </div>
                   </div>
                   <Progress value={50} className="h-4" />
                   <div className="flex items-center justify-between mt-2 text-sm">
                     <span className="text-muted-foreground">
-                      Noch <span className="text-primary font-semibold">+?.? Punkte</span> möglich
+                      Noch <span className="text-primary font-semibold">+— Punkte</span> möglich
                     </span>
                   </div>
                 </div>
@@ -870,8 +875,8 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Personalized Insights based on weaknesses and lifestyle */}
-        {isPremiumUser && completedAnalyses.length > 0 && (
+        {/* Personalized Insights based on weaknesses and lifestyle - hide when locked */}
+        {isPremiumUser && completedAnalyses.length > 0 && !shouldHideData && (
           <PersonalizedInsights
             weaknesses={completedAnalyses[0]?.weaknesses || []}
             priorities={completedAnalyses[0]?.detailed_results?.priorities || []}
@@ -884,7 +889,7 @@ const Dashboard = () => {
         {/* Score Chart - Clean Style */}
         {chartData.length >= 2 && (
           <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-scale-in relative overflow-hidden" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
-            {isResultsLocked && completedAnalyses.length > 0 ? (
+            {shouldHideData ? (
               <>
                 <div className="blur-md opacity-50 pointer-events-none select-none">
                   <div className="flex items-center justify-between mb-4">
@@ -1111,7 +1116,7 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "1200ms", animationFillMode: "forwards" }}>
             <h2 className="text-xl font-bold">Letzte Analysen</h2>
-            {analyses.length > 5 && !isResultsLocked && (
+            {analyses.length > 5 && !shouldHideData && (
               <Link to="/progress#analyses" className="text-sm text-primary hover:underline flex items-center gap-1 group">
                 Alle {analyses.length} anzeigen
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -1137,7 +1142,7 @@ const Dashboard = () => {
                 </Button>
               </Link>
             </div>
-          ) : isResultsLocked && completedAnalyses.length > 0 ? (
+          ) : shouldHideData ? (
             <div className="relative p-8 rounded-2xl glass-card opacity-0 animate-scale-in overflow-hidden" style={{ animationDelay: "1300ms", animationFillMode: "forwards" }}>
               <div className="blur-md opacity-50 pointer-events-none select-none space-y-3">
                 {[1, 2, 3].map((i) => (
