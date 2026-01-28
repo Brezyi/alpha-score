@@ -1840,6 +1840,14 @@ export type Database = {
         }
         Relationships: []
       }
+      unconfirmed_users_stats: {
+        Row: {
+          confirmed: number | null
+          expired_unconfirmed: number | null
+          pending_confirmation: number | null
+        }
+        Relationships: []
+      }
       user_testimonials_public: {
         Row: {
           age: number | null
@@ -1927,6 +1935,12 @@ export type Database = {
         Returns: boolean
       }
       cleanup_old_login_attempts: { Args: never; Returns: number }
+      cleanup_unconfirmed_users: {
+        Args: never
+        Returns: {
+          deleted_count: number
+        }[]
+      }
       clear_failed_logins: { Args: { _email: string }; Returns: undefined }
       complete_challenge: {
         Args: { p_challenge_id: string; p_user_id: string }
