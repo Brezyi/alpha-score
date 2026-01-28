@@ -60,6 +60,7 @@ import { useProductRecommendations } from "@/hooks/useProductRecommendations";
 import { ProductRecommendationsCard } from "@/components/ProductRecommendationsCard";
 import { PersonalizedInsights } from "@/components/dashboard/PersonalizedInsights";
 import { useLifestyle } from "@/hooks/useLifestyle";
+import { useReferral } from "@/hooks/useReferral";
 import { Capacitor } from "@capacitor/core";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
@@ -218,8 +219,14 @@ const Dashboard = () => {
   // Lifestyle data for personalized insights
   const { todayEntry: lifestyleData, loading: lifestyleLoading } = useLifestyle();
   
+  // Referral check for free users
+  const { hasEnoughReferrals, loading: referralLoading } = useReferral();
+  
   // Gamification
   const { xp, achievements, dailyChallenges, loading: gamificationLoading, challengesLoading, completeChallenge, checkAchievements } = useGamification();
+  
+  // Check if results should be locked (free user without enough referrals)
+  const isResultsLocked = !isPremium && !hasEnoughReferrals;
 
   // Format subscription badge
   const getSubscriptionBadge = () => {
@@ -494,8 +501,8 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Main Score Card with Circle */}
           <div className="md:col-span-1 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
-            {/* Personal Best Badge */}
-            {isPersonalBest && (
+            {/* Personal Best Badge - only show if not locked */}
+            {!isResultsLocked && isPersonalBest && (
               <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-medium">
                 <Trophy className="w-3 h-3" />
                 <span>Bestwert</span>
@@ -503,67 +510,121 @@ const Dashboard = () => {
             )}
             <div className="text-center">
               <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
-              <div className="relative inline-flex items-center justify-center">
-                <svg
-                  className="w-32 h-32 transform -rotate-90 overflow-visible"
-                  viewBox="-8 -8 144 144"
-                >
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    fill="none"
-                    className="text-muted/30"
-                  />
-                  <circle
-                    cx="64"
-                    cy="64"
-                    r="56"
-                    stroke="url(#dashboardScoreGradient)"
-                    strokeWidth="8"
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeDasharray={352}
-                    strokeDashoffset={352 - (352 * (latestScore || 0)) / 10}
-                    className={`transition-all duration-1000 ease-out ${scoreDiff !== null && parseFloat(scoreDiff) > 0 ? '[filter:drop-shadow(0_0_6px_hsl(var(--primary)/0.5))]' : ''}`}
-                  />
-                  <defs>
-                    <linearGradient id="dashboardScoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" />
-                      <stop offset="100%" stopColor="hsl(153, 100%, 60%)" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-4xl font-black text-primary">
-                    {latestScore !== null ? (
-                      hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
-                    ) : "—"}
-                  </span>
-                  <span className="text-xs text-muted-foreground">von 10</span>
-                </div>
-              </div>
               
-              {/* Score Change Indicator - centered below */}
-              {scoreDiff !== null && (
-                <div className="mt-3 flex justify-center">
-                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
-                    parseFloat(scoreDiff) > 0 ? "bg-green-500/10 text-green-500" : 
-                    parseFloat(scoreDiff) < 0 ? "bg-red-500/10 text-red-500" : "bg-muted text-muted-foreground"
-                  }`}>
-                    {parseFloat(scoreDiff) > 0 ? (
-                      <ArrowUpRight className="w-4 h-4" />
-                    ) : parseFloat(scoreDiff) < 0 ? (
-                      <ArrowDownRight className="w-4 h-4" />
-                    ) : (
-                      <Minus className="w-4 h-4" />
-                    )}
-                    <span>{parseFloat(scoreDiff) > 0 ? "+" : ""}{scoreDiff}</span>
-                    <span className="text-muted-foreground font-normal">seit letzter Analyse</span>
+              {/* Locked state for free users without referrals */}
+              {isResultsLocked && completedAnalyses.length > 0 ? (
+                <div className="relative">
+                  {/* Blurred score circle */}
+                  <div className="relative inline-flex items-center justify-center blur-lg opacity-50 pointer-events-none select-none">
+                    <svg
+                      className="w-32 h-32 transform -rotate-90 overflow-visible"
+                      viewBox="-8 -8 144 144"
+                    >
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        className="text-muted/30"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={352}
+                        strokeDashoffset={352 - (352 * 7.5) / 10}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-black text-primary">?.?</span>
+                      <span className="text-xs text-muted-foreground">von 10</span>
+                    </div>
+                  </div>
+                  
+                  {/* Lock overlay */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center mb-2">
+                      <Lock className="w-8 h-8 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium mb-2">Ergebnis gesperrt</p>
+                    <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
+                      <Button size="sm" variant="hero">
+                        Freischalten
+                      </Button>
+                    </Link>
                   </div>
                 </div>
+              ) : (
+                <>
+                  <div className="relative inline-flex items-center justify-center">
+                    <svg
+                      className="w-32 h-32 transform -rotate-90 overflow-visible"
+                      viewBox="-8 -8 144 144"
+                    >
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        className="text-muted/30"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="url(#dashboardScoreGradient)"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={352}
+                        strokeDashoffset={352 - (352 * (latestScore || 0)) / 10}
+                        className={`transition-all duration-1000 ease-out ${scoreDiff !== null && parseFloat(scoreDiff) > 0 ? '[filter:drop-shadow(0_0_6px_hsl(var(--primary)/0.5))]' : ''}`}
+                      />
+                      <defs>
+                        <linearGradient id="dashboardScoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" />
+                          <stop offset="100%" stopColor="hsl(153, 100%, 60%)" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-black text-primary">
+                        {latestScore !== null ? (
+                          hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
+                        ) : "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">von 10</span>
+                    </div>
+                  </div>
+                  
+                  {/* Score Change Indicator - centered below */}
+                  {scoreDiff !== null && (
+                    <div className="mt-3 flex justify-center">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
+                        parseFloat(scoreDiff) > 0 ? "bg-green-500/10 text-green-500" : 
+                        parseFloat(scoreDiff) < 0 ? "bg-red-500/10 text-red-500" : "bg-muted text-muted-foreground"
+                      }`}>
+                        {parseFloat(scoreDiff) > 0 ? (
+                          <ArrowUpRight className="w-4 h-4" />
+                        ) : parseFloat(scoreDiff) < 0 ? (
+                          <ArrowDownRight className="w-4 h-4" />
+                        ) : (
+                          <Minus className="w-4 h-4" />
+                        )}
+                        <span>{parseFloat(scoreDiff) > 0 ? "+" : ""}{scoreDiff}</span>
+                        <span className="text-muted-foreground font-normal">seit letzter Analyse</span>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
