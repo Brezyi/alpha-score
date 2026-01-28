@@ -1840,14 +1840,6 @@ export type Database = {
         }
         Relationships: []
       }
-      unconfirmed_users_stats: {
-        Row: {
-          confirmed: number | null
-          expired_unconfirmed: number | null
-          pending_confirmation: number | null
-        }
-        Relationships: []
-      }
       user_testimonials_public: {
         Row: {
           age: number | null
@@ -2009,6 +2001,14 @@ export type Database = {
           xp_reward: number
         }[]
       }
+      get_expired_unconfirmed_user_ids: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          user_id: string
+        }[]
+      }
       get_my_sensitive_data: {
         Args: never
         Returns: {
@@ -2039,6 +2039,14 @@ export type Database = {
           app_logo_url: string
           app_name: string
           favicon_url: string
+        }[]
+      }
+      get_unconfirmed_users_stats: {
+        Args: never
+        Returns: {
+          confirmed: number
+          expired_unconfirmed: number
+          pending_confirmation: number
         }[]
       }
       get_user_role: {
