@@ -67,6 +67,89 @@ serve(async (req) => {
     }
     logStep("Analysis ID received", { analysisId });
 
+    // ====== CHECK SUBSCRIPTION & DAILY LIMITS ======
+    // Check user's subscription status
+    const { data: dbSubscription } = await supabaseClient
+      .from('subscriptions')
+      .select('status, plan_type, current_period_end')
+      .eq('user_id', user.id)
+      .eq('status', 'active')
+      .maybeSingle();
+
+    // Check if user is owner (unlimited access)
+    const { data: roleData } = await supabaseClient.rpc('get_user_role', {
+      _user_id: user.id
+    });
+    const isOwner = roleData === 'owner';
+
+    const subscriptionType = dbSubscription?.plan_type || null;
+    const isPremium = subscriptionType === 'premium' || subscriptionType === 'lifetime' || isOwner;
+    const isLifetime = subscriptionType === 'lifetime' || isOwner;
+
+    logStep("Subscription check", { isPremium, subscriptionType, isOwner, isLifetime });
+
+    // Count today's completed analyses for this user
+    const today = new Date();
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+
+    const { count: todayAnalysesCount } = await supabaseClient
+      .from('analyses')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('status', 'completed')
+      .gte('created_at', startOfDay)
+      .lt('created_at', endOfDay);
+
+    const dailyCount = todayAnalysesCount || 0;
+    logStep("Daily analysis count", { dailyCount, startOfDay, endOfDay });
+
+    // Apply limits based on subscription
+    const DAILY_LIMIT_PREMIUM = 10;
+    const DAILY_LIMIT_FREE = 1;
+
+    if (!isPremium) {
+      // Free users: check if they already have a completed analysis
+      const { count: totalCount } = await supabaseClient
+        .from('analyses')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'completed');
+
+      if ((totalCount || 0) >= DAILY_LIMIT_FREE) {
+        logStep("Free user limit reached", { totalCount });
+        return new Response(JSON.stringify({
+          success: false,
+          error: "LIMIT_REACHED",
+          message: "Du hast deine kostenlose Analyse bereits verwendet. Upgrade auf Premium für mehr Analysen!",
+          limit: DAILY_LIMIT_FREE,
+          used: totalCount || 0,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    } else if (!isLifetime) {
+      // Premium users (not lifetime): check daily limit
+      if (dailyCount >= DAILY_LIMIT_PREMIUM) {
+        logStep("Premium daily limit reached", { dailyCount, limit: DAILY_LIMIT_PREMIUM });
+        return new Response(JSON.stringify({
+          success: false,
+          error: "DAILY_LIMIT_REACHED",
+          message: `Du hast dein Tageslimit von ${DAILY_LIMIT_PREMIUM} Analysen erreicht. Morgen kannst du wieder analysieren, oder upgrade auf Lifetime für unbegrenzte Analysen!`,
+          limit: DAILY_LIMIT_PREMIUM,
+          used: dailyCount,
+          resetsAt: endOfDay,
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
+    }
+    // Lifetime/Owner users: no limit
+
+    logStep("Limits passed", { isPremium, isLifetime, dailyCount });
+
     // Fetch the analysis record
     const { data: analysis, error: fetchError } = await supabaseClient
       .from('analyses')

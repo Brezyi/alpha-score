@@ -32,7 +32,7 @@ const plans = [
     period: "/ Monat",
     description: "Voller Zugang zu allen Premium-Features.",
     features: [
-      "Unbegrenzte KI-Analysen",
+      "10 KI-Analysen pro Tag",
       "Detaillierter Looks Score",
       "Personalisierter Verbesserungsplan",
       "Progress Tracking",
@@ -54,7 +54,7 @@ const plans = [
       "Alle Premium-Features",
       "Unbegrenzte KI-Analysen",
       "Lebenslanger Zugang",
-      "Einmalzahlung",
+      "Keine Tageslimits",
       "Keine monatlichen Kosten",
     ],
     limitations: [],
