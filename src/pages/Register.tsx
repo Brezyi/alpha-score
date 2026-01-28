@@ -205,8 +205,14 @@ const Register = () => {
       let errorTitle = "Registrierung fehlgeschlagen";
       let errorDescription = error.message || "Bitte versuche es erneut.";
 
+      // Check for rate limit error
+      if (error.message?.toLowerCase().includes("rate limit") ||
+          error.message?.toLowerCase().includes("email rate limit")) {
+        errorTitle = "Zu viele Anfragen";
+        errorDescription = "Es wurden zu viele E-Mails gesendet. Bitte warte 1-2 Minuten und versuche es dann erneut.";
+      }
       // Check for weak/pwned password error
-      if (error.message?.toLowerCase().includes("weak") || 
+      else if (error.message?.toLowerCase().includes("weak") || 
           error.message?.toLowerCase().includes("pwned") ||
           error.code === "weak_password") {
         errorTitle = "Unsicheres Passwort";
