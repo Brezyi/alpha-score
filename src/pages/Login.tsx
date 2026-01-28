@@ -23,6 +23,35 @@ const GoogleIcon = () => (
   </svg>
 );
 
+// Animated score component for the login page
+const AnimatedScore = () => {
+  const [score, setScore] = useState(0);
+  
+  useEffect(() => {
+    const finalScore = 8.6;
+    const duration = 1500;
+    const startTime = Date.now();
+    
+    const animate = () => {
+      const progress = Math.min((Date.now() - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      setScore(eased * finalScore);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, []);
+  
+  return (
+    <div className="text-8xl font-black text-gradient mb-6 tabular-nums">
+      {score.toFixed(1)}
+    </div>
+  );
+};
+
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -580,7 +609,7 @@ const Login = () => {
         {/* Content */}
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-16">
           <div className="text-center max-w-md">
-            <div className="text-8xl font-black text-gradient mb-6">8.6</div>
+            <AnimatedScore />
             <p className="text-xl font-semibold mb-2">Dein Potenzial wartet</p>
             <p className="text-muted-foreground">
               Tracke deinen Fortschritt und erreiche deinen Ziel-Score.
