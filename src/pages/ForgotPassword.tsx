@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Zap, ArrowLeft, Mail, Loader2, CheckCircle } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
@@ -12,11 +12,30 @@ export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const { toast } = useToast();
   const { settings } = useGlobalSettings();
 
+  // Cooldown timer
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [cooldown]);
+
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (cooldown > 0) {
+      toast({
+        title: "Bitte warten",
+        description: `Du kannst in ${cooldown} Sekunden erneut eine E-Mail anfordern.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -24,9 +43,21 @@ export default function ForgotPassword() {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Translate common Supabase error messages
+        let errorMessage = error.message;
+        if (error.message.includes("rate limit") || error.message.includes("Rate limit")) {
+          errorMessage = "Zu viele Anfragen. Bitte warte einen Moment und versuche es erneut.";
+        } else if (error.message.includes("Email not found")) {
+          errorMessage = "Diese E-Mail-Adresse wurde nicht gefunden.";
+        } else if (error.message.includes("Invalid email")) {
+          errorMessage = "Bitte gib eine gültige E-Mail-Adresse ein.";
+        }
+        throw new Error(errorMessage);
+      }
 
       setEmailSent(true);
+      setCooldown(60); // 60 seconds cooldown
       toast({
         title: "E-Mail gesendet",
         description: "Überprüfe deinen Posteingang für den Reset-Link.",
@@ -130,13 +161,15 @@ export default function ForgotPassword() {
               variant="hero" 
               size="lg" 
               className="w-full"
-              disabled={loading}
+              disabled={loading || cooldown > 0}
             >
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Wird gesendet...
                 </>
+              ) : cooldown > 0 ? (
+                `Erneut senden in ${cooldown}s`
               ) : (
                 "Reset-Link senden"
               )}
