@@ -7,7 +7,9 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useReferral } from "@/hooks/useReferral";
 import { motion, AnimatePresence } from "framer-motion";
+import { ReferralGate } from "@/components/ReferralGate";
 
 import { 
   ArrowLeft, 
@@ -56,6 +58,8 @@ export default function AnalysisResults() {
     }
   });
   const { isPremium, loading: subscriptionLoading } = useSubscription();
+  const { hasEnoughReferrals, loading: referralLoading, refetch: refetchReferrals } = useReferral();
+  const [referralUnlocked, setReferralUnlocked] = useState(false);
 
   // Persist viewed details to localStorage
   useEffect(() => {
@@ -148,7 +152,7 @@ export default function AnalysisResults() {
     return () => clearInterval(interval);
   }, [isProcessing, fetchAnalysis]);
 
-  if (loading || subscriptionLoading) {
+  if (loading || subscriptionLoading || referralLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -156,6 +160,19 @@ export default function AnalysisResults() {
           <p className="text-muted-foreground">Analyse wird geladen...</p>
         </div>
       </div>
+    );
+  }
+
+  // Show referral gate for free users who haven't invited enough friends
+  // Only applies when analysis is complete (not processing/failed)
+  if (!isPremium && !hasEnoughReferrals && !referralUnlocked && analysis?.status === 'completed') {
+    return (
+      <ReferralGate 
+        onUnlocked={() => {
+          setReferralUnlocked(true);
+          refetchReferrals();
+        }} 
+      />
     );
   }
 
