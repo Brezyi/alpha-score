@@ -2,11 +2,13 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useStreak } from "@/hooks/useStreak";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useReferral } from "@/hooks/useReferral";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Upload, 
@@ -19,7 +21,10 @@ import {
   Check,
   HelpCircle,
   Crown,
-  Lock
+  Lock,
+  Users,
+  Copy,
+  Share2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PhotoGuidelinesModal } from "@/components/PhotoGuidelinesModal";
@@ -40,7 +45,6 @@ const photoTypes = [
   { id: "body" as const, label: "Körper", icon: User, description: "Ganzkörper (optional)" },
 ];
 
-const FREE_ANALYSIS_LIMIT = 1;
 const DAILY_LIMIT_PREMIUM = 10;
 
 export default function AnalysisUpload() {
@@ -56,6 +60,16 @@ export default function AnalysisUpload() {
   const { toast } = useToast();
   const { recordActivity } = useStreak();
   const { isPremium, subscriptionType, loading: subscriptionLoading } = useSubscription();
+  const { 
+    referralCode, 
+    referralCount, 
+    requiredReferrals, 
+    hasEnoughReferrals, 
+    loading: referralLoading,
+    copyReferralCode,
+    copyShareLink,
+    getShareLink 
+  } = useReferral();
 
   const isLifetime = subscriptionType === 'lifetime' || subscriptionType === 'owner';
 
@@ -103,8 +117,45 @@ export default function AnalysisUpload() {
     fetchAnalysesCount();
   }, [user]);
 
-  const hasReachedFreeLimit = !isPremium && completedAnalysesCount !== null && completedAnalysesCount >= FREE_ANALYSIS_LIMIT;
+  // Free users need 3 referrals to unlock their analysis
+  const needsReferrals = !isPremium && !hasEnoughReferrals;
   const hasReachedDailyLimit = isPremium && !isLifetime && dailyAnalysesCount !== null && dailyAnalysesCount >= DAILY_LIMIT_PREMIUM;
+
+  const handleCopyCode = async () => {
+    const success = await copyReferralCode();
+    if (success) {
+      toast({
+        title: "Code kopiert!",
+        description: "Teile den Code mit deinen Freunden.",
+      });
+    }
+  };
+
+  const handleShare = async () => {
+    const link = getShareLink();
+    if (link && navigator.share) {
+      try {
+        await navigator.share({
+          title: "Lade Freunde ein!",
+          text: `Melde dich bei GLOWMAXXED an und nutze meinen Freundescode: ${referralCode}`,
+          url: link,
+        });
+      } catch (err) {
+        // User cancelled or share failed, copy link instead
+        await copyShareLink();
+        toast({
+          title: "Link kopiert!",
+          description: "Teile den Link mit deinen Freunden.",
+        });
+      }
+    } else {
+      await copyShareLink();
+      toast({
+        title: "Link kopiert!",
+        description: "Teile den Link mit deinen Freunden.",
+      });
+    }
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -262,8 +313,8 @@ export default function AnalysisUpload() {
     return photos.find(p => p.type === type);
   };
 
-  // Show loading while checking subscription and analysis count
-  if (subscriptionLoading || completedAnalysesCount === null || (isPremium && !isLifetime && dailyAnalysesCount === null)) {
+  // Show loading while checking subscription, analysis count, and referral data
+  if (subscriptionLoading || referralLoading || completedAnalysesCount === null || (isPremium && !isLifetime && dailyAnalysesCount === null)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -274,8 +325,8 @@ export default function AnalysisUpload() {
     );
   }
 
-  // Show upgrade screen if free user has reached limit
-  if (hasReachedFreeLimit) {
+  // Show referral invite screen if free user needs more referrals
+  if (needsReferrals) {
     return (
       <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
@@ -292,46 +343,110 @@ export default function AnalysisUpload() {
           </div>
         </header>
         
-        <main className="container mx-auto px-4 py-16 max-w-md text-center">
+        <main className="container mx-auto px-4 py-12 max-w-md text-center">
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-            <Lock className="w-10 h-10 text-primary" />
+            <Users className="w-10 h-10 text-primary" />
           </div>
-          <h2 className="text-2xl font-bold mb-3">Kostenlose Analyse genutzt</h2>
-          <p className="text-muted-foreground mb-8">
-            Du hast deine kostenlose Analyse bereits verwendet. Werde Premium für mehr Analysen mit detaillierten Ergebnissen.
+          <h2 className="text-2xl font-bold mb-3">Lade 3 Freunde ein!</h2>
+          <p className="text-muted-foreground mb-6">
+            Um deine kostenlose Analyse freizuschalten, lade {requiredReferrals} Freunde ein, die sich registrieren.
           </p>
+
+          {/* Progress */}
+          <div className="mb-8">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-muted-foreground">Fortschritt</span>
+              <span className="font-medium">{referralCount} / {requiredReferrals}</span>
+            </div>
+            <div className="h-3 bg-muted rounded-full overflow-hidden">
+              <motion.div 
+                className="h-full bg-primary rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${(referralCount / requiredReferrals) * 100}%` }}
+                transition={{ duration: 0.5, ease: "easeOut" }}
+              />
+            </div>
+            <div className="flex justify-between mt-2">
+              {[...Array(requiredReferrals)].map((_, i) => (
+                <div key={i} className="flex flex-col items-center">
+                  <div className={cn(
+                    "w-8 h-8 rounded-full flex items-center justify-center transition-all",
+                    i < referralCount 
+                      ? "bg-primary text-primary-foreground" 
+                      : "bg-muted text-muted-foreground"
+                  )}>
+                    {i < referralCount ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
           
+          {/* Referral Code Card */}
           <Card className="bg-gradient-to-br from-primary/20 via-primary/10 to-card border-primary/30 mb-6">
             <CardContent className="p-6">
-              <Crown className="w-10 h-10 text-primary mx-auto mb-4" />
-              <h3 className="font-bold text-lg mb-2">Premium Features</h3>
-              <ul className="text-sm text-muted-foreground space-y-2 text-left">
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-primary" />
-                  10 KI-Analysen pro Tag
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-primary" />
-                  Detaillierter Looks Score
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-primary" />
-                  Personalisierter Looksmax-Plan
-                </li>
-                <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-primary" />
-                  Face Fitness Übungen
-                </li>
-              </ul>
+              <p className="text-sm text-muted-foreground mb-3">Dein Freundescode</p>
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <code className="text-3xl font-bold tracking-widest text-primary">
+                  {referralCode || "--------"}
+                </code>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={handleCopyCode}
+                >
+                  <Copy className="w-4 h-4" />
+                  Code kopieren
+                </Button>
+                <Button 
+                  variant="hero" 
+                  className="flex-1"
+                  onClick={handleShare}
+                >
+                  <Share2 className="w-4 h-4" />
+                  Teilen
+                </Button>
+              </div>
             </CardContent>
           </Card>
-          
-          <Link to="/pricing">
-            <Button variant="hero" size="lg" className="w-full">
-              <Crown className="w-5 h-5" />
-              Premium werden
-            </Button>
-          </Link>
+
+          {/* Instructions */}
+          <div className="bg-muted/50 rounded-xl p-4 text-left mb-6">
+            <h4 className="font-medium mb-2">So funktioniert's:</h4>
+            <ol className="text-sm text-muted-foreground space-y-2">
+              <li className="flex items-start gap-2">
+                <span className="bg-primary/20 text-primary rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs font-bold">1</span>
+                Teile deinen Code mit Freunden
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="bg-primary/20 text-primary rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs font-bold">2</span>
+                Deine Freunde registrieren sich mit dem Code
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="bg-primary/20 text-primary rounded-full w-5 h-5 flex items-center justify-center flex-shrink-0 text-xs font-bold">3</span>
+                Nach 3 Anmeldungen wird deine Analyse freigeschaltet
+              </li>
+            </ol>
+          </div>
+
+          {/* Premium alternative */}
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-3">
+              Keine Lust zu warten?
+            </p>
+            <Link to="/pricing">
+              <Button variant="outline" size="sm">
+                <Crown className="w-4 h-4" />
+                Jetzt Premium werden
+              </Button>
+            </Link>
+          </div>
         </main>
       </div>
     );
