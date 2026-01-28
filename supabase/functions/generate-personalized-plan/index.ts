@@ -179,11 +179,19 @@ ANFORDERUNGEN:
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limit reached" }), {
+        return new Response(JSON.stringify({ error: "Rate limit erreicht. Bitte versuche es in einer Minute erneut." }), {
           status: 429,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      if (aiResponse.status === 402) {
+        return new Response(JSON.stringify({ error: "KI-Guthaben aufgebraucht. Bitte kontaktiere den Support." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const errorText = await aiResponse.text();
+      logStep("AI Error", { status: aiResponse.status, body: errorText });
       throw new Error(`AI request failed: ${aiResponse.status}`);
     }
 
