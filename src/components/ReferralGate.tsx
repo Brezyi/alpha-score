@@ -68,7 +68,8 @@ export function ReferralGate({ onUnlocked }: ReferralGateProps) {
     const shareLink = getShareLink();
     if (shareLink) {
       const text = encodeURIComponent(`Hey! Schau dir diese App an – analysiere dein Gesicht mit KI und entdecke dein Potenzial! 🔥\n\n${shareLink}`);
-      window.open(`https://wa.me/?text=${text}`, '_blank');
+      // Use api.whatsapp.com as fallback (more reliable in some regions)
+      window.open(`https://api.whatsapp.com/send?text=${text}`, '_blank');
     }
   };
 
