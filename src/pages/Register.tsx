@@ -362,7 +362,12 @@ const Register = () => {
                 {password && (
                   <div className="space-y-1">
                     <Progress value={passwordStrength.score} className="h-1" />
-                    <span className="text-xs text-muted-foreground">{passwordStrength.label}</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{passwordStrength.label}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground/70">
+                      ⚠ Passwörter aus Datenlecks werden abgelehnt
+                    </p>
                   </div>
                 )}
               </div>
@@ -733,6 +738,9 @@ const Register = () => {
                     </li>
                     <li className={/[^a-zA-Z0-9]/.test(password) ? "text-primary" : ""}>
                       {/[^a-zA-Z0-9]/.test(password) ? "✓" : "○"} Sonderzeichen (z.B. !@#$)
+                    </li>
+                    <li className="text-muted-foreground/70">
+                      ⚠ Passwörter aus Datenlecks werden abgelehnt
                     </li>
                   </ul>
                 </div>
