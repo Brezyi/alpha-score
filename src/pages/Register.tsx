@@ -189,8 +189,9 @@ const Register = () => {
       if (signUpData?.user && !signUpData.session) {
         // Email confirmation required
         toast({
-          title: "Bestätigungs-E-Mail gesendet!",
-          description: "Bitte überprüfe dein Postfach und klicke auf den Bestätigungslink.",
+          title: "📧 Bestätigungs-E-Mail gesendet!",
+          description: "Bitte bestätige deine E-Mail innerhalb von 7 Tagen. Danach wird dein Konto automatisch gelöscht und du musst dich neu registrieren.",
+          duration: 10000,
         });
       } else {
         toast({
