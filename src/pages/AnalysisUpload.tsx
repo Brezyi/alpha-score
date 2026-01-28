@@ -41,6 +41,7 @@ const photoTypes = [
 ];
 
 const FREE_ANALYSIS_LIMIT = 1;
+const DAILY_LIMIT_PREMIUM = 10;
 
 export default function AnalysisUpload() {
   const isNative = Capacitor.isNativePlatform();
@@ -49,11 +50,14 @@ export default function AnalysisUpload() {
   const [isUploading, setIsUploading] = useState(false);
   const [activeType, setActiveType] = useState<"front" | "side" | "body">("front");
   const [completedAnalysesCount, setCompletedAnalysesCount] = useState<number | null>(null);
+  const [dailyAnalysesCount, setDailyAnalysesCount] = useState<number | null>(null);
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { recordActivity } = useStreak();
-  const { isPremium, loading: subscriptionLoading } = useSubscription();
+  const { isPremium, subscriptionType, loading: subscriptionLoading } = useSubscription();
+
+  const isLifetime = subscriptionType === 'lifetime' || subscriptionType === 'owner';
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -62,19 +66,37 @@ export default function AnalysisUpload() {
     }
   }, [user, loading, navigate]);
 
-  // Check how many completed analyses user has
+  // Check how many completed analyses user has (total + today)
   useEffect(() => {
     const fetchAnalysesCount = async () => {
       if (!user) return;
       
-      const { count, error } = await supabase
+      // Total completed analyses
+      const { count: totalCount, error: totalError } = await supabase
         .from("analyses")
         .select("*", { count: "exact", head: true })
         .eq("user_id", user.id)
         .eq("status", "completed");
       
-      if (!error) {
-        setCompletedAnalysesCount(count ?? 0);
+      if (!totalError) {
+        setCompletedAnalysesCount(totalCount ?? 0);
+      }
+
+      // Today's completed analyses
+      const today = new Date();
+      const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).toISOString();
+
+      const { count: dailyCount, error: dailyError } = await supabase
+        .from("analyses")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .gte("created_at", startOfDay)
+        .lt("created_at", endOfDay);
+
+      if (!dailyError) {
+        setDailyAnalysesCount(dailyCount ?? 0);
       }
     };
     
@@ -82,6 +104,7 @@ export default function AnalysisUpload() {
   }, [user]);
 
   const hasReachedFreeLimit = !isPremium && completedAnalysesCount !== null && completedAnalysesCount >= FREE_ANALYSIS_LIMIT;
+  const hasReachedDailyLimit = isPremium && !isLifetime && dailyAnalysesCount !== null && dailyAnalysesCount >= DAILY_LIMIT_PREMIUM;
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -240,7 +263,7 @@ export default function AnalysisUpload() {
   };
 
   // Show loading while checking subscription and analysis count
-  if (subscriptionLoading || completedAnalysesCount === null) {
+  if (subscriptionLoading || completedAnalysesCount === null || (isPremium && !isLifetime && dailyAnalysesCount === null)) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -275,7 +298,7 @@ export default function AnalysisUpload() {
           </div>
           <h2 className="text-2xl font-bold mb-3">Kostenlose Analyse genutzt</h2>
           <p className="text-muted-foreground mb-8">
-            Du hast deine kostenlose Analyse bereits verwendet. Werde Premium für unbegrenzte Analysen mit detaillierten Ergebnissen.
+            Du hast deine kostenlose Analyse bereits verwendet. Werde Premium für mehr Analysen mit detaillierten Ergebnissen.
           </p>
           
           <Card className="bg-gradient-to-br from-primary/20 via-primary/10 to-card border-primary/30 mb-6">
@@ -285,7 +308,7 @@ export default function AnalysisUpload() {
               <ul className="text-sm text-muted-foreground space-y-2 text-left">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-primary" />
-                  Unbegrenzte Foto-Analysen
+                  10 KI-Analysen pro Tag
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-primary" />
@@ -297,7 +320,7 @@ export default function AnalysisUpload() {
                 </li>
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-primary" />
-                  AI Coach 24/7
+                  Face Fitness Übungen
                 </li>
               </ul>
             </CardContent>
@@ -309,6 +332,75 @@ export default function AnalysisUpload() {
               Premium werden
             </Button>
           </Link>
+        </main>
+      </div>
+    );
+  }
+
+  // Show daily limit reached screen for premium users (not lifetime)
+  if (hasReachedDailyLimit) {
+    return (
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+          <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span>Zurück</span>
+            </button>
+            <h1 className="text-lg font-bold">KI-Analyse</h1>
+            <div className="w-5" />
+          </div>
+        </header>
+        
+        <main className="container mx-auto px-4 py-16 max-w-md text-center">
+          <div className="w-20 h-20 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-6">
+            <Sparkles className="w-10 h-10 text-amber-500" />
+          </div>
+          <h2 className="text-2xl font-bold mb-3">Tageslimit erreicht</h2>
+          <p className="text-muted-foreground mb-8">
+            Du hast heute bereits {dailyAnalysesCount} von {DAILY_LIMIT_PREMIUM} Analysen verwendet. Morgen kannst du wieder analysieren!
+          </p>
+          
+          <Card className="bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-card border-amber-500/30 mb-6">
+            <CardContent className="p-6">
+              <Crown className="w-10 h-10 text-amber-500 mx-auto mb-4" />
+              <h3 className="font-bold text-lg mb-2">Lifetime Upgrade</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Mit Lifetime hast du keine Tageslimits – unbegrenzte Analysen, für immer.
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-2 text-left">
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-amber-500" />
+                  Unbegrenzte KI-Analysen
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-amber-500" />
+                  Keine Tageslimits
+                </li>
+                <li className="flex items-center gap-2">
+                  <Check className="w-4 h-4 text-amber-500" />
+                  Einmalzahlung, kein Abo
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+          
+          <Link to="/pricing">
+            <Button variant="hero" size="lg" className="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700">
+              <Crown className="w-5 h-5" />
+              Auf Lifetime upgraden
+            </Button>
+          </Link>
+          
+          <button 
+            onClick={() => navigate("/dashboard")}
+            className="mt-4 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Zurück zum Dashboard
+          </button>
         </main>
       </div>
     );
