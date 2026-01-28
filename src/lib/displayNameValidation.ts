@@ -95,3 +95,19 @@ export function validateDisplayName(name: string): { valid: boolean; error?: str
   
   return { valid: true };
 }
+
+// Validate testimonial text for forbidden content
+export function validateTestimonialContent(text: string): { valid: boolean; error?: string } {
+  if (!text || text.trim().length === 0) {
+    return { valid: false, error: "Text darf nicht leer sein" };
+  }
+  
+  if (containsForbiddenContent(text)) {
+    return { 
+      valid: false, 
+      error: "Deine Bewertung enthält unzulässige Inhalte und kann nicht eingereicht werden." 
+    };
+  }
+  
+  return { valid: true };
+}
