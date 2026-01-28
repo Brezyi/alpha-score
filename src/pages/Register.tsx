@@ -200,9 +200,27 @@ const Register = () => {
       }
       navigate("/login");
     } catch (error: any) {
+      // Handle specific error cases with user-friendly messages
+      let errorTitle = "Registrierung fehlgeschlagen";
+      let errorDescription = error.message || "Bitte versuche es erneut.";
+
+      // Check for weak/pwned password error
+      if (error.message?.toLowerCase().includes("weak") || 
+          error.message?.toLowerCase().includes("pwned") ||
+          error.code === "weak_password") {
+        errorTitle = "Unsicheres Passwort";
+        errorDescription = "Dieses Passwort wurde in Datenlecks gefunden und ist nicht sicher. Bitte wähle ein anderes, einzigartiges Passwort.";
+      }
+      // Check for email already registered
+      else if (error.message?.toLowerCase().includes("already registered") ||
+               error.message?.toLowerCase().includes("already exists")) {
+        errorTitle = "E-Mail bereits registriert";
+        errorDescription = "Diese E-Mail-Adresse ist bereits registriert. Bitte melde dich an oder verwende eine andere E-Mail.";
+      }
+
       toast({
-        title: "Registrierung fehlgeschlagen",
-        description: error.message || "Bitte versuche es erneut.",
+        title: errorTitle,
+        description: errorDescription,
         variant: "destructive",
       });
     } finally {
