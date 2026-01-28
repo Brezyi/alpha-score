@@ -708,6 +708,35 @@ export type Database = {
         }
         Relationships: []
       }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referred_id: string
+          referrer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referred_id: string
+          referrer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referred_id?: string
+          referrer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_referrer"
+            columns: ["referrer_id"]
+            isOneToOne: false
+            referencedRelation: "user_referral_codes"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       refund_requests: {
         Row: {
           admin_notes: string | null
@@ -1282,6 +1311,27 @@ export type Database = {
           achieved_at?: string
           id?: string
           milestone_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
           user_id?: string
         }
         Relationships: []
@@ -1886,6 +1936,7 @@ export type Database = {
           xp_earned: number
         }[]
       }
+      count_referrals: { Args: { p_user_id: string }; Returns: number }
       create_audit_log: {
         Args: {
           _action_type: string
@@ -1908,6 +1959,7 @@ export type Database = {
         Args: { _count?: number; _user_id: string }
         Returns: string[]
       }
+      generate_referral_code: { Args: never; Returns: string }
       get_admin_password_status: {
         Args: never
         Returns: {
@@ -1949,6 +2001,10 @@ export type Database = {
           first_name: string
           last_name: string
         }[]
+      }
+      get_or_create_referral_code: {
+        Args: { p_user_id: string }
+        Returns: string
       }
       get_owner_masked_email: { Args: never; Returns: string }
       get_pending_password_reset_requests: {
@@ -1999,6 +2055,10 @@ export type Database = {
           is_locked: boolean
           remaining_seconds: number
         }[]
+      }
+      record_referral: {
+        Args: { p_new_user_id: string; p_referral_code: string }
+        Returns: boolean
       }
       request_admin_password_reset: { Args: never; Returns: string }
       request_admin_password_reset_for_user: {
