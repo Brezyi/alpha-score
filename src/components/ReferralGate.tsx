@@ -186,6 +186,16 @@ export function ReferralGate({ onUnlocked }: ReferralGateProps) {
           </CardContent>
         </Card>
 
+        {/* Referral code display */}
+        {referralCode && (
+          <div className="text-center mb-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
+            <p className="text-xs text-muted-foreground mb-2">Dein Code</p>
+            <code className="text-3xl font-bold tracking-[0.3em] text-primary">
+              {referralCode}
+            </code>
+          </div>
+        )}
+
         {/* Share Section */}
         <Card className="mb-6">
           <CardContent className="p-6">
@@ -268,16 +278,6 @@ export function ReferralGate({ onUnlocked }: ReferralGateProps) {
             </p>
           </div>
         </motion.div>
-
-        {/* Referral code display */}
-        {referralCode && (
-          <div className="text-center mt-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
-            <p className="text-xs text-muted-foreground mb-2">Dein Code</p>
-            <code className="text-3xl font-bold tracking-[0.3em] text-primary">
-              {referralCode}
-            </code>
-          </div>
-        )}
       </motion.div>
     </div>
   );
