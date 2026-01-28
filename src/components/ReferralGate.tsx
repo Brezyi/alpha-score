@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +14,7 @@ import {
   Lock, 
   Sparkles,
   Gift,
-  ArrowRight
+  ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ interface ReferralGateProps {
 }
 
 export function ReferralGate({ onUnlocked }: ReferralGateProps) {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { 
     referralCode, 
@@ -101,6 +103,15 @@ export function ReferralGate({ onUnlocked }: ReferralGateProps) {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      {/* Back button */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => navigate("/dashboard")}
+        className="absolute top-4 left-4 z-20"
+      >
+        <ArrowLeft className="w-5 h-5" />
+      </Button>
       {/* Background effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
