@@ -271,9 +271,12 @@ export function ReferralGate({ onUnlocked }: ReferralGateProps) {
 
         {/* Referral code display */}
         {referralCode && (
-          <p className="text-center text-xs text-muted-foreground mt-4">
-            Dein Code: <span className="font-mono font-bold text-foreground">{referralCode}</span>
-          </p>
+          <div className="text-center mt-6 p-4 rounded-xl bg-primary/5 border border-primary/20">
+            <p className="text-xs text-muted-foreground mb-2">Dein Code</p>
+            <code className="text-3xl font-bold tracking-[0.3em] text-primary">
+              {referralCode}
+            </code>
+          </div>
         )}
       </motion.div>
     </div>
