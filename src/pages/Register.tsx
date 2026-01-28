@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Mail, Lock, User, Loader2, Check, AlertCircle } from "lucide-react";
+import { ArrowLeft, Mail, Lock, User, Loader2, Check, AlertCircle, Gift } from "lucide-react";
 import { ScannerLogo } from "@/components/ScannerLogo";
 import { Progress } from "@/components/ui/progress";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { validateDisplayName } from "@/lib/displayNameValidation";
 import { Capacitor } from "@capacitor/core";
+import { recordReferral } from "@/hooks/useReferral";
 
 const GoogleIcon = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -30,12 +31,14 @@ const benefits = [
 ];
 
 const Register = () => {
+  const [searchParams] = useSearchParams();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [referralCode, setReferralCode] = useState(searchParams.get("ref") || "");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const navigate = useNavigate();
@@ -175,6 +178,11 @@ const Register = () => {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
         }));
+
+        // Record referral if code was provided
+        if (referralCode.trim()) {
+          await recordReferral(referralCode.trim(), signUpData.user.id);
+        }
       }
 
       // Check if email confirmation is required
@@ -365,7 +373,28 @@ const Register = () => {
                 )}
               </div>
 
-              <Button 
+              {/* Referral Code */}
+              <div className="space-y-1.5">
+                <Label htmlFor="referralCode" className="text-sm">Freundescode (optional)</Label>
+                <div className="relative">
+                  <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    id="referralCode"
+                    type="text"
+                    placeholder="z.B. A1B2C3D4"
+                    value={referralCode}
+                    onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                    className="pl-10 h-11 bg-card border-border text-base uppercase"
+                    maxLength={8}
+                    autoComplete="off"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Hast du einen Code von einem Freund erhalten?
+                </p>
+              </div>
+
+              <Button
                 type="submit" 
                 variant="hero" 
                 size="lg" 
@@ -727,7 +756,28 @@ const Register = () => {
               )}
             </div>
 
-            <Button 
+            {/* Referral Code */}
+            <div className="space-y-2">
+              <Label htmlFor="referralCodeDesktop">Freundescode (optional)</Label>
+              <div className="relative">
+                <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                <Input
+                  id="referralCodeDesktop"
+                  type="text"
+                  placeholder="z.B. A1B2C3D4"
+                  value={referralCode}
+                  onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                  className="pl-10 h-12 bg-card border-border uppercase"
+                  maxLength={8}
+                  autoComplete="off"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Hast du einen Code von einem Freund erhalten? Gib ihn hier ein!
+              </p>
+            </div>
+
+            <Button
               type="submit" 
               variant="hero" 
               size="lg" 
