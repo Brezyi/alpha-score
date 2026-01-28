@@ -17,6 +17,7 @@ import {
 import { MessageSquarePlus, Trash2, Clock, CheckCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { StarRating } from "@/components/StarRating";
+import { validateTestimonialContent, containsForbiddenContent } from "@/lib/displayNameValidation";
 
 interface Analysis {
   id: string;
@@ -78,6 +79,27 @@ export function TestimonialSubmitDialog() {
       toast({
         title: "Fehler",
         description: "Du musst mindestens 18 Jahre alt sein, um eine Bewertung abzugeben.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate display name for forbidden content
+    if (containsForbiddenContent(formData.display_name)) {
+      toast({
+        title: "Unzulässiger Anzeigename",
+        description: "Der gewählte Anzeigename enthält unzulässige Inhalte.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate testimonial text for forbidden content
+    const contentValidation = validateTestimonialContent(formData.testimonial_text);
+    if (!contentValidation.valid) {
+      toast({
+        title: "Bewertung abgelehnt",
+        description: contentValidation.error,
         variant: "destructive",
       });
       return;
