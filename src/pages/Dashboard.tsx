@@ -633,18 +633,40 @@ const Dashboard = () => {
           <div className="md:col-span-2 space-y-4">
             {/* Potential Card */}
             {latestPotential !== null && (
-              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 opacity-0 animate-fade-in-up" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary" />
-                    <span className="font-medium">Dein Potenzial</span>
-                  </div>
-                  <span className="text-2xl font-bold text-primary">{latestPotential.toFixed(1)}</span>
-                </div>
-                {pointsToGo && (
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> erreichbar
-                  </div>
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
+                {isResultsLocked && completedAnalyses.length > 0 ? (
+                  <>
+                    <div className="blur-md opacity-50 pointer-events-none select-none">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-primary" />
+                          <span className="font-medium">Dein Potenzial</span>
+                        </div>
+                        <span className="text-2xl font-bold text-primary">?.?</span>
+                      </div>
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        Noch <span className="text-primary font-semibold">+?.? Punkte</span> erreichbar
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-primary" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        <span className="font-medium">Dein Potenzial</span>
+                      </div>
+                      <span className="text-2xl font-bold text-primary">{latestPotential.toFixed(1)}</span>
+                    </div>
+                    {pointsToGo && (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> erreichbar
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -682,9 +704,24 @@ const Dashboard = () => {
                   <div className="relative text-[10px] text-orange-400 mt-1 animate-pulse font-medium">Heute aktiv werden!</div>
                 )}
               </div>
-              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "350ms", animationFillMode: "forwards" }}>
-                <div className="text-2xl font-bold text-primary">{latestPotential ? `Top ${Math.round((1 - (latestScore || 0) / 10) * 100)}%` : "—"}</div>
-                <div className="text-xs text-muted-foreground">Ranking</div>
+              {/* Ranking - Locked for free users */}
+              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform relative" style={{ animationDelay: "350ms", animationFillMode: "forwards" }}>
+                {isResultsLocked && completedAnalyses.length > 0 ? (
+                  <>
+                    <div className="blur-md opacity-50 pointer-events-none select-none">
+                      <div className="text-2xl font-bold text-primary">Top ?%</div>
+                      <div className="text-xs text-muted-foreground">Ranking</div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Lock className="w-4 h-4 text-primary" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold text-primary">{latestPotential ? `Top ${Math.round((1 - (latestScore || 0) / 10) * 100)}%` : "—"}</div>
+                    <div className="text-xs text-muted-foreground">Ranking</div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -767,35 +804,69 @@ const Dashboard = () => {
 
         {/* Potential Progress Bar */}
         {potentialProgress !== null && latestPotential !== null && (
-          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "500ms", animationFillMode: "forwards" }}>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-                <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
-              </div>
-              <div className="text-sm text-muted-foreground">
-                <span className="text-foreground font-bold">{latestScore?.toFixed(1)}</span>
-                <span className="mx-1">/</span>
-                <span className="text-primary font-bold">{latestPotential.toFixed(1)}</span>
-              </div>
-            </div>
-            <div className="relative">
-              <Progress value={potentialProgress} animated={hasAnimated} animationDuration={2200} glowOnComplete className="h-4" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xs font-medium text-primary-foreground drop-shadow-sm">
-                  {hasAnimated ? <AnimatedNumber value={potentialProgress} decimals={0} /> : potentialProgress}%
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-2 text-sm">
-              <span className="text-muted-foreground">
-                Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> möglich
-              </span>
-              <Link to="/plan" className="text-primary hover:underline flex items-center gap-1 group">
-                Plan ansehen
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
+          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "500ms", animationFillMode: "forwards" }}>
+            {isResultsLocked && completedAnalyses.length > 0 ? (
+              <>
+                <div className="blur-md opacity-50 pointer-events-none select-none">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <span className="text-foreground font-bold">?.?</span>
+                      <span className="mx-1">/</span>
+                      <span className="text-primary font-bold">?.?</span>
+                    </div>
+                  </div>
+                  <Progress value={50} className="h-4" />
+                  <div className="flex items-center justify-between mt-2 text-sm">
+                    <span className="text-muted-foreground">
+                      Noch <span className="text-primary font-semibold">+?.? Punkte</span> möglich
+                    </span>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Lock className="w-6 h-6 text-primary mb-2" />
+                  <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
+                    <Button size="sm" variant="hero">
+                      Freischalten
+                    </Button>
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                    <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <span className="text-foreground font-bold">{latestScore?.toFixed(1)}</span>
+                    <span className="mx-1">/</span>
+                    <span className="text-primary font-bold">{latestPotential.toFixed(1)}</span>
+                  </div>
+                </div>
+                <div className="relative">
+                  <Progress value={potentialProgress} animated={hasAnimated} animationDuration={2200} glowOnComplete className="h-4" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-medium text-primary-foreground drop-shadow-sm">
+                      {hasAnimated ? <AnimatedNumber value={potentialProgress} decimals={0} /> : potentialProgress}%
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-2 text-sm">
+                  <span className="text-muted-foreground">
+                    Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> möglich
+                  </span>
+                  <Link to="/plan" className="text-primary hover:underline flex items-center gap-1 group">
+                    Plan ansehen
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -812,118 +883,127 @@ const Dashboard = () => {
 
         {/* Score Chart - Clean Style */}
         {chartData.length >= 2 && (
-          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-scale-in" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-primary" />
-                Score-Entwicklung
-              </h2>
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <div className="w-4 h-0.5 bg-primary rounded-full" />
-                  <span className="text-muted-foreground">Score</span>
+          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-scale-in relative overflow-hidden" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
+            {isResultsLocked && completedAnalyses.length > 0 ? (
+              <>
+                <div className="blur-md opacity-50 pointer-events-none select-none">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      Score-Entwicklung
+                    </h2>
+                  </div>
+                  <div className="h-44 flex items-center justify-center bg-muted/20 rounded-lg">
+                    <div className="text-muted-foreground">Chart gesperrt</div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5">
-                  <svg className="w-4 h-2" viewBox="0 0 16 2">
-                    <line x1="0" y1="1" x2="16" y2="1" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="3 2" strokeOpacity="0.5" />
-                  </svg>
-                  <span className="text-muted-foreground">Potenzial</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Lock className="w-6 h-6 text-primary mb-2" />
+                  <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
+                    <Button size="sm" variant="hero">
+                      Freischalten
+                    </Button>
+                  </Link>
                 </div>
-              </div>
-            </div>
-            
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="scoreGradientFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis 
-                    dataKey="date" 
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={{ stroke: "hsl(var(--border))", strokeWidth: 1 }}
-                    dy={8}
-                  />
-                  <YAxis 
-                    domain={[0, 10]}
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={11}
-                    tickLine={false}
-                    axisLine={false}
-                    tickFormatter={(value) => value.toFixed(0)}
-                    ticks={[0, 2.5, 5, 7.5, 10]}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--popover))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "10px",
-                      boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                      padding: "10px 14px",
-                    }}
-                    labelFormatter={(_, payload) => {
-                      const data = payload?.[0]?.payload;
-                      return (
-                        <span className="text-sm font-semibold text-foreground block mb-1">{data?.fullDate || data?.date}</span>
-                      );
-                    }}
-                    formatter={(value: number, name: string, props: any) => {
-                      const change = props?.payload?.change;
-                      if (name === "score") {
-                        return [
-                          <div key={name} className="flex items-center gap-2">
-                            <span className="font-medium">{value?.toFixed(1) || "—"}</span>
-                            {change !== null && change !== undefined && (
-                              <span className={`text-xs font-medium ${change > 0 ? 'text-green-500' : change < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
-                                ({change > 0 ? '+' : ''}{change.toFixed(1)})
-                              </span>
-                            )}
-                          </div>, 
-                          "Score"
-                        ];
-                      }
-                      return [
-                        <span key={name} className="font-medium">{value?.toFixed(1) || "—"}</span>, 
-                        "Potenzial"
-                      ];
-                    }}
-                    cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
-                  />
-                  {/* Gradient fill area under score line */}
-                  <Area
-                    type="monotone"
-                    dataKey="score"
-                    stroke="none"
-                    fill="url(#scoreGradientFill)"
-                  />
-                  {/* Potential Line (dashed) */}
-                  <Line
-                    type="monotone"
-                    dataKey="potential"
-                    stroke="hsl(var(--primary) / 0.4)"
-                    strokeWidth={2}
-                    strokeDasharray="5 5"
-                    dot={false}
-                    activeDot={{ r: 4, fill: "hsl(var(--primary) / 0.5)", stroke: "hsl(var(--primary))", strokeWidth: 1 }}
-                    connectNulls
-                  />
-                  {/* Current Score Line (solid, prominent) */}
-                  <Line
-                    type="monotone"
-                    dataKey="score"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={3}
-                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 5 }}
-                    activeDot={{ r: 7, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    Score-Entwicklung
+                  </h2>
+                  <div className="flex items-center gap-4 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <div className="w-4 h-0.5 bg-primary rounded-full" />
+                      <span className="text-muted-foreground">Score</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <svg className="w-4 h-2" viewBox="0 0 16 2">
+                        <line x1="0" y1="1" x2="16" y2="1" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="3 2" strokeOpacity="0.5" />
+                      </svg>
+                      <span className="text-muted-foreground">Potenzial</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="h-44">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="scoreGradientFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis 
+                        dataKey="date" 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                        dy={5}
+                      />
+                      <YAxis 
+                        domain={[0, 10]} 
+                        axisLine={false}
+                        tickLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                        dx={-5}
+                        tickFormatter={(value) => value.toFixed(0)}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: "hsl(var(--card))", 
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          padding: "12px"
+                        }}
+                        labelFormatter={(label, payload) => {
+                          const data = payload?.[0]?.payload;
+                          return data?.fullDate || label;
+                        }}
+                        formatter={(value: any, name: string, props: any) => {
+                          const change = props?.payload?.change;
+                          if (name === "score") {
+                            const changeStr = change !== null ? ` (${change > 0 ? '+' : ''}${change.toFixed(1)})` : '';
+                            return [`${Number(value).toFixed(1)}${changeStr}`, "Score"];
+                          }
+                          return [Number(value).toFixed(1), "Potenzial"];
+                        }}
+                      />
+                      {/* Area fill under score line */}
+                      <Area
+                        type="monotone"
+                        dataKey="score"
+                        stroke="none"
+                        fill="url(#scoreGradientFill)"
+                      />
+                      {/* Potential Line (dashed) */}
+                      <Line
+                        type="monotone"
+                        dataKey="potential"
+                        stroke="hsl(var(--primary) / 0.4)"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={false}
+                        activeDot={{ r: 4, fill: "hsl(var(--primary) / 0.5)", stroke: "hsl(var(--primary))", strokeWidth: 1 }}
+                        connectNulls
+                      />
+                      {/* Current Score Line (solid, prominent) */}
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={3}
+                        dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 5 }}
+                        activeDot={{ r: 7, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -1031,7 +1111,7 @@ const Dashboard = () => {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "1200ms", animationFillMode: "forwards" }}>
             <h2 className="text-xl font-bold">Letzte Analysen</h2>
-            {analyses.length > 5 && (
+            {analyses.length > 5 && !isResultsLocked && (
               <Link to="/progress#analyses" className="text-sm text-primary hover:underline flex items-center gap-1 group">
                 Alle {analyses.length} anzeigen
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -1056,6 +1136,29 @@ const Dashboard = () => {
                   Erste Analyse starten
                 </Button>
               </Link>
+            </div>
+          ) : isResultsLocked && completedAnalyses.length > 0 ? (
+            <div className="relative p-8 rounded-2xl glass-card opacity-0 animate-scale-in overflow-hidden" style={{ animationDelay: "1300ms", animationFillMode: "forwards" }}>
+              <div className="blur-md opacity-50 pointer-events-none select-none space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
+                    <div className="w-14 h-14 rounded-lg bg-muted" />
+                    <div className="flex-1">
+                      <div className="h-4 w-32 bg-muted rounded mb-2" />
+                      <div className="h-3 w-24 bg-muted/50 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <Lock className="w-8 h-8 text-primary mb-3" />
+                <p className="text-sm font-medium mb-3">Analysen gesperrt</p>
+                <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
+                  <Button variant="hero">
+                    Freischalten
+                  </Button>
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
