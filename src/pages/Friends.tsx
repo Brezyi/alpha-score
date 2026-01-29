@@ -174,6 +174,7 @@ export default function Friends() {
     privacySettings,
     loading: friendsLoading,
     sendFriendRequest,
+    sendFriendRequestByUserId,
     searchUsers,
     acceptRequest,
     declineRequest,
@@ -601,7 +602,7 @@ export default function Friends() {
                     <Button 
                       size="sm" 
                       className="rounded-xl"
-                      onClick={() => sendFriendRequest(result.friend_code)}
+                      onClick={() => sendFriendRequestByUserId(result.user_id)}
                     >
                       <UserPlus className="w-4 h-4 mr-1" />
                       Hinzufügen
