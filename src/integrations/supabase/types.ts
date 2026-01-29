@@ -1089,6 +1089,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_counts: {
+        Row: {
+          id: string
+          last_updated: string
+          unread_friend_requests: number
+          unread_messages: number
+          unread_partner_requests: number
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          last_updated?: string
+          unread_friend_requests?: number
+          unread_messages?: number
+          unread_partner_requests?: number
+          user_id: string
+        }
+        Update: {
+          id?: string
+          last_updated?: string
+          unread_friend_requests?: number
+          unread_messages?: number
+          unread_partner_requests?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       nutrition_goals: {
         Row: {
           created_at: string
@@ -1165,6 +1192,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      partner_requests: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          responded_at: string | null
+          status: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          responded_at?: string | null
+          status?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          responded_at?: string | null
+          status?: string
+        }
+        Relationships: []
       }
       payments: {
         Row: {

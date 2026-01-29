@@ -17,12 +17,16 @@ import {
   Flame,
   Trophy,
   X,
-  Loader2
+  Loader2,
+  Clock,
+  UserX,
+  Bell
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/hooks/useFriends";
 import { useFriendMessages } from "@/hooks/useFriendMessages";
 import { useAccountabilityPartner } from "@/hooks/useAccountabilityPartner";
+import { usePartnerRequests } from "@/hooks/usePartnerRequests";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -41,6 +45,7 @@ import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { useToast } from "@/hooks/use-toast";
 import { ChatDialog } from "@/components/friends/ChatDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 // Friend Card Component - Modern Design
 function FriendCard({ 
@@ -183,7 +188,15 @@ export default function Friends() {
     updatePrivacySettings,
   } = useFriends();
   const { conversations, getTotalUnreadCount } = useFriendMessages();
-  const { partner, createPartnership } = useAccountabilityPartner();
+  const { partner, checkIn, endPartnership } = useAccountabilityPartner();
+  const { 
+    incomingRequests: partnerRequests, 
+    outgoingRequests: sentPartnerRequests,
+    sendPartnerRequest,
+    acceptPartnerRequest,
+    declinePartnerRequest,
+    cancelPartnerRequest 
+  } = usePartnerRequests();
 
   const [activeTab, setActiveTab] = useState("friends");
   const [searchQuery, setSearchQuery] = useState("");
@@ -194,6 +207,9 @@ export default function Friends() {
   const [sendingRequest, setSendingRequest] = useState(false);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showCheckInDialog, setShowCheckInDialog] = useState(false);
+  const [checkInGoals, setCheckInGoals] = useState<string[]>([]);
+  const [checkInMood, setCheckInMood] = useState(3);
 
   const isNative = Capacitor.isNativePlatform();
   const unreadCount = getTotalUnreadCount();
@@ -430,6 +446,9 @@ export default function Friends() {
           >
             <HandshakeIcon className="w-4 h-4" />
             <span className="hidden sm:inline">Partner</span>
+            {partnerRequests.length > 0 && (
+              <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">{partnerRequests.length}</Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -469,7 +488,7 @@ export default function Friends() {
                       setSelectedChat(friend.id);
                       setActiveTab("chat");
                     }}
-                    onMakePartner={() => createPartnership(friend.id)}
+                    onMakePartner={() => sendPartnerRequest(friend.id)}
                   />
                 ))}
               </div>
@@ -675,7 +694,100 @@ export default function Friends() {
         </TabsContent>
 
         {/* Partner Tab */}
-        <TabsContent value="partner" className="mt-4">
+        <TabsContent value="partner" className="mt-4 space-y-4">
+          {/* Incoming Partner Requests */}
+          {partnerRequests.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Bell className="w-4 h-4 text-amber-500" />
+                <span className="text-sm font-medium">Partner-Anfragen</span>
+                <Badge variant="destructive" className="h-5">{partnerRequests.length}</Badge>
+              </div>
+              {partnerRequests.map((req, index) => (
+                <motion.div
+                  key={req.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/20 p-4"
+                >
+                  <div className="flex items-center gap-4">
+                    <Avatar className="w-12 h-12 ring-2 ring-amber-500/30">
+                      <AvatarImage src={req.requester_avatar || undefined} />
+                      <AvatarFallback className="bg-amber-500/20 text-amber-500 font-bold">
+                        {req.requester_name?.[0]?.toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold truncate">{req.requester_name || "Unbekannt"}</p>
+                      <p className="text-xs text-muted-foreground">möchte dein Partner sein</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-9 px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => declinePartnerRequest(req.id)}
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        className="h-9 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl"
+                        onClick={() => acceptPartnerRequest(req.id)}
+                      >
+                        <Check className="w-4 h-4 mr-1" />
+                        Annehmen
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Outgoing Partner Requests */}
+          {sentPartnerRequests.length > 0 && !partner && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-3"
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm font-medium text-muted-foreground">Gesendete Anfragen</span>
+              </div>
+              {sentPartnerRequests.map((req) => (
+                <div
+                  key={req.id}
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-border"
+                >
+                  <Avatar className="w-10 h-10">
+                    <AvatarImage src={req.addressee_avatar || undefined} />
+                    <AvatarFallback>{req.addressee_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{req.addressee_name || "Unbekannt"}</p>
+                    <p className="text-xs text-muted-foreground">Warten auf Antwort...</p>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={() => cancelPartnerRequest(req.id)}
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    Abbrechen
+                  </Button>
+                </div>
+              ))}
+            </motion.div>
+          )}
+
           <AnimatePresence mode="wait">
             {partner ? (
               <motion.div
@@ -731,14 +843,45 @@ export default function Friends() {
                   </div>
                 </div>
 
-                {!partner.todayCheckedIn && (
-                  <Button className="w-full h-12 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg">
-                    <Check className="w-5 h-5 mr-2" />
-                    Heute einchecken
-                  </Button>
-                )}
+                <div className="space-y-3">
+                  {!partner.todayCheckedIn && (
+                    <Button 
+                      className="w-full h-12 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg"
+                      onClick={() => setShowCheckInDialog(true)}
+                    >
+                      <Check className="w-5 h-5 mr-2" />
+                      Heute einchecken
+                    </Button>
+                  )}
+                  
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" className="w-full h-10 text-muted-foreground hover:text-destructive">
+                        <UserX className="w-4 h-4 mr-2" />
+                        Partnerschaft beenden
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="rounded-3xl">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Partnerschaft beenden?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Dein Streak und alle Check-in-Daten mit diesem Partner gehen verloren.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel className="rounded-xl">Abbrechen</AlertDialogCancel>
+                        <AlertDialogAction 
+                          className="rounded-xl bg-destructive hover:bg-destructive/90"
+                          onClick={() => endPartnership()}
+                        >
+                          Beenden
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </motion.div>
-            ) : (
+            ) : partnerRequests.length === 0 && sentPartnerRequests.length === 0 && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -751,7 +894,7 @@ export default function Friends() {
                   </div>
                   <h3 className="font-semibold text-lg mb-2">Kein Accountability Partner</h3>
                   <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
-                    Wähle einen Freund als Partner für tägliche Check-ins
+                    Sende eine Anfrage an einen Freund
                   </p>
                   {friends.length > 0 && (
                     <div className="space-y-2 max-w-xs mx-auto">
@@ -760,16 +903,23 @@ export default function Friends() {
                           key={friend.id} 
                           variant="outline" 
                           className="w-full justify-start gap-3 h-12 rounded-xl"
-                          onClick={() => createPartnership(friend.id)}
+                          onClick={() => sendPartnerRequest(friend.id)}
                         >
                           <Avatar className="w-8 h-8">
                             <AvatarImage src={friend.avatar_url || undefined} />
                             <AvatarFallback>{friend.display_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
                           </Avatar>
                           <span className="truncate">{friend.display_name || "Unbekannt"}</span>
+                          <Send className="w-4 h-4 ml-auto text-muted-foreground" />
                         </Button>
                       ))}
                     </div>
+                  )}
+                  {friends.length === 0 && (
+                    <Button onClick={() => setActiveTab("add")} className="rounded-xl">
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Erst Freunde hinzufügen
+                    </Button>
                   )}
                 </div>
               </motion.div>
@@ -849,6 +999,77 @@ export default function Friends() {
                 onCheckedChange={(v) => updatePrivacySettings({ allow_challenge_invites: v })}
               />
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Check-in Dialog */}
+      <Dialog open={showCheckInDialog} onOpenChange={setShowCheckInDialog}>
+        <DialogContent className="max-w-md rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Check className="w-5 h-5 text-amber-500" />
+              Täglicher Check-in
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-6 py-4">
+            <div className="space-y-3">
+              <Label>Was hast du heute erreicht?</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {["Training", "Gesund gegessen", "Wasser getrunken", "Gut geschlafen", "Skincare", "Supplements"].map((goal) => (
+                  <Button
+                    key={goal}
+                    variant={checkInGoals.includes(goal) ? "default" : "outline"}
+                    className="h-10 rounded-xl text-sm"
+                    onClick={() => {
+                      setCheckInGoals(prev => 
+                        prev.includes(goal) 
+                          ? prev.filter(g => g !== goal)
+                          : [...prev, goal]
+                      );
+                    }}
+                  >
+                    {checkInGoals.includes(goal) && <Check className="w-3 h-3 mr-1" />}
+                    {goal}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Wie fühlst du dich? (1-5)</Label>
+              <div className="flex gap-2 justify-center">
+                {[1, 2, 3, 4, 5].map((mood) => (
+                  <Button
+                    key={mood}
+                    variant={checkInMood === mood ? "default" : "outline"}
+                    className={cn(
+                      "w-12 h-12 rounded-xl text-lg",
+                      checkInMood === mood && "bg-amber-500 hover:bg-amber-600"
+                    )}
+                    onClick={() => setCheckInMood(mood)}
+                  >
+                    {mood === 1 ? "😔" : mood === 2 ? "😕" : mood === 3 ? "😐" : mood === 4 ? "🙂" : "😁"}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <Button 
+              className="w-full h-12 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+              onClick={async () => {
+                const success = await checkIn(checkInGoals, checkInMood);
+                if (success) {
+                  setShowCheckInDialog(false);
+                  setCheckInGoals([]);
+                  setCheckInMood(3);
+                }
+              }}
+            >
+              <Check className="w-5 h-5 mr-2" />
+              Check-in speichern
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
