@@ -20,6 +20,7 @@ import { CalorieCalculator } from "@/components/lifestyle/CalorieCalculator";
 import { MotivationCard } from "@/components/lifestyle/MotivationCard";
 import { FoodSearch } from "@/components/lifestyle/FoodSearch";
 import { HealthConnectCard } from "@/components/lifestyle/HealthConnectCard";
+import { ProgressPhotosTracker } from "@/components/lifestyle/ProgressPhotosTracker";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeeklyChallengeCard } from "@/components/challenges/WeeklyChallengeCard";
 import { Button } from "@/components/ui/button";
@@ -375,6 +376,9 @@ export default function Lifestyle() {
           <TabsContent value="body" className="space-y-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <BodyMeasurementsTracker />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <ProgressPhotosTracker />
             </motion.div>
           </TabsContent>
 
