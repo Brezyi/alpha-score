@@ -39,7 +39,7 @@ interface FriendStats {
   analysisCount: number | null;
   lastAnalysisDate: string | null;
   showStreak: boolean;
-  showScore: "everyone" | "friends" | "nobody";
+  showScore: "none" | "delta_only" | "full";
   showChallenges: boolean;
 }
 
@@ -69,36 +69,32 @@ export function FriendProfileDialog({
         .eq("user_id", friendId)
         .maybeSingle();
 
-      const showScore = privacy?.show_score || "friends";
+      const showScore = (privacy?.show_score as "none" | "delta_only" | "full") || "full";
       const showStreak = privacy?.show_streak !== false;
       const showChallenges = privacy?.show_challenges !== false;
 
-      // Fetch streak
+      // Fetch streak (RLS handles visibility)
       let streak: number | null = null;
-      if (showStreak) {
-        const { data: streakData } = await supabase
-          .from("user_streaks")
-          .select("current_streak")
-          .eq("user_id", friendId)
-          .maybeSingle();
-        streak = streakData?.current_streak || null;
-      }
+      const { data: streakData } = await supabase
+        .from("user_streaks")
+        .select("current_streak")
+        .eq("user_id", friendId)
+        .maybeSingle();
+      streak = streakData?.current_streak || null;
 
-      // Fetch score (latest analysis)
+      // Fetch score (latest analysis) - RLS handles visibility
       let score: number | null = null;
       let lastAnalysisDate: string | null = null;
-      if (showScore === "everyone" || showScore === "friends") {
-        const { data: analysisData } = await supabase
-          .from("analyses")
-          .select("looks_score, created_at")
-          .eq("user_id", friendId)
-          .eq("status", "completed")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        score = analysisData?.looks_score || null;
-        lastAnalysisDate = analysisData?.created_at || null;
-      }
+      const { data: analysisData } = await supabase
+        .from("analyses")
+        .select("looks_score, created_at")
+        .eq("user_id", friendId)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      score = analysisData?.looks_score || null;
+      lastAnalysisDate = analysisData?.created_at || null;
 
       // Fetch XP/Level
       let level: number | null = null;
@@ -193,14 +189,14 @@ export function FriendProfileDialog({
                 {/* Score */}
                 <div className="text-center p-3 rounded-xl bg-muted/50">
                   <div className="flex justify-center mb-1">
-                    {stats?.showScore !== "nobody" ? (
+                    {stats?.showScore !== "none" ? (
                       <TrendingUp className="w-5 h-5 text-primary" />
                     ) : (
                       <EyeOff className="w-5 h-5 text-muted-foreground" />
                     )}
                   </div>
                   <p className="text-2xl font-bold">
-                    {stats?.showScore !== "nobody" && stats?.score ? stats.score.toFixed(1) : "—"}
+                    {stats?.showScore !== "none" && stats?.score ? stats.score.toFixed(1) : "—"}
                   </p>
                   <p className="text-xs text-muted-foreground">Score</p>
                 </div>
@@ -223,7 +219,7 @@ export function FriendProfileDialog({
                   <span className="font-medium">{stats?.analysisCount || 0}</span>
                 </div>
                 
-                {stats?.lastAnalysisDate && stats?.showScore !== "nobody" && (
+                {stats?.lastAnalysisDate && stats?.showScore !== "none" && (
                   <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
