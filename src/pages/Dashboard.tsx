@@ -59,6 +59,8 @@ import { AchievementsGrid } from "@/components/gamification/AchievementsGrid";
 import { useProductRecommendations } from "@/hooks/useProductRecommendations";
 import { ProductRecommendationsCard } from "@/components/ProductRecommendationsCard";
 import { PersonalizedInsights } from "@/components/dashboard/PersonalizedInsights";
+import { SleepScoreCorrelation } from "@/components/dashboard/SleepScoreCorrelation";
+import { StreakRewards } from "@/components/gamification/StreakRewards";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { useReferral } from "@/hooks/useReferral";
 import { Capacitor } from "@capacitor/core";
@@ -216,8 +218,8 @@ const Dashboard = () => {
   const { currentStreak, longestStreak, isActiveToday, loading: streakLoading } = useStreak();
   const { settings } = useGlobalSettings();
   
-  // Lifestyle data for personalized insights
-  const { todayEntry: lifestyleData, loading: lifestyleLoading } = useLifestyle();
+  // Lifestyle data for personalized insights and sleep correlation
+  const { todayEntry: lifestyleData, entries: lifestyleEntries, loading: lifestyleLoading } = useLifestyle();
   
   // Referral check for free users
   const { hasEnoughReferrals, loading: referralLoading } = useReferral();
@@ -1098,6 +1100,26 @@ const Dashboard = () => {
                 <AchievementsGrid achievements={achievements} maxDisplay={12} />
               </div>
             )}
+            
+            {/* Streak Rewards Compact */}
+            <StreakRewards 
+              currentStreak={currentStreak} 
+              longestStreak={longestStreak} 
+              compact 
+            />
+            
+            {/* Sleep-Score Correlation */}
+            <SleepScoreCorrelation 
+              lifestyleEntries={lifestyleEntries.map(e => ({
+                entry_date: e.entry_date,
+                sleep_hours: e.sleep_hours,
+                sleep_quality: null // Add this when field is available
+              }))}
+              analyses={completedAnalyses.map(a => ({
+                created_at: a.created_at,
+                looks_score: a.looks_score
+              }))}
+            />
             
             {/* Product Recommendations */}
             {recommendedProducts.length > 0 && (

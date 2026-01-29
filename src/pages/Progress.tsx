@@ -10,6 +10,8 @@ import { useGamification } from "@/hooks/useGamification";
 import { generateSignedUrls } from "@/hooks/useSignedImageUrl";
 import { ProgressImage } from "@/components/ProgressImage";
 import { AchievementsFullGrid } from "@/components/gamification/AchievementsFullGrid";
+import { AnalysisTimeline } from "@/components/progress/AnalysisTimeline";
+import { StreakRewards } from "@/components/gamification/StreakRewards";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileProgressContent } from "@/components/mobile/MobileProgressContent";
 import { Capacitor } from "@capacitor/core";
@@ -625,6 +627,31 @@ export default function Progress() {
                 </Card>
               </motion.div>
             </motion.div>
+
+            {/* Streak Rewards */}
+            <motion.div
+              initial={shouldReduce ? false : { opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={shouldReduce ? { duration: 0.2 } : { delay: 0.35 }}
+              className="mb-8"
+            >
+              <StreakRewards 
+                currentStreak={currentStreak} 
+                longestStreak={longestStreak} 
+              />
+            </motion.div>
+
+            {/* Analysis Timeline */}
+            {completedAnalyses.length > 0 && (
+              <motion.div
+                initial={shouldReduce ? false : { opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={shouldReduce ? { duration: 0.2 } : { delay: 0.38 }}
+                className="mb-8"
+              >
+                <AnalysisTimeline analyses={completedAnalyses} />
+              </motion.div>
+            )}
 
             {/* Score Chart - Showcase Style with Custom SVG */}
             {chartData.length >= 2 && (
