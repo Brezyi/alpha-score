@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Loader2, ArrowLeft } from "lucide-react";
 import { useFriendMessages } from "@/hooks/useFriendMessages";
@@ -10,6 +10,8 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { containsForbiddenContent } from "@/lib/displayNameValidation";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatDialogProps {
   open: boolean;
@@ -21,6 +23,7 @@ interface ChatDialogProps {
 
 export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }: ChatDialogProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { messages, loading, sending, sendMessage } = useFriendMessages(friendId);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -33,8 +36,20 @@ export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }
   }, [messages]);
 
   const handleSend = async () => {
-    if (!newMessage.trim() || sending) return;
-    const success = await sendMessage(newMessage);
+    const trimmed = newMessage.trim();
+    if (!trimmed || sending) return;
+    
+    // Check for forbidden content
+    if (containsForbiddenContent(trimmed)) {
+      toast({
+        title: "Nachricht nicht erlaubt",
+        description: "Deine Nachricht enthält unzulässige Inhalte.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const success = await sendMessage(trimmed);
     if (success) {
       setNewMessage("");
     }
@@ -132,19 +147,20 @@ export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }
 
         {/* Input */}
         <div className="p-4 border-t bg-card">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Nachricht schreiben..."
+          <div className="flex gap-2 items-end">
+            <Textarea
+              placeholder="Nachricht schreiben... 😊"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={sending}
-              className="h-12 rounded-xl"
+              className="min-h-[44px] max-h-[120px] rounded-xl resize-none py-3"
+              rows={1}
             />
             <Button 
               onClick={handleSend} 
               disabled={!newMessage.trim() || sending}
-              className="h-12 w-12 rounded-xl shrink-0"
+              className="h-11 w-11 rounded-xl shrink-0"
             >
               {sending ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
