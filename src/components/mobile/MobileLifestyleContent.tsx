@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { HealthConnectCard } from "@/components/lifestyle/HealthConnectCard";
 
 interface LifestyleEntry {
   sleep_hours: number | null;
@@ -59,10 +60,19 @@ export const MobileLifestyleContent = ({
 
   return (
     <div className="px-4 py-6 space-y-6">
+      {/* Health Connect Card - Native only */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <HealthConnectCard />
+      </motion.div>
+
       {/* Today's Status */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold">Heute</h2>
