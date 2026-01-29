@@ -40,6 +40,7 @@ import { Capacitor } from "@capacitor/core";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { useToast } from "@/hooks/use-toast";
+import { ChatDialog } from "@/components/friends/ChatDialog";
 
 // Friend Card Component - Modern Design
 function FriendCard({ 
@@ -776,6 +777,17 @@ export default function Friends() {
           </AnimatePresence>
         </TabsContent>
       </Tabs>
+
+      {/* Chat Dialog */}
+      {selectedChat && (
+        <ChatDialog
+          open={!!selectedChat}
+          onClose={() => setSelectedChat(null)}
+          friendId={selectedChat}
+          friendName={friends.find(f => f.id === selectedChat)?.display_name || conversations.find(c => c.friend_id === selectedChat)?.friend_name || null}
+          friendAvatar={friends.find(f => f.id === selectedChat)?.avatar_url || conversations.find(c => c.friend_id === selectedChat)?.friend_avatar || null}
+        />
+      )}
 
       {/* Privacy Settings Dialog */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
