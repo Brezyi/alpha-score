@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Sparkles,
   Crown,
+  Users,
   Zap,
   Flame
 } from "lucide-react";
@@ -234,7 +235,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
     { icon: Camera, label: "Analyse", path: "/upload", color: "bg-primary/15 text-primary" },
     { icon: Target, label: "Plan", path: "/plan", color: "bg-blue-500/15 text-blue-500" },
     { icon: Heart, label: "Lifestyle", path: "/lifestyle", color: "bg-pink-500/15 text-pink-500" },
-    { icon: MessageSquare, label: "Coach", path: "/coach", color: "bg-violet-500/15 text-violet-500" },
+    { icon: Users, label: "Freunde", path: "/friends", color: "bg-emerald-500/15 text-emerald-500" },
   ];
 
   return (
