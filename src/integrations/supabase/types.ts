@@ -547,6 +547,57 @@ export type Database = {
         }
         Relationships: []
       }
+      food_database: {
+        Row: {
+          barcode: string | null
+          brand: string | null
+          calories_per_100g: number | null
+          carbs_per_100g: number | null
+          category: string | null
+          created_at: string | null
+          created_by: string | null
+          fat_per_100g: number | null
+          fiber_per_100g: number | null
+          id: string
+          is_verified: boolean | null
+          name: string
+          protein_per_100g: number | null
+          serving_size_g: number | null
+        }
+        Insert: {
+          barcode?: string | null
+          brand?: string | null
+          calories_per_100g?: number | null
+          carbs_per_100g?: number | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          fat_per_100g?: number | null
+          fiber_per_100g?: number | null
+          id?: string
+          is_verified?: boolean | null
+          name: string
+          protein_per_100g?: number | null
+          serving_size_g?: number | null
+        }
+        Update: {
+          barcode?: string | null
+          brand?: string | null
+          calories_per_100g?: number | null
+          carbs_per_100g?: number | null
+          category?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          fat_per_100g?: number | null
+          fiber_per_100g?: number | null
+          id?: string
+          is_verified?: boolean | null
+          name?: string
+          protein_per_100g?: number | null
+          serving_size_g?: number | null
+        }
+        Relationships: []
+      }
       grocery_items: {
         Row: {
           category: string | null
@@ -775,6 +826,47 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_plans: {
+        Row: {
+          created_at: string | null
+          custom_meal_name: string | null
+          id: string
+          meal_type: string
+          notes: string | null
+          plan_date: string
+          recipe_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          custom_meal_name?: string | null
+          id?: string
+          meal_type: string
+          notes?: string | null
+          plan_date: string
+          recipe_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          custom_meal_name?: string | null
+          id?: string
+          meal_type?: string
+          notes?: string | null
+          plan_date?: string
+          recipe_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plans_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mfa_backup_codes: {
         Row: {
           code_hash: string
@@ -835,6 +927,30 @@ export type Database = {
           stress_level?: number | null
           symptoms?: string[] | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      motivation_tips: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          tip_text: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          tip_text: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          tip_text?: string
         }
         Relationships: []
       }
@@ -1009,6 +1125,39 @@ export type Database = {
           updated_at?: string
           user_id?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      progress_photos: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          photo_type: string | null
+          photo_url: string
+          taken_at: string | null
+          user_id: string
+          weight_kg: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          photo_type?: string | null
+          photo_url: string
+          taken_at?: string | null
+          user_id: string
+          weight_kg?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          photo_type?: string | null
+          photo_url?: string
+          taken_at?: string | null
+          user_id?: string
+          weight_kg?: number | null
         }
         Relationships: []
       }
@@ -1690,6 +1839,60 @@ export type Database = {
           },
         ]
       }
+      user_calorie_settings: {
+        Row: {
+          activity_level: string | null
+          birth_date: string | null
+          calculated_bmr: number | null
+          calculated_daily_calories: number | null
+          calculated_tdee: number | null
+          created_at: string | null
+          current_weight_kg: number | null
+          gender: string | null
+          goal_type: string | null
+          height_cm: number | null
+          id: string
+          target_weight_kg: number | null
+          updated_at: string | null
+          user_id: string
+          weekly_goal_kg: number | null
+        }
+        Insert: {
+          activity_level?: string | null
+          birth_date?: string | null
+          calculated_bmr?: number | null
+          calculated_daily_calories?: number | null
+          calculated_tdee?: number | null
+          created_at?: string | null
+          current_weight_kg?: number | null
+          gender?: string | null
+          goal_type?: string | null
+          height_cm?: number | null
+          id?: string
+          target_weight_kg?: number | null
+          updated_at?: string | null
+          user_id: string
+          weekly_goal_kg?: number | null
+        }
+        Update: {
+          activity_level?: string | null
+          birth_date?: string | null
+          calculated_bmr?: number | null
+          calculated_daily_calories?: number | null
+          calculated_tdee?: number | null
+          created_at?: string | null
+          current_weight_kg?: number | null
+          gender?: string | null
+          goal_type?: string | null
+          height_cm?: number | null
+          id?: string
+          target_weight_kg?: number | null
+          updated_at?: string | null
+          user_id?: string
+          weekly_goal_kg?: number | null
+        }
+        Relationships: []
+      }
       user_challenge_progress: {
         Row: {
           assigned_date: string
@@ -1817,6 +2020,35 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_motivation_logs: {
+        Row: {
+          id: string
+          tip_id: string | null
+          user_id: string
+          viewed_at: string | null
+        }
+        Insert: {
+          id?: string
+          tip_id?: string | null
+          user_id: string
+          viewed_at?: string | null
+        }
+        Update: {
+          id?: string
+          tip_id?: string | null
+          user_id?: string
+          viewed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_motivation_logs_tip_id_fkey"
+            columns: ["tip_id"]
+            isOneToOne: false
+            referencedRelation: "motivation_tips"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_referral_codes: {
         Row: {
@@ -2124,6 +2356,66 @@ export type Database = {
           level?: number
           total_xp?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      water_logs: {
+        Row: {
+          amount_ml: number
+          created_at: string | null
+          id: string
+          logged_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_ml: number
+          created_at?: string | null
+          id?: string
+          logged_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_ml?: number
+          created_at?: string | null
+          id?: string
+          logged_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      water_reminders: {
+        Row: {
+          created_at: string | null
+          daily_goal_liters: number | null
+          end_time: string | null
+          id: string
+          is_enabled: boolean | null
+          reminder_interval_hours: number | null
+          start_time: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          daily_goal_liters?: number | null
+          end_time?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          reminder_interval_hours?: number | null
+          start_time?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          daily_goal_liters?: number | null
+          end_time?: string | null
+          id?: string
+          is_enabled?: boolean | null
+          reminder_interval_hours?: number | null
+          start_time?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
