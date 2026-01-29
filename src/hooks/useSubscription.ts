@@ -41,11 +41,32 @@ export function useSubscription() {
     error: null,
   });
 
-  const checkSubscription = useCallback(async (retryAfterRefresh = false) => {
+  const checkSubscription = useCallback(async (retryCount = 0) => {
     try {
-      let { data: { session } } = await supabase.auth.getSession();
+      // First, try to get a fresh session
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session) {
+      if (sessionError || !session) {
+        // Try to refresh the session if we have a stored refresh token
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
+          setState({
+            isPremium: false,
+            subscriptionType: null,
+            subscriptionEnd: null,
+            isAdminGranted: false,
+            loading: false,
+            error: null,
+          });
+          return;
+        }
+      }
+
+      // Get the current valid session
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      
+      if (!currentSession) {
         setState({
           isPremium: false,
           subscriptionType: null,
@@ -59,14 +80,14 @@ export function useSubscription() {
 
       // Check if user is owner - owners get full premium access
       const { data: roleData } = await supabase.rpc('get_user_role', {
-        _user_id: session.user.id
+        _user_id: currentSession.user.id
       });
 
       if (roleData === 'owner') {
         setState({
           isPremium: true,
           subscriptionType: "owner",
-          subscriptionEnd: null, // Never expires
+          subscriptionEnd: null,
           isAdminGranted: false,
           loading: false,
           error: null,
@@ -76,50 +97,65 @@ export function useSubscription() {
 
       const { data, error } = await supabase.functions.invoke("check-subscription");
 
-      // Handle token expiration - refresh session and retry once
-      if (error || data?.token_expired) {
-        const isTokenError = error?.message?.includes("401") || 
-                            error?.message?.includes("expired") ||
-                            data?.token_expired;
+      // Handle token expiration - the error context contains the response
+      if (error) {
+        const errorMessage = error.message || '';
+        const isTokenError = errorMessage.includes("401") || 
+                            errorMessage.includes("expired") ||
+                            errorMessage.includes("Token");
         
-        if (isTokenError && !retryAfterRefresh) {
-          console.log("Token expired, refreshing session...");
+        if (isTokenError && retryCount < 2) {
+          console.log("Token expired, refreshing session...", { retryCount });
           const { error: refreshError } = await supabase.auth.refreshSession();
           
           if (!refreshError) {
-            // Retry with fresh token
-            return checkSubscription(true);
+            // Wait a moment for the new token to propagate
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return checkSubscription(retryCount + 1);
           }
         }
         
-        // If refresh failed or this was already a retry, set not premium
-        console.error("Subscription check error:", error || data?.error);
+        // Set as not premium but don't show error for auth issues
         setState({
           isPremium: false,
           subscriptionType: null,
           subscriptionEnd: null,
           isAdminGranted: false,
           loading: false,
-          error: null, // Don't show error for token issues
+          error: null,
         });
         return;
       }
 
+      // Check for token_expired in successful response (edge function returns 401 with body)
+      if (data?.token_expired && retryCount < 2) {
+        console.log("Token expired flag in response, refreshing...", { retryCount });
+        const { error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (!refreshError) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          return checkSubscription(retryCount + 1);
+        }
+      }
+
       setState({
-        isPremium: data.is_premium || false,
-        subscriptionType: data.subscription_type || null,
-        subscriptionEnd: data.subscription_end || null,
-        isAdminGranted: data.is_admin_granted || false,
+        isPremium: data?.is_premium || false,
+        subscriptionType: data?.subscription_type || null,
+        subscriptionEnd: data?.subscription_end || null,
+        isAdminGranted: data?.is_admin_granted || false,
         loading: false,
         error: null,
       });
     } catch (error: any) {
       console.error("Subscription check failed:", error);
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: null // Silently fail for auth issues
-      }));
+      setState({
+        isPremium: false,
+        subscriptionType: null,
+        subscriptionEnd: null,
+        isAdminGranted: false,
+        loading: false,
+        error: null,
+      });
     }
   }, []);
 
