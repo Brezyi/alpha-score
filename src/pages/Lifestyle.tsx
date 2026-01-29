@@ -5,11 +5,16 @@ import { useSubscription } from "@/hooks/useSubscription";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { LifestyleTracker } from "@/components/lifestyle/LifestyleTracker";
 import { SupplementTracker } from "@/components/lifestyle/SupplementTracker";
+import { FastingTimer } from "@/components/lifestyle/FastingTimer";
+import { NutritionTracker } from "@/components/lifestyle/NutritionTracker";
+import { BodyMeasurementsTracker } from "@/components/lifestyle/BodyMeasurementsTracker";
+import { AdvancedStatistics } from "@/components/lifestyle/AdvancedStatistics";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeeklyChallengeCard } from "@/components/challenges/WeeklyChallengeCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Lock } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Loader2, Lock, UtensilsCrossed, Timer, Ruler, BarChart3 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -187,7 +192,7 @@ export default function Lifestyle() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-8">
+      <div className="container max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -202,40 +207,88 @@ export default function Lifestyle() {
 
         <motion.div className="mb-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="text-2xl font-bold mb-1">Lifestyle Tracker</h1>
-          <p className="text-sm text-muted-foreground">Tracke Schlaf, Wasser & Training</p>
+          <p className="text-sm text-muted-foreground">Tracke Schlaf, Ernährung, Körpermaße & mehr</p>
         </motion.div>
 
-        {/* Weekly Tracker - Full Width at Top */}
-        <motion.div 
-          className="mb-6" 
-          initial={{ opacity: 0, y: 20 }} 
-          animate={{ opacity: 1, y: 0 }} 
-          transition={{ delay: 0.05 }}
-        >
-          <LifestyleTracker onDateChange={setSelectedDate} />
-        </motion.div>
+        {/* Tabs Navigation */}
+        <Tabs defaultValue="daily" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 h-auto">
+            <TabsTrigger value="daily" className="flex flex-col gap-1 py-2">
+              <Moon className="h-4 w-4" />
+              <span className="text-xs">Tägliches</span>
+            </TabsTrigger>
+            <TabsTrigger value="nutrition" className="flex flex-col gap-1 py-2">
+              <UtensilsCrossed className="h-4 w-4" />
+              <span className="text-xs">Ernährung</span>
+            </TabsTrigger>
+            <TabsTrigger value="body" className="flex flex-col gap-1 py-2">
+              <Ruler className="h-4 w-4" />
+              <span className="text-xs">Körper</span>
+            </TabsTrigger>
+            <TabsTrigger value="stats" className="flex flex-col gap-1 py-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="text-xs">Statistik</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Health Alerts */}
-        <HealthAlerts />
+          {/* Daily Tracking Tab */}
+          <TabsContent value="daily" className="space-y-6">
+            {/* Weekly Tracker */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <LifestyleTracker onDateChange={setSelectedDate} />
+            </motion.div>
 
-        {/* Main Grid */}
-        <div className="grid gap-6">
-          {/* Supplements */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <SupplementTracker selectedDate={selectedDate} />
-          </motion.div>
+            {/* Health Alerts */}
+            <HealthAlerts />
 
-          {/* Goals & Challenges */}
-          <div className="grid md:grid-cols-2 gap-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <GoalCard currentScore={currentScore} />
+            {/* Fasting & Supplements Row */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                <FastingTimer />
+              </motion.div>
+              
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                <SupplementTracker selectedDate={selectedDate} />
+              </motion.div>
+            </div>
+
+            {/* Goals & Challenges */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <GoalCard currentScore={currentScore} />
+              </motion.div>
+              
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                <WeeklyChallengeCard />
+              </motion.div>
+            </div>
+          </TabsContent>
+
+          {/* Nutrition Tab */}
+          <TabsContent value="nutrition" className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <NutritionTracker />
             </motion.div>
             
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <WeeklyChallengeCard />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <FastingTimer />
             </motion.div>
-          </div>
-        </div>
+          </TabsContent>
+
+          {/* Body Measurements Tab */}
+          <TabsContent value="body" className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <BodyMeasurementsTracker />
+            </motion.div>
+          </TabsContent>
+
+          {/* Statistics Tab */}
+          <TabsContent value="stats">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <AdvancedStatistics />
+            </motion.div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

@@ -257,6 +257,51 @@ export type Database = {
         }
         Relationships: []
       }
+      body_measurements: {
+        Row: {
+          arm_cm: number | null
+          body_fat_percent: number | null
+          chest_cm: number | null
+          created_at: string
+          hip_cm: number | null
+          id: string
+          measured_at: string
+          notes: string | null
+          thigh_cm: number | null
+          user_id: string
+          waist_cm: number | null
+          weight_kg: number | null
+        }
+        Insert: {
+          arm_cm?: number | null
+          body_fat_percent?: number | null
+          chest_cm?: number | null
+          created_at?: string
+          hip_cm?: number | null
+          id?: string
+          measured_at?: string
+          notes?: string | null
+          thigh_cm?: number | null
+          user_id: string
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Update: {
+          arm_cm?: number | null
+          body_fat_percent?: number | null
+          chest_cm?: number | null
+          created_at?: string
+          hip_cm?: number | null
+          id?: string
+          measured_at?: string
+          notes?: string | null
+          thigh_cm?: number | null
+          user_id?: string
+          waist_cm?: number | null
+          weight_kg?: number | null
+        }
+        Relationships: []
+      }
       coach_conversations: {
         Row: {
           created_at: string
@@ -400,6 +445,42 @@ export type Database = {
         }
         Relationships: []
       }
+      fasting_sessions: {
+        Row: {
+          actual_end_time: string | null
+          created_at: string
+          fasting_type: string
+          id: string
+          is_completed: boolean | null
+          notes: string | null
+          start_time: string
+          target_end_time: string
+          user_id: string
+        }
+        Insert: {
+          actual_end_time?: string | null
+          created_at?: string
+          fasting_type?: string
+          id?: string
+          is_completed?: boolean | null
+          notes?: string | null
+          start_time: string
+          target_end_time: string
+          user_id: string
+        }
+        Update: {
+          actual_end_time?: string | null
+          created_at?: string
+          fasting_type?: string
+          id?: string
+          is_completed?: boolean | null
+          notes?: string | null
+          start_time?: string
+          target_end_time?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lifestyle_entries: {
         Row: {
           created_at: string
@@ -457,6 +538,57 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_entries: {
+        Row: {
+          barcode: string | null
+          calories: number | null
+          carbs_g: number | null
+          created_at: string
+          entry_date: string
+          fat_g: number | null
+          fiber_g: number | null
+          food_name: string
+          id: string
+          meal_type: string
+          notes: string | null
+          protein_g: number | null
+          serving_size: string | null
+          user_id: string
+        }
+        Insert: {
+          barcode?: string | null
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string
+          entry_date?: string
+          fat_g?: number | null
+          fiber_g?: number | null
+          food_name: string
+          id?: string
+          meal_type: string
+          notes?: string | null
+          protein_g?: number | null
+          serving_size?: string | null
+          user_id: string
+        }
+        Update: {
+          barcode?: string | null
+          calories?: number | null
+          carbs_g?: number | null
+          created_at?: string
+          entry_date?: string
+          fat_g?: number | null
+          fiber_g?: number | null
+          food_name?: string
+          id?: string
+          meal_type?: string
+          notes?: string | null
+          protein_g?: number | null
+          serving_size?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       mfa_backup_codes: {
         Row: {
           code_hash: string
@@ -480,6 +612,42 @@ export type Database = {
           id?: string
           used?: boolean
           used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nutrition_goals: {
+        Row: {
+          created_at: string
+          daily_calories: number | null
+          daily_carbs_g: number | null
+          daily_fat_g: number | null
+          daily_fiber_g: number | null
+          daily_protein_g: number | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_calories?: number | null
+          daily_carbs_g?: number | null
+          daily_fat_g?: number | null
+          daily_fiber_g?: number | null
+          daily_protein_g?: number | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_calories?: number | null
+          daily_carbs_g?: number | null
+          daily_fat_g?: number | null
+          daily_fiber_g?: number | null
+          daily_protein_g?: number | null
+          id?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
