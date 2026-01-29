@@ -241,14 +241,14 @@ export function useFriends() {
 
   // Send friend request by code
   const sendFriendRequest = async (code: string): Promise<boolean> => {
-    if (!user) return false;
+    if (!user || !code.trim()) return false;
 
     // Find user by code
     const { data: codeData, error: codeError } = await supabase
       .from("friend_codes")
       .select("user_id")
       .eq("code", code.toUpperCase())
-      .single();
+      .maybeSingle();
 
     if (codeError || !codeData) {
       toast({
@@ -259,7 +259,14 @@ export function useFriends() {
       return false;
     }
 
-    if (codeData.user_id === user.id) {
+    return sendFriendRequestByUserId(codeData.user_id);
+  };
+
+  // Send friend request by user ID (for search results)
+  const sendFriendRequestByUserId = async (targetUserId: string): Promise<boolean> => {
+    if (!user || !targetUserId) return false;
+
+    if (targetUserId === user.id) {
       toast({
         title: "Das bist du!",
         description: "Du kannst dir selbst keine Anfrage senden.",
@@ -272,8 +279,8 @@ export function useFriends() {
     const { data: existing } = await supabase
       .from("friend_connections")
       .select("id, status")
-      .or(`and(requester_id.eq.${user.id},addressee_id.eq.${codeData.user_id}),and(requester_id.eq.${codeData.user_id},addressee_id.eq.${user.id})`)
-      .single();
+      .or(`and(requester_id.eq.${user.id},addressee_id.eq.${targetUserId}),and(requester_id.eq.${targetUserId},addressee_id.eq.${user.id})`)
+      .maybeSingle();
 
     if (existing) {
       if (existing.status === "accepted") {
@@ -286,6 +293,12 @@ export function useFriends() {
           title: "Anfrage existiert",
           description: "Eine Anfrage ist bereits ausstehend.",
         });
+      } else if (existing.status === "blocked") {
+        toast({
+          title: "Nicht möglich",
+          description: "Diese Verbindung ist nicht möglich.",
+          variant: "destructive",
+        });
       }
       return false;
     }
@@ -295,11 +308,12 @@ export function useFriends() {
       .from("friend_connections")
       .insert({
         requester_id: user.id,
-        addressee_id: codeData.user_id,
+        addressee_id: targetUserId,
         status: "pending",
       });
 
     if (error) {
+      console.error("Error sending friend request:", error);
       toast({
         title: "Fehler",
         description: "Anfrage konnte nicht gesendet werden.",
@@ -463,6 +477,7 @@ export function useFriends() {
     privacySettings,
     loading,
     sendFriendRequest,
+    sendFriendRequestByUserId,
     searchUsers,
     acceptRequest,
     declineRequest,
