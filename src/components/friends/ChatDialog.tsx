@@ -10,6 +10,8 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { containsForbiddenContent } from "@/lib/displayNameValidation";
+import { useToast } from "@/hooks/use-toast";
 
 interface ChatDialogProps {
   open: boolean;
@@ -21,6 +23,7 @@ interface ChatDialogProps {
 
 export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }: ChatDialogProps) {
   const { user } = useAuth();
+  const { toast } = useToast();
   const { messages, loading, sending, sendMessage } = useFriendMessages(friendId);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -35,6 +38,16 @@ export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }
   const handleSend = async () => {
     const trimmed = newMessage.trim();
     if (!trimmed || sending) return;
+    
+    // Filter für Beleidigungen und illegale Inhalte
+    if (containsForbiddenContent(trimmed)) {
+      toast({
+        title: "Nachricht blockiert",
+        description: "Deine Nachricht enthält unzulässige Inhalte und kann nicht gesendet werden.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const success = await sendMessage(trimmed);
     if (success) {
