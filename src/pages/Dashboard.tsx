@@ -28,7 +28,8 @@ import {
   Quote,
   CheckCircle2,
   Circle,
-  Heart
+  Heart,
+  Users
 } from "lucide-react";
 import {
   Collapsible,
@@ -113,6 +114,14 @@ const quickActions = [
     href: "/lifestyle",
     color: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
     premium: true,
+  },
+  {
+    icon: Users,
+    title: "Freunde",
+    description: "Verbinde dich mit anderen",
+    href: "/friends",
+    color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    premium: false,
   },
   {
     icon: TrendingUp,
