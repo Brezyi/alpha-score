@@ -32,6 +32,8 @@ const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Plan = lazy(() => import("./pages/Plan"));
 const Progress = lazy(() => import("./pages/Progress"));
 const Lifestyle = lazy(() => import("./pages/Lifestyle"));
+const Friends = lazy(() => import("./pages/Friends"));
+const Coach = lazy(() => import("./pages/Coach"));
 const Features = lazy(() => import("./pages/Features"));
 const PricingPage = lazy(() => import("./pages/PricingPage"));
 const Datenschutz = lazy(() => import("./pages/Datenschutz"));
@@ -41,8 +43,6 @@ const ConfirmDeletion = lazy(() => import("./pages/ConfirmDeletion"));
 const Support = lazy(() => import("./pages/Support"));
 const RefundStatus = lazy(() => import("./pages/RefundStatus"));
 const AdminPasswordReset = lazy(() => import("./pages/AdminPasswordReset"));
-
-// Admin pages - lazy loaded since rarely accessed
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const UserManagement = lazy(() => import("./pages/admin/UserManagement"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
@@ -105,6 +105,8 @@ const App = () => (
                         <Route path="/plan" element={<Plan />} />
                         <Route path="/progress" element={<Progress />} />
                         <Route path="/lifestyle" element={<Lifestyle />} />
+                        <Route path="/friends" element={<Friends />} />
+                        <Route path="/coach" element={<Coach />} />
                         <Route path="/support" element={<Support />} />
                         <Route path="/refund-status" element={<RefundStatus />} />
                         <Route path="/features" element={<Features />} />

@@ -41,6 +41,33 @@ export type Database = {
         }
         Relationships: []
       }
+      accountability_partners: {
+        Row: {
+          ended_at: string | null
+          id: string
+          is_active: boolean
+          partner_id: string
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          partner_id: string
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          ended_at?: string | null
+          id?: string
+          is_active?: boolean
+          partner_id?: string
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       achievements: {
         Row: {
           category: string
@@ -598,6 +625,114 @@ export type Database = {
         }
         Relationships: []
       }
+      friend_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      friend_connections: {
+        Row: {
+          addressee_id: string
+          created_at: string
+          id: string
+          requester_id: string
+          status: Database["public"]["Enums"]["friend_status"]
+          updated_at: string
+        }
+        Insert: {
+          addressee_id: string
+          created_at?: string
+          id?: string
+          requester_id: string
+          status?: Database["public"]["Enums"]["friend_status"]
+          updated_at?: string
+        }
+        Update: {
+          addressee_id?: string
+          created_at?: string
+          id?: string
+          requester_id?: string
+          status?: Database["public"]["Enums"]["friend_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      friend_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      friend_privacy_settings: {
+        Row: {
+          allow_challenge_invites: boolean
+          created_at: string
+          id: string
+          show_challenges: boolean
+          show_score: Database["public"]["Enums"]["privacy_visibility"]
+          show_streak: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          allow_challenge_invites?: boolean
+          created_at?: string
+          id?: string
+          show_challenges?: boolean
+          show_score?: Database["public"]["Enums"]["privacy_visibility"]
+          show_streak?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          allow_challenge_invites?: boolean
+          created_at?: string
+          id?: string
+          show_challenges?: boolean
+          show_score?: Database["public"]["Enums"]["privacy_visibility"]
+          show_streak?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       grocery_items: {
         Row: {
           category: string | null
@@ -989,6 +1124,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      partner_check_ins: {
+        Row: {
+          check_in_date: string
+          completed_goals: string[] | null
+          created_at: string
+          id: string
+          mood_score: number | null
+          notes: string | null
+          partnership_id: string
+          user_id: string
+        }
+        Insert: {
+          check_in_date?: string
+          completed_goals?: string[] | null
+          created_at?: string
+          id?: string
+          mood_score?: number | null
+          notes?: string | null
+          partnership_id: string
+          user_id: string
+        }
+        Update: {
+          check_in_date?: string
+          completed_goals?: string[] | null
+          created_at?: string
+          id?: string
+          mood_score?: number | null
+          notes?: string | null
+          partnership_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_check_ins_partnership_id_fkey"
+            columns: ["partnership_id"]
+            isOneToOne: false
+            referencedRelation: "accountability_partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -1509,6 +1685,86 @@ export type Database = {
           new_value?: Json
           old_value?: Json | null
           setting_key?: string
+        }
+        Relationships: []
+      }
+      shared_challenge_participants: {
+        Row: {
+          challenge_id: string
+          completed_at: string | null
+          current_progress: number
+          id: string
+          is_completed: boolean
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          completed_at?: string | null
+          current_progress?: number
+          id?: string
+          is_completed?: boolean
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          completed_at?: string | null
+          current_progress?: number
+          id?: string
+          is_completed?: boolean
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_challenge_participants_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "shared_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_challenges: {
+        Row: {
+          challenge_type: string
+          created_at: string
+          creator_id: string
+          description: string | null
+          end_date: string
+          id: string
+          is_active: boolean
+          start_date: string
+          target_value: number | null
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          challenge_type: string
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          end_date: string
+          id?: string
+          is_active?: boolean
+          start_date?: string
+          target_value?: number | null
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          challenge_type?: string
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          end_date?: string
+          id?: string
+          is_active?: boolean
+          start_date?: string
+          target_value?: number | null
+          title?: string
+          xp_reward?: number
         }
         Relationships: []
       }
@@ -2760,6 +3016,7 @@ export type Database = {
         Args: { _count?: number; _user_id: string }
         Returns: string[]
       }
+      generate_friend_code: { Args: never; Returns: string }
       generate_referral_code: { Args: never; Returns: string }
       get_admin_password_status: {
         Args: never
@@ -2935,6 +3192,8 @@ export type Database = {
     }
     Enums: {
       app_role: "owner" | "admin" | "user"
+      friend_status: "pending" | "accepted" | "blocked"
+      privacy_visibility: "none" | "delta_only" | "full"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3063,6 +3322,8 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["owner", "admin", "user"],
+      friend_status: ["pending", "accepted", "blocked"],
+      privacy_visibility: ["none", "delta_only", "full"],
     },
   },
 } as const
