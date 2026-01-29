@@ -131,17 +131,18 @@ export function usePartnerRequests() {
       return false;
     }
 
-    // Check for existing request (any status)
-    const { data: existingRequest } = await supabase
+    // Check for existing requests (any status) - may return multiple
+    const { data: existingRequests } = await supabase
       .from("partner_requests")
       .select("id, status")
       .or(
         `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
-      )
-      .maybeSingle();
+      );
 
-    if (existingRequest) {
-      if (existingRequest.status === "pending") {
+    if (existingRequests && existingRequests.length > 0) {
+      // Check if any is pending
+      const pendingRequest = existingRequests.find(r => r.status === "pending");
+      if (pendingRequest) {
         toast({
           title: "Anfrage existiert bereits",
           description: "Es gibt bereits eine offene Anfrage.",
@@ -150,17 +151,18 @@ export function usePartnerRequests() {
         return false;
       }
       
-      // Delete old declined/accepted requests to allow new request
+      // Delete ALL old declined/accepted requests to allow new request
+      const idsToDelete = existingRequests.map(r => r.id);
       const { error: deleteError } = await supabase
         .from("partner_requests")
         .delete()
-        .eq("id", existingRequest.id);
+        .in("id", idsToDelete);
       
       if (deleteError) {
-        console.error("Error deleting old request:", deleteError);
+        console.error("Error deleting old requests:", deleteError);
         toast({
           title: "Fehler",
-          description: "Alte Anfrage konnte nicht entfernt werden.",
+          description: "Alte Anfragen konnten nicht entfernt werden.",
           variant: "destructive",
         });
         return false;
