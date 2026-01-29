@@ -9,12 +9,16 @@ import { FastingTimer } from "@/components/lifestyle/FastingTimer";
 import { NutritionTracker } from "@/components/lifestyle/NutritionTracker";
 import { BodyMeasurementsTracker } from "@/components/lifestyle/BodyMeasurementsTracker";
 import { AdvancedStatistics } from "@/components/lifestyle/AdvancedStatistics";
+import { MoodTracker } from "@/components/lifestyle/MoodTracker";
+import { ActivityTracker } from "@/components/lifestyle/ActivityTracker";
+import { RecipeDatabase } from "@/components/lifestyle/RecipeDatabase";
+import { GroceryListTracker } from "@/components/lifestyle/GroceryListTracker";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeeklyChallengeCard } from "@/components/challenges/WeeklyChallengeCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Lock, UtensilsCrossed, Timer, Ruler, BarChart3 } from "lucide-react";
+import { Loader2, Lock, UtensilsCrossed, Timer, Ruler, BarChart3, Smile, Footprints, ChefHat, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -212,14 +216,30 @@ export default function Lifestyle() {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="daily" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 h-auto">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 h-auto gap-1">
             <TabsTrigger value="daily" className="flex flex-col gap-1 py-2">
               <Moon className="h-4 w-4" />
               <span className="text-xs">Tägliches</span>
             </TabsTrigger>
+            <TabsTrigger value="mood" className="flex flex-col gap-1 py-2">
+              <Smile className="h-4 w-4" />
+              <span className="text-xs">Stimmung</span>
+            </TabsTrigger>
+            <TabsTrigger value="activity" className="flex flex-col gap-1 py-2">
+              <Footprints className="h-4 w-4" />
+              <span className="text-xs">Aktivität</span>
+            </TabsTrigger>
             <TabsTrigger value="nutrition" className="flex flex-col gap-1 py-2">
               <UtensilsCrossed className="h-4 w-4" />
               <span className="text-xs">Ernährung</span>
+            </TabsTrigger>
+            <TabsTrigger value="recipes" className="flex flex-col gap-1 py-2">
+              <ChefHat className="h-4 w-4" />
+              <span className="text-xs">Rezepte</span>
+            </TabsTrigger>
+            <TabsTrigger value="grocery" className="flex flex-col gap-1 py-2">
+              <ShoppingCart className="h-4 w-4" />
+              <span className="text-xs">Einkauf</span>
             </TabsTrigger>
             <TabsTrigger value="body" className="flex flex-col gap-1 py-2">
               <Ruler className="h-4 w-4" />
@@ -264,6 +284,20 @@ export default function Lifestyle() {
             </div>
           </TabsContent>
 
+          {/* Mood Tab */}
+          <TabsContent value="mood" className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <MoodTracker />
+            </motion.div>
+          </TabsContent>
+
+          {/* Activity Tab */}
+          <TabsContent value="activity" className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <ActivityTracker />
+            </motion.div>
+          </TabsContent>
+
           {/* Nutrition Tab */}
           <TabsContent value="nutrition" className="space-y-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -272,6 +306,20 @@ export default function Lifestyle() {
             
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <FastingTimer />
+            </motion.div>
+          </TabsContent>
+
+          {/* Recipes Tab */}
+          <TabsContent value="recipes" className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <RecipeDatabase />
+            </motion.div>
+          </TabsContent>
+
+          {/* Grocery List Tab */}
+          <TabsContent value="grocery" className="space-y-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <GroceryListTracker />
             </motion.div>
           </TabsContent>
 

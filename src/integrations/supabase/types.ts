@@ -83,6 +83,45 @@ export type Database = {
         }
         Relationships: []
       }
+      activities: {
+        Row: {
+          active_calories: number | null
+          activity_type: string | null
+          created_at: string
+          distance_km: number | null
+          duration_minutes: number | null
+          entry_date: string
+          id: string
+          notes: string | null
+          steps: number | null
+          user_id: string
+        }
+        Insert: {
+          active_calories?: number | null
+          activity_type?: string | null
+          created_at?: string
+          distance_km?: number | null
+          duration_minutes?: number | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          steps?: number | null
+          user_id: string
+        }
+        Update: {
+          active_calories?: number | null
+          activity_type?: string | null
+          created_at?: string
+          distance_km?: number | null
+          duration_minutes?: number | null
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          steps?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_password_reset_requests: {
         Row: {
           admin_notes: string | null
@@ -302,6 +341,33 @@ export type Database = {
         }
         Relationships: []
       }
+      calorie_adjustments: {
+        Row: {
+          calorie_adjustment: number | null
+          created_at: string
+          day_of_week: number | null
+          id: string
+          is_active: boolean | null
+          user_id: string
+        }
+        Insert: {
+          calorie_adjustment?: number | null
+          created_at?: string
+          day_of_week?: number | null
+          id?: string
+          is_active?: boolean | null
+          user_id: string
+        }
+        Update: {
+          calorie_adjustment?: number | null
+          created_at?: string
+          day_of_week?: number | null
+          id?: string
+          is_active?: boolean | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       coach_conversations: {
         Row: {
           created_at: string
@@ -481,6 +547,126 @@ export type Database = {
         }
         Relationships: []
       }
+      grocery_items: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_checked: boolean | null
+          item_name: string
+          list_id: string
+          quantity: number | null
+          recipe_id: string | null
+          unit: string | null
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_checked?: boolean | null
+          item_name: string
+          list_id: string
+          quantity?: number | null
+          recipe_id?: string | null
+          unit?: string | null
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_checked?: boolean | null
+          item_name?: string
+          list_id?: string
+          quantity?: number | null
+          recipe_id?: string | null
+          unit?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grocery_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "grocery_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grocery_items_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grocery_lists: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      health_connections: {
+        Row: {
+          access_token_encrypted: string | null
+          created_at: string
+          id: string
+          is_connected: boolean | null
+          last_sync_at: string | null
+          provider: string
+          refresh_token_encrypted: string | null
+          sync_enabled: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted?: string | null
+          created_at?: string
+          id?: string
+          is_connected?: boolean | null
+          last_sync_at?: string | null
+          provider: string
+          refresh_token_encrypted?: string | null
+          sync_enabled?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string | null
+          created_at?: string
+          id?: string
+          is_connected?: boolean | null
+          last_sync_at?: string | null
+          provider?: string
+          refresh_token_encrypted?: string | null
+          sync_enabled?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lifestyle_entries: {
         Row: {
           created_at: string
@@ -612,6 +798,42 @@ export type Database = {
           id?: string
           used?: boolean
           used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mood_entries: {
+        Row: {
+          created_at: string
+          energy_level: number | null
+          entry_date: string
+          id: string
+          mood_score: number | null
+          notes: string | null
+          stress_level: number | null
+          symptoms: string[] | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          energy_level?: number | null
+          entry_date?: string
+          id?: string
+          mood_score?: number | null
+          notes?: string | null
+          stress_level?: number | null
+          symptoms?: string[] | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          energy_level?: number | null
+          entry_date?: string
+          id?: string
+          mood_score?: number | null
+          notes?: string | null
+          stress_level?: number | null
+          symptoms?: string[] | null
           user_id?: string
         }
         Relationships: []
@@ -888,6 +1110,78 @@ export type Database = {
         }
         Relationships: []
       }
+      recipes: {
+        Row: {
+          calories_per_serving: number | null
+          carbs_g: number | null
+          category: string | null
+          cook_time_minutes: number | null
+          created_at: string
+          created_by: string | null
+          cuisine: string | null
+          description: string | null
+          difficulty: string | null
+          fat_g: number | null
+          fiber_g: number | null
+          id: string
+          image_url: string | null
+          ingredients: Json | null
+          instructions: string[] | null
+          is_system: boolean | null
+          name: string
+          prep_time_minutes: number | null
+          protein_g: number | null
+          servings: number | null
+          tags: string[] | null
+        }
+        Insert: {
+          calories_per_serving?: number | null
+          carbs_g?: number | null
+          category?: string | null
+          cook_time_minutes?: number | null
+          created_at?: string
+          created_by?: string | null
+          cuisine?: string | null
+          description?: string | null
+          difficulty?: string | null
+          fat_g?: number | null
+          fiber_g?: number | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json | null
+          instructions?: string[] | null
+          is_system?: boolean | null
+          name: string
+          prep_time_minutes?: number | null
+          protein_g?: number | null
+          servings?: number | null
+          tags?: string[] | null
+        }
+        Update: {
+          calories_per_serving?: number | null
+          carbs_g?: number | null
+          category?: string | null
+          cook_time_minutes?: number | null
+          created_at?: string
+          created_by?: string | null
+          cuisine?: string | null
+          description?: string | null
+          difficulty?: string | null
+          fat_g?: number | null
+          fiber_g?: number | null
+          id?: string
+          image_url?: string | null
+          ingredients?: Json | null
+          instructions?: string[] | null
+          is_system?: boolean | null
+          name?: string
+          prep_time_minutes?: number | null
+          protein_g?: number | null
+          servings?: number | null
+          tags?: string[] | null
+        }
+        Relationships: []
+      }
       referrals: {
         Row: {
           created_at: string
@@ -1012,6 +1306,35 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      saved_recipes: {
+        Row: {
+          id: string
+          recipe_id: string
+          saved_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          recipe_id: string
+          saved_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          recipe_id?: string
+          saved_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_recipes_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       settings_changelog: {
         Row: {
