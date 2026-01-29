@@ -245,16 +245,52 @@ export default function Friends() {
 
   // Share friend code
   const handleShareCode = async () => {
-    if (myFriendCode && navigator.share) {
+    if (!myFriendCode) {
+      toast({
+        title: "Kein Code verfügbar",
+        description: "Bitte warte, bis dein Code generiert wird.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const shareText = `Füge mich auf GLOWMAXXED hinzu! Mein Code: ${myFriendCode}`;
+    
+    // Check if native share is available and we're not in an iframe
+    const canShare = typeof navigator.share === 'function' && !window.frameElement;
+    
+    if (canShare) {
       try {
         await navigator.share({
           title: "GLOWMAXXED - Freundes-Code",
-          text: `Füge mich auf GLOWMAXXED hinzu! Mein Code: ${myFriendCode}`,
+          text: shareText,
         });
         handleHaptic();
-      } catch {}
-    } else {
-      handleCopyCode();
+        return;
+      } catch (err: any) {
+        // User cancelled or share failed - fall through to copy
+        if (err?.name === 'AbortError') return;
+      }
+    }
+    
+    // Fallback: Copy to clipboard
+    try {
+      await navigator.clipboard.writeText(shareText);
+      setCodeCopied(true);
+      handleHaptic();
+      toast({ title: "Text kopiert! ✓", description: "Teile ihn mit deinen Freunden." });
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch {
+      // Final fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = shareText;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCodeCopied(true);
+      toast({ title: "Text kopiert! ✓" });
+      setTimeout(() => setCodeCopied(false), 2000);
     }
   };
 
