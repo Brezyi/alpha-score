@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +19,11 @@ import {
   Star,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck,
+  Utensils,
+  Sparkles,
+  Pill
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
@@ -40,6 +45,10 @@ interface DayStatus {
   water: number | null;
   exercise: number | null;
   sleepQuality: number | null;
+  sunscreenApplied: boolean;
+  nutritionQuality: number | null;
+  skincareCompleted: boolean;
+  supplementsTaken: boolean;
   isToday: boolean;
   isPast: boolean;
   sleepGoalMet: boolean;
@@ -57,6 +66,10 @@ interface LifestyleEntry {
   sleep_quality: number | null;
   water_liters: number | null;
   exercise_minutes: number | null;
+  sunscreen_applied: boolean;
+  nutrition_quality: number | null;
+  skincare_routine_completed: boolean;
+  supplements_taken: boolean;
 }
 
 export function LifestyleTracker({ className, compact = false, onDateChange }: LifestyleTrackerProps) {
@@ -80,6 +93,12 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
   const [waterLiters, setWaterLiters] = useState(2);
   const [exerciseMinutes, setExerciseMinutes] = useState(0);
   
+  // New habit states
+  const [sunscreenApplied, setSunscreenApplied] = useState(false);
+  const [nutritionQuality, setNutritionQuality] = useState(3);
+  const [skincareCompleted, setSkincareCompleted] = useState(false);
+  const [supplementsTaken, setSupplementsTaken] = useState(false);
+  
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch entries
@@ -89,7 +108,7 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
     try {
       const { data, error } = await supabase
         .from("lifestyle_entries")
-        .select("id, entry_date, sleep_hours, sleep_bedtime, sleep_waketime, sleep_quality, water_liters, exercise_minutes")
+        .select("id, entry_date, sleep_hours, sleep_bedtime, sleep_waketime, sleep_quality, water_liters, exercise_minutes, sunscreen_applied, nutrition_quality, skincare_routine_completed, supplements_taken")
         .eq("user_id", user.id)
         .order("entry_date", { ascending: false })
         .limit(30);
@@ -137,6 +156,10 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
       setSleepQuality(entry.sleep_quality ?? 3);
       setWaterLiters(entry.water_liters ?? 2);
       setExerciseMinutes(entry.exercise_minutes ?? 0);
+      setSunscreenApplied(entry.sunscreen_applied ?? false);
+      setNutritionQuality(entry.nutrition_quality ?? 3);
+      setSkincareCompleted(entry.skincare_routine_completed ?? false);
+      setSupplementsTaken(entry.supplements_taken ?? false);
     } else {
       // Reset to defaults for new entry
       setSleepHours(7);
@@ -145,6 +168,10 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
       setSleepQuality(3);
       setWaterLiters(2);
       setExerciseMinutes(0);
+      setSunscreenApplied(false);
+      setNutritionQuality(3);
+      setSkincareCompleted(false);
+      setSupplementsTaken(false);
     }
   }, [selectedDate, entries]);
 
@@ -182,6 +209,10 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
         water,
         exercise,
         sleepQuality: quality,
+        sunscreenApplied: entry?.sunscreen_applied ?? false,
+        nutritionQuality: entry?.nutrition_quality ?? null,
+        skincareCompleted: entry?.skincare_routine_completed ?? false,
+        supplementsTaken: entry?.supplements_taken ?? false,
         isToday: isToday(date),
         isPast,
         sleepGoalMet,
@@ -222,6 +253,10 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
           sleep_bedtime: bedtime,
           sleep_waketime: waketime,
           sleep_quality: sleepQuality,
+          sunscreen_applied: sunscreenApplied,
+          nutrition_quality: nutritionQuality,
+          skincare_routine_completed: skincareCompleted,
+          supplements_taken: supplementsTaken,
           water_liters: waterLiters,
           exercise_minutes: exerciseMinutes
         }, { onConflict: "user_id,entry_date" });
@@ -240,10 +275,10 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
     } finally {
       setSaving(false);
     }
-  }, [user, selectedDate, sleepHours, bedtime, waketime, sleepQuality, waterLiters, exerciseMinutes, fetchEntries, toast]);
+  }, [user, selectedDate, sleepHours, bedtime, waketime, sleepQuality, waterLiters, exerciseMinutes, sunscreenApplied, nutritionQuality, skincareCompleted, supplementsTaken, fetchEntries, toast]);
 
   // Debounced auto-save
-  const handleValueChange = useCallback((type: string, value: number | string) => {
+  const handleValueChange = useCallback((type: string, value: number | string | boolean) => {
     switch (type) {
       case 'bedtime':
         setBedtime(value as string);
@@ -259,6 +294,18 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
         break;
       case 'exercise':
         setExerciseMinutes(value as number);
+        break;
+      case 'sunscreen':
+        setSunscreenApplied(value as boolean);
+        break;
+      case 'nutrition':
+        setNutritionQuality(value as number);
+        break;
+      case 'skincare':
+        setSkincareCompleted(value as boolean);
+        break;
+      case 'supplements':
+        setSupplementsTaken(value as boolean);
         break;
     }
     
@@ -718,7 +765,78 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
                 )}>
                   {exerciseMinutes >= 30 ? "✓ Super!" : exerciseMinutes > 0 ? "Weiter so" : ""}
                 </span>
-                <span>2h</span>
+              <span>2h</span>
+              </div>
+            </div>
+
+            {/* New Habits Section */}
+            <div className="pt-2 border-t border-border space-y-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tägliche Habits</h4>
+              
+              {/* Sunscreen Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-amber-500" />
+                  <span className="text-sm font-medium">Sonnenschutz aufgetragen</span>
+                </div>
+                <Switch 
+                  checked={sunscreenApplied} 
+                  onCheckedChange={(v) => handleValueChange('sunscreen', v)} 
+                />
+              </div>
+
+              {/* Skincare Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-pink-500/5 border border-pink-500/10">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-pink-500" />
+                  <span className="text-sm font-medium">Skincare-Routine erledigt</span>
+                </div>
+                <Switch 
+                  checked={skincareCompleted} 
+                  onCheckedChange={(v) => handleValueChange('skincare', v)} 
+                />
+              </div>
+
+              {/* Supplements Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/5 border border-green-500/10">
+                <div className="flex items-center gap-2">
+                  <Pill className="w-4 h-4 text-green-500" />
+                  <span className="text-sm font-medium">Supplements genommen</span>
+                </div>
+                <Switch 
+                  checked={supplementsTaken} 
+                  onCheckedChange={(v) => handleValueChange('supplements', v)} 
+                />
+              </div>
+
+              {/* Nutrition Quality */}
+              <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Utensils className="w-4 h-4 text-emerald-500" />
+                    <span className="text-sm font-medium">Ernährungsqualität</span>
+                  </div>
+                  <span className="text-sm font-bold">{nutritionQuality}/5</span>
+                </div>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((rating) => (
+                    <button
+                      key={rating}
+                      onClick={() => handleValueChange('nutrition', rating)}
+                      className={cn(
+                        "flex-1 py-1.5 rounded-md transition-all text-xs font-medium",
+                        nutritionQuality >= rating 
+                          ? "bg-emerald-500/20 border-emerald-500/50 border text-emerald-500" 
+                          : "bg-muted border border-transparent hover:border-muted-foreground/30 text-muted-foreground"
+                      )}
+                    >
+                      {rating}
+                    </button>
+                  ))}
+                </div>
+                <div className="text-[10px] text-muted-foreground text-center">
+                  {nutritionQuality <= 2 ? "Viel Junk Food" : nutritionQuality === 3 ? "Gemischt" : nutritionQuality === 4 ? "Überwiegend gesund" : "Perfekt!"}
+                </div>
               </div>
             </div>
           </div>

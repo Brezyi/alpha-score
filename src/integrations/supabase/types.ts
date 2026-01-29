@@ -407,10 +407,14 @@ export type Database = {
           exercise_minutes: number | null
           id: string
           notes: string | null
+          nutrition_quality: number | null
+          skincare_routine_completed: boolean | null
           sleep_bedtime: string | null
           sleep_hours: number | null
           sleep_quality: number | null
           sleep_waketime: string | null
+          sunscreen_applied: boolean | null
+          supplements_taken: boolean | null
           updated_at: string
           user_id: string
           water_liters: number | null
@@ -421,10 +425,14 @@ export type Database = {
           exercise_minutes?: number | null
           id?: string
           notes?: string | null
+          nutrition_quality?: number | null
+          skincare_routine_completed?: boolean | null
           sleep_bedtime?: string | null
           sleep_hours?: number | null
           sleep_quality?: number | null
           sleep_waketime?: string | null
+          sunscreen_applied?: boolean | null
+          supplements_taken?: boolean | null
           updated_at?: string
           user_id: string
           water_liters?: number | null
@@ -435,10 +443,14 @@ export type Database = {
           exercise_minutes?: number | null
           id?: string
           notes?: string | null
+          nutrition_quality?: number | null
+          skincare_routine_completed?: boolean | null
           sleep_bedtime?: string | null
           sleep_hours?: number | null
           sleep_quality?: number | null
           sleep_waketime?: string | null
+          sunscreen_applied?: boolean | null
+          supplements_taken?: boolean | null
           updated_at?: string
           user_id?: string
           water_liters?: number | null
