@@ -53,12 +53,12 @@ export function useFriends() {
       .eq("user_id", user.id)
       .single();
 
-    if (error && error.code !== "PGRST116") {
-      // If no code exists, generate one
+    if (data?.code) {
+      setMyFriendCode(data.code);
+    } else {
+      // No code exists, generate one
       const newCode = await generateFriendCode();
       setMyFriendCode(newCode);
-    } else if (data) {
-      setMyFriendCode(data.code);
     }
   }, [user]);
 
