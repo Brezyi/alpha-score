@@ -41,9 +41,9 @@ export function useSubscription() {
     error: null,
   });
 
-  const checkSubscription = useCallback(async () => {
+  const checkSubscription = useCallback(async (retryAfterRefresh = false) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      let { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
         setState({
@@ -76,9 +76,32 @@ export function useSubscription() {
 
       const { data, error } = await supabase.functions.invoke("check-subscription");
 
-      if (error) {
-        console.error("Subscription check error:", error);
-        setState(prev => ({ ...prev, loading: false, error: error.message }));
+      // Handle token expiration - refresh session and retry once
+      if (error || data?.token_expired) {
+        const isTokenError = error?.message?.includes("401") || 
+                            error?.message?.includes("expired") ||
+                            data?.token_expired;
+        
+        if (isTokenError && !retryAfterRefresh) {
+          console.log("Token expired, refreshing session...");
+          const { error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (!refreshError) {
+            // Retry with fresh token
+            return checkSubscription(true);
+          }
+        }
+        
+        // If refresh failed or this was already a retry, set not premium
+        console.error("Subscription check error:", error || data?.error);
+        setState({
+          isPremium: false,
+          subscriptionType: null,
+          subscriptionEnd: null,
+          isAdminGranted: false,
+          loading: false,
+          error: null, // Don't show error for token issues
+        });
         return;
       }
 
@@ -95,7 +118,7 @@ export function useSubscription() {
       setState(prev => ({ 
         ...prev, 
         loading: false, 
-        error: error.message || "Failed to check subscription" 
+        error: null // Silently fail for auth issues
       }));
     }
   }, []);
