@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Crown, AlertTriangle, Droplets, Moon, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Crown, AlertTriangle, Droplets, Moon, CheckCircle2, Calculator, Camera, GlassWater, CalendarDays, Lightbulb } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useLifestyle } from "@/hooks/useLifestyle";
@@ -13,6 +13,13 @@ import { MoodTracker } from "@/components/lifestyle/MoodTracker";
 import { ActivityTracker } from "@/components/lifestyle/ActivityTracker";
 import { RecipeDatabase } from "@/components/lifestyle/RecipeDatabase";
 import { GroceryListTracker } from "@/components/lifestyle/GroceryListTracker";
+import { AIFoodScanner } from "@/components/lifestyle/AIFoodScanner";
+import { WaterTrackerAdvanced } from "@/components/lifestyle/WaterTrackerAdvanced";
+import { MealPlanner } from "@/components/lifestyle/MealPlanner";
+import { CalorieCalculator } from "@/components/lifestyle/CalorieCalculator";
+import { MotivationCard } from "@/components/lifestyle/MotivationCard";
+import { FoodSearch } from "@/components/lifestyle/FoodSearch";
+import { HealthConnectCard } from "@/components/lifestyle/HealthConnectCard";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeeklyChallengeCard } from "@/components/challenges/WeeklyChallengeCard";
 import { Button } from "@/components/ui/button";
@@ -253,32 +260,48 @@ export default function Lifestyle() {
 
           {/* Daily Tracking Tab */}
           <TabsContent value="daily" className="space-y-6">
-            {/* Weekly Tracker */}
+            {/* Motivation Tip */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <MotivationCard />
+            </motion.div>
+
+            {/* Weekly Tracker */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
               <LifestyleTracker onDateChange={setSelectedDate} />
             </motion.div>
 
             {/* Health Alerts */}
             <HealthAlerts />
 
-            {/* Fasting & Supplements Row */}
+            {/* Water & Fasting Row */}
             <div className="grid md:grid-cols-2 gap-6">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                <FastingTimer />
+                <WaterTrackerAdvanced />
               </motion.div>
               
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                <FastingTimer />
+              </motion.div>
+            </div>
+
+            {/* Supplements & Health Connect */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <SupplementTracker selectedDate={selectedDate} />
+              </motion.div>
+              
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+                <HealthConnectCard />
               </motion.div>
             </div>
 
             {/* Goals & Challenges */}
             <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <GoalCard currentScore={currentScore} />
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
                 <WeeklyChallengeCard />
               </motion.div>
             </div>
@@ -300,11 +323,36 @@ export default function Lifestyle() {
 
           {/* Nutrition Tab */}
           <TabsContent value="nutrition" className="space-y-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <NutritionTracker />
-            </motion.div>
+            {/* AI Scanner & Food Search */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                <AIFoodScanner />
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                <Card>
+                  <CardContent className="p-4">
+                    <FoodSearch mealType="lunch" />
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
             
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <NutritionTracker />
+            </motion.div>
+
+            {/* Meal Planner & Calorie Calculator */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+                <MealPlanner />
+              </motion.div>
+              
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+                <CalorieCalculator />
+              </motion.div>
+            </div>
+            
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
               <FastingTimer />
             </motion.div>
           </TabsContent>
