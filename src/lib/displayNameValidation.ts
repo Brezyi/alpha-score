@@ -11,7 +11,7 @@ const FORBIDDEN_PATTERNS = [
   // English insults
   /fuck/i, /shit/i, /bitch/i, /asshole/i, /cunt/i, /dick/i, /cock/i,
   /nigger/i, /nigga/i, /faggot/i, /retard/i, /whore/i, /slut/i,
-  /bastard/i, /pussy/i, /piss/i,
+  /bastard/i, /pussy/i, /piss/i, /ficke/i, /ficken/i, /fick/i,
   
   // Hate speech / extremism
   /nazi/i, /hitler/i, /heil/i, /sieg\s*heil/i, /88/i, /1488/i,

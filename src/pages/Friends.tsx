@@ -45,6 +45,7 @@ import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { useToast } from "@/hooks/use-toast";
 import { ChatDialog } from "@/components/friends/ChatDialog";
+import { FriendProfileDialog } from "@/components/friends/FriendProfileDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 // Friend Card Component - Modern Design
@@ -53,12 +54,14 @@ function FriendCard({
   onRemove,
   onMessage,
   onMakePartner,
+  onViewProfile,
   index 
 }: { 
   friend: any; 
   onRemove: () => void;
   onMessage: () => void;
   onMakePartner: () => void;
+  onViewProfile: () => void;
   index: number;
 }) {
   return (
@@ -66,7 +69,8 @@ function FriendCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="group relative overflow-hidden rounded-2xl bg-card border border-border p-4 hover:border-primary/30 transition-all duration-300"
+      className="group relative overflow-hidden rounded-2xl bg-card border border-border p-4 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+      onClick={onViewProfile}
     >
       <div className="flex items-center gap-4">
         <div className="relative">
@@ -86,7 +90,7 @@ function FriendCard({
           </p>
         </div>
         
-        <div className="flex gap-1">
+        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
           <Button 
             size="icon" 
             variant="ghost" 
@@ -206,6 +210,7 @@ export default function Friends() {
   const [searching, setSearching] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
   const [selectedChat, setSelectedChat] = useState<string | null>(null);
+  const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [checkInGoals, setCheckInGoals] = useState<string[]>([]);
@@ -489,6 +494,7 @@ export default function Friends() {
                       setActiveTab("chat");
                     }}
                     onMakePartner={() => sendPartnerRequest(friend.id)}
+                    onViewProfile={() => setSelectedProfile(friend)}
                   />
                 ))}
               </div>
@@ -1073,6 +1079,23 @@ export default function Friends() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Friend Profile Dialog */}
+      {selectedProfile && (
+        <FriendProfileDialog
+          open={!!selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+          friendId={selectedProfile.id}
+          friendName={selectedProfile.display_name}
+          friendAvatar={selectedProfile.avatar_url}
+          connectedSince={selectedProfile.connected_since}
+          onMessage={() => {
+            setSelectedChat(selectedProfile.id);
+            setActiveTab("chat");
+          }}
+          onMakePartner={() => sendPartnerRequest(selectedProfile.id)}
+        />
+      )}
     </div>
   );
 

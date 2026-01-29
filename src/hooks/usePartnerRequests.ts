@@ -134,7 +134,7 @@ export function usePartnerRequests() {
     // Check for existing pending request
     const { data: existingRequest } = await supabase
       .from("partner_requests")
-      .select("id")
+      .select("id, status")
       .or(
         `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
       )
@@ -149,6 +149,15 @@ export function usePartnerRequests() {
       });
       return false;
     }
+
+    // Delete any old declined requests before creating new one
+    await supabase
+      .from("partner_requests")
+      .delete()
+      .or(
+        `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
+      )
+      .neq("status", "pending");
 
     const { error } = await supabase.from("partner_requests").insert({
       requester_id: user.id,
