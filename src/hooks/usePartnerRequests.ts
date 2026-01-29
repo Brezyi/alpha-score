@@ -131,33 +131,41 @@ export function usePartnerRequests() {
       return false;
     }
 
-    // Check for existing pending request
+    // Check for existing request (any status)
     const { data: existingRequest } = await supabase
       .from("partner_requests")
       .select("id, status")
       .or(
         `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
       )
-      .eq("status", "pending")
       .maybeSingle();
 
     if (existingRequest) {
-      toast({
-        title: "Anfrage existiert bereits",
-        description: "Es gibt bereits eine offene Anfrage.",
-        variant: "destructive",
-      });
-      return false;
+      if (existingRequest.status === "pending") {
+        toast({
+          title: "Anfrage existiert bereits",
+          description: "Es gibt bereits eine offene Anfrage.",
+          variant: "destructive",
+        });
+        return false;
+      }
+      
+      // Delete old declined/accepted requests to allow new request
+      const { error: deleteError } = await supabase
+        .from("partner_requests")
+        .delete()
+        .eq("id", existingRequest.id);
+      
+      if (deleteError) {
+        console.error("Error deleting old request:", deleteError);
+        toast({
+          title: "Fehler",
+          description: "Alte Anfrage konnte nicht entfernt werden.",
+          variant: "destructive",
+        });
+        return false;
+      }
     }
-
-    // Delete any old declined requests before creating new one
-    await supabase
-      .from("partner_requests")
-      .delete()
-      .or(
-        `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
-      )
-      .neq("status", "pending");
 
     const { error } = await supabase.from("partner_requests").insert({
       requester_id: user.id,
