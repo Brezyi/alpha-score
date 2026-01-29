@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,8 +10,6 @@ import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { containsForbiddenContent } from "@/lib/displayNameValidation";
-import { useToast } from "@/hooks/use-toast";
 
 interface ChatDialogProps {
   open: boolean;
@@ -23,7 +21,6 @@ interface ChatDialogProps {
 
 export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }: ChatDialogProps) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const { messages, loading, sending, sendMessage } = useFriendMessages(friendId);
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -38,16 +35,6 @@ export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }
   const handleSend = async () => {
     const trimmed = newMessage.trim();
     if (!trimmed || sending) return;
-    
-    // Check for forbidden content
-    if (containsForbiddenContent(trimmed)) {
-      toast({
-        title: "Nachricht nicht erlaubt",
-        description: "Deine Nachricht enthält unzulässige Inhalte.",
-        variant: "destructive",
-      });
-      return;
-    }
     
     const success = await sendMessage(trimmed);
     if (success) {
@@ -149,13 +136,16 @@ export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }
         <div className="p-4 border-t bg-card">
           <div className="flex gap-2 items-end">
             <Textarea
-              placeholder="Nachricht schreiben... 😊"
+              placeholder="Nachricht schreiben..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={sending}
               className="min-h-[44px] max-h-[120px] rounded-xl resize-none py-3"
               rows={1}
+              inputMode="text"
+              autoComplete="off"
+              autoCorrect="on"
             />
             <Button 
               onClick={handleSend} 
