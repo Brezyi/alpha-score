@@ -35,9 +35,25 @@ export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }
     }
   }, [messages]);
 
+  // Link-Erkennung
+  const containsLink = (text: string): boolean => {
+    const urlPattern = /(?:https?:\/\/|www\.|[a-zA-Z0-9-]+\.[a-zA-Z]{2,})(?:[^\s]*)/gi;
+    return urlPattern.test(text);
+  };
+
   const handleSend = async () => {
     const trimmed = newMessage.trim();
     if (!trimmed || sending) return;
+    
+    // Filter für Links
+    if (containsLink(trimmed)) {
+      toast({
+        title: "Links nicht erlaubt",
+        description: "Das Teilen von Links ist in Nachrichten nicht gestattet.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Filter für Beleidigungen und illegale Inhalte
     if (containsForbiddenContent(trimmed)) {
