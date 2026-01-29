@@ -34,17 +34,21 @@ export function useAccountabilityPartner() {
 
   // Fetch partner
   const fetchPartner = useCallback(async () => {
-    if (!user) return;
+    if (!user) {
+      setPartner(null);
+      return;
+    }
 
     const { data, error } = await supabase
       .from("accountability_partners")
       .select("*")
       .or(`user_id.eq.${user.id},partner_id.eq.${user.id}`)
       .eq("is_active", true)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== "PGRST116") {
+    if (error) {
       console.error("Error fetching partner:", error);
+      setPartner(null);
       return;
     }
 
@@ -135,15 +139,32 @@ export function useAccountabilityPartner() {
   const createPartnership = async (friendId: string): Promise<boolean> => {
     if (!user) return false;
 
+    // Check if I already have a partner
+    const { data: myExisting } = await supabase
+      .from("accountability_partners")
+      .select("id")
+      .or(`user_id.eq.${user.id},partner_id.eq.${user.id}`)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (myExisting) {
+      toast({
+        title: "Du hast bereits einen Partner",
+        description: "Beende zuerst deine aktuelle Partnerschaft.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
     // Check if friend already has a partner
-    const { data: existing } = await supabase
+    const { data: friendExisting } = await supabase
       .from("accountability_partners")
       .select("id")
       .or(`user_id.eq.${friendId},partner_id.eq.${friendId}`)
       .eq("is_active", true)
-      .single();
+      .maybeSingle();
 
-    if (existing) {
+    if (friendExisting) {
       toast({
         title: "Bereits vergeben",
         description: "Dieser Freund hat bereits einen Partner.",
