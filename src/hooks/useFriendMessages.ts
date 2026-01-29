@@ -167,19 +167,29 @@ export function useFriendMessages(friendId?: string) {
           event: "INSERT",
           schema: "public",
           table: "friend_messages",
-          filter: `receiver_id=eq.${user.id}`,
         },
         (payload) => {
-          // New message received
-          if (friendId && payload.new.sender_id === friendId) {
-            setMessages(prev => [...prev, payload.new as Message]);
-            // Mark as read immediately if viewing this conversation
-            supabase
-              .from("friend_messages")
-              .update({ is_read: true })
-              .eq("id", payload.new.id);
+          const newMsg = payload.new as Message;
+          // Message relevant to current user (sent to or from me)
+          if (newMsg.receiver_id === user.id || newMsg.sender_id === user.id) {
+            // If viewing this specific conversation, add message directly
+            if (friendId && (newMsg.sender_id === friendId || newMsg.receiver_id === friendId)) {
+              setMessages(prev => {
+                // Prevent duplicates
+                if (prev.some(m => m.id === newMsg.id)) return prev;
+                return [...prev, newMsg];
+              });
+              // Mark as read if I'm the receiver
+              if (newMsg.receiver_id === user.id) {
+                supabase
+                  .from("friend_messages")
+                  .update({ is_read: true })
+                  .eq("id", newMsg.id);
+              }
+            }
+            // Always refresh conversations list
+            fetchConversations();
           }
-          fetchConversations();
         }
       )
       .subscribe();
