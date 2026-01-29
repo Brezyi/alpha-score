@@ -43,30 +43,40 @@ export function useSubscription() {
 
   const checkSubscription = useCallback(async (retryCount = 0) => {
     try {
-      // First, try to get a fresh session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // First, try to get current session
+      let { data: { session } } = await supabase.auth.getSession();
       
-      if (sessionError || !session) {
-        // Try to refresh the session if we have a stored refresh token
-        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      // If no session or session might be stale, try to refresh proactively
+      if (session) {
+        // Check if access token is about to expire (within 60 seconds)
+        const expiresAt = session.expires_at;
+        const now = Math.floor(Date.now() / 1000);
+        const isExpiringSoon = expiresAt && (expiresAt - now) < 60;
         
-        if (refreshError || !refreshData.session) {
-          setState({
-            isPremium: false,
-            subscriptionType: null,
-            subscriptionEnd: null,
-            isAdminGranted: false,
-            loading: false,
-            error: null,
-          });
-          return;
+        if (isExpiringSoon) {
+          console.log("Token expiring soon, refreshing proactively...");
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error("Session refresh failed:", refreshError);
+            // Refresh token is also expired - user needs to login again
+            await supabase.auth.signOut();
+            setState({
+              isPremium: false,
+              subscriptionType: null,
+              subscriptionEnd: null,
+              isAdminGranted: false,
+              loading: false,
+              error: null,
+            });
+            return;
+          }
+          
+          session = refreshData.session;
         }
       }
-
-      // Get the current valid session
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      if (!currentSession) {
+      if (!session) {
         setState({
           isPremium: false,
           subscriptionType: null,
@@ -80,7 +90,7 @@ export function useSubscription() {
 
       // Check if user is owner - owners get full premium access
       const { data: roleData } = await supabase.rpc('get_user_role', {
-        _user_id: currentSession.user.id
+        _user_id: session.user.id
       });
 
       if (roleData === 'owner') {
@@ -97,20 +107,34 @@ export function useSubscription() {
 
       const { data, error } = await supabase.functions.invoke("check-subscription");
 
-      // Handle token expiration - the error context contains the response
+      // Handle token expiration errors
       if (error) {
         const errorMessage = error.message || '';
         const isTokenError = errorMessage.includes("401") || 
                             errorMessage.includes("expired") ||
                             errorMessage.includes("Token");
         
-        if (isTokenError && retryCount < 2) {
-          console.log("Token expired, refreshing session...", { retryCount });
-          const { error: refreshError } = await supabase.auth.refreshSession();
+        if (isTokenError && retryCount < 1) {
+          console.log("Token error detected, attempting refresh...", { retryCount });
+          const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
           
-          if (!refreshError) {
-            // Wait a moment for the new token to propagate
-            await new Promise(resolve => setTimeout(resolve, 100));
+          if (refreshError) {
+            console.error("Session refresh failed, signing out:", refreshError);
+            await supabase.auth.signOut();
+            setState({
+              isPremium: false,
+              subscriptionType: null,
+              subscriptionEnd: null,
+              isAdminGranted: false,
+              loading: false,
+              error: null,
+            });
+            return;
+          }
+          
+          if (refreshData.session) {
+            // Wait for new token to be used
+            await new Promise(resolve => setTimeout(resolve, 200));
             return checkSubscription(retryCount + 1);
           }
         }
@@ -127,13 +151,27 @@ export function useSubscription() {
         return;
       }
 
-      // Check for token_expired in successful response (edge function returns 401 with body)
-      if (data?.token_expired && retryCount < 2) {
-        console.log("Token expired flag in response, refreshing...", { retryCount });
-        const { error: refreshError } = await supabase.auth.refreshSession();
+      // Check for token_expired in response body
+      if (data?.token_expired && retryCount < 1) {
+        console.log("Token expired flag in response, attempting refresh...");
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         
-        if (!refreshError) {
-          await new Promise(resolve => setTimeout(resolve, 100));
+        if (refreshError) {
+          console.error("Session refresh failed, signing out:", refreshError);
+          await supabase.auth.signOut();
+          setState({
+            isPremium: false,
+            subscriptionType: null,
+            subscriptionEnd: null,
+            isAdminGranted: false,
+            loading: false,
+            error: null,
+          });
+          return;
+        }
+        
+        if (refreshData.session) {
+          await new Promise(resolve => setTimeout(resolve, 200));
           return checkSubscription(retryCount + 1);
         }
       }
