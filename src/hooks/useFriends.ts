@@ -254,7 +254,7 @@ export function useFriends() {
   const sendFriendRequest = async (code: string): Promise<boolean> => {
     if (!user || !code.trim()) return false;
 
-    // Find user by code
+    // Find user by code and get their profile for the success message
     const { data: codeData, error: codeError } = await supabase
       .from("friend_codes")
       .select("user_id")
@@ -270,11 +270,20 @@ export function useFriends() {
       return false;
     }
 
-    return sendFriendRequestByUserId(codeData.user_id);
+    // Get the profile of the target user for the toast message
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", codeData.user_id)
+      .single();
+
+    const targetName = profileData?.display_name || `Nutzer ${code.slice(0, 4)}`;
+
+    return sendFriendRequestByUserId(codeData.user_id, targetName);
   };
 
   // Send friend request by user ID (for search results)
-  const sendFriendRequestByUserId = async (targetUserId: string): Promise<boolean> => {
+  const sendFriendRequestByUserId = async (targetUserId: string, targetDisplayName?: string): Promise<boolean> => {
     if (!user || !targetUserId) return false;
 
     if (targetUserId === user.id) {
@@ -333,8 +342,22 @@ export function useFriends() {
       return false;
     }
 
-    toast({ title: "Anfrage gesendet! ✓" });
-    await fetchSentRequests();
+    // Get the display name if not provided
+    let displayName = targetDisplayName;
+    if (!displayName) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("user_id", targetUserId)
+        .single();
+      displayName = profile?.display_name || "Nutzer";
+    }
+
+    toast({ title: `Anfrage an ${displayName} gesendet! ✓` });
+    
+    // Optimistic update for sent requests
+    setSentRequests(prev => [...prev, targetUserId]);
+    
     return true;
   };
 
@@ -372,14 +395,22 @@ export function useFriends() {
     }));
   };
 
-  // Accept friend request
+  // Accept friend request - optimistic update
   const acceptRequest = async (requestId: string): Promise<boolean> => {
+    // Optimistic update - remove from pending immediately
+    const request = pendingRequests.find(r => r.id === requestId);
+    setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+
     const { error } = await supabase
       .from("friend_connections")
       .update({ status: "accepted", updated_at: new Date().toISOString() })
       .eq("id", requestId);
 
     if (error) {
+      // Revert on error
+      if (request) {
+        setPendingRequests(prev => [...prev, request]);
+      }
       toast({
         title: "Fehler",
         description: "Anfrage konnte nicht angenommen werden.",
@@ -389,18 +420,27 @@ export function useFriends() {
     }
 
     toast({ title: "Freund hinzugefügt! ✓" });
-    await Promise.all([fetchFriends(), fetchPendingRequests()]);
+    // Fetch updated friends list
+    fetchFriends();
     return true;
   };
 
-  // Decline friend request
+  // Decline friend request - optimistic update
   const declineRequest = async (requestId: string): Promise<boolean> => {
+    // Optimistic update - remove from pending immediately
+    const request = pendingRequests.find(r => r.id === requestId);
+    setPendingRequests(prev => prev.filter(r => r.id !== requestId));
+
     const { error } = await supabase
       .from("friend_connections")
       .delete()
       .eq("id", requestId);
 
     if (error) {
+      // Revert on error
+      if (request) {
+        setPendingRequests(prev => [...prev, request]);
+      }
       toast({
         title: "Fehler",
         description: "Anfrage konnte nicht abgelehnt werden.",
@@ -410,7 +450,6 @@ export function useFriends() {
     }
 
     toast({ title: "Anfrage abgelehnt" });
-    await fetchPendingRequests();
     return true;
   };
 
@@ -483,6 +522,37 @@ export function useFriends() {
 
     init();
   }, [user, fetchFriendCode, fetchFriends, fetchPendingRequests, fetchSentRequests, fetchPrivacySettings]);
+
+  // Realtime subscription for friend connections
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("friend_connections_realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "friend_connections",
+        },
+        (payload) => {
+          // Check if this change involves the current user
+          const record = payload.new as any || payload.old as any;
+          if (record?.requester_id === user.id || record?.addressee_id === user.id) {
+            // Refetch all friend-related data
+            fetchFriends();
+            fetchPendingRequests();
+            fetchSentRequests();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchFriends, fetchPendingRequests, fetchSentRequests]);
 
   return {
     friends,
