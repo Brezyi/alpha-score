@@ -167,20 +167,31 @@ export function useFriends() {
     }
 
     const requesterIds = data.map(r => r.requester_id);
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, display_name, avatar_url")
-      .in("user_id", requesterIds);
+    
+    // Fetch both profiles and friend codes for fallback display names
+    const [profilesRes, codesRes] = await Promise.all([
+      supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", requesterIds),
+      supabase.from("friend_codes").select("user_id, code").in("user_id", requesterIds)
+    ]);
 
-    const profilesMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
+    const profilesMap = new Map(profilesRes.data?.map(p => [p.user_id, p]) || []);
+    const codesMap = new Map(codesRes.data?.map(c => [c.user_id, c.code]) || []);
 
-    const requests: FriendRequest[] = data.map(req => ({
-      id: req.id,
-      requester_id: req.requester_id,
-      requester_name: profilesMap.get(req.requester_id)?.display_name || null,
-      requester_avatar: profilesMap.get(req.requester_id)?.avatar_url || null,
-      created_at: req.created_at,
-    }));
+    const requests: FriendRequest[] = data.map(req => {
+      const profile = profilesMap.get(req.requester_id);
+      const code = codesMap.get(req.requester_id);
+      
+      // Use display_name, fallback to friend code, then fallback to "Nutzer"
+      const displayName = profile?.display_name || (code ? `Nutzer ${code.slice(0, 4)}` : "Neuer Nutzer");
+      
+      return {
+        id: req.id,
+        requester_id: req.requester_id,
+        requester_name: displayName,
+        requester_avatar: profile?.avatar_url || null,
+        created_at: req.created_at,
+      };
+    });
 
     setPendingRequests(requests);
   }, [user]);
