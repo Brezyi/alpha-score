@@ -281,13 +281,18 @@ export default function Lifestyle() {
               </motion.div>
             </div>
 
+            {/* Mood Tracker */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <MoodTracker selectedDate={selectedDate} />
+            </motion.div>
+
             {/* Supplements & Health Connect */}
             <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
                 <SupplementTracker selectedDate={selectedDate} />
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <HealthConnectCard />
               </motion.div>
             </div>
