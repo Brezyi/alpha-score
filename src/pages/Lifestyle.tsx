@@ -204,7 +204,7 @@ export default function Lifestyle() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-5xl mx-auto px-4 py-8">
+      <div className="container max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
@@ -270,10 +270,16 @@ export default function Lifestyle() {
               <MotivationCard />
             </motion.div>
 
-            {/* Health Connect - only visible on native */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <HealthConnectCard />
-            </motion.div>
+            {/* Health Connect - only render wrapper on native to avoid empty gaps on web */}
+            {isNative && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <HealthConnectCard />
+              </motion.div>
+            )}
 
             {/* Mood Tracker */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
@@ -281,12 +287,12 @@ export default function Lifestyle() {
             </motion.div>
 
             {/* Water & Fasting Row */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <div className="grid md:grid-cols-2 gap-6 auto-rows-fr">
+              <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <WaterTrackerAdvanced />
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
                 <FastingTimer />
               </motion.div>
             </div>
@@ -297,12 +303,12 @@ export default function Lifestyle() {
             </motion.div>
 
             {/* Goals & Challenges */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+            <div className="grid md:grid-cols-2 gap-6 auto-rows-fr">
+              <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
                 <GoalCard currentScore={currentScore} />
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                 <WeeklyChallengeCard />
               </motion.div>
             </div>
