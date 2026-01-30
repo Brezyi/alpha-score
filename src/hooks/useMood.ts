@@ -29,16 +29,16 @@ const SYMPTOMS_LIST = [
   "Motivationslosigkeit"
 ];
 
-export function useMood() {
+export function useMood(selectedDate?: Date) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [todayEntry, setTodayEntry] = useState<MoodEntry | null>(null);
+  const [currentEntry, setCurrentEntry] = useState<MoodEntry | null>(null);
   const [entries, setEntries] = useState<MoodEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const today = format(new Date(), "yyyy-MM-dd");
+  const dateStr = format(selectedDate || new Date(), "yyyy-MM-dd");
 
-  const fetchTodayEntry = useCallback(async () => {
+  const fetchCurrentEntry = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -46,15 +46,15 @@ export function useMood() {
         .from("mood_entries")
         .select("*")
         .eq("user_id", user.id)
-        .eq("entry_date", today)
+        .eq("entry_date", dateStr)
         .maybeSingle();
 
       if (error) throw error;
-      setTodayEntry(data);
+      setCurrentEntry(data);
     } catch (error) {
-      console.error("Error fetching today's mood entry:", error);
+      console.error("Error fetching mood entry:", error);
     }
-  }, [user, today]);
+  }, [user, dateStr]);
 
   const fetchEntries = useCallback(async (limit = 30) => {
     if (!user) return;
@@ -82,13 +82,13 @@ export function useMood() {
         .from("mood_entries")
         .upsert({
           user_id: user.id,
-          entry_date: today,
+          entry_date: dateStr,
           ...updates
         }, { onConflict: "user_id,entry_date" });
 
       if (error) throw error;
       
-      await fetchTodayEntry();
+      await fetchCurrentEntry();
       toast({ title: "Stimmung gespeichert ✓" });
       return true;
     } catch (error) {
@@ -103,7 +103,7 @@ export function useMood() {
   };
 
   const toggleSymptom = async (symptom: string) => {
-    const currentSymptoms = todayEntry?.symptoms || [];
+    const currentSymptoms = currentEntry?.symptoms || [];
     const newSymptoms = currentSymptoms.includes(symptom)
       ? currentSymptoms.filter(s => s !== symptom)
       : [...currentSymptoms, symptom];
@@ -119,22 +119,22 @@ export function useMood() {
       }
 
       setLoading(true);
-      await Promise.all([fetchTodayEntry(), fetchEntries()]);
+      await Promise.all([fetchCurrentEntry(), fetchEntries()]);
       setLoading(false);
     };
 
     init();
-  }, [user, fetchTodayEntry, fetchEntries]);
+  }, [user, fetchCurrentEntry, fetchEntries]);
 
   return {
-    todayEntry,
+    currentEntry,
     entries,
     loading,
     symptomsList: SYMPTOMS_LIST,
     saveMoodEntry,
     toggleSymptom,
     refetch: async () => {
-      await Promise.all([fetchTodayEntry(), fetchEntries()]);
+      await Promise.all([fetchCurrentEntry(), fetchEntries()]);
     }
   };
 }
