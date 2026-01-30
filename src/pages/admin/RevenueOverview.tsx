@@ -106,6 +106,10 @@ export default function RevenueOverview() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Wait for role check to complete before redirecting
+    if (isOwner === undefined || isAdmin === undefined) {
+      return; // Still loading roles
+    }
     if (!isOwner && !isAdmin) {
       navigate("/admin");
       return;
@@ -284,6 +288,15 @@ export default function RevenueOverview() {
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+
+  // Show loading while checking roles
+  if (isOwner === undefined || isAdmin === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!isOwner && !isAdmin) return null;
 
