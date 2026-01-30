@@ -4,7 +4,6 @@ import {
   ArrowLeft, 
   Users, 
   UserPlus, 
-  MessageCircle, 
   Copy, 
   Check, 
   Search, 
@@ -24,7 +23,6 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/hooks/useFriends";
-import { useFriendMessages } from "@/hooks/useFriendMessages";
 import { useAccountabilityPartner } from "@/hooks/useAccountabilityPartner";
 import { usePartnerRequests } from "@/hooks/usePartnerRequests";
 import { usePresence } from "@/hooks/usePresence";
@@ -45,7 +43,6 @@ import { Capacitor } from "@capacitor/core";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { useToast } from "@/hooks/use-toast";
-import { ChatDialog } from "@/components/friends/ChatDialog";
 import { FriendProfileDialog } from "@/components/friends/FriendProfileDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
@@ -53,7 +50,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 function FriendCard({ 
   friend, 
   onRemove,
-  onMessage,
   onMakePartner,
   onViewProfile,
   index,
@@ -61,7 +57,6 @@ function FriendCard({
 }: { 
   friend: any; 
   onRemove: () => void;
-  onMessage: () => void;
   onMakePartner: () => void;
   onViewProfile: () => void;
   index: number;
@@ -112,14 +107,6 @@ function FriendCard({
         </div>
         
         <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
-            onClick={onMessage}
-          >
-            <MessageCircle className="w-5 h-5" />
-          </Button>
           <Button 
             size="icon" 
             variant="ghost" 
@@ -215,7 +202,6 @@ export default function Friends() {
     removeFriend,
     updatePrivacySettings,
   } = useFriends();
-  const { conversations, getTotalUnreadCount } = useFriendMessages();
   const { partner, checkIn, endPartnership } = useAccountabilityPartner();
   const { 
     incomingRequests: partnerRequests, 
@@ -233,7 +219,6 @@ export default function Friends() {
   const [codeCopied, setCodeCopied] = useState(false);
   const [searching, setSearching] = useState(false);
   const [sendingRequest, setSendingRequest] = useState(false);
-  const [selectedChat, setSelectedChat] = useState<string | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<any | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showCheckInDialog, setShowCheckInDialog] = useState(false);
@@ -241,7 +226,6 @@ export default function Friends() {
   const [checkInMood, setCheckInMood] = useState(3);
 
   const isNative = Capacitor.isNativePlatform();
-  const unreadCount = getTotalUnreadCount();
 
   const handleHaptic = async () => {
     if (isNative) {
@@ -439,7 +423,7 @@ export default function Friends() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 h-14 p-1.5 bg-muted/50 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-3 h-14 p-1.5 bg-muted/50 rounded-2xl">
           <TabsTrigger 
             value="friends" 
             className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md flex items-center gap-1.5 transition-all"
@@ -458,16 +442,6 @@ export default function Friends() {
             <span className="hidden sm:inline font-medium">Hinzufügen</span>
             {pendingRequests.length > 0 && (
               <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-semibold animate-pulse">{pendingRequests.length}</Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger 
-            value="chat" 
-            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md flex items-center gap-1.5 transition-all"
-          >
-            <MessageCircle className="w-4 h-4" />
-            <span className="hidden sm:inline font-medium">Chat</span>
-            {unreadCount > 0 && (
-              <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-semibold animate-pulse">{unreadCount}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger 
@@ -515,10 +489,6 @@ export default function Friends() {
                     index={index}
                     isOnline={isOnline(friend.id)}
                     onRemove={() => removeFriend(friend.connection_id)}
-                    onMessage={() => {
-                      setSelectedChat(friend.id);
-                      setActiveTab("chat");
-                    }}
                     onMakePartner={() => sendPartnerRequest(friend.id)}
                     onViewProfile={() => setSelectedProfile(friend)}
                   />
@@ -664,65 +634,6 @@ export default function Friends() {
               </div>
             )}
           </motion.div>
-        </TabsContent>
-
-        {/* Chat Tab */}
-        <TabsContent value="chat" className="mt-4">
-          <AnimatePresence mode="wait">
-            {conversations.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative overflow-hidden rounded-3xl border border-dashed border-border p-12 text-center"
-              >
-                <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
-                <div className="relative">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-blue-500/10 flex items-center justify-center">
-                    <MessageCircle className="w-10 h-10 text-blue-500/60" />
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">Keine Nachrichten</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Starte einen Chat mit einem Freund
-                  </p>
-                </div>
-              </motion.div>
-            ) : (
-              <div className="space-y-2">
-                {conversations.map((conv, index) => (
-                  <motion.div
-                    key={conv.friend_id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-card border border-border cursor-pointer hover:border-primary/30 transition-all"
-                    onClick={() => setSelectedChat(conv.friend_id)}
-                  >
-                    <div className="relative">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={conv.friend_avatar || undefined} />
-                        <AvatarFallback>{conv.friend_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
-                      </Avatar>
-                      {conv.unread_count > 0 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                          <span className="text-[10px] font-bold text-primary-foreground">{conv.unread_count}</span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-0.5">
-                        <p className="font-semibold truncate">{conv.friend_name || "Freund"}</p>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(conv.last_message_time), "HH:mm", { locale: de })}
-                        </span>
-                      </div>
-                      <p className="text-sm text-muted-foreground truncate">{conv.last_message}</p>
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-muted-foreground" />
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </AnimatePresence>
         </TabsContent>
 
         {/* Partner Tab - Redesigned */}
@@ -1060,16 +971,6 @@ export default function Friends() {
         </TabsContent>
       </Tabs>
 
-      {/* Chat Dialog */}
-      {selectedChat && (
-        <ChatDialog
-          open={!!selectedChat}
-          onClose={() => setSelectedChat(null)}
-          friendId={selectedChat}
-          friendName={friends.find(f => f.id === selectedChat)?.display_name || conversations.find(c => c.friend_id === selectedChat)?.friend_name || null}
-          friendAvatar={friends.find(f => f.id === selectedChat)?.avatar_url || conversations.find(c => c.friend_id === selectedChat)?.friend_avatar || null}
-        />
-      )}
 
       {/* Privacy Settings Dialog */}
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
@@ -1217,10 +1118,6 @@ export default function Friends() {
           connectedSince={selectedProfile.connected_since}
           connectionId={selectedProfile.connection_id}
           isOnline={isOnline(selectedProfile.id)}
-          onMessage={() => {
-            setSelectedChat(selectedProfile.id);
-            setActiveTab("chat");
-          }}
           onMakePartner={() => sendPartnerRequest(selectedProfile.id)}
           onRemoveFriend={() => removeFriend(selectedProfile.connection_id)}
         />
