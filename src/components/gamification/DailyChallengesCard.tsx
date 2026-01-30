@@ -9,7 +9,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { triggerConfetti } from "@/components/ui/confetti";
 
 interface Challenge {
   challengeId: string;
