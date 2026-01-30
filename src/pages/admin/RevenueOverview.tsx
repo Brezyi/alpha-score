@@ -172,17 +172,28 @@ export default function RevenueOverview() {
       setSubscriptions(subs);
       setPayments(pays);
 
-      // Calculate stats from local data
+      // Calculate stats from local data - ONLY count real Stripe purchases
+      const isRealStripePurchase = (s: SubscriptionData) => {
+        return !s.stripe_customer_id?.startsWith("promo_") && 
+               !s.stripe_customer_id?.startsWith("admin_granted_");
+      };
+      
       const activeMonthly = subs.filter(s => s.status === "active" && s.plan_type === "premium");
       const activeLifetime = subs.filter(s => s.status === "active" && s.plan_type === "lifetime");
       const canceled = subs.filter(s => s.status === "canceled");
 
-      const monthlyRevenue = activeMonthly.reduce((sum, s) => sum + (s.amount || 0), 0);
+      // Only count real Stripe revenue
+      const realMonthlyRevenue = activeMonthly
+        .filter(isRealStripePurchase)
+        .reduce((sum, s) => sum + (s.amount || 0), 0);
+      const realLifetimeRevenue = subs
+        .filter(s => s.plan_type === "lifetime" && isRealStripePurchase(s))
+        .reduce((sum, s) => sum + (s.amount || 0), 0);
       const totalFromPayments = pays.reduce((sum, p) => sum + (p.amount || 0), 0);
 
       setStats({
-        totalRevenue: totalFromPayments || (monthlyRevenue + activeLifetime.reduce((sum, s) => sum + (s.amount || 0), 0)),
-        monthlyRevenue: monthlyRevenue,
+        totalRevenue: totalFromPayments || (realMonthlyRevenue + realLifetimeRevenue),
+        monthlyRevenue: realMonthlyRevenue,
         activeSubscriptions: activeMonthly.length,
         lifetimePurchases: activeLifetime.length,
         canceledSubscriptions: canceled.length,
@@ -298,28 +309,29 @@ export default function RevenueOverview() {
     
     if (source === "promo") {
       return (
-        <div className="flex flex-col">
-          <span className="text-purple-500 text-sm font-medium">Gratis</span>
-          <Badge variant="outline" className="w-fit text-xs border-purple-500/50 text-purple-500">
-            Promo-Code
-          </Badge>
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/10 border border-purple-500/20">
+          <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
+          <span className="text-purple-400 text-xs font-medium">Promo-Code</span>
         </div>
       );
     }
     
     if (source === "admin") {
       return (
-        <div className="flex flex-col">
-          <span className="text-amber-500 text-sm font-medium">Gratis</span>
-          <Badge variant="outline" className="w-fit text-xs border-amber-500/50 text-amber-500">
-            Von Admin vergeben
-          </Badge>
+        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20">
+          <div className="w-1.5 h-1.5 rounded-full bg-sky-500" />
+          <span className="text-sky-400 text-xs font-medium">Admin vergeben</span>
         </div>
       );
     }
     
     // Real Stripe payment
-    return formatCurrency(sub.amount, sub.currency);
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+        <DollarSign className="w-3 h-3 text-emerald-500" />
+        <span className="text-emerald-400 text-sm font-semibold">{formatCurrency(sub.amount, sub.currency)}</span>
+      </div>
+    );
   };
 
   const getPlanBadge = (plan: string) => {
