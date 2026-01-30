@@ -29,7 +29,8 @@ import {
   CheckCircle2,
   Circle,
   Heart,
-  Users
+  Users,
+  DollarSign
 } from "lucide-react";
 import {
   Collapsible,
@@ -130,6 +131,14 @@ const quickActions = [
     href: "/progress",
     color: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
     premium: true,
+  },
+  {
+    icon: DollarSign,
+    title: "Affiliate",
+    description: "Verdiene 20% pro Abo",
+    href: "/affiliate",
+    color: "bg-green-500/10 text-green-600 dark:text-green-400",
+    premium: false,
   },
 ];
 
@@ -1079,28 +1088,6 @@ const Dashboard = () => {
               );
             })}
           </div>
-          
-          {/* Affiliate Program Card */}
-          <Link 
-            to="/affiliate" 
-            className="block mt-6 opacity-0 animate-fade-in"
-            style={{ animationDelay: "1000ms", animationFillMode: "forwards" }}
-          >
-            <div className="p-5 rounded-2xl glass-card hover:border-green-500/50 transition-all duration-300 group cursor-pointer hover:shadow-lg hover:shadow-green-500/10">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg group-hover:text-green-500 transition-colors">Affiliate Programm</h3>
-                    <p className="text-sm text-muted-foreground">Verdiene 20% Provision für jedes vermittelte Abo</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-green-500 group-hover:translate-x-1 transition-all" />
-              </div>
-            </div>
-          </Link>
         </div>
 
         {/* Gamification Section - XP, Challenges, Achievements */}
