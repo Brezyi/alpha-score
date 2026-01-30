@@ -194,7 +194,7 @@ export function FriendProfileDialog({
           transition={{ delay: 0.15 }}
           className="text-center px-6 pt-4 pb-2"
         >
-          <h2 className="text-2xl font-bold tracking-tight">{friendName || "Unbekannt"}</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{friendName || "Freund"}</h2>
           <div className="flex items-center justify-center gap-2 mt-1">
             {isOnline ? (
               <span className="text-sm text-green-500 font-medium">Online</span>
