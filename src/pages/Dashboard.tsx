@@ -30,7 +30,8 @@ import {
   Circle,
   Heart,
   Users,
-  DollarSign
+  DollarSign,
+  BarChart3
 } from "lucide-react";
 import {
   Collapsible,
@@ -232,7 +233,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isPremium, subscriptionType, subscriptionEnd } = useSubscription();
-  const { isAdminOrOwner, role } = useUserRole();
+  const { isAdminOrOwner, isOwner, role } = useUserRole();
   const { currentStreak, longestStreak, isActiveToday, loading: streakLoading } = useStreak();
   const { settings } = useGlobalSettings();
   
@@ -1087,6 +1088,28 @@ const Dashboard = () => {
                 </Link>
               );
             })}
+            
+            {/* Owner-Only: Revenue Quick Access */}
+            {isOwner && (
+              <Link 
+                to="/admin/billing"
+                className="group relative p-6 rounded-2xl glass-card border-amber-500/30 hover:border-amber-500/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-amber-500/10"
+                style={{ animationDelay: `${850 + quickActions.length * 100}ms`, animationFillMode: "forwards" }}
+              >
+                <div className="absolute top-3 right-3">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <BarChart3 className="w-6 h-6 text-amber-500" />
+                </div>
+                <h3 className="font-semibold mb-1 group-hover:text-amber-500 transition-colors">
+                  Umsatz & Abos
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Revenue & Affiliate-Übersicht
+                </p>
+              </Link>
+            )}
           </div>
         </div>
 
