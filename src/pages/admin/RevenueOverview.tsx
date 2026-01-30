@@ -260,6 +260,66 @@ export default function RevenueOverview() {
     }).format(amount / 100);
   };
 
+  // Helper to determine subscription source type
+  const getSubscriptionSource = (stripeCustomerId: string) => {
+    if (stripeCustomerId?.startsWith("promo_")) {
+      return "promo";
+    }
+    if (stripeCustomerId?.startsWith("admin_granted_")) {
+      return "admin";
+    }
+    return "stripe"; // Real Stripe purchase
+  };
+
+  // Get customer display name based on source
+  const getCustomerDisplay = (sub: SubscriptionData) => {
+    const source = getSubscriptionSource(sub.stripe_customer_id);
+    
+    if (source === "promo") {
+      return (
+        <div className="flex flex-col">
+          <span className="text-muted-foreground text-xs">Promo-Code</span>
+          <span className="text-xs text-purple-500">{sub.stripe_customer_id.replace("promo_PREMIUM_", "").replace("promo_LIFETIME_", "").slice(0, 8)}...</span>
+        </div>
+      );
+    }
+    
+    if (source === "admin") {
+      return (
+        <div className="flex flex-col">
+          <span className="text-muted-foreground text-xs">Von Admin vergeben</span>
+          <span className="text-xs text-amber-500">{sub.stripe_customer_id.replace("admin_granted_", "").slice(0, 8)}...</span>
+        </div>
+      );
+    }
+    
+    return sub.customer_email || "Unbekannt";
+  };
+
+  // Get amount display with source indication
+  const getAmountDisplay = (sub: SubscriptionData) => {
+    const source = getSubscriptionSource(sub.stripe_customer_id);
+    
+    if (source === "promo") {
+      return (
+        <span className="text-purple-500 text-sm">
+          Gratis (Promo)
+        </span>
+      );
+    }
+    
+    if (source === "admin" && sub.amount === 0) {
+      return (
+        <span className="text-amber-500 text-sm">
+          Gratis (Admin)
+        </span>
+      );
+    }
+    
+    // Real payment or admin-granted with value
+    return formatCurrency(sub.amount, sub.currency);
+  };
+
   const getPlanBadge = (plan: string) => {
     if (plan === "lifetime") {
       return (
@@ -495,11 +555,11 @@ export default function RevenueOverview() {
                   {subscriptions.map((sub) => (
                     <TableRow key={sub.id}>
                       <TableCell className="font-medium">
-                        {sub.customer_email || "Unbekannt"}
+                        {getCustomerDisplay(sub)}
                       </TableCell>
                       <TableCell>{getPlanBadge(sub.plan_type)}</TableCell>
                       <TableCell>{getStatusBadge(sub.status, sub.cancel_at_period_end)}</TableCell>
-                      <TableCell>{formatCurrency(sub.amount, sub.currency)}</TableCell>
+                      <TableCell>{getAmountDisplay(sub)}</TableCell>
                       <TableCell>
                         {format(new Date(sub.created_at), "dd.MM.yyyy", { locale: de })}
                       </TableCell>
