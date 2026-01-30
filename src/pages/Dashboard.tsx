@@ -58,12 +58,9 @@ import { AnalysisThumbnail } from "@/components/AnalysisThumbnail";
 import { useGamification } from "@/hooks/useGamification";
 import { XpLevelCard } from "@/components/gamification/XpLevelCard";
 import { DailyChallengesCard } from "@/components/gamification/DailyChallengesCard";
-import { AchievementsGrid } from "@/components/gamification/AchievementsGrid";
 import { useProductRecommendations } from "@/hooks/useProductRecommendations";
 import { ProductRecommendationsCard } from "@/components/ProductRecommendationsCard";
 import { PersonalizedInsights } from "@/components/dashboard/PersonalizedInsights";
-import { SleepScoreCorrelation } from "@/components/dashboard/SleepScoreCorrelation";
-import { StreakRewards } from "@/components/gamification/StreakRewards";
 import { WelcomeWidget } from "@/components/dashboard/WelcomeWidget";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { useLifestyle } from "@/hooks/useLifestyle";
@@ -1108,7 +1105,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Gamification Section - XP, Challenges, Achievements */}
+        {/* Gamification Section - XP, Challenges */}
         {isPremiumUser && (
           <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }}>
             <h2 className="text-xl font-bold">Dein Fortschritt</h2>
@@ -1129,36 +1126,9 @@ const Dashboard = () => {
                 onComplete={completeChallenge}
               />
               
-              {/* Activity Feed - NEW */}
+              {/* Activity Feed */}
               <ActivityFeed />
             </div>
-            
-            {/* Achievements Grid */}
-            {achievements.length > 0 && (
-              <div className="p-5 rounded-2xl glass-card">
-                <AchievementsGrid achievements={achievements} maxDisplay={12} />
-              </div>
-            )}
-            
-            {/* Streak Rewards Compact */}
-            <StreakRewards 
-              currentStreak={currentStreak} 
-              longestStreak={longestStreak} 
-              compact 
-            />
-            
-            {/* Sleep-Score Correlation */}
-            <SleepScoreCorrelation 
-              lifestyleEntries={lifestyleEntries.map(e => ({
-                entry_date: e.entry_date,
-                sleep_hours: e.sleep_hours,
-                sleep_quality: null // Add this when field is available
-              }))}
-              analyses={completedAnalyses.map(a => ({
-                created_at: a.created_at,
-                looks_score: a.looks_score
-              }))}
-            />
             
             {/* Product Recommendations */}
             {recommendedProducts.length > 0 && (
