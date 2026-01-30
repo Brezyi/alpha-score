@@ -288,13 +288,18 @@ export default function RevenueOverview() {
 
   // Get customer display name based on source
   const getCustomerDisplay = (sub: SubscriptionData) => {
-    const source = getSubscriptionSource(sub.stripe_customer_id);
     const displayName = sub.display_name || sub.customer_email || "Unbekannt";
+    return displayName;
+  };
+
+  // Get amount display with source indication
+  const getAmountDisplay = (sub: SubscriptionData) => {
+    const source = getSubscriptionSource(sub.stripe_customer_id);
     
     if (source === "promo") {
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{displayName}</span>
+          <span className="text-purple-500 text-sm font-medium">Gratis</span>
           <Badge variant="outline" className="w-fit text-xs border-purple-500/50 text-purple-500">
             Promo-Code
           </Badge>
@@ -305,34 +310,11 @@ export default function RevenueOverview() {
     if (source === "admin") {
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{displayName}</span>
+          <span className="text-amber-500 text-sm font-medium">Gratis</span>
           <Badge variant="outline" className="w-fit text-xs border-amber-500/50 text-amber-500">
             Von Admin vergeben
           </Badge>
         </div>
-      );
-    }
-    
-    return displayName;
-  };
-
-  // Get amount display with source indication
-  const getAmountDisplay = (sub: SubscriptionData) => {
-    const source = getSubscriptionSource(sub.stripe_customer_id);
-    
-    if (source === "promo") {
-      return (
-        <span className="text-purple-500 text-sm font-medium">
-          Gratis (Promo)
-        </span>
-      );
-    }
-    
-    if (source === "admin") {
-      return (
-        <span className="text-amber-500 text-sm font-medium">
-          Gratis (Admin)
-        </span>
       );
     }
     
