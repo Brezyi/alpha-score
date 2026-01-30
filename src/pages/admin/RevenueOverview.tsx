@@ -83,7 +83,7 @@ interface AffiliateStats {
 
 export default function RevenueOverview() {
   const navigate = useNavigate();
-  const { isOwner, isAdmin } = useUserRole();
+  const { isOwner, isAdmin, loading: roleLoading } = useUserRole();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
@@ -107,15 +107,21 @@ export default function RevenueOverview() {
 
   useEffect(() => {
     // Wait for role check to complete before redirecting
-    if (isOwner === undefined || isAdmin === undefined) {
+    if (roleLoading) {
       return; // Still loading roles
     }
     if (!isOwner && !isAdmin) {
       navigate("/admin");
       return;
     }
-    fetchLocalData();
-  }, [isOwner, isAdmin, navigate]);
+  }, [isOwner, isAdmin, roleLoading, navigate]);
+  
+  // Fetch data when roles are confirmed
+  useEffect(() => {
+    if (!roleLoading && (isOwner || isAdmin)) {
+      fetchLocalData();
+    }
+  }, [roleLoading, isOwner, isAdmin]);
 
   const fetchLocalData = useCallback(async () => {
     setLoading(true);
@@ -290,7 +296,7 @@ export default function RevenueOverview() {
   };
 
   // Show loading while checking roles
-  if (isOwner === undefined || isAdmin === undefined) {
+  if (roleLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <RefreshCw className="w-8 h-8 animate-spin text-primary" />
