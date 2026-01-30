@@ -139,6 +139,31 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
     return allDeltas.indexOf(userScoreDelta) + 1;
   }, [friendScores, userScoreDelta]);
 
+  // Create sorted list combining user and friends by rank
+  const sortedRankings = useMemo(() => {
+    const userEntry = {
+      id: "user",
+      isUser: true as const,
+      displayName: "Du",
+      avatarUrl: null as string | null,
+      scoreDelta: userScoreDelta,
+      showScore: "full" as const,
+      rank: userRank || 999,
+    };
+
+    const friendEntries = friendScores.map(f => ({
+      id: f.friendId,
+      isUser: false as const,
+      displayName: f.displayName,
+      avatarUrl: f.avatarUrl,
+      scoreDelta: f.scoreDelta,
+      showScore: f.showScore,
+      rank: f.rank,
+    }));
+
+    return [...friendEntries, userEntry].sort((a, b) => a.rank - b.rank);
+  }, [friendScores, userScoreDelta, userRank]);
+
   if (friendsLoading || loading) {
     return (
       <div className="p-5 rounded-2xl glass-card space-y-4">
@@ -232,51 +257,49 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
       </p>
 
       <div className="space-y-3">
-        {/* User's own entry */}
-        <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/5 border border-primary/20">
-          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-            {userRank || "-"}
-          </div>
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-            <span className="text-xs font-bold text-primary">DU</span>
-          </div>
-          <span className="font-medium text-sm flex-1">Du</span>
-          <div className="flex items-center gap-1">
-            {getDeltaIcon(userScoreDelta)}
-            <span className={cn("text-sm font-medium", getDeltaColor(userScoreDelta))}>
-              {userScoreDelta !== null 
-                ? `${userScoreDelta > 0 ? "+" : ""}${userScoreDelta}`
-                : "-"
-              }
-            </span>
-          </div>
-        </div>
-
-        {/* Friends */}
-        {friendScores.map((friend) => (
+        {sortedRankings.map((entry) => (
           <div 
-            key={friend.friendId} 
-            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+            key={entry.id} 
+            className={cn(
+              "flex items-center gap-3 p-2 rounded-lg transition-colors",
+              entry.isUser 
+                ? "bg-primary/5 border border-primary/20" 
+                : "hover:bg-muted/50"
+            )}
           >
-            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-              {friend.rank}
+            <div className={cn(
+              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
+              entry.isUser 
+                ? "bg-primary/20 text-primary" 
+                : "bg-muted text-muted-foreground"
+            )}>
+              {entry.rank}
             </div>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src={friend.avatarUrl || undefined} />
-              <AvatarFallback className="text-xs">
-                {friend.displayName.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <span className="font-medium text-sm flex-1 truncate">
-              {friend.displayName}
+            {entry.isUser ? (
+              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <span className="text-xs font-bold text-primary">DU</span>
+              </div>
+            ) : (
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={entry.avatarUrl || undefined} />
+                <AvatarFallback className="text-xs">
+                  {entry.displayName.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            )}
+            <span className={cn(
+              "font-medium text-sm flex-1 truncate",
+              entry.isUser && "text-primary"
+            )}>
+              {entry.displayName}
             </span>
             <div className="flex items-center gap-1">
-              {friend.showScore === "delta_only" || friend.showScore === "full" ? (
+              {entry.isUser || entry.showScore === "delta_only" || entry.showScore === "full" ? (
                 <>
-                  {getDeltaIcon(friend.scoreDelta)}
-                  <span className={cn("text-sm font-medium", getDeltaColor(friend.scoreDelta))}>
-                    {friend.scoreDelta !== null 
-                      ? `${friend.scoreDelta > 0 ? "+" : ""}${friend.scoreDelta}`
+                  {getDeltaIcon(entry.scoreDelta)}
+                  <span className={cn("text-sm font-medium", getDeltaColor(entry.scoreDelta))}>
+                    {entry.scoreDelta !== null 
+                      ? `${entry.scoreDelta > 0 ? "+" : ""}${entry.scoreDelta}`
                       : "-"
                     }
                   </span>
