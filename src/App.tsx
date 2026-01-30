@@ -8,6 +8,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { SystemSettingsProvider } from "./contexts/SystemSettingsContext";
 import { AdminAccessProvider } from "./contexts/AdminAccessContext";
 import { MaintenanceProvider, MaintenanceCheck } from "./components/MaintenanceGate";
+import { OnboardingTourProvider } from "./components/onboarding/OnboardingTour";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -88,7 +89,8 @@ const App = () => (
               <AdminAccessProvider>
                 <MaintenanceProvider>
                   <MaintenanceCheck>
-                    <Suspense fallback={<PageLoader />}>
+                    <OnboardingTourProvider>
+                      <Suspense fallback={<PageLoader />}>
                       <Routes>
                         {/* Critical path - no lazy loading */}
                         <Route path="/" element={<Index />} />
@@ -212,8 +214,9 @@ const App = () => (
                         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
-                    </Suspense>
-                    <CookieConsent />
+                      </Suspense>
+                      <CookieConsent />
+                    </OnboardingTourProvider>
                   </MaintenanceCheck>
                 </MaintenanceProvider>
               </AdminAccessProvider>
