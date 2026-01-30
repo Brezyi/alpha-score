@@ -265,16 +265,15 @@ export default function Lifestyle() {
             {/* Health Alerts */}
             <HealthAlerts />
 
-            {/* Motivation & Health Connect - Both small cards */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-                <MotivationCard />
-              </motion.div>
-              
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                <HealthConnectCard />
-              </motion.div>
-            </div>
+            {/* Motivation Tip */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+              <MotivationCard />
+            </motion.div>
+
+            {/* Health Connect - only visible on native */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <HealthConnectCard />
+            </motion.div>
 
             {/* Mood Tracker */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
@@ -292,7 +291,7 @@ export default function Lifestyle() {
               </motion.div>
             </div>
 
-            {/* Supplements - Full width */}
+            {/* Supplements */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
               <SupplementTracker selectedDate={selectedDate} />
             </motion.div>
