@@ -155,12 +155,13 @@ export function useFriendMessages(friendId?: string) {
     return conversations.reduce((sum, c) => sum + c.unread_count, 0);
   }, [conversations]);
 
-  // Subscribe to realtime messages
+  // Subscribe to realtime messages - separate channel for each conversation
   useEffect(() => {
     if (!user) return;
 
+    // Channel for all messages to/from current user
     const channel = supabase
-      .channel("friend_messages_realtime")
+      .channel(`friend_messages_${user.id}`)
       .on(
         "postgres_changes",
         {
@@ -168,27 +169,50 @@ export function useFriendMessages(friendId?: string) {
           schema: "public",
           table: "friend_messages",
         },
-        (payload) => {
+        async (payload) => {
           const newMsg = payload.new as Message;
-          // Message relevant to current user (sent to or from me)
-          if (newMsg.receiver_id === user.id || newMsg.sender_id === user.id) {
-            // If viewing this specific conversation, add message directly
-            if (friendId && (newMsg.sender_id === friendId || newMsg.receiver_id === friendId)) {
-              setMessages(prev => {
-                // Prevent duplicates
-                if (prev.some(m => m.id === newMsg.id)) return prev;
-                return [...prev, newMsg];
-              });
-              // Mark as read if I'm the receiver
-              if (newMsg.receiver_id === user.id) {
-                supabase
-                  .from("friend_messages")
-                  .update({ is_read: true })
-                  .eq("id", newMsg.id);
-              }
+          
+          // Only process messages relevant to current user
+          if (newMsg.receiver_id !== user.id && newMsg.sender_id !== user.id) {
+            return;
+          }
+
+          // If viewing this specific conversation, add message immediately
+          if (friendId && (newMsg.sender_id === friendId || newMsg.receiver_id === friendId)) {
+            setMessages(prev => {
+              // Prevent duplicates
+              if (prev.some(m => m.id === newMsg.id)) return prev;
+              return [...prev, newMsg];
+            });
+            
+            // Mark as read if I'm the receiver and viewing this chat
+            if (newMsg.receiver_id === user.id) {
+              await supabase
+                .from("friend_messages")
+                .update({ is_read: true })
+                .eq("id", newMsg.id);
             }
-            // Always refresh conversations list
-            fetchConversations();
+          }
+          
+          // Refresh conversations list for unread counts
+          fetchConversations();
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "friend_messages",
+        },
+        (payload) => {
+          const updatedMsg = payload.new as Message;
+          
+          // Update message in current view if relevant
+          if (friendId && (updatedMsg.sender_id === friendId || updatedMsg.receiver_id === friendId)) {
+            setMessages(prev => 
+              prev.map(m => m.id === updatedMsg.id ? updatedMsg : m)
+            );
           }
         }
       )

@@ -27,6 +27,7 @@ import { useFriends } from "@/hooks/useFriends";
 import { useFriendMessages } from "@/hooks/useFriendMessages";
 import { useAccountabilityPartner } from "@/hooks/useAccountabilityPartner";
 import { usePartnerRequests } from "@/hooks/usePartnerRequests";
+import { usePresence } from "@/hooks/usePresence";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -55,7 +56,8 @@ function FriendCard({
   onMessage,
   onMakePartner,
   onViewProfile,
-  index 
+  index,
+  isOnline
 }: { 
   friend: any; 
   onRemove: () => void;
@@ -63,6 +65,7 @@ function FriendCard({
   onMakePartner: () => void;
   onViewProfile: () => void;
   index: number;
+  isOnline: boolean;
 }) {
   return (
     <motion.div
@@ -80,13 +83,19 @@ function FriendCard({
               {friend.display_name?.[0]?.toUpperCase() || "?"}
             </AvatarFallback>
           </Avatar>
-          <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
+          {isOnline && (
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
+          )}
         </div>
         
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-foreground truncate">{friend.display_name || "Unbekannt"}</p>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Freunde seit {format(new Date(friend.connected_since), "dd. MMM", { locale: de })}
+            {isOnline ? (
+              <span className="text-green-500">Online</span>
+            ) : (
+              <>Freunde seit {format(new Date(friend.connected_since), "dd. MMM", { locale: de })}</>
+            )}
           </p>
         </div>
         
@@ -201,7 +210,7 @@ export default function Friends() {
     declinePartnerRequest,
     cancelPartnerRequest 
   } = usePartnerRequests();
-
+  const { isOnline } = usePresence();
   const [activeTab, setActiveTab] = useState("friends");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -488,6 +497,7 @@ export default function Friends() {
                     key={friend.id}
                     friend={friend}
                     index={index}
+                    isOnline={isOnline(friend.id)}
                     onRemove={() => removeFriend(friend.connection_id)}
                     onMessage={() => {
                       setSelectedChat(friend.id);

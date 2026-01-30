@@ -5,6 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Send, Loader2, ArrowLeft } from "lucide-react";
 import { useFriendMessages } from "@/hooks/useFriendMessages";
+import { usePresence } from "@/hooks/usePresence";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
@@ -25,8 +26,11 @@ export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }
   const { user } = useAuth();
   const { toast } = useToast();
   const { messages, loading, sending, sendMessage } = useFriendMessages(friendId);
+  const { isOnline } = usePresence();
   const [newMessage, setNewMessage] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const friendIsOnline = isOnline(friendId);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -94,7 +98,9 @@ export function ChatDialog({ open, onClose, friendId, friendName, friendAvatar }
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="font-semibold truncate">{friendName || "Chat"}</p>
-            <p className="text-xs text-muted-foreground">Online</p>
+            <p className={cn("text-xs", friendIsOnline ? "text-green-500" : "text-muted-foreground")}>
+              {friendIsOnline ? "Online" : "Offline"}
+            </p>
           </div>
         </div>
 
