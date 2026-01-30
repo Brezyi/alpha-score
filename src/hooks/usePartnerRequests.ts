@@ -131,43 +131,49 @@ export function usePartnerRequests() {
       return false;
     }
 
-    // Check for existing requests (any status) - may return multiple
-    const { data: existingRequests } = await supabase
+    // Delete any old non-pending requests first to avoid conflicts
+    await supabase
       .from("partner_requests")
-      .select("id, status")
+      .delete()
       .or(
         `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
-      );
+      )
+      .neq("status", "pending");
 
-    if (existingRequests && existingRequests.length > 0) {
-      // Check if any is pending
-      const pendingRequest = existingRequests.find(r => r.status === "pending");
-      if (pendingRequest) {
+    // Check for existing pending requests only
+    const { data: pendingRequest } = await supabase
+      .from("partner_requests")
+      .select("id, requester_id")
+      .or(
+        `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
+      )
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (pendingRequest) {
+      // If the friend already sent a request to us, tell user to check incoming requests
+      if (pendingRequest.requester_id === friendId) {
+        toast({
+          title: "Du hast eine Anfrage erhalten!",
+          description: "Schau in deine eingehenden Partner-Anfragen.",
+        });
+      } else {
         toast({
           title: "Anfrage existiert bereits",
-          description: "Es gibt bereits eine offene Anfrage.",
-          variant: "destructive",
+          description: "Warte auf die Antwort deines Freundes.",
         });
-        return false;
       }
-      
-      // Delete ALL old declined/accepted requests to allow new request
-      const idsToDelete = existingRequests.map(r => r.id);
-      const { error: deleteError } = await supabase
-        .from("partner_requests")
-        .delete()
-        .in("id", idsToDelete);
-      
-      if (deleteError) {
-        console.error("Error deleting old requests:", deleteError);
-        toast({
-          title: "Fehler",
-          description: "Alte Anfragen konnten nicht entfernt werden.",
-          variant: "destructive",
-        });
-        return false;
-      }
+      return false;
     }
+
+    // Get friend's profile for the success message
+    const { data: friendProfile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("user_id", friendId)
+      .single();
+
+    const friendName = friendProfile?.display_name || "Freund";
 
     const { error } = await supabase.from("partner_requests").insert({
       requester_id: user.id,
@@ -184,7 +190,7 @@ export function usePartnerRequests() {
       return false;
     }
 
-    toast({ title: "Partner-Anfrage gesendet! ✓" });
+    toast({ title: `Partner-Anfrage an ${friendName} gesendet! ✓` });
     await fetchRequests();
     return true;
   };
@@ -193,14 +199,20 @@ export function usePartnerRequests() {
   const acceptPartnerRequest = async (requestId: string): Promise<boolean> => {
     if (!user) return false;
 
-    // Get the request details
-    const { data: request } = await supabase
+    // Optimistic update - remove from incoming immediately
+    const request = incomingRequests.find(r => r.id === requestId);
+    setIncomingRequests(prev => prev.filter(r => r.id !== requestId));
+
+    // Get the full request details
+    const { data: requestData } = await supabase
       .from("partner_requests")
       .select("*")
       .eq("id", requestId)
       .single();
 
-    if (!request || request.addressee_id !== user.id) {
+    if (!requestData || requestData.addressee_id !== user.id) {
+      // Revert
+      if (request) setIncomingRequests(prev => [...prev, request]);
       toast({
         title: "Fehler",
         description: "Anfrage nicht gefunden.",
@@ -220,7 +232,7 @@ export function usePartnerRequests() {
     const { data: theirPartner } = await supabase
       .from("accountability_partners")
       .select("id")
-      .or(`user_id.eq.${request.requester_id},partner_id.eq.${request.requester_id}`)
+      .or(`user_id.eq.${requestData.requester_id},partner_id.eq.${requestData.requester_id}`)
       .eq("is_active", true)
       .maybeSingle();
 
@@ -235,7 +247,6 @@ export function usePartnerRequests() {
         .from("partner_requests")
         .update({ status: "declined", responded_at: new Date().toISOString() })
         .eq("id", requestId);
-      await fetchRequests();
       return false;
     }
 
@@ -246,6 +257,8 @@ export function usePartnerRequests() {
       .eq("id", requestId);
 
     if (updateError) {
+      // Revert
+      if (request) setIncomingRequests(prev => [...prev, request]);
       toast({
         title: "Fehler",
         description: "Anfrage konnte nicht akzeptiert werden.",
@@ -256,7 +269,7 @@ export function usePartnerRequests() {
 
     // Create the partnership
     const { error: partnerError } = await supabase.from("accountability_partners").insert({
-      user_id: request.requester_id,
+      user_id: requestData.requester_id,
       partner_id: user.id,
     });
 
@@ -270,13 +283,16 @@ export function usePartnerRequests() {
     }
 
     toast({ title: "Partner-Anfrage angenommen! 🎉" });
-    await fetchRequests();
     return true;
   };
 
-  // Decline partner request
+  // Decline partner request - optimistic update
   const declinePartnerRequest = async (requestId: string): Promise<boolean> => {
     if (!user) return false;
+
+    // Optimistic update
+    const request = incomingRequests.find(r => r.id === requestId);
+    setIncomingRequests(prev => prev.filter(r => r.id !== requestId));
 
     const { error } = await supabase
       .from("partner_requests")
@@ -284,6 +300,8 @@ export function usePartnerRequests() {
       .eq("id", requestId);
 
     if (error) {
+      // Revert
+      if (request) setIncomingRequests(prev => [...prev, request]);
       toast({
         title: "Fehler",
         description: "Anfrage konnte nicht abgelehnt werden.",
@@ -293,13 +311,16 @@ export function usePartnerRequests() {
     }
 
     toast({ title: "Partner-Anfrage abgelehnt" });
-    await fetchRequests();
     return true;
   };
 
-  // Cancel outgoing request
+  // Cancel outgoing request - optimistic update
   const cancelPartnerRequest = async (requestId: string): Promise<boolean> => {
     if (!user) return false;
+
+    // Optimistic update
+    const request = outgoingRequests.find(r => r.id === requestId);
+    setOutgoingRequests(prev => prev.filter(r => r.id !== requestId));
 
     const { error } = await supabase
       .from("partner_requests")
@@ -308,6 +329,8 @@ export function usePartnerRequests() {
       .eq("requester_id", user.id);
 
     if (error) {
+      // Revert
+      if (request) setOutgoingRequests(prev => [...prev, request]);
       toast({
         title: "Fehler",
         description: "Anfrage konnte nicht zurückgezogen werden.",
@@ -317,7 +340,6 @@ export function usePartnerRequests() {
     }
 
     toast({ title: "Anfrage zurückgezogen" });
-    await fetchRequests();
     return true;
   };
 
