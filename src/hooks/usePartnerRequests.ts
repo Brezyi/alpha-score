@@ -131,40 +131,15 @@ export function usePartnerRequests() {
       return false;
     }
 
-    // Delete any old non-pending requests first to avoid conflicts
+    // Delete ALL old requests between these users to avoid unique constraint conflicts
     await supabase
       .from("partner_requests")
       .delete()
       .or(
         `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
-      )
-      .neq("status", "pending");
+      );
 
-    // Check for existing pending requests only
-    const { data: pendingRequest } = await supabase
-      .from("partner_requests")
-      .select("id, requester_id")
-      .or(
-        `and(requester_id.eq.${user.id},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${user.id})`
-      )
-      .eq("status", "pending")
-      .maybeSingle();
-
-    if (pendingRequest) {
-      // If the friend already sent a request to us, tell user to check incoming requests
-      if (pendingRequest.requester_id === friendId) {
-        toast({
-          title: "Du hast eine Anfrage erhalten!",
-          description: "Schau in deine eingehenden Partner-Anfragen.",
-        });
-      } else {
-        toast({
-          title: "Anfrage existiert bereits",
-          description: "Warte auf die Antwort deines Freundes.",
-        });
-      }
-      return false;
-    }
+    // No need to check for pending - we just deleted everything
 
     // Get friend's profile for the success message
     const { data: friendProfile } = await supabase
