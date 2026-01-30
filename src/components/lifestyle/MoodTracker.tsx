@@ -1,7 +1,6 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -43,19 +42,28 @@ const STRESS_OPTIONS = [
   { value: 5, label: "Sehr gestresst" },
 ];
 
-export function MoodTracker() {
+interface MoodTrackerProps {
+  selectedDate?: Date;
+}
+
+export function MoodTracker({ selectedDate }: MoodTrackerProps) {
   const { 
-    todayEntry, 
+    currentEntry, 
     symptomsList, 
     saveMoodEntry, 
     toggleSymptom,
     loading 
-  } = useMood();
+  } = useMood(selectedDate);
   
-  const [notes, setNotes] = useState(todayEntry?.notes || "");
+  const [notes, setNotes] = useState(currentEntry?.notes || "");
   const [saving, setSaving] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync notes when entry changes
+  useEffect(() => {
+    setNotes(currentEntry?.notes || "");
+  }, [currentEntry]);
 
   const handleValueChange = useCallback(async (field: string, value: number | string | string[]) => {
     setSaving(true);
@@ -133,7 +141,7 @@ export function MoodTracker() {
           <div className="flex justify-between gap-2">
             {MOOD_OPTIONS.map((option) => {
               const Icon = option.icon;
-              const isSelected = todayEntry?.mood_score === option.value;
+              const isSelected = currentEntry?.mood_score === option.value;
               return (
                 <button
                   key={option.value}
@@ -163,7 +171,7 @@ export function MoodTracker() {
             {ENERGY_OPTIONS.map((option) => (
               <Button
                 key={option.value}
-                variant={todayEntry?.energy_level === option.value ? "default" : "outline"}
+                variant={currentEntry?.energy_level === option.value ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleValueChange("energy_level", option.value)}
                 className="text-xs"
@@ -184,7 +192,7 @@ export function MoodTracker() {
             {STRESS_OPTIONS.map((option) => (
               <Button
                 key={option.value}
-                variant={todayEntry?.stress_level === option.value ? "default" : "outline"}
+                variant={currentEntry?.stress_level === option.value ? "default" : "outline"}
                 size="sm"
                 onClick={() => handleValueChange("stress_level", option.value)}
                 className="text-xs"
@@ -203,7 +211,7 @@ export function MoodTracker() {
           </Label>
           <div className="flex gap-2 flex-wrap">
             {symptomsList.map((symptom) => {
-              const isSelected = todayEntry?.symptoms?.includes(symptom);
+              const isSelected = currentEntry?.symptoms?.includes(symptom);
               return (
                 <Badge
                   key={symptom}
