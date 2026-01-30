@@ -150,7 +150,7 @@ export function useFriends() {
     setFriends(friendsList);
   }, [user]);
 
-  // Fetch pending requests (received)
+  // Fetch pending requests (received) - always get fresh profile data
   const fetchPendingRequests = useCallback(async () => {
     if (!user) return;
 
@@ -172,7 +172,7 @@ export function useFriends() {
 
     const requesterIds = data.map(r => r.requester_id);
     
-    // Fetch both profiles and friend codes for fallback display names
+    // Fetch profiles and friend codes - profiles have priority for display_name
     const [profilesRes, codesRes] = await Promise.all([
       supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", requesterIds),
       supabase.from("friend_codes").select("user_id, code").in("user_id", requesterIds)
@@ -185,8 +185,16 @@ export function useFriends() {
       const profile = profilesMap.get(req.requester_id);
       const code = codesMap.get(req.requester_id);
       
-      // Use display_name, fallback to friend code, then fallback to "Nutzer"
-      const displayName = profile?.display_name || (code ? `Nutzer ${code.slice(0, 4)}` : "Neuer Nutzer");
+      // PRIORITY: 1. profile.display_name, 2. Friend code prefix, 3. Generic fallback
+      // Check that display_name is not null/undefined/empty string
+      let displayName: string;
+      if (profile?.display_name && profile.display_name.trim() !== '') {
+        displayName = profile.display_name;
+      } else if (code) {
+        displayName = `Nutzer ${code.slice(0, 4)}`;
+      } else {
+        displayName = "Neuer Nutzer";
+      }
       
       return {
         id: req.id,
@@ -399,9 +407,9 @@ export function useFriends() {
     }));
   };
 
-  // Accept friend request - optimistic update
+  // Accept friend request - optimistic update with proper name
   const acceptRequest = async (requestId: string): Promise<boolean> => {
-    // Optimistic update - remove from pending immediately
+    // Find the request to get requester info
     const request = pendingRequests.find(r => r.id === requestId);
     setPendingRequests(prev => prev.filter(r => r.id !== requestId));
 
@@ -423,9 +431,12 @@ export function useFriends() {
       return false;
     }
 
-    toast({ title: "Freund hinzugefügt! ✓" });
-    // Fetch updated friends list
-    fetchFriends();
+    // Use the requester's actual name from the request if available
+    const friendName = request?.requester_name || "Freund";
+    toast({ title: `${friendName} hinzugefügt! ✓` });
+    
+    // Force immediate refetch to get complete profile data
+    await fetchFriends();
     return true;
   };
 
