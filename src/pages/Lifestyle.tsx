@@ -224,14 +224,10 @@ export default function Lifestyle() {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="daily" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 h-auto gap-1">
+          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 h-auto gap-1">
             <TabsTrigger value="daily" className="flex flex-col gap-1 py-2">
               <Moon className="h-4 w-4" />
               <span className="text-xs">Tägliches</span>
-            </TabsTrigger>
-            <TabsTrigger value="mood" className="flex flex-col gap-1 py-2">
-              <Smile className="h-4 w-4" />
-              <span className="text-xs">Stimmung</span>
             </TabsTrigger>
             <TabsTrigger value="activity" className="flex flex-col gap-1 py-2">
               <Footprints className="h-4 w-4" />
@@ -308,15 +304,6 @@ export default function Lifestyle() {
             </div>
           </TabsContent>
 
-          {/* Mood Tab */}
-          <TabsContent value="mood" className="space-y-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <LifestyleTracker compact={false} onDateChange={setSelectedDate} />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <MoodTracker selectedDate={selectedDate} />
-            </motion.div>
-          </TabsContent>
 
           {/* Activity Tab */}
           <TabsContent value="activity" className="space-y-6">
