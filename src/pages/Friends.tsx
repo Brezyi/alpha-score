@@ -49,7 +49,7 @@ import { ChatDialog } from "@/components/friends/ChatDialog";
 import { FriendProfileDialog } from "@/components/friends/FriendProfileDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-// Friend Card Component - Modern Design
+// Friend Card Component - Premium Design
 function FriendCard({ 
   friend, 
   onRemove,
@@ -71,39 +71,51 @@ function FriendCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05 }}
-      className="group relative overflow-hidden rounded-2xl bg-card border border-border p-4 hover:border-primary/30 transition-all duration-300 cursor-pointer"
+      transition={{ delay: index * 0.03, type: "spring", stiffness: 400, damping: 25 }}
+      className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-card via-card to-card/80 border border-border/50 p-4 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 cursor-pointer"
       onClick={onViewProfile}
     >
-      <div className="flex items-center gap-4">
+      {/* Subtle glow effect on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+      
+      <div className="relative flex items-center gap-4">
         <div className="relative">
-          <Avatar className="w-14 h-14 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
-            <AvatarImage src={friend.avatar_url || undefined} />
+          <Avatar className="w-14 h-14 ring-2 ring-primary/10 ring-offset-2 ring-offset-background transition-all group-hover:ring-primary/30">
+            <AvatarImage src={friend.avatar_url || undefined} className="object-cover" />
             <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/5 text-primary font-bold text-lg">
               {friend.display_name?.[0]?.toUpperCase() || "?"}
             </AvatarFallback>
           </Avatar>
           {isOnline && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background" />
+            <motion.div 
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-green-500 rounded-full border-2 border-background shadow-lg shadow-green-500/30"
+            />
           )}
         </div>
         
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-foreground truncate">{friend.display_name || "Unbekannt"}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <p className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+            {friend.display_name || "Unbekannt"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
             {isOnline ? (
-              <span className="text-green-500">Online</span>
+              <span className="text-green-500 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                Online
+              </span>
             ) : (
               <>Freunde seit {format(new Date(friend.connected_since), "dd. MMM", { locale: de })}</>
             )}
           </p>
         </div>
         
-        <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+        <div className="flex gap-1.5" onClick={(e) => e.stopPropagation()}>
           <Button 
             size="icon" 
             variant="ghost" 
-            className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary"
+            className="h-10 w-10 rounded-xl hover:bg-primary/10 hover:text-primary transition-all"
             onClick={onMessage}
           >
             <MessageCircle className="w-5 h-5" />
@@ -111,7 +123,7 @@ function FriendCard({
           <Button 
             size="icon" 
             variant="ghost" 
-            className="h-10 w-10 rounded-xl hover:bg-amber-500/10 hover:text-amber-500"
+            className="h-10 w-10 rounded-xl hover:bg-amber-500/10 hover:text-amber-500 transition-all"
             onClick={onMakePartner}
           >
             <HandshakeIcon className="w-5 h-5" />
@@ -122,7 +134,7 @@ function FriendCard({
   );
 }
 
-// Friend Request Card - Modern Design
+// Friend Request Card - Premium Design
 function RequestCard({ 
   request, 
   onAccept, 
@@ -136,15 +148,17 @@ function RequestCard({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: index * 0.05 }}
-      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/10 via-card to-card border border-primary/20 p-4"
+      initial={{ opacity: 0, scale: 0.95, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 25 }}
+      className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/15 via-primary/8 to-card border border-primary/20 p-4"
     >
-      <div className="absolute top-0 right-0 w-20 h-20 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent" />
+      <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
       
       <div className="relative flex items-center gap-4">
-        <Avatar className="w-12 h-12 ring-2 ring-primary/30">
+        <Avatar className="w-12 h-12 ring-2 ring-primary/30 shadow-lg">
           <AvatarImage src={request.requester_avatar || undefined} />
           <AvatarFallback className="bg-primary/20 text-primary font-bold">
             {request.requester_name?.[0]?.toUpperCase() || "?"}
@@ -152,27 +166,28 @@ function RequestCard({
         </Avatar>
         
         <div className="flex-1 min-w-0">
-          <p className="font-semibold truncate">{request.requester_name || "Unbekannt"}</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="font-semibold truncate">{request.requester_name || "Neuer Nutzer"}</p>
+          <p className="text-xs text-muted-foreground flex items-center gap-1">
+            <UserPlus className="w-3 h-3" />
             möchte dein Freund sein
           </p>
         </div>
         
         <div className="flex gap-2">
           <Button 
-            size="sm" 
+            size="icon" 
             variant="ghost" 
-            className="h-9 px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             onClick={onDecline}
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </Button>
           <Button 
             size="sm" 
-            className="h-9 px-4 bg-primary hover:bg-primary/90 rounded-xl"
+            className="h-10 px-4 bg-primary hover:bg-primary/90 rounded-xl shadow-lg shadow-primary/20"
             onClick={onAccept}
           >
-            <Check className="w-4 h-4 mr-1" />
+            <Check className="w-4 h-4 mr-1.5" />
             Annehmen
           </Button>
         </div>
@@ -367,35 +382,41 @@ export default function Friends() {
         </p>
       </motion.div>
 
-      {/* Friend Code Card - Hero Style */}
+      {/* Friend Code Card - Premium Hero Style */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }} 
         animate={{ opacity: 1, y: 0 }} 
-        transition={{ delay: 0.1 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30 p-6"
+        transition={{ delay: 0.1, type: "spring", stiffness: 400, damping: 25 }}
+        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/25 via-primary/15 to-primary/5 border border-primary/30 p-6"
       >
-        {/* Decorative elements */}
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
+        {/* Animated background elements */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
+        <div className="absolute -top-10 -right-10 w-48 h-48 bg-primary/20 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-primary/15 rounded-full blur-2xl" />
         
         <div className="relative">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium text-primary">Dein Freundes-Code</span>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-primary" />
+            </div>
+            <span className="text-sm font-semibold text-primary">Dein Freundes-Code</span>
           </div>
           
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <div className="text-4xl font-bold font-mono tracking-[0.3em] text-foreground">
+              <div className="text-4xl font-bold font-mono tracking-[0.25em] text-foreground bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
                 {myFriendCode || "--------"}
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Teile diesen Code mit Freunden
+              </p>
             </div>
             
             <div className="flex gap-2">
               <Button 
                 variant="outline" 
                 size="icon"
-                className="h-12 w-12 rounded-xl border-primary/30 hover:bg-primary/10 hover:border-primary"
+                className="h-12 w-12 rounded-xl border-2 border-primary/30 hover:bg-primary/10 hover:border-primary transition-all"
                 onClick={handleCopyCode}
               >
                 {codeCopied ? (
@@ -405,63 +426,58 @@ export default function Friends() {
                 )}
               </Button>
               <Button 
-                variant="default" 
                 size="icon"
-                className="h-12 w-12 rounded-xl"
+                className="h-12 w-12 rounded-xl shadow-lg shadow-primary/20"
                 onClick={handleShareCode}
               >
                 <Share2 className="w-5 h-5" />
               </Button>
             </div>
           </div>
-          
-          <p className="text-xs text-muted-foreground mt-3">
-            Teile deinen Code mit Freunden, damit sie dich hinzufügen können
-          </p>
         </div>
       </motion.div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 h-12 p-1 bg-muted/50 rounded-2xl">
+        <TabsList className="grid w-full grid-cols-4 h-14 p-1.5 bg-muted/50 rounded-2xl">
           <TabsTrigger 
             value="friends" 
-            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1.5"
+            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md flex items-center gap-1.5 transition-all"
           >
             <Users className="w-4 h-4" />
-            <span className="hidden sm:inline">Freunde</span>
+            <span className="hidden sm:inline font-medium">Freunde</span>
             {friends.length > 0 && (
-              <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{friends.length}</Badge>
+              <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-semibold">{friends.length}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="add" 
-            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1.5"
+            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md flex items-center gap-1.5 transition-all"
           >
             <UserPlus className="w-4 h-4" />
-            <span className="hidden sm:inline">Hinzufügen</span>
+            <span className="hidden sm:inline font-medium">Hinzufügen</span>
             {pendingRequests.length > 0 && (
-              <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">{pendingRequests.length}</Badge>
+              <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-semibold animate-pulse">{pendingRequests.length}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="chat" 
-            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1.5"
+            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md flex items-center gap-1.5 transition-all"
           >
             <MessageCircle className="w-4 h-4" />
-            <span className="hidden sm:inline">Chat</span>
+            <span className="hidden sm:inline font-medium">Chat</span>
             {unreadCount > 0 && (
-              <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">{unreadCount}</Badge>
+              <Badge variant="destructive" className="h-5 px-1.5 text-[10px] font-semibold animate-pulse">{unreadCount}</Badge>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="partner" 
-            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm flex items-center gap-1.5"
+            className="rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-md flex items-center gap-1.5 transition-all"
           >
             <HandshakeIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">Partner</span>
+            <span className="hidden sm:inline font-medium">Partner</span>
             {partnerRequests.length > 0 && (
-              <Badge variant="destructive" className="h-5 px-1.5 text-[10px]">{partnerRequests.length}</Badge>
+              <Badge className="h-5 px-1.5 text-[10px] font-semibold bg-amber-500 hover:bg-amber-500 animate-pulse">{partnerRequests.length}</Badge>
             )}
           </TabsTrigger>
         </TabsList>
@@ -709,8 +725,30 @@ export default function Friends() {
           </AnimatePresence>
         </TabsContent>
 
-        {/* Partner Tab */}
+        {/* Partner Tab - Redesigned */}
         <TabsContent value="partner" className="mt-4 space-y-4">
+          {/* Intro Card - Only show if no partner */}
+          {!partner && partnerRequests.length === 0 && sentPartnerRequests.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-transparent border border-amber-500/20 p-5"
+            >
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent" />
+              <div className="relative flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg shrink-0">
+                  <HandshakeIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-lg">Accountability Partner</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Wähle einen Freund als Partner. Checkt täglich gemeinsam ein, baut einen Streak auf und motiviert euch gegenseitig!
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Incoming Partner Requests */}
           {partnerRequests.length > 0 && (
             <motion.div
@@ -718,45 +756,49 @@ export default function Friends() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-3"
             >
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-amber-500" />
-                <span className="text-sm font-medium">Partner-Anfragen</span>
-                <Badge variant="destructive" className="h-5">{partnerRequests.length}</Badge>
+                <span className="text-sm font-semibold">Partner-Anfragen</span>
+                <Badge className="h-5 bg-amber-500 hover:bg-amber-500">{partnerRequests.length}</Badge>
               </div>
               {partnerRequests.map((req, index) => (
                 <motion.div
                   key={req.id}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/20 p-4"
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: index * 0.05, type: "spring", stiffness: 400, damping: 25 }}
+                  className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-500/15 via-amber-500/5 to-card border border-amber-500/20 p-4"
                 >
-                  <div className="flex items-center gap-4">
-                    <Avatar className="w-12 h-12 ring-2 ring-amber-500/30">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent" />
+                  <div className="relative flex items-center gap-4">
+                    <Avatar className="w-12 h-12 ring-2 ring-amber-500/30 shadow-lg">
                       <AvatarImage src={req.requester_avatar || undefined} />
                       <AvatarFallback className="bg-amber-500/20 text-amber-500 font-bold">
                         {req.requester_name?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold truncate">{req.requester_name || "Unbekannt"}</p>
-                      <p className="text-xs text-muted-foreground">möchte dein Partner sein</p>
+                      <p className="font-semibold truncate">{req.requester_name || "Neuer Nutzer"}</p>
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <HandshakeIcon className="w-3 h-3" />
+                        möchte dein Partner werden
+                      </p>
                     </div>
                     <div className="flex gap-2">
                       <Button 
-                        size="sm" 
+                        size="icon" 
                         variant="ghost" 
-                        className="h-9 px-3 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        className="h-10 w-10 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                         onClick={() => declinePartnerRequest(req.id)}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-5 h-5" />
                       </Button>
                       <Button 
                         size="sm" 
-                        className="h-9 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl"
+                        className="h-10 px-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl shadow-lg shadow-amber-500/20"
                         onClick={() => acceptPartnerRequest(req.id)}
                       >
-                        <Check className="w-4 h-4 mr-1" />
+                        <Check className="w-4 h-4 mr-1.5" />
                         Annehmen
                       </Button>
                     </div>
@@ -773,33 +815,39 @@ export default function Friends() {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-3"
             >
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-muted-foreground">Gesendete Anfragen</span>
+                <span className="text-sm font-medium text-muted-foreground">Deine Anfragen</span>
               </div>
-              {sentPartnerRequests.map((req) => (
-                <div
+              {sentPartnerRequests.map((req, index) => (
+                <motion.div
                   key={req.id}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-border"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-muted/30 border border-border/50"
                 >
-                  <Avatar className="w-10 h-10">
+                  <Avatar className="w-11 h-11 ring-2 ring-muted">
                     <AvatarImage src={req.addressee_avatar || undefined} />
-                    <AvatarFallback>{req.addressee_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
+                    <AvatarFallback className="bg-muted">{req.addressee_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{req.addressee_name || "Unbekannt"}</p>
-                    <p className="text-xs text-muted-foreground">Warten auf Antwort...</p>
+                    <p className="font-medium truncate">{req.addressee_name || "Nutzer"}</p>
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Warten auf Antwort...
+                    </p>
                   </div>
                   <Button 
                     size="sm" 
                     variant="ghost" 
-                    className="text-muted-foreground hover:text-destructive"
+                    className="h-9 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                     onClick={() => cancelPartnerRequest(req.id)}
                   >
                     <X className="w-4 h-4 mr-1" />
-                    Abbrechen
+                    Zurückziehen
                   </Button>
-                </div>
+                </motion.div>
               ))}
             </motion.div>
           )}
@@ -809,70 +857,123 @@ export default function Friends() {
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/20 p-6"
+                className="relative overflow-hidden rounded-3xl"
               >
-                <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/10 rounded-full blur-3xl" />
-                
-                <div className="relative text-center mb-6">
-                  <div className="relative inline-block">
-                    <Avatar className="w-24 h-24 ring-4 ring-amber-500/30 ring-offset-4 ring-offset-background">
+                {/* Partner Card Header */}
+                <div className="relative bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent p-6 pb-20">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-500/20 via-transparent to-transparent" />
+                  <div className="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl" />
+                  <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl" />
+                </div>
+
+                {/* Avatar */}
+                <div className="relative -mt-16 flex justify-center">
+                  <div className="relative">
+                    <Avatar className="w-28 h-28 ring-4 ring-background shadow-2xl">
                       <AvatarImage src={partner.partner_avatar || undefined} />
-                      <AvatarFallback className="text-3xl bg-gradient-to-br from-amber-500/20 to-amber-500/5 text-amber-500">
+                      <AvatarFallback className="text-4xl font-bold bg-gradient-to-br from-amber-500/30 to-amber-500/10 text-amber-500">
                         {partner.partner_name?.[0]?.toUpperCase() || "?"}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg">
+                    <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-lg border-4 border-background">
                       <HandshakeIcon className="w-5 h-5 text-white" />
                     </div>
                   </div>
-                  <h3 className="font-bold text-xl mt-4">{partner.partner_name || "Partner"}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Partner seit {format(new Date(partner.started_at), "dd. MMM yyyy", { locale: de })}
+                </div>
+
+                {/* Partner Info */}
+                <div className="text-center px-6 pt-4 pb-2">
+                  <h3 className="font-bold text-2xl tracking-tight">{partner.partner_name || "Partner"}</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Partner seit {format(new Date(partner.started_at), "d. MMM yyyy", { locale: de })}
                   </p>
                 </div>
 
-                <div className="grid grid-cols-3 gap-3 mb-6">
-                  <div className="text-center p-4 bg-background/50 rounded-2xl border border-border">
-                    <Flame className="w-6 h-6 mx-auto mb-2 text-orange-500" />
-                    <p className="text-2xl font-bold">{partner.streak || 0}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Streak</p>
-                  </div>
-                  <div className="text-center p-4 bg-background/50 rounded-2xl border border-border">
-                    <div className={cn(
-                      "w-6 h-6 rounded-full mx-auto mb-2 flex items-center justify-center",
-                      partner.todayCheckedIn ? "bg-green-500" : "bg-muted"
-                    )}>
-                      {partner.todayCheckedIn && <Check className="w-4 h-4 text-white" />}
+                {/* Stats Grid */}
+                <div className="px-4 py-4">
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* Streak */}
+                    <div className="relative overflow-hidden text-center p-4 rounded-2xl bg-gradient-to-br from-orange-500/15 to-orange-500/5 border border-orange-500/10">
+                      <div className="flex justify-center mb-2">
+                        <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                          <Flame className="w-5 h-5 text-orange-500" />
+                        </div>
+                      </div>
+                      <p className="text-2xl font-bold">{partner.streak || 0}</p>
+                      <p className="text-xs text-muted-foreground font-medium">Tage</p>
                     </div>
-                    <p className="text-sm font-semibold">{partner.todayCheckedIn ? "Done" : "Offen"}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Du</p>
-                  </div>
-                  <div className="text-center p-4 bg-background/50 rounded-2xl border border-border">
+
+                    {/* My Check-in */}
                     <div className={cn(
-                      "w-6 h-6 rounded-full mx-auto mb-2 flex items-center justify-center",
-                      partner.partnerCheckedIn ? "bg-green-500" : "bg-muted"
+                      "relative overflow-hidden text-center p-4 rounded-2xl border",
+                      partner.todayCheckedIn 
+                        ? "bg-gradient-to-br from-green-500/15 to-green-500/5 border-green-500/20" 
+                        : "bg-muted/30 border-border/50"
                     )}>
-                      {partner.partnerCheckedIn && <Check className="w-4 h-4 text-white" />}
+                      <div className="flex justify-center mb-2">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center",
+                          partner.todayCheckedIn ? "bg-green-500" : "bg-muted"
+                        )}>
+                          {partner.todayCheckedIn ? (
+                            <Check className="w-5 h-5 text-white" />
+                          ) : (
+                            <Clock className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm font-semibold">{partner.todayCheckedIn ? "Erledigt" : "Offen"}</p>
+                      <p className="text-xs text-muted-foreground font-medium">Du</p>
                     </div>
-                    <p className="text-sm font-semibold">{partner.partnerCheckedIn ? "Done" : "Offen"}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Partner</p>
+
+                    {/* Partner Check-in */}
+                    <div className={cn(
+                      "relative overflow-hidden text-center p-4 rounded-2xl border",
+                      partner.partnerCheckedIn 
+                        ? "bg-gradient-to-br from-green-500/15 to-green-500/5 border-green-500/20" 
+                        : "bg-muted/30 border-border/50"
+                    )}>
+                      <div className="flex justify-center mb-2">
+                        <div className={cn(
+                          "w-10 h-10 rounded-xl flex items-center justify-center",
+                          partner.partnerCheckedIn ? "bg-green-500" : "bg-muted"
+                        )}>
+                          {partner.partnerCheckedIn ? (
+                            <Check className="w-5 h-5 text-white" />
+                          ) : (
+                            <Clock className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-sm font-semibold">{partner.partnerCheckedIn ? "Erledigt" : "Offen"}</p>
+                      <p className="text-xs text-muted-foreground font-medium">Partner</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="space-y-3">
+                {/* Actions */}
+                <div className="px-4 pb-4 space-y-3">
                   {!partner.todayCheckedIn && (
                     <Button 
-                      className="w-full h-12 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg"
+                      className="w-full h-12 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/20"
                       onClick={() => setShowCheckInDialog(true)}
                     >
                       <Check className="w-5 h-5 mr-2" />
                       Heute einchecken
                     </Button>
                   )}
+                  {partner.todayCheckedIn && (
+                    <div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20 text-center">
+                      <p className="text-green-600 dark:text-green-400 font-medium flex items-center justify-center gap-2">
+                        <Check className="w-5 h-5" />
+                        Du hast heute eingecheckt! 🎉
+                      </p>
+                    </div>
+                  )}
                   
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="ghost" className="w-full h-10 text-muted-foreground hover:text-destructive">
+                      <Button variant="ghost" className="w-full h-10 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl">
                         <UserX className="w-4 h-4 mr-2" />
                         Partnerschaft beenden
                       </Button>
@@ -881,7 +982,7 @@ export default function Friends() {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Partnerschaft beenden?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Dein Streak und alle Check-in-Daten mit diesem Partner gehen verloren.
+                          Euer {partner.streak || 0}-Tage Streak geht verloren. Du kannst jederzeit einen neuen Partner wählen.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -897,50 +998,65 @@ export default function Friends() {
                   </AlertDialog>
                 </div>
               </motion.div>
-            ) : partnerRequests.length === 0 && sentPartnerRequests.length === 0 && (
+            ) : friends.length > 0 && partnerRequests.length === 0 && sentPartnerRequests.length === 0 && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="relative overflow-hidden rounded-3xl border border-dashed border-border p-12 text-center"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-3"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-muted/50 to-transparent" />
-                <div className="relative">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-amber-500/10 flex items-center justify-center">
-                    <HandshakeIcon className="w-10 h-10 text-amber-500/60" />
-                  </div>
-                  <h3 className="font-semibold text-lg mb-2">Kein Accountability Partner</h3>
-                  <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
-                    Sende eine Anfrage an einen Freund
-                  </p>
-                  {friends.length > 0 && (
-                    <div className="space-y-2 max-w-xs mx-auto">
-                      {friends.slice(0, 3).map((friend) => (
-                        <Button 
-                          key={friend.id} 
-                          variant="outline" 
-                          className="w-full justify-start gap-3 h-12 rounded-xl"
-                          onClick={() => sendPartnerRequest(friend.id)}
-                        >
-                          <Avatar className="w-8 h-8">
-                            <AvatarImage src={friend.avatar_url || undefined} />
-                            <AvatarFallback>{friend.display_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
-                          </Avatar>
-                          <span className="truncate">{friend.display_name || "Unbekannt"}</span>
-                          <Send className="w-4 h-4 ml-auto text-muted-foreground" />
-                        </Button>
-                      ))}
-                    </div>
-                  )}
-                  {friends.length === 0 && (
-                    <Button onClick={() => setActiveTab("add")} className="rounded-xl">
-                      <UserPlus className="w-4 h-4 mr-2" />
-                      Erst Freunde hinzufügen
-                    </Button>
-                  )}
+                <p className="text-sm font-medium text-muted-foreground">Wähle einen Freund als Partner:</p>
+                <div className="grid gap-2">
+                  {friends.map((friend, index) => (
+                    <motion.div
+                      key={friend.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-3 h-14 rounded-xl border-2 hover:border-amber-500/50 hover:bg-amber-500/5 transition-all"
+                        onClick={() => sendPartnerRequest(friend.id)}
+                      >
+                        <Avatar className="w-9 h-9">
+                          <AvatarImage src={friend.avatar_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary">{friend.display_name?.[0]?.toUpperCase() || "?"}</AvatarFallback>
+                        </Avatar>
+                        <span className="flex-1 text-left font-medium truncate">{friend.display_name || "Freund"}</span>
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                          <Send className="w-4 h-4 text-amber-500" />
+                        </div>
+                      </Button>
+                    </motion.div>
+                  ))}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Empty state - no friends */}
+          {!partner && friends.length === 0 && partnerRequests.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative overflow-hidden rounded-3xl border border-dashed border-border p-10 text-center"
+            >
+              <div className="absolute inset-0 bg-gradient-to-br from-muted/30 to-transparent" />
+              <div className="relative">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                  <Users className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="font-semibold text-lg mb-2">Erst Freunde hinzufügen</h3>
+                <p className="text-sm text-muted-foreground mb-4 max-w-xs mx-auto">
+                  Füge Freunde hinzu, um einen Partner zu wählen
+                </p>
+                <Button onClick={() => setActiveTab("add")} className="rounded-xl">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Freunde finden
+                </Button>
+              </div>
+            </motion.div>
+          )}
         </TabsContent>
       </Tabs>
 
@@ -1099,11 +1215,14 @@ export default function Friends() {
           friendName={selectedProfile.display_name}
           friendAvatar={selectedProfile.avatar_url}
           connectedSince={selectedProfile.connected_since}
+          connectionId={selectedProfile.connection_id}
+          isOnline={isOnline(selectedProfile.id)}
           onMessage={() => {
             setSelectedChat(selectedProfile.id);
             setActiveTab("chat");
           }}
           onMakePartner={() => sendPartnerRequest(selectedProfile.id)}
+          onRemoveFriend={() => removeFriend(selectedProfile.connection_id)}
         />
       )}
     </div>

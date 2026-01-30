@@ -414,14 +414,19 @@ export function useFriends() {
     return true;
   };
 
-  // Remove friend
+  // Remove friend - optimistic update
   const removeFriend = async (connectionId: string): Promise<boolean> => {
+    // Optimistic update - remove from state immediately
+    setFriends(prev => prev.filter(f => f.connection_id !== connectionId));
+
     const { error } = await supabase
       .from("friend_connections")
       .delete()
       .eq("id", connectionId);
 
     if (error) {
+      // Revert on error
+      await fetchFriends();
       toast({
         title: "Fehler",
         description: "Freund konnte nicht entfernt werden.",
@@ -431,7 +436,6 @@ export function useFriends() {
     }
 
     toast({ title: "Freund entfernt" });
-    await fetchFriends();
     return true;
   };
 
