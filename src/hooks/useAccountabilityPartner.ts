@@ -59,12 +59,12 @@ export function useAccountabilityPartner() {
 
     const partnerId = data.user_id === user.id ? data.partner_id : data.user_id;
 
-    // Get partner profile
+    // Get partner public profile (safe view)
     const { data: profile } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("display_name, avatar_url")
       .eq("user_id", partnerId)
-      .single();
+      .maybeSingle();
 
     // Get today's check-ins
     const today = new Date().toISOString().split("T")[0];
