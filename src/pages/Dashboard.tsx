@@ -63,6 +63,8 @@ import { ProductRecommendationsCard } from "@/components/ProductRecommendationsC
 import { PersonalizedInsights } from "@/components/dashboard/PersonalizedInsights";
 import { WelcomeWidget } from "@/components/dashboard/WelcomeWidget";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { FriendComparisonWidget } from "@/components/dashboard/FriendComparisonWidget";
+import { WeeklySummaryCard } from "@/components/dashboard/WeeklySummaryCard";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { useReferral } from "@/hooks/useReferral";
 import { Capacitor } from "@capacitor/core";
@@ -544,7 +546,7 @@ const Dashboard = () => {
         {/* Stats Overview - Showcase Style */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Main Score Card with Circle */}
-          <div className="md:col-span-1 p-6 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up relative" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
+          <div className="md:col-span-1 p-6 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up relative" style={{ animationDelay: "100ms", animationFillMode: "forwards" }} data-tour="score-card">
             {/* Personal Best Badge - only show if not locked */}
             {!isResultsLocked && isPersonalBest && (
               <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-medium">
@@ -1075,7 +1077,7 @@ const Dashboard = () => {
         )}
 
         {/* Quick Actions */}
-        <div className="mb-8">
+        <div className="mb-8" data-tour="quick-actions">
           <h2 className="text-xl font-bold mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>Schnellzugriff</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => {
@@ -1131,7 +1133,7 @@ const Dashboard = () => {
 
         {/* Gamification Section - XP, Challenges */}
         {isPremiumUser && (
-          <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }}>
+          <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }} data-tour="gamification">
             <h2 className="text-xl font-bold">Dein Fortschritt</h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1152,6 +1154,22 @@ const Dashboard = () => {
               
               {/* Activity Feed */}
               <ActivityFeed />
+            </div>
+            
+            {/* Social & Recap Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Weekly Summary */}
+              <WeeklySummaryCard
+                currentStreak={currentStreak}
+                currentXp={xp.currentXp}
+                isPremium={isPremiumUser}
+              />
+              
+              {/* Friend Comparison */}
+              <FriendComparisonWidget
+                userScoreDelta={scoreDiff ? parseFloat(scoreDiff) : null}
+                isPremium={isPremiumUser}
+              />
             </div>
             
             {/* Product Recommendations */}

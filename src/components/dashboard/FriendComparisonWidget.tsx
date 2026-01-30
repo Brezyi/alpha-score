@@ -1,0 +1,300 @@
+import { useState, useEffect, useMemo } from "react";
+import { Users, TrendingUp, TrendingDown, Minus, Trophy, Lock, ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useFriends } from "@/hooks/useFriends";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
+
+interface FriendScoreData {
+  friendId: string;
+  displayName: string;
+  avatarUrl: string | null;
+  showScore: "none" | "delta_only" | "full";
+  scoreDelta: number | null; // Score change in last 30 days
+  currentScore: number | null;
+  rank: number;
+}
+
+interface FriendComparisonWidgetProps {
+  userScoreDelta: number | null;
+  isPremium: boolean;
+}
+
+export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComparisonWidgetProps) {
+  const { user } = useAuth();
+  const { friends, loading: friendsLoading } = useFriends();
+  const [friendScores, setFriendScores] = useState<FriendScoreData[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchFriendScores = async () => {
+      if (!user || friends.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Get friend IDs who allow score sharing
+        const friendsWithScoreAccess = friends.filter(
+          f => f.privacy_settings.show_score !== "none"
+        );
+
+        if (friendsWithScoreAccess.length === 0) {
+          setFriendScores([]);
+          setLoading(false);
+          return;
+        }
+
+        const friendIds = friendsWithScoreAccess.map(f => f.user_id);
+
+        // Fetch analyses from last 30 days for these friends
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+        const { data: analysesData, error } = await supabase
+          .from("analyses")
+          .select("user_id, looks_score, created_at")
+          .in("user_id", friendIds)
+          .eq("status", "completed")
+          .gte("created_at", thirtyDaysAgo.toISOString())
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        // Calculate score deltas for each friend
+        const scoreDataMap = new Map<string, { scores: number[]; dates: Date[] }>();
+        
+        analysesData?.forEach(analysis => {
+          if (analysis.looks_score === null) return;
+          
+          if (!scoreDataMap.has(analysis.user_id)) {
+            scoreDataMap.set(analysis.user_id, { scores: [], dates: [] });
+          }
+          
+          const data = scoreDataMap.get(analysis.user_id)!;
+          data.scores.push(analysis.looks_score);
+          data.dates.push(new Date(analysis.created_at));
+        });
+
+        // Build friend score data
+        const friendScoreData: FriendScoreData[] = friendsWithScoreAccess.map((friend, index) => {
+          const scoreData = scoreDataMap.get(friend.user_id);
+          let scoreDelta: number | null = null;
+          let currentScore: number | null = null;
+
+          if (scoreData && scoreData.scores.length >= 2) {
+            const firstScore = scoreData.scores[0];
+            const lastScore = scoreData.scores[scoreData.scores.length - 1];
+            scoreDelta = Number((lastScore - firstScore).toFixed(1));
+            currentScore = lastScore;
+          } else if (scoreData && scoreData.scores.length === 1) {
+            currentScore = scoreData.scores[0];
+            scoreDelta = 0;
+          }
+
+          return {
+            friendId: friend.user_id,
+            displayName: friend.display_name || "Freund",
+            avatarUrl: friend.avatar_url,
+            showScore: friend.privacy_settings.show_score,
+            scoreDelta,
+            currentScore,
+            rank: 0, // Will be calculated below
+          };
+        });
+
+        // Sort by delta (highest improvement first) and assign ranks
+        const sortedData = friendScoreData
+          .filter(f => f.scoreDelta !== null)
+          .sort((a, b) => (b.scoreDelta || 0) - (a.scoreDelta || 0));
+
+        sortedData.forEach((f, i) => {
+          f.rank = i + 1;
+        });
+
+        setFriendScores(sortedData.slice(0, 5)); // Top 5
+      } catch (error) {
+        console.error("Error fetching friend scores:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (!friendsLoading) {
+      fetchFriendScores();
+    }
+  }, [user, friends, friendsLoading]);
+
+  // Calculate user's rank among friends
+  const userRank = useMemo(() => {
+    if (userScoreDelta === null) return null;
+    
+    const allDeltas = [...friendScores.map(f => f.scoreDelta || 0), userScoreDelta];
+    allDeltas.sort((a, b) => b - a);
+    return allDeltas.indexOf(userScoreDelta) + 1;
+  }, [friendScores, userScoreDelta]);
+
+  if (friendsLoading || loading) {
+    return (
+      <div className="p-5 rounded-2xl glass-card space-y-4">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-5 w-5 rounded" />
+          <Skeleton className="h-5 w-32" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-full" />
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-4 w-12 ml-auto" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // No friends yet
+  if (friends.length === 0) {
+    return (
+      <div className="p-5 rounded-2xl glass-card">
+        <div className="flex items-center gap-2 mb-4">
+          <Users className="w-5 h-5 text-primary" />
+          <h3 className="font-bold">Freunde-Vergleich</h3>
+        </div>
+        <div className="text-center py-6">
+          <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-50" />
+          <p className="text-sm text-muted-foreground mb-3">
+            Füge Freunde hinzu, um eure Fortschritte zu vergleichen
+          </p>
+          <Link to="/friends">
+            <Button variant="outline" size="sm">
+              Freunde finden
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // No scores to compare
+  if (friendScores.length === 0) {
+    return (
+      <div className="p-5 rounded-2xl glass-card">
+        <div className="flex items-center gap-2 mb-4">
+          <Users className="w-5 h-5 text-primary" />
+          <h3 className="font-bold">Freunde-Vergleich</h3>
+        </div>
+        <p className="text-sm text-muted-foreground text-center py-4">
+          Noch keine Vergleichsdaten verfügbar
+        </p>
+      </div>
+    );
+  }
+
+  const getDeltaIcon = (delta: number | null) => {
+    if (delta === null) return <Minus className="w-4 h-4 text-muted-foreground" />;
+    if (delta > 0) return <TrendingUp className="w-4 h-4 text-emerald-500" />;
+    if (delta < 0) return <TrendingDown className="w-4 h-4 text-red-500" />;
+    return <Minus className="w-4 h-4 text-muted-foreground" />;
+  };
+
+  const getDeltaColor = (delta: number | null) => {
+    if (delta === null) return "text-muted-foreground";
+    if (delta > 0) return "text-emerald-500";
+    if (delta < 0) return "text-red-500";
+    return "text-muted-foreground";
+  };
+
+  return (
+    <div className="p-5 rounded-2xl glass-card">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <Users className="w-5 h-5 text-primary" />
+          <h3 className="font-bold">Freunde-Vergleich</h3>
+        </div>
+        {userRank && userRank <= 3 && (
+          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30">
+            <Trophy className="w-3 h-3 mr-1" />
+            #{userRank}
+          </Badge>
+        )}
+      </div>
+
+      <p className="text-xs text-muted-foreground mb-4">
+        Score-Verbesserung der letzten 30 Tage
+      </p>
+
+      <div className="space-y-3">
+        {/* User's own entry */}
+        <div className="flex items-center gap-3 p-2 rounded-lg bg-primary/5 border border-primary/20">
+          <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
+            {userRank || "-"}
+          </div>
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+            <span className="text-xs font-bold text-primary">DU</span>
+          </div>
+          <span className="font-medium text-sm flex-1">Du</span>
+          <div className="flex items-center gap-1">
+            {getDeltaIcon(userScoreDelta)}
+            <span className={cn("text-sm font-medium", getDeltaColor(userScoreDelta))}>
+              {userScoreDelta !== null 
+                ? `${userScoreDelta > 0 ? "+" : ""}${userScoreDelta}`
+                : "-"
+              }
+            </span>
+          </div>
+        </div>
+
+        {/* Friends */}
+        {friendScores.map((friend) => (
+          <div 
+            key={friend.friendId} 
+            className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+          >
+            <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+              {friend.rank}
+            </div>
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={friend.avatarUrl || undefined} />
+              <AvatarFallback className="text-xs">
+                {friend.displayName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-medium text-sm flex-1 truncate">
+              {friend.displayName}
+            </span>
+            <div className="flex items-center gap-1">
+              {friend.showScore === "delta_only" || friend.showScore === "full" ? (
+                <>
+                  {getDeltaIcon(friend.scoreDelta)}
+                  <span className={cn("text-sm font-medium", getDeltaColor(friend.scoreDelta))}>
+                    {friend.scoreDelta !== null 
+                      ? `${friend.scoreDelta > 0 ? "+" : ""}${friend.scoreDelta}`
+                      : "-"
+                    }
+                  </span>
+                </>
+              ) : (
+                <Lock className="w-4 h-4 text-muted-foreground" />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Link to="/friends" className="block mt-4">
+        <Button variant="ghost" size="sm" className="w-full text-xs">
+          Alle Freunde ansehen
+          <ChevronRight className="w-4 h-4 ml-1" />
+        </Button>
+      </Link>
+    </div>
+  );
+}
