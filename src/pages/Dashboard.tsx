@@ -64,6 +64,8 @@ import { ProductRecommendationsCard } from "@/components/ProductRecommendationsC
 import { PersonalizedInsights } from "@/components/dashboard/PersonalizedInsights";
 import { SleepScoreCorrelation } from "@/components/dashboard/SleepScoreCorrelation";
 import { StreakRewards } from "@/components/gamification/StreakRewards";
+import { WelcomeWidget } from "@/components/dashboard/WelcomeWidget";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { useReferral } from "@/hooks/useReferral";
 import { Capacitor } from "@capacitor/core";
@@ -513,20 +515,15 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="container px-4 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8 animate-fade-in" style={{ animationDelay: "0ms" }}>
-          <h1 className="text-3xl font-bold mb-2">
-            Hey, {profile?.display_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Champ"} 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Bereit, heute besser zu werden?
-          </p>
+        {/* Welcome Widget */}
+        <div className="mb-8">
+          <WelcomeWidget />
         </div>
 
         {/* Stats Overview - Showcase Style */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {/* Main Score Card with Circle */}
-          <div className="md:col-span-1 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
+          <div className="md:col-span-1 p-6 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up relative" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
             {/* Personal Best Badge - only show if not locked */}
             {!isResultsLocked && isPersonalBest && (
               <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-medium">
@@ -756,7 +753,7 @@ const Dashboard = () => {
         {/* New Widgets Row: Motivation Quote + Next Steps */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Motivation Quote Widget */}
-          <div className="p-5 rounded-2xl glass-card opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
+          <div className="p-5 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
             <div className="absolute top-3 right-3">
               <Quote className="w-8 h-8 text-primary/10" />
             </div>
@@ -773,7 +770,7 @@ const Dashboard = () => {
           </div>
 
           {/* Next Steps Widget */}
-          <div className="p-5 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "450ms", animationFillMode: "forwards" }}>
+          <div className="p-5 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up" style={{ animationDelay: "450ms", animationFillMode: "forwards" }}>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
@@ -830,7 +827,7 @@ const Dashboard = () => {
 
         {/* Potential Progress Bar */}
         {potentialProgress !== null && latestPotential !== null && (
-          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "500ms", animationFillMode: "forwards" }}>
+          <div className="mb-8 p-6 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "500ms", animationFillMode: "forwards" }}>
             {shouldHideData ? (
               <>
                 <div className="blur-md opacity-50 pointer-events-none select-none">
@@ -909,7 +906,7 @@ const Dashboard = () => {
 
         {/* Score Chart - Clean Style */}
         {chartData.length >= 2 && (
-          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-scale-in relative overflow-hidden" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
+          <div className="mb-8 p-6 rounded-2xl glass-enhanced hover-glow opacity-0 animate-scale-in relative overflow-hidden" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
             {shouldHideData ? (
               <>
                 <div className="blur-md opacity-50 pointer-events-none select-none">
@@ -1057,8 +1054,6 @@ const Dashboard = () => {
         )}
 
         {/* Quick Actions */}
-
-        {/* Quick Actions */}
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>Schnellzugriff</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1068,7 +1063,7 @@ const Dashboard = () => {
                 <Link 
                   key={action.title}
                   to={isLocked ? "/pricing" : action.href}
-                  className="group relative p-6 rounded-2xl glass-card hover:border-primary/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-primary/5"
+                  className="group relative p-6 rounded-2xl glass-card hover-glow hover-lift transition-all duration-300 opacity-0 animate-fade-in"
                   style={{ animationDelay: `${850 + index * 100}ms`, animationFillMode: "forwards" }}
                 >
                   {isLocked && (
@@ -1118,7 +1113,7 @@ const Dashboard = () => {
           <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }}>
             <h2 className="text-xl font-bold">Dein Fortschritt</h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* XP & Level Card */}
               <XpLevelCard
                 level={xp.level}
@@ -1133,6 +1128,9 @@ const Dashboard = () => {
                 loading={challengesLoading}
                 onComplete={completeChallenge}
               />
+              
+              {/* Activity Feed - NEW */}
+              <ActivityFeed />
             </div>
             
             {/* Achievements Grid */}
@@ -1348,7 +1346,7 @@ const Dashboard = () => {
 
         {/* CTA for more analyses */}
         {analyses.length > 0 && (
-          <div className="text-center p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "1800ms", animationFillMode: "forwards" }}>
+          <div className="text-center p-6 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up" style={{ animationDelay: "1800ms", animationFillMode: "forwards" }}>
             <h3 className="text-lg font-bold mb-2">Neue Analyse starten</h3>
             <p className="text-muted-foreground mb-4 text-sm">
               Tracke deinen Fortschritt mit regelmäßigen Analysen.
