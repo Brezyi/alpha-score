@@ -64,7 +64,6 @@ import { SleepScoreCorrelation } from "@/components/dashboard/SleepScoreCorrelat
 import { StreakRewards } from "@/components/gamification/StreakRewards";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { useReferral } from "@/hooks/useReferral";
-import { AffiliateCard } from "@/components/affiliate/AffiliateCard";
 import { Capacitor } from "@capacitor/core";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
@@ -1080,6 +1079,28 @@ const Dashboard = () => {
               );
             })}
           </div>
+          
+          {/* Affiliate Program Card */}
+          <Link 
+            to="/affiliate" 
+            className="block mt-6 opacity-0 animate-fade-in"
+            style={{ animationDelay: "1000ms", animationFillMode: "forwards" }}
+          >
+            <div className="p-5 rounded-2xl glass-card hover:border-green-500/50 transition-all duration-300 group cursor-pointer hover:shadow-lg hover:shadow-green-500/10">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                    <Users className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg group-hover:text-green-500 transition-colors">Affiliate Programm</h3>
+                    <p className="text-sm text-muted-foreground">Verdiene 20% Provision für jedes vermittelte Abo</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-green-500 group-hover:translate-x-1 transition-all" />
+              </div>
+            </div>
+          </Link>
         </div>
 
         {/* Gamification Section - XP, Challenges, Achievements */}
@@ -1141,9 +1162,6 @@ const Dashboard = () => {
                 hasPersonalizedResults={hasPersonalizedResults}
               />
             )}
-            
-            {/* Affiliate Card */}
-            <AffiliateCard compact />
           </div>
         )}
 
