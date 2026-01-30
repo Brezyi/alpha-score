@@ -257,34 +257,34 @@ export default function Lifestyle() {
 
           {/* Daily Tracking Tab */}
           <TabsContent value="daily" className="space-y-6">
-            {/* Motivation Tip */}
+            {/* Weekly Tracker - Date Selection First */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <MotivationCard />
-            </motion.div>
-
-            {/* Weekly Tracker */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
               <LifestyleTracker onDateChange={setSelectedDate} />
             </motion.div>
 
             {/* Health Alerts */}
             <HealthAlerts />
 
+            {/* Motivation Tip */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+              <MotivationCard />
+            </motion.div>
+
+            {/* Mood Tracker - How are you feeling */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <MoodTracker selectedDate={selectedDate} />
+            </motion.div>
+
             {/* Water & Fasting Row */}
             <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
                 <WaterTrackerAdvanced />
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <FastingTimer />
               </motion.div>
             </div>
-
-            {/* Mood Tracker */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <MoodTracker selectedDate={selectedDate} />
-            </motion.div>
 
             {/* Supplements & Health Connect */}
             <div className="grid md:grid-cols-2 gap-6">
@@ -299,11 +299,11 @@ export default function Lifestyle() {
 
             {/* Goals & Challenges */}
             <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
                 <GoalCard currentScore={currentScore} />
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                 <WeeklyChallengeCard />
               </motion.div>
             </div>
