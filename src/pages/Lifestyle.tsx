@@ -265,37 +265,37 @@ export default function Lifestyle() {
             {/* Health Alerts */}
             <HealthAlerts />
 
-            {/* Motivation Tip */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              <MotivationCard />
-            </motion.div>
+            {/* Motivation & Health Connect - Both small cards */}
+            <div className="grid md:grid-cols-2 gap-6">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+                <MotivationCard />
+              </motion.div>
+              
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+                <HealthConnectCard />
+              </motion.div>
+            </div>
 
-            {/* Mood Tracker - How are you feeling */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            {/* Mood Tracker */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
               <MoodTracker selectedDate={selectedDate} />
             </motion.div>
 
             {/* Water & Fasting Row */}
             <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
                 <WaterTrackerAdvanced />
               </motion.div>
               
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
                 <FastingTimer />
               </motion.div>
             </div>
 
-            {/* Supplements & Health Connect */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                <SupplementTracker selectedDate={selectedDate} />
-              </motion.div>
-              
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                <HealthConnectCard />
-              </motion.div>
-            </div>
+            {/* Supplements - Full width */}
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+              <SupplementTracker selectedDate={selectedDate} />
+            </motion.div>
 
             {/* Goals & Challenges */}
             <div className="grid md:grid-cols-2 gap-6">
