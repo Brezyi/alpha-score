@@ -97,7 +97,7 @@ function FriendCard({
         
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-            {friend.display_name || "Unbekannt"}
+            {friend.display_name || (friend.friend_code ? `Nutzer ${friend.friend_code.slice(0, 4)}` : "Freund")}
           </p>
           <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1.5">
             {isOnline ? (
@@ -648,7 +648,7 @@ export default function Friends() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{result.display_name || "Unbekannt"}</p>
+                      <p className="font-medium truncate">{result.display_name || (result.friend_code ? `Nutzer ${result.friend_code.slice(0, 4)}` : "Nutzer")}</p>
                       <p className="text-xs text-muted-foreground font-mono">{result.friend_code}</p>
                     </div>
                     <Button 
@@ -710,7 +710,7 @@ export default function Friends() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-0.5">
-                        <p className="font-semibold truncate">{conv.friend_name || "Unbekannt"}</p>
+                        <p className="font-semibold truncate">{conv.friend_name || "Freund"}</p>
                         <span className="text-xs text-muted-foreground">
                           {format(new Date(conv.last_message_time), "HH:mm", { locale: de })}
                         </span>

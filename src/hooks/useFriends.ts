@@ -126,13 +126,17 @@ export function useFriends() {
       const friendId = conn.requester_id === user.id ? conn.addressee_id : conn.requester_id;
       const profile = profilesMap.get(friendId);
       const privacy = privacyMap.get(friendId);
+      const friendCode = codesMap.get(friendId) || "";
+      
+      // Use display_name, fallback to friend code prefix, then to generic name
+      const displayName = profile?.display_name || (friendCode ? `Nutzer ${friendCode.slice(0, 4)}` : null);
 
       return {
         id: friendId,
         user_id: friendId,
-        display_name: profile?.display_name || null,
+        display_name: displayName,
         avatar_url: profile?.avatar_url || null,
-        friend_code: codesMap.get(friendId) || "",
+        friend_code: friendCode,
         privacy_settings: {
           show_score: (privacy?.show_score as "none" | "delta_only" | "full") || "delta_only",
           show_streak: privacy?.show_streak ?? true,
