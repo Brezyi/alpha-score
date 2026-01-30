@@ -247,11 +247,19 @@ const Dashboard = () => {
   // Gamification
   const { xp, achievements, dailyChallenges, loading: gamificationLoading, challengesLoading, completeChallenge, checkAchievements } = useGamification();
   
-  // Product recommendations - call hook unconditionally with empty array as fallback
-  const { products: recommendedProducts, loading: productsLoading, hasPersonalizedResults } = useProductRecommendations([]);
-  
   // Check if results should be locked (free user without enough referrals)
   const isResultsLocked = !isPremium && !hasEnoughReferrals;
+  
+  // Get user's weaknesses for product recommendations - computed from analyses state
+  // This needs to be before any early returns to maintain hook order
+  const userWeaknesses = React.useMemo(() => {
+    const completedAnalysesForWeaknesses = analyses.filter(a => a.status === "completed" && a.looks_score !== null);
+    const shouldHide = isResultsLocked && completedAnalysesForWeaknesses.length > 0;
+    return shouldHide ? [] : (completedAnalysesForWeaknesses[0]?.weaknesses || []);
+  }, [analyses, isResultsLocked]);
+  
+  // Product recommendations - must be called before early returns
+  const { products: recommendedProducts, loading: productsLoading, hasPersonalizedResults } = useProductRecommendations(userWeaknesses);
 
   // Format subscription badge
   const getSubscriptionBadge = () => {
@@ -452,9 +460,8 @@ const Dashboard = () => {
   const highestScore = allScores.length > 0 ? Math.max(...allScores) : null;
   const isPersonalBest = latestScore !== null && highestScore !== null && latestScore >= highestScore && completedAnalyses.length > 1;
 
-  // Get user's weaknesses for product recommendations (hide if locked)
-  const userWeaknesses = shouldHideData ? [] : (completedAnalyses[0]?.weaknesses || []);
-  // Note: useProductRecommendations is called at the top of the component to follow hooks rules
+  // Chart data (last 10 analyses, reversed for chronological order) with potential and change
+  // Security: Empty chart data when locked
   const chartDataRaw = shouldHideData ? [] : completedAnalyses.slice(0, 10).reverse();
   const chartData = chartDataRaw.map((a, index) => {
     const prevScore = index > 0 ? chartDataRaw[index - 1].looks_score : null;
