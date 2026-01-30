@@ -11,7 +11,6 @@ import {
   Calendar,
   Target,
   EyeOff,
-  MessageCircle,
   HandshakeIcon,
   Loader2,
   UserMinus,
@@ -31,7 +30,6 @@ interface FriendProfileDialogProps {
   friendAvatar: string | null;
   connectedSince: string;
   connectionId: string;
-  onMessage: () => void;
   onMakePartner: () => void;
   onRemoveFriend: () => Promise<boolean>;
   isOnline?: boolean;
@@ -57,7 +55,6 @@ export function FriendProfileDialog({
   friendAvatar,
   connectedSince,
   connectionId,
-  onMessage,
   onMakePartner,
   onRemoveFriend,
   isOnline = false,
@@ -319,29 +316,16 @@ export function FriendProfileDialog({
           transition={{ delay: 0.25 }}
           className="p-4 pt-2 space-y-3"
         >
-          <div className="flex gap-2">
-            <Button 
-              variant="outline" 
-              className="flex-1 h-12 rounded-xl border-2 hover:border-primary/50 hover:bg-primary/5"
-              onClick={() => {
-                onClose();
-                onMessage();
-              }}
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Nachricht
-            </Button>
-            <Button 
-              className="flex-1 h-12 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg"
-              onClick={() => {
-                onClose();
-                onMakePartner();
-              }}
-            >
-              <HandshakeIcon className="w-4 h-4 mr-2" />
-              Partner
-            </Button>
-          </div>
+          <Button 
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg"
+            onClick={() => {
+              onClose();
+              onMakePartner();
+            }}
+          >
+            <HandshakeIcon className="w-4 h-4 mr-2" />
+            Als Partner anfragen
+          </Button>
 
           <AlertDialog>
             <AlertDialogTrigger asChild>
