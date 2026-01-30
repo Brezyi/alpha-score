@@ -45,7 +45,7 @@ export function AnalysisTimeline({ analyses, className }: AnalysisTimelineProps)
   const selectedAnalysis = analyses[selectedIndex];
   const previousAnalysis = analyses[selectedIndex + 1];
   
-  const scoreDiff = selectedAnalysis?.looks_score !== null && previousAnalysis?.looks_score !== null
+  const scoreDiff = selectedAnalysis?.looks_score != null && previousAnalysis?.looks_score != null
     ? selectedAnalysis.looks_score - previousAnalysis.looks_score
     : null;
 
