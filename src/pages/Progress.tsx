@@ -75,7 +75,6 @@ export default function Progress() {
   const [error, setError] = useState<string | null>(null);
   const [compareIndex, setCompareIndex] = useState(0);
   const achievementsSectionRef = useRef<HTMLDivElement>(null);
-  const analysesSectionRef = useRef<HTMLDivElement>(null);
   const timelineSectionRef = useRef<HTMLDivElement>(null);
   // userMilestones state removed - using achievements from useGamification
   const { user, loading: authLoading } = useAuth();
@@ -99,10 +98,6 @@ export default function Progress() {
       if (location.hash === "#achievements" && achievementsSectionRef.current) {
         setTimeout(() => {
           achievementsSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-        }, 100);
-      } else if (location.hash === "#analyses" && analysesSectionRef.current) {
-        setTimeout(() => {
-          analysesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 100);
       } else if (location.hash === "#timeline" && timelineSectionRef.current) {
         setTimeout(() => {
@@ -1017,99 +1012,6 @@ export default function Progress() {
               </motion.div>
             </motion.div>
 
-            {/* Analysis History */}
-            <motion.div
-              ref={analysesSectionRef}
-              id="analyses"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-            >
-              <Card className="p-6">
-                <h2 className="text-xl font-bold mb-4">Alle Analysen</h2>
-                <motion.div 
-                  className="space-y-3"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {completedAnalyses.map((analysis, index) => {
-                    const prevAnalysis = completedAnalyses[index + 1];
-                    const scoreDiff = prevAnalysis?.looks_score && analysis.looks_score
-                      ? analysis.looks_score - prevAnalysis.looks_score
-                      : null;
-
-                    return (
-                      <motion.div 
-                        key={analysis.id}
-                        variants={itemVariants}
-                        whileHover={{ scale: 1.02, x: 5 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="flex items-center gap-4 p-3 rounded-lg bg-card hover:bg-accent/50 transition-colors cursor-pointer group"
-                        onClick={() => navigate(`/analysis/${analysis.id}`)}
-                      >
-                        <motion.div 
-                          className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0"
-                          whileHover={{ scale: 1.1 }}
-                        >
-                          <ProgressImage 
-                            src={analysis.signedPhotoUrls?.[0] || analysis.photo_urls?.[0]} 
-                            alt="Analyse" 
-                          />
-                        </motion.div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium flex items-center gap-2">
-                            Score: {analysis.looks_score?.toFixed(1)}
-                            {index === 0 && (
-                              <motion.span 
-                                className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full"
-                                animate={{ scale: [1, 1.1, 1] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                              >
-                                Aktuell
-                              </motion.span>
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground flex items-center gap-2">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(analysis.created_at)}
-                          </div>
-                        </div>
-                        {scoreDiff !== null && (
-                          <motion.div 
-                            className={cn(
-                              "flex items-center gap-1 text-sm font-medium",
-                              scoreDiff > 0 && "text-green-500",
-                              scoreDiff < 0 && "text-red-500",
-                              scoreDiff === 0 && "text-muted-foreground"
-                            )}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 + index * 0.05 }}
-                          >
-                            {scoreDiff > 0 ? (
-                              <TrendingUp className="w-4 h-4" />
-                            ) : scoreDiff < 0 ? (
-                              <TrendingDown className="w-4 h-4" />
-                            ) : (
-                              <Minus className="w-4 h-4" />
-                            )}
-                            {scoreDiff > 0 ? "+" : ""}{scoreDiff.toFixed(1)}
-                          </motion.div>
-                        )}
-                        <motion.div
-                          initial={{ opacity: 0 }}
-                          whileHover={{ opacity: 1 }}
-                          className="transition-opacity"
-                        >
-                          <Eye className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100" />
-                        </motion.div>
-                      </motion.div>
-                    );
-                  })}
-                </motion.div>
-              </Card>
-            </motion.div>
           </>
         )}
       </div>
