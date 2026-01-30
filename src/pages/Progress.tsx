@@ -76,6 +76,7 @@ export default function Progress() {
   const [compareIndex, setCompareIndex] = useState(0);
   const achievementsSectionRef = useRef<HTMLDivElement>(null);
   const analysesSectionRef = useRef<HTMLDivElement>(null);
+  const timelineSectionRef = useRef<HTMLDivElement>(null);
   // userMilestones state removed - using achievements from useGamification
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
@@ -102,6 +103,10 @@ export default function Progress() {
       } else if (location.hash === "#analyses" && analysesSectionRef.current) {
         setTimeout(() => {
           analysesSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 100);
+      } else if (location.hash === "#timeline" && timelineSectionRef.current) {
+        setTimeout(() => {
+          timelineSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
         }, 100);
       }
     }
@@ -644,6 +649,8 @@ export default function Progress() {
             {/* Analysis Timeline */}
             {completedAnalyses.length > 0 && (
               <motion.div
+                ref={timelineSectionRef}
+                id="timeline"
                 initial={shouldReduce ? false : { opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={shouldReduce ? { duration: 0.2 } : { delay: 0.38 }}
