@@ -1,19 +1,22 @@
-import { Home, Camera, TrendingUp, Heart, User } from "lucide-react";
+import { Home, Camera, TrendingUp, Heart, User, Users } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { motion } from "framer-motion";
+import { useNotificationCounts } from "@/hooks/useNotificationCounts";
+import { Badge } from "@/components/ui/badge";
 
 const navItems = [
   { icon: Home, label: "Home", path: "/dashboard" },
   { icon: TrendingUp, label: "Progress", path: "/progress" },
   { icon: Camera, label: "Scan", path: "/upload", isMain: true },
-  { icon: Heart, label: "Lifestyle", path: "/lifestyle" },
+  { icon: Users, label: "Freunde", path: "/friends", showBadge: true },
   { icon: User, label: "Plan", path: "/plan" },
 ];
 
 export const BottomNavigation = () => {
   const location = useLocation();
+  const { total } = useNotificationCounts();
 
   const handleTap = async () => {
     try {
@@ -84,6 +87,12 @@ export const BottomNavigation = () => {
                     className="w-5 h-5 transition-all" 
                     strokeWidth={isActive ? 2.5 : 2} 
                   />
+                  {/* Notification Badge */}
+                  {item.showBadge && total > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full px-1">
+                      {total > 99 ? "99+" : total}
+                    </span>
+                  )}
                   {isActive && (
                     <motion.div 
                       layoutId="navIndicator"
