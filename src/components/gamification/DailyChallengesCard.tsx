@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { triggerConfetti } from "@/components/ui/confetti";
 
 interface Challenge {
   challengeId: string;
@@ -195,9 +196,17 @@ export const DailyChallengesCard = memo(({
   const isEvening = useIsEvening();
   const shouldReduce = useReducedMotion();
 
-  const handleComplete = useCallback((id: string) => {
-    onComplete(id);
-  }, [onComplete]);
+  const handleComplete = useCallback(async (id: string) => {
+    await onComplete(id);
+    // Trigger confetti on challenge completion
+    const remaining = challenges.filter(c => !c.completed && c.challengeId !== id).length;
+    if (remaining === 0) {
+      // All challenges done - big celebration!
+      triggerConfetti("celebration");
+    } else {
+      triggerConfetti("achievement");
+    }
+  }, [onComplete, challenges]);
 
   if (loading) {
     return (

@@ -66,6 +66,7 @@ import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { useReferral } from "@/hooks/useReferral";
 import { Capacitor } from "@capacitor/core";
+import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
 import {
@@ -1394,6 +1395,9 @@ const Dashboard = () => {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Floating Action Button */}
+        <FloatingActionButton />
       </main>
     </div>
   );
