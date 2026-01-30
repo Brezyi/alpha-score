@@ -247,6 +247,9 @@ const Dashboard = () => {
   // Gamification
   const { xp, achievements, dailyChallenges, loading: gamificationLoading, challengesLoading, completeChallenge, checkAchievements } = useGamification();
   
+  // Product recommendations - call hook unconditionally with empty array as fallback
+  const { products: recommendedProducts, loading: productsLoading, hasPersonalizedResults } = useProductRecommendations([]);
+  
   // Check if results should be locked (free user without enough referrals)
   const isResultsLocked = !isPremium && !hasEnoughReferrals;
 
@@ -451,10 +454,7 @@ const Dashboard = () => {
 
   // Get user's weaknesses for product recommendations (hide if locked)
   const userWeaknesses = shouldHideData ? [] : (completedAnalyses[0]?.weaknesses || []);
-  const { products: recommendedProducts, loading: productsLoading, hasPersonalizedResults } = useProductRecommendations(userWeaknesses);
-
-  // Chart data (last 10 analyses, reversed for chronological order) with potential and change
-  // Security: Empty chart data when locked
+  // Note: useProductRecommendations is called at the top of the component to follow hooks rules
   const chartDataRaw = shouldHideData ? [] : completedAnalyses.slice(0, 10).reverse();
   const chartData = chartDataRaw.map((a, index) => {
     const prevScore = index > 0 ? chartDataRaw[index - 1].looks_score : null;
