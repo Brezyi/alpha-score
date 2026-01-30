@@ -67,6 +67,7 @@ import { useLifestyle } from "@/hooks/useLifestyle";
 import { useReferral } from "@/hooks/useReferral";
 import { Capacitor } from "@capacitor/core";
 import { FloatingActionButton } from "@/components/ui/floating-action-button";
+import { SkeletonDashboard } from "@/components/ui/skeleton-card";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
 import {
@@ -388,10 +389,25 @@ const Dashboard = () => {
     checkUserAchievements();
   }, [user, analysesLoading, gamificationLoading, achievements.length, analyses, currentStreak, xp.level, checkAchievements]);
 
-  if (loading) {
+  // Show skeleton while loading critical data
+  const isLoadingCriticalData = loading || analysesLoading || profileLoading;
+  
+  if (isLoadingCriticalData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-background">
+        <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
+          <div className="container px-4">
+            <div className="flex items-center justify-between h-16">
+              <ScannerLogo size="sm" labelSize="lg" />
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="container px-4 py-6 pb-24">
+          <SkeletonDashboard />
+        </main>
       </div>
     );
   }
