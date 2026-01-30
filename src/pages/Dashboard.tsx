@@ -511,223 +511,454 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Main Content - Cleaner Layout */}
-      <main className="container px-4 py-6 max-w-6xl mx-auto">
-        
-        {/* Hero Section - Welcome + Score */}
-        <div className="mb-8">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            {/* Left: Welcome */}
-            <div className="animate-fade-in">
-              <h1 className="text-2xl md:text-3xl font-bold mb-1">
-                Hey, {profile?.display_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Champ"} 👋
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                Bereit, heute besser zu werden?
-              </p>
-            </div>
-            
-            {/* Right: Quick Stats Row */}
-            <div className="flex items-center gap-3">
-              {/* Streak */}
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border">
-                <Flame className={`w-5 h-5 ${currentStreak > 0 ? 'text-orange-500' : 'text-muted-foreground'}`} />
-                <div>
-                  <div className="text-lg font-bold leading-none">{currentStreak}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase">Streak</div>
-                </div>
+      {/* Main Content */}
+      <main className="container px-4 py-8">
+        {/* Welcome Section */}
+        <div className="mb-8 animate-fade-in" style={{ animationDelay: "0ms" }}>
+          <h1 className="text-3xl font-bold mb-2">
+            Hey, {profile?.display_name?.split(" ")[0] || user?.user_metadata?.full_name?.split(" ")[0] || "Champ"} 👋
+          </h1>
+          <p className="text-muted-foreground">
+            Bereit, heute besser zu werden?
+          </p>
+        </div>
+
+        {/* Stats Overview - Showcase Style */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Main Score Card with Circle */}
+          <div className="md:col-span-1 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative" style={{ animationDelay: "100ms", animationFillMode: "forwards" }}>
+            {/* Personal Best Badge - only show if not locked */}
+            {!isResultsLocked && isPersonalBest && (
+              <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-medium">
+                <Trophy className="w-3 h-3" />
+                <span>Bestwert</span>
               </div>
+            )}
+            <div className="text-center">
+              <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
               
-              {/* Analyses Count */}
-              <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-card border border-border">
-                <Camera className="w-5 h-5 text-primary" />
-                <div>
-                  <div className="text-lg font-bold leading-none">{completedAnalyses.length}</div>
-                  <div className="text-[10px] text-muted-foreground uppercase">Scans</div>
+              {/* Locked state for free users without referrals */}
+              {shouldHideData ? (
+                <div className="relative">
+                  {/* Blurred score circle - no real data exposed */}
+                  <div className="relative inline-flex items-center justify-center blur-lg opacity-50 pointer-events-none select-none">
+                    <svg
+                      className="w-32 h-32 transform -rotate-90 overflow-visible"
+                      viewBox="-8 -8 144 144"
+                    >
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        className="text-muted/30"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={352}
+                        strokeDashoffset={352 - (352 * 5) / 10}
+                      />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-black text-primary">—</span>
+                      <span className="text-xs text-muted-foreground">von 10</span>
+                    </div>
+                  </div>
+                  
+                  {/* Lock overlay */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center mb-2">
+                      <Lock className="w-8 h-8 text-primary" />
+                    </div>
+                    <p className="text-sm font-medium mb-2">Ergebnis gesperrt</p>
+                    <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
+                      <Button size="sm" variant="hero">
+                        Freischalten
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  <div className="relative inline-flex items-center justify-center">
+                    <svg
+                      className="w-32 h-32 transform -rotate-90 overflow-visible"
+                      viewBox="-8 -8 144 144"
+                    >
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="currentColor"
+                        strokeWidth="8"
+                        fill="none"
+                        className="text-muted/30"
+                      />
+                      <circle
+                        cx="64"
+                        cy="64"
+                        r="56"
+                        stroke="url(#dashboardScoreGradient)"
+                        strokeWidth="8"
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={352}
+                        strokeDashoffset={352 - (352 * (latestScore || 0)) / 10}
+                        className={`transition-all duration-1000 ease-out ${scoreDiff !== null && parseFloat(scoreDiff) > 0 ? '[filter:drop-shadow(0_0_6px_hsl(var(--primary)/0.5))]' : ''}`}
+                      />
+                      <defs>
+                        <linearGradient id="dashboardScoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" />
+                          <stop offset="100%" stopColor="hsl(153, 100%, 60%)" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-black text-primary">
+                        {latestScore !== null ? (
+                          hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
+                        ) : "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground">von 10</span>
+                    </div>
+                  </div>
+                  
+                  {/* Score Change Indicator - centered below */}
+                  {scoreDiff !== null && (
+                    <div className="mt-3 flex justify-center">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
+                        parseFloat(scoreDiff) > 0 ? "bg-green-500/10 text-green-500" : 
+                        parseFloat(scoreDiff) < 0 ? "bg-red-500/10 text-red-500" : "bg-muted text-muted-foreground"
+                      }`}>
+                        {parseFloat(scoreDiff) > 0 ? (
+                          <ArrowUpRight className="w-4 h-4" />
+                        ) : parseFloat(scoreDiff) < 0 ? (
+                          <ArrowDownRight className="w-4 h-4" />
+                        ) : (
+                          <Minus className="w-4 h-4" />
+                        )}
+                        <span>{parseFloat(scoreDiff) > 0 ? "+" : ""}{scoreDiff}</span>
+                        <span className="text-muted-foreground font-normal">seit letzter Analyse</span>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Potential & Stats */}
+          <div className="md:col-span-2 space-y-4">
+            {/* Potential Card - only render when not locked AND has data */}
+            {completedAnalyses.length > 0 && completedAnalyses[0]?.potential_score !== null && (
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "200ms", animationFillMode: "forwards" }}>
+                {shouldHideData ? (
+                  <>
+                    <div className="blur-md opacity-50 pointer-events-none select-none">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-5 h-5 text-primary" />
+                          <span className="font-medium">Dein Potenzial</span>
+                        </div>
+                        <span className="text-2xl font-bold text-primary">—</span>
+                      </div>
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        Noch <span className="text-primary font-semibold">+— Punkte</span> erreichbar
+                      </div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Lock className="w-5 h-5 text-primary" />
+                    </div>
+                  </>
+                ) : latestPotential !== null ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        <span className="font-medium">Dein Potenzial</span>
+                      </div>
+                      <span className="text-2xl font-bold text-primary">{latestPotential.toFixed(1)}</span>
+                    </div>
+                    {pointsToGo && (
+                      <div className="mt-2 text-sm text-muted-foreground">
+                        Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> erreichbar
+                      </div>
+                    )}
+                  </>
+                ) : null}
+              </div>
+            )}
+
+            {/* Mini Stats Grid */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "250ms", animationFillMode: "forwards" }}>
+                <div className="text-2xl font-bold">{completedAnalyses.length}</div>
+                <div className="text-xs text-muted-foreground">Analysen</div>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform relative overflow-hidden" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
+                {/* Animated flame background for active streaks */}
+                {!streakLoading && currentStreak >= 3 && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-orange-500/10 via-transparent to-transparent animate-pulse" />
+                )}
+                <div className="relative flex items-center justify-center gap-1">
+                  <span className="text-2xl font-bold">
+                    {streakLoading ? (
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    ) : currentStreak}
+                  </span>
+                  {!streakLoading && currentStreak > 0 && (
+                    <div className="relative">
+                      <Flame className={`w-5 h-5 text-orange-500 ${currentStreak >= 7 ? 'animate-bounce' : currentStreak >= 3 ? 'animate-pulse' : ''}`} />
+                      {currentStreak >= 7 && (
+                        <Flame className="absolute inset-0 w-5 h-5 text-orange-400 animate-ping opacity-50" />
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="relative text-xs text-muted-foreground">
+                  {currentStreak >= 7 ? "🔥 On Fire!" : currentStreak >= 3 ? "Streak" : "Streak"}
+                </div>
+                {!streakLoading && !isActiveToday && currentStreak > 0 && (
+                  <div className="relative text-[10px] text-orange-400 mt-1 animate-pulse font-medium">Heute aktiv werden!</div>
+                )}
+              </div>
+              {/* Ranking - Locked for free users */}
+              <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform relative" style={{ animationDelay: "350ms", animationFillMode: "forwards" }}>
+                {shouldHideData ? (
+                  <>
+                    <div className="blur-md opacity-50 pointer-events-none select-none">
+                      <div className="text-2xl font-bold text-primary">Top —%</div>
+                      <div className="text-xs text-muted-foreground">Ranking</div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <Lock className="w-4 h-4 text-primary" />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold text-primary">{latestPotential ? `Top ${Math.round((1 - (latestScore || 0) / 10) * 100)}%` : "—"}</div>
+                    <div className="text-xs text-muted-foreground">Ranking</div>
+                  </>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
-          {/* Left Column - Score & Progress */}
-          <div className="lg:col-span-4 space-y-4">
-            
-            {/* Score Card - Prominent */}
-            <div className="p-6 rounded-2xl bg-gradient-to-br from-card via-card to-primary/5 border border-border relative overflow-hidden animate-fade-in" style={{ animationDelay: "100ms" }}>
-              {/* Glow Effect */}
-              <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
-              
-              {!isResultsLocked && isPersonalBest && (
-                <div className="absolute top-4 right-4 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-500 text-xs font-medium">
-                  <Trophy className="w-3 h-3" />
-                  Best
-                </div>
-              )}
-              
-              <div className="relative">
-                <div className="text-sm text-muted-foreground mb-4 text-center">Dein Looks Score</div>
-                
-                {shouldHideData ? (
-                  <div className="relative flex flex-col items-center">
-                    <div className="w-32 h-32 rounded-full bg-muted/30 flex items-center justify-center border-4 border-muted/50">
-                      <Lock className="w-10 h-10 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-4 mb-2">Ergebnis gesperrt</p>
-                    <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
-                      <Button size="sm" variant="hero">Freischalten</Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center">
-                    {/* SVG Score Ring */}
-                    <div className="relative">
-                      <svg className="w-36 h-36 transform -rotate-90" viewBox="0 0 144 144">
-                        <circle cx="72" cy="72" r="60" stroke="hsl(var(--muted)/0.3)" strokeWidth="10" fill="none" />
-                        <circle 
-                          cx="72" cy="72" r="60" 
-                          stroke="url(#dashboardGradient)" 
-                          strokeWidth="10" 
-                          fill="none" 
-                          strokeLinecap="round"
-                          strokeDasharray={377}
-                          strokeDashoffset={377 - (377 * (latestScore || 0)) / 10}
-                          className="transition-all duration-1000 ease-out"
-                        />
-                        <defs>
-                          <linearGradient id="dashboardGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="hsl(var(--primary))" />
-                            <stop offset="100%" stopColor="hsl(var(--primary)/0.6)" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <div className="absolute inset-0 flex flex-col items-center justify-center">
-                        <span className="text-4xl font-black text-primary">
-                          {latestScore !== null ? (
-                            hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
-                          ) : "—"}
-                        </span>
-                        <span className="text-xs text-muted-foreground">von 10</span>
-                      </div>
-                    </div>
-                    
-                    {/* Score Change */}
-                    {scoreDiff !== null && (
-                      <div className={`mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium ${
-                        parseFloat(scoreDiff) > 0 ? "bg-emerald-500/10 text-emerald-500" : 
-                        parseFloat(scoreDiff) < 0 ? "bg-red-500/10 text-red-500" : "bg-muted text-muted-foreground"
-                      }`}>
-                        {parseFloat(scoreDiff) > 0 ? <ArrowUpRight className="w-4 h-4" /> :
-                         parseFloat(scoreDiff) < 0 ? <ArrowDownRight className="w-4 h-4" /> :
-                         <Minus className="w-4 h-4" />}
-                        {parseFloat(scoreDiff) > 0 && "+"}{scoreDiff}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
+        {/* New Widgets Row: Motivation Quote + Next Steps */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Motivation Quote Widget */}
+          <div className="p-5 rounded-2xl glass-card opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
+            <div className="absolute top-3 right-3">
+              <Quote className="w-8 h-8 text-primary/10" />
             </div>
-            
-            {/* Potential Card */}
-            {completedAnalyses.length > 0 && latestPotential && !shouldHideData && (
-              <div className="p-4 rounded-xl bg-primary/5 border border-primary/20 animate-fade-in" style={{ animationDelay: "200ms" }}>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-medium">Potenzial</span>
-                  </div>
-                  <span className="text-xl font-bold text-primary">{latestPotential.toFixed(1)}</span>
-                </div>
-                {pointsToGo && (
-                  <div className="mt-2 flex items-center gap-2">
-                    <Progress value={potentialProgress || 0} className="flex-1 h-2" />
-                    <span className="text-xs text-muted-foreground whitespace-nowrap">+{pointsToGo} möglich</span>
-                  </div>
-                )}
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-primary" />
               </div>
-            )}
-            
-            {/* Daily Quote - Compact */}
-            <div className="p-4 rounded-xl bg-card border border-border animate-fade-in" style={{ animationDelay: "300ms" }}>
-              <div className="flex items-start gap-3">
-                <Quote className="w-5 h-5 text-primary/50 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm leading-relaxed text-muted-foreground">"{dailyQuote.text}"</p>
-                  <p className="text-xs text-muted-foreground/70 mt-1">— {dailyQuote.author}</p>
-                </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-muted-foreground mb-1">Motivation des Tages</div>
+                <p className="text-sm font-medium leading-relaxed mb-2">"{dailyQuote.text}"</p>
+                <p className="text-xs text-muted-foreground">— {dailyQuote.author}</p>
               </div>
             </div>
           </div>
-          
-          {/* Right Column - Actions & Content */}
-          <div className="lg:col-span-8 space-y-6">
+
+          {/* Next Steps Widget */}
+          <div className="p-5 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "450ms", animationFillMode: "forwards" }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                  <Target className="w-4 h-4 text-blue-500" />
+                </div>
+                <span className="font-semibold text-sm">Nächste Schritte</span>
+              </div>
+              <Link to="/plan" className="text-xs text-primary hover:underline flex items-center gap-1 group">
+                Alle
+                <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
             
-            {/* Quick Actions - Horizontal Pills */}
-            <div className="animate-fade-in" style={{ animationDelay: "150ms" }}>
-              <div className="flex flex-wrap gap-2">
-                {quickActions.slice(0, 4).map((action) => {
-                  const isLocked = action.premium && !isPremiumUser;
-                  return (
-                    <Link 
-                      key={action.title}
-                      to={isLocked ? "/pricing" : action.href}
-                      className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border transition-all hover:scale-[1.02] active:scale-[0.98] ${
-                        isLocked ? 'bg-muted/50 border-border' : 'bg-card border-border hover:border-primary/30 hover:bg-primary/5'
-                      }`}
-                    >
-                      <div className={`w-8 h-8 rounded-lg ${action.color} flex items-center justify-center`}>
-                        <action.icon className="w-4 h-4" />
-                      </div>
-                      <span className="text-sm font-medium">{action.title}</span>
-                      {isLocked && <Lock className="w-3 h-3 text-muted-foreground ml-1" />}
-                    </Link>
-                  );
-                })}
-                
-                {/* Owner Revenue Link */}
-                {isOwner && (
-                  <Link 
-                    to="/admin/billing"
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 transition-all"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-amber-500/15 flex items-center justify-center">
-                      <BarChart3 className="w-4 h-4 text-amber-500" />
-                    </div>
-                    <span className="text-sm font-medium text-amber-600 dark:text-amber-400">Umsatz</span>
+            {tasksLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="text-center py-3">
+                <p className="text-sm text-muted-foreground mb-2">Keine offenen Tasks</p>
+                {isPremiumUser ? (
+                  <Link to="/plan">
+                    <Button variant="outline" size="sm" className="text-xs">
+                      Plan erstellen
+                    </Button>
+                  </Link>
+                ) : (
+                  <Link to="/pricing">
+                    <Button variant="outline" size="sm" className="text-xs gap-1">
+                      <Lock className="w-3 h-3" />
+                      Premium freischalten
+                    </Button>
                   </Link>
                 )}
               </div>
-            </div>
-            
-            {/* Score Chart - Clean */}
-            {chartData.length >= 2 && !shouldHideData && (
-              <div className="p-5 rounded-2xl bg-card border border-border animate-fade-in" style={{ animationDelay: "250ms" }}>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold">Score-Entwicklung</h3>
+            ) : (
+              <div className="space-y-2">
+                {tasks.map((task, index) => (
+                  <div 
+                    key={task.id} 
+                    className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
+                  >
+                    <Circle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm truncate flex-1">{task.title}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wide">
+                      {task.category}
+                    </span>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Potential Progress Bar */}
+        {potentialProgress !== null && latestPotential !== null && (
+          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "500ms", animationFillMode: "forwards" }}>
+            {shouldHideData ? (
+              <>
+                <div className="blur-md opacity-50 pointer-events-none select-none">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      <span className="text-foreground font-bold">—</span>
+                      <span className="mx-1">/</span>
+                      <span className="text-primary font-bold">—</span>
+                    </div>
+                  </div>
+                  <Progress value={50} className="h-4" />
+                  <div className="flex items-center justify-between mt-2 text-sm">
+                    <span className="text-muted-foreground">
+                      Noch <span className="text-primary font-semibold">+— Punkte</span> möglich
+                    </span>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Lock className="w-6 h-6 text-primary mb-2" />
+                  <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
+                    <Button size="sm" variant="hero">
+                      Freischalten
+                    </Button>
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                    <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    <span className="text-foreground font-bold">{latestScore?.toFixed(1)}</span>
+                    <span className="mx-1">/</span>
+                    <span className="text-primary font-bold">{latestPotential.toFixed(1)}</span>
+                  </div>
+                </div>
+                <div className="relative">
+                  <Progress value={potentialProgress} animated={hasAnimated} animationDuration={2200} glowOnComplete className="h-4" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-medium text-primary-foreground drop-shadow-sm">
+                      {hasAnimated ? <AnimatedNumber value={potentialProgress} decimals={0} /> : potentialProgress}%
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-2 text-sm">
+                  <span className="text-muted-foreground">
+                    Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> möglich
+                  </span>
+                  <Link to="/plan" className="text-primary hover:underline flex items-center gap-1 group">
+                    Plan ansehen
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Personalized Insights based on weaknesses and lifestyle - hide when locked */}
+        {isPremiumUser && completedAnalyses.length > 0 && !shouldHideData && (
+          <PersonalizedInsights
+            weaknesses={completedAnalyses[0]?.weaknesses || []}
+            priorities={completedAnalyses[0]?.detailed_results?.priorities || []}
+            lifestyleData={lifestyleData}
+            gender={profile?.gender}
+          />
+        )}
+
+
+        {/* Score Chart - Clean Style */}
+        {chartData.length >= 2 && (
+          <div className="mb-8 p-6 rounded-2xl glass-card opacity-0 animate-scale-in relative overflow-hidden" style={{ animationDelay: "600ms", animationFillMode: "forwards" }}>
+            {shouldHideData ? (
+              <>
+                <div className="blur-md opacity-50 pointer-events-none select-none">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold flex items-center gap-2">
+                      <TrendingUp className="w-5 h-5 text-primary" />
+                      Score-Entwicklung
+                    </h2>
+                  </div>
+                  <div className="h-44 flex items-center justify-center bg-muted/20 rounded-lg">
+                    <div className="text-muted-foreground">Chart gesperrt</div>
+                  </div>
+                </div>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <Lock className="w-6 h-6 text-primary mb-2" />
+                  <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
+                    <Button size="sm" variant="hero">
+                      Freischalten
+                    </Button>
+                  </Link>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-primary" />
+                    Score-Entwicklung
+                  </h2>
                   <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-0.5 bg-primary rounded-full" />
+                      <div className="w-4 h-0.5 bg-primary rounded-full" />
                       <span className="text-muted-foreground">Score</span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <div className="w-3 h-0.5 bg-primary/40 rounded-full" style={{ backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 2px, currentColor 2px, currentColor 4px)' }} />
+                      <svg className="w-4 h-2" viewBox="0 0 16 2">
+                        <line x1="0" y1="1" x2="16" y2="1" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="3 2" strokeOpacity="0.5" />
+                      </svg>
                       <span className="text-muted-foreground">Potenzial</span>
                     </div>
                   </div>
                 </div>
                 
-                <div className="h-40">
+                <div className="h-44">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={chartData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+                    <LineChart data={chartData} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                       <defs>
-                        <linearGradient id="scoreAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                        <linearGradient id="scoreGradientFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
                           <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
                         </linearGradient>
                       </defs>
@@ -735,292 +966,469 @@ const Dashboard = () => {
                         dataKey="date" 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
                         dy={5}
                       />
                       <YAxis 
                         domain={[0, 10]} 
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
-                        tickFormatter={(v) => v.toFixed(0)}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                        dx={-5}
+                        tickFormatter={(value) => value.toFixed(0)}
                       />
                       <Tooltip 
                         contentStyle={{ 
                           backgroundColor: "hsl(var(--card))", 
                           border: "1px solid hsl(var(--border))",
-                          borderRadius: "10px",
-                          fontSize: "12px",
-                          padding: "8px 12px"
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                          padding: "12px"
                         }}
-                        labelFormatter={(_, payload) => payload?.[0]?.payload?.fullDate || ''}
-                        formatter={(value: any, name: string) => [
-                          Number(value).toFixed(1), 
-                          name === "score" ? "Score" : "Potenzial"
-                        ]}
+                        labelFormatter={(label, payload) => {
+                          const data = payload?.[0]?.payload;
+                          return data?.fullDate || label;
+                        }}
+                        formatter={(value: any, name: string, props: any) => {
+                          const change = props?.payload?.change;
+                          if (name === "score") {
+                            const changeStr = change !== null ? ` (${change > 0 ? '+' : ''}${change.toFixed(1)})` : '';
+                            return [`${Number(value).toFixed(1)}${changeStr}`, "Score"];
+                          }
+                          return [Number(value).toFixed(1), "Potenzial"];
+                        }}
                       />
-                      <Area type="monotone" dataKey="score" stroke="none" fill="url(#scoreAreaGradient)" />
-                      <Line type="monotone" dataKey="potential" stroke="hsl(var(--primary)/0.4)" strokeWidth={2} strokeDasharray="4 4" dot={false} />
-                      <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={{ fill: "hsl(var(--primary))", r: 4, strokeWidth: 0 }} activeDot={{ r: 6 }} />
-                    </ComposedChart>
+                      {/* Area fill under score line */}
+                      <Area
+                        type="monotone"
+                        dataKey="score"
+                        stroke="none"
+                        fill="url(#scoreGradientFill)"
+                      />
+                      {/* Potential Line (dashed) */}
+                      <Line
+                        type="monotone"
+                        dataKey="potential"
+                        stroke="hsl(var(--primary) / 0.4)"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={false}
+                        activeDot={{ r: 4, fill: "hsl(var(--primary) / 0.5)", stroke: "hsl(var(--primary))", strokeWidth: 1 }}
+                        connectNulls
+                      />
+                      {/* Current Score Line (solid, prominent) */}
+                      <Line
+                        type="monotone"
+                        dataKey="score"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={3}
+                        dot={{ fill: "hsl(var(--primary))", strokeWidth: 0, r: 5 }}
+                        activeDot={{ r: 7, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
+                      />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
-              </div>
+              </>
             )}
-            
-            {/* Next Steps + Recent Analyses Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              
-              {/* Next Steps */}
-              <div className="p-4 rounded-xl bg-card border border-border animate-fade-in" style={{ animationDelay: "300ms" }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Target className="w-4 h-4 text-blue-500" />
-                    <span className="font-medium text-sm">Nächste Schritte</span>
-                  </div>
-                  <Link to="/plan" className="text-xs text-primary hover:underline">Alle →</Link>
-                </div>
-                
-                {tasksLoading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : tasks.length === 0 ? (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground mb-2">Keine offenen Tasks</p>
-                    <Link to={isPremiumUser ? "/plan" : "/pricing"}>
-                      <Button variant="outline" size="sm" className="text-xs gap-1">
-                        {!isPremiumUser && <Lock className="w-3 h-3" />}
-                        {isPremiumUser ? "Plan erstellen" : "Premium"}
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {tasks.map((task) => (
-                      <div key={task.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <Circle className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                        <span className="text-sm truncate flex-1">{task.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* Recent Analyses Preview */}
-              <div className="p-4 rounded-xl bg-card border border-border animate-fade-in" style={{ animationDelay: "350ms" }}>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Camera className="w-4 h-4 text-primary" />
-                    <span className="font-medium text-sm">Letzte Analysen</span>
-                  </div>
-                  {completedAnalyses.length > 0 && (
-                    <Link to="/progress#analyses" className="text-xs text-primary hover:underline">Alle →</Link>
-                  )}
-                </div>
-                
-                {analysesLoading ? (
-                  <div className="flex items-center justify-center py-6">
-                    <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : completedAnalyses.length === 0 ? (
-                  <div className="text-center py-4">
-                    <p className="text-sm text-muted-foreground mb-2">Noch keine Analysen</p>
-                    <Link to="/upload">
-                      <Button variant="hero" size="sm" className="text-xs gap-1">
-                        <Camera className="w-3 h-3" />
-                        Erste Analyse
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {completedAnalyses.slice(0, 4).map((analysis) => (
-                      <Link 
-                        key={analysis.id} 
-                        to={`/analysis/${analysis.id}`}
-                        className="flex-shrink-0 group"
-                      >
-                        <div className="relative">
-                          <AnalysisThumbnail photoUrls={analysis.photo_urls} className="w-16 h-16 rounded-lg group-hover:ring-2 ring-primary/50 transition-all" />
-                          <div className="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded bg-primary text-[10px] font-bold text-primary-foreground">
-                            {analysis.looks_score?.toFixed(1)}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </div>
           </div>
-          
-          {/* Gamification Section for Premium */}
-          {isPremiumUser && !shouldHideData && (
-            <div className="space-y-4 animate-fade-in" style={{ animationDelay: "400ms" }}>
-              
-              {/* XP & Level + Daily Challenges */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <XpLevelCard
-                  level={xp.level}
-                  currentXp={xp.currentXp}
-                  xpForNextLevel={xp.xpForNextLevel}
-                  progress={xp.progress}
-                />
-                <DailyChallengesCard
-                  challenges={dailyChallenges}
-                  loading={challengesLoading}
-                  onComplete={completeChallenge}
-                />
+        )}
+
+        {/* Premium Banner (for free users) */}
+        {!isPremiumUser && (
+          <div className="relative overflow-hidden rounded-2xl p-6 mb-8 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent border border-primary/30 opacity-0 animate-fade-in-up" style={{ animationDelay: "700ms", animationFillMode: "forwards" }}>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <Crown className="w-5 h-5 text-primary animate-float" />
+                <span className="text-sm font-medium text-primary">Premium Feature</span>
               </div>
-              
-              {/* Achievements - Compact */}
-              {achievements.length > 0 && (
-                <div className="p-4 rounded-xl bg-card border border-border">
-                  <AchievementsGrid achievements={achievements} maxDisplay={8} />
-                </div>
-              )}
-              
-              {/* Streak Rewards */}
-              <StreakRewards 
-                currentStreak={currentStreak} 
-                longestStreak={longestStreak} 
-                compact 
-              />
-              
-              {/* Personalized Insights */}
-              {completedAnalyses.length > 0 && (
-                <PersonalizedInsights
-                  weaknesses={completedAnalyses[0]?.weaknesses || []}
-                  priorities={completedAnalyses[0]?.detailed_results?.priorities || []}
-                  lifestyleData={lifestyleData}
-                  gender={profile?.gender}
-                />
-              )}
-              
-              {/* Sleep Correlation */}
-              <SleepScoreCorrelation 
-                lifestyleEntries={lifestyleEntries.map(e => ({
-                  entry_date: e.entry_date,
-                  sleep_hours: e.sleep_hours,
-                  sleep_quality: null
-                }))}
-                analyses={completedAnalyses.map(a => ({
-                  created_at: a.created_at,
-                  looks_score: a.looks_score
-                }))}
-              />
-              
-              {/* Product Recommendations */}
-              {recommendedProducts.length > 0 && (
-                <ProductRecommendationsCard
-                  products={recommendedProducts}
-                  loading={productsLoading}
-                  maxDisplay={3}
-                  title="Empfohlene Produkte"
-                  hasPersonalizedResults={hasPersonalizedResults}
-                />
-              )}
-            </div>
-          )}
-          
-          {/* Premium CTA for Free Users */}
-          {!isPremiumUser && (
-            <div className="p-5 rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 animate-fade-in" style={{ animationDelay: "400ms" }}>
-              <div className="flex items-center gap-3 mb-3">
-                <Crown className="w-5 h-5 text-primary" />
-                <span className="font-semibold">Premium freischalten</span>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Detaillierte Analysen, personalisierter Plan und AI Coach.
+              <h3 className="text-xl font-bold mb-2">Schalte alle Features frei</h3>
+              <p className="text-muted-foreground mb-4 max-w-md">
+                Erhalte detaillierte Analysen, deinen personalisierten Plan und Zugang zum AI Coach.
               </p>
               <Link to="/pricing">
-                <Button variant="hero" size="sm" className="gap-2">
+                <Button variant="hero" className="group">
                   Premium werden
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             </div>
-          )}
-          
-        </div>{/* End Right Column */}
-        
-      </div>{/* End Main Grid */}
-      
-      {/* New Analysis CTA - Bottom */}
-      {completedAnalyses.length > 0 && (
-        <div className="mt-8 text-center p-6 rounded-2xl bg-card border border-border animate-fade-in" style={{ animationDelay: "500ms" }}>
-          <h3 className="font-semibold mb-2">Neue Analyse starten</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Tracke deinen Fortschritt mit regelmäßigen Analysen.
-          </p>
-          <Link to="/upload">
-            <Button variant="hero" className="gap-2">
-              <Camera className="w-4 h-4" />
-              Foto analysieren
-            </Button>
-          </Link>
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 animate-pulse" />
+          </div>
+        )}
+
+        {/* Quick Actions */}
+
+        {/* Quick Actions */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>Schnellzugriff</h2>
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {quickActions.map((action, index) => {
+              const isLocked = action.premium && !isPremiumUser;
+              return (
+                <Link 
+                  key={action.title}
+                  to={isLocked ? "/pricing" : action.href}
+                  className="group relative p-6 rounded-2xl glass-card hover:border-primary/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-primary/5"
+                  style={{ animationDelay: `${850 + index * 100}ms`, animationFillMode: "forwards" }}
+                >
+                  {isLocked && (
+                    <div className="absolute top-3 right-3">
+                      <Lock className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className={`w-12 h-12 rounded-xl ${action.color} flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
+                    <action.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                    {action.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {action.description}
+                  </p>
+                </Link>
+              );
+            })}
+            
+            {/* Owner-Only: Revenue Quick Access */}
+            {isOwner && (
+              <Link 
+                to="/admin/billing"
+                className="group relative p-6 rounded-2xl glass-card border-amber-500/30 hover:border-amber-500/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-amber-500/10"
+                style={{ animationDelay: `${850 + quickActions.length * 100}ms`, animationFillMode: "forwards" }}
+              >
+                <div className="absolute top-3 right-3">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <BarChart3 className="w-6 h-6 text-amber-500" />
+                </div>
+                <h3 className="font-semibold mb-1 group-hover:text-amber-500 transition-colors">
+                  Umsatz & Abos
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Revenue & Affiliate-Übersicht
+                </p>
+              </Link>
+            )}
+          </div>
         </div>
-      )}
-      
-      {/* Delete Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-destructive" />
-              </div>
-              <AlertDialogTitle>
-                {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
-                  ? "Analyse abbrechen?"
-                  : "Analyse entfernen?"}
-              </AlertDialogTitle>
+
+        {/* Gamification Section - XP, Challenges, Achievements */}
+        {isPremiumUser && (
+          <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }}>
+            <h2 className="text-xl font-bold">Dein Fortschritt</h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* XP & Level Card */}
+              <XpLevelCard
+                level={xp.level}
+                currentXp={xp.currentXp}
+                xpForNextLevel={xp.xpForNextLevel}
+                progress={xp.progress}
+              />
+              
+              {/* Daily Challenges */}
+              <DailyChallengesCard
+                challenges={dailyChallenges}
+                loading={challengesLoading}
+                onComplete={completeChallenge}
+              />
             </div>
-            <AlertDialogDescription>
-              {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
-                ? "Diese laufende Analyse wird abgebrochen und gelöscht."
-                : "Diese fehlgeschlagene Analyse wird aus deiner Historie entfernt."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={async () => {
-                if (!analysisToDelete) return;
-                try {
-                  const { error } = await supabase
-                    .from("analyses")
-                    .delete()
-                    .eq("id", analysisToDelete.id);
-                  if (error) throw error;
-                  setAnalyses(prev => prev.filter(a => a.id !== analysisToDelete.id));
-                  toast({
-                    title: "Analyse entfernt",
-                    description: "Die Analyse wurde erfolgreich gelöscht.",
-                  });
-                } catch (err) {
-                  console.error("Error deleting analysis:", err);
-                  toast({
-                    title: "Fehler",
-                    description: "Die Analyse konnte nicht gelöscht werden.",
-                    variant: "destructive",
-                  });
-                } finally {
-                  setDeleteDialogOpen(false);
-                  setAnalysisToDelete(null);
-                }
-              }}
-            >
-              Entfernen
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      
-    </main>
-  </div>
-);
+            
+            {/* Achievements Grid */}
+            {achievements.length > 0 && (
+              <div className="p-5 rounded-2xl glass-card">
+                <AchievementsGrid achievements={achievements} maxDisplay={12} />
+              </div>
+            )}
+            
+            {/* Streak Rewards Compact */}
+            <StreakRewards 
+              currentStreak={currentStreak} 
+              longestStreak={longestStreak} 
+              compact 
+            />
+            
+            {/* Sleep-Score Correlation */}
+            <SleepScoreCorrelation 
+              lifestyleEntries={lifestyleEntries.map(e => ({
+                entry_date: e.entry_date,
+                sleep_hours: e.sleep_hours,
+                sleep_quality: null // Add this when field is available
+              }))}
+              analyses={completedAnalyses.map(a => ({
+                created_at: a.created_at,
+                looks_score: a.looks_score
+              }))}
+            />
+            
+            {/* Product Recommendations */}
+            {recommendedProducts.length > 0 && (
+              <ProductRecommendationsCard
+                products={recommendedProducts}
+                loading={productsLoading}
+                maxDisplay={4}
+                title="Empfohlene Produkte für dich"
+                hasPersonalizedResults={hasPersonalizedResults}
+              />
+            )}
+          </div>
+        )}
+
+        {/* Analysis History - Show last 5 */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "1200ms", animationFillMode: "forwards" }}>
+            <h2 className="text-xl font-bold">Letzte Analysen</h2>
+            {analyses.length > 5 && !shouldHideData && (
+              <Link to="/progress#analyses" className="text-sm text-primary hover:underline flex items-center gap-1 group">
+                Alle {analyses.length} anzeigen
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            )}
+          </div>
+
+          {analysesLoading ? (
+            <div className="flex items-center justify-center p-12 rounded-2xl glass-card">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : analyses.length === 0 ? (
+            <div className="text-center p-8 rounded-2xl glass-card opacity-0 animate-scale-in" style={{ animationDelay: "1300ms", animationFillMode: "forwards" }}>
+              <Camera className="w-12 h-12 text-primary mx-auto mb-4 animate-bounce-subtle" />
+              <h3 className="text-xl font-bold mb-2">Noch keine Analysen</h3>
+              <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+                Lade ein Foto hoch und erhalte in wenigen Sekunden deinen Looks Score.
+              </p>
+              <Link to="/upload">
+                <Button variant="hero" size="lg" className="group">
+                  <Camera className="w-5 h-5" />
+                  Erste Analyse starten
+                </Button>
+              </Link>
+            </div>
+          ) : shouldHideData ? (
+            <div className="relative p-8 rounded-2xl glass-card opacity-0 animate-scale-in overflow-hidden" style={{ animationDelay: "1300ms", animationFillMode: "forwards" }}>
+              <div className="blur-md opacity-50 pointer-events-none select-none space-y-3">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-muted/30">
+                    <div className="w-14 h-14 rounded-lg bg-muted" />
+                    <div className="flex-1">
+                      <div className="h-4 w-32 bg-muted rounded mb-2" />
+                      <div className="h-3 w-24 bg-muted/50 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <Lock className="w-8 h-8 text-primary mb-3" />
+                <p className="text-sm font-medium mb-3">Analysen gesperrt</p>
+                <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
+                  <Button variant="hero">
+                    Freischalten
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {analyses.slice(0, 5).map((analysis, index) => {
+                const isPending = analysis.status === "pending" || analysis.status === "processing";
+                const isFailed = analysis.status === "failed" || analysis.status === "validation_failed";
+                const canDelete = isPending || isFailed;
+                
+                const handleOpenDeleteDialog = (e: React.MouseEvent) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setAnalysisToDelete(analysis);
+                  setDeleteDialogOpen(true);
+                };
+                
+                return (
+                  <div
+                    key={analysis.id}
+                    className="flex items-center gap-4 p-4 rounded-xl glass-card hover:border-primary/50 transition-all group opacity-0 animate-slide-in-right hover:translate-x-1"
+                    style={{ animationDelay: `${1300 + index * 100}ms`, animationFillMode: "forwards" }}
+                  >
+                    {/* Clickable area for navigation */}
+                    <Link
+                      to={`/analysis/${analysis.id}`}
+                      className="flex items-center gap-4 flex-1 min-w-0"
+                    >
+                      {/* Photo Thumbnail */}
+                      <div className="relative flex-shrink-0">
+                        <AnalysisThumbnail 
+                          photoUrls={analysis.photo_urls} 
+                          className="w-14 h-14"
+                        />
+                        {/* Score Badge */}
+                        {analysis.status === "completed" && analysis.looks_score !== null && (
+                          <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-background border-2 border-primary/30 flex items-center justify-center">
+                            <span className="text-xs font-bold text-primary">
+                              {analysis.looks_score.toFixed(1)}
+                            </span>
+                          </div>
+                        )}
+                        {analysis.status === "processing" && (
+                          <div className="absolute inset-0 bg-background/50 rounded-lg flex items-center justify-center">
+                            <Loader2 className="w-5 h-5 animate-spin text-primary" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-medium">
+                            {analysis.status === "completed" ? "Analyse abgeschlossen" : 
+                             analysis.status === "processing" ? "Wird analysiert..." : 
+                             analysis.status === "validation_failed" ? "Validierung fehlgeschlagen" :
+                             analysis.status === "failed" ? "Fehlgeschlagen" :
+                             "Ausstehend"}
+                          </span>
+                          {analysis.status === "completed" && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs ${
+                              analysis.looks_score && analysis.looks_score >= 7 
+                                ? "bg-green-500/20 text-green-400"
+                                : analysis.looks_score && analysis.looks_score >= 5
+                                ? "bg-yellow-500/20 text-yellow-400"
+                                : "bg-red-500/20 text-red-400"
+                            }`}>
+                              {analysis.looks_score && analysis.looks_score >= 7 ? "Top" : 
+                               analysis.looks_score && analysis.looks_score >= 5 ? "Durchschnitt" : 
+                               "Potenzial"}
+                            </span>
+                          )}
+                          {isPending && (
+                            <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
+                              In Bearbeitung
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(analysis.created_at)}
+                        </div>
+                        {analysis.strengths && analysis.strengths.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {analysis.strengths.slice(0, 3).map((strength, i) => (
+                              <span key={i} className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs">
+                                {strength}
+                              </span>
+                            ))}
+                            {analysis.strengths.length > 3 && (
+                              <span className="text-xs text-muted-foreground">
+                                +{analysis.strengths.length - 3} mehr
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Arrow */}
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    </Link>
+                    
+                    {/* Cancel/Delete button for pending or failed analyses */}
+                    {canDelete && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="flex-shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                        onClick={handleOpenDeleteDialog}
+                        title={isFailed ? "Analyse entfernen" : "Analyse abbrechen"}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* CTA for more analyses */}
+        {analyses.length > 0 && (
+          <div className="text-center p-6 rounded-2xl glass-card opacity-0 animate-fade-in-up" style={{ animationDelay: "1800ms", animationFillMode: "forwards" }}>
+            <h3 className="text-lg font-bold mb-2">Neue Analyse starten</h3>
+            <p className="text-muted-foreground mb-4 text-sm">
+              Tracke deinen Fortschritt mit regelmäßigen Analysen.
+            </p>
+            <Link to="/upload">
+              <Button variant="hero" className="group">
+                <Camera className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                Foto analysieren
+              </Button>
+            </Link>
+          </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertTriangle className="w-5 h-5 text-destructive" />
+                </div>
+                <AlertDialogTitle>
+                  {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
+                    ? "Analyse abbrechen?"
+                    : "Analyse entfernen?"}
+                </AlertDialogTitle>
+              </div>
+              <AlertDialogDescription>
+                {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
+                  ? "Diese laufende Analyse wird abgebrochen und gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
+                  : "Diese fehlgeschlagene Analyse wird aus deiner Historie entfernt. Diese Aktion kann nicht rückgängig gemacht werden."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
+                Abbrechen
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async () => {
+                  if (!analysisToDelete) return;
+                  
+                  try {
+                    const { error } = await supabase
+                      .from("analyses")
+                      .delete()
+                      .eq("id", analysisToDelete.id);
+                    
+                    if (error) throw error;
+                    
+                    setAnalyses(prev => prev.filter(a => a.id !== analysisToDelete.id));
+                    toast({
+                      title: analysisToDelete.status === "pending" || analysisToDelete.status === "processing"
+                        ? "Analyse abgebrochen"
+                        : "Analyse entfernt",
+                      description: "Die Analyse wurde erfolgreich gelöscht.",
+                    });
+                  } catch (err) {
+                    console.error("Error deleting analysis:", err);
+                    toast({
+                      title: "Fehler",
+                      description: "Die Analyse konnte nicht gelöscht werden.",
+                      variant: "destructive",
+                    });
+                  } finally {
+                    setDeleteDialogOpen(false);
+                    setAnalysisToDelete(null);
+                  }
+                }}
+              >
+                {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
+                  ? "Analyse abbrechen"
+                  : "Analyse entfernen"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </main>
+    </div>
+  );
 };
 
 export default Dashboard;
