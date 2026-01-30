@@ -13,12 +13,11 @@ import {
   Scissors,
   Dumbbell,
   Eye,
-  Lock
+  Lock,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import beforeImage from "@/assets/transformation-before.jpg";
-import afterImage from "@/assets/transformation-after.jpg";
 
 type FeatureTab = "potential" | "analysis" | "plan" | "progress" | "coach";
 
@@ -195,9 +194,9 @@ const PotentialPreview = () => {
       transition={{ duration: 0.4 }}
       className="flex flex-col items-center gap-8"
     >
-      {/* Top Row: Before/After Slider + Stats Side by Side */}
+      {/* Top Row: Abstract Potential Visualization + Stats Side by Side */}
       <div className="flex flex-col md:flex-row gap-8 items-center justify-center w-full">
-        {/* Before/After Slider */}
+        {/* Abstract Before/After Visualization */}
         <div
           ref={containerRef}
           className="relative aspect-[3/4] w-64 rounded-2xl overflow-hidden cursor-ew-resize select-none glow-box flex-shrink-0"
@@ -209,30 +208,24 @@ const PotentialPreview = () => {
           onMouseLeave={() => setIsDragging(false)}
           onTouchEnd={() => setIsDragging(false)}
         >
-          {/* Before Image */}
-          <div className="absolute inset-0">
-            <img 
-              src={beforeImage} 
-              alt="Vorher" 
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
+          {/* Before Side (Gray/Muted) */}
+          <div className="absolute inset-0 bg-gradient-to-br from-muted/80 via-muted/60 to-muted/40 flex items-center justify-center">
+            <div className="w-24 h-24 rounded-full bg-muted-foreground/20 flex items-center justify-center">
+              <User className="w-12 h-12 text-muted-foreground/50" />
+            </div>
             <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-black/60 backdrop-blur-sm">
               <span className="text-muted-foreground text-sm font-bold">Score: 5.2</span>
             </div>
           </div>
 
-          {/* After Image */}
+          {/* After Side (Primary/Vibrant) */}
           <div
-            className="absolute inset-0"
+            className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10 flex items-center justify-center"
             style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
           >
-            <img 
-              src={afterImage} 
-              alt="Nachher" 
-              className="w-full h-full object-cover"
-              draggable={false}
-            />
+            <div className="w-24 h-24 rounded-full bg-primary/30 flex items-center justify-center border-2 border-primary/50">
+              <User className="w-12 h-12 text-primary" />
+            </div>
             <div className="absolute top-4 left-4 px-3 py-1.5 rounded-lg bg-primary/80 backdrop-blur-sm">
               <span className="text-primary-foreground text-sm font-bold">Score: 7.4</span>
             </div>
