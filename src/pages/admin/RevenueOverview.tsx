@@ -25,7 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, TrendingUp, CreditCard, Users, RefreshCw, Euro, Crown, Infinity, Download, AlertCircle } from "lucide-react";
+import { ArrowLeft, TrendingUp, CreditCard, Users, RefreshCw, Euro, Crown, Infinity, Download, AlertCircle, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -61,6 +61,26 @@ interface RevenueStats {
   canceledSubscriptions: number;
 }
 
+interface AffiliateEarning {
+  id: string;
+  referrer_id: string;
+  referrer_email?: string;
+  referred_id: string;
+  referred_email?: string;
+  commission_amount: number;
+  payment_amount: number;
+  currency: string;
+  status: string;
+  created_at: string;
+}
+
+interface AffiliateStats {
+  totalCommissions: number;
+  pendingCommissions: number;
+  paidCommissions: number;
+  totalReferrals: number;
+}
+
 export default function RevenueOverview() {
   const navigate = useNavigate();
   const { isOwner, isAdmin } = useUserRole();
@@ -75,6 +95,13 @@ export default function RevenueOverview() {
     activeSubscriptions: 0,
     lifetimePurchases: 0,
     canceledSubscriptions: 0,
+  });
+  const [affiliateEarnings, setAffiliateEarnings] = useState<AffiliateEarning[]>([]);
+  const [affiliateStats, setAffiliateStats] = useState<AffiliateStats>({
+    totalCommissions: 0,
+    pendingCommissions: 0,
+    paidCommissions: 0,
+    totalReferrals: 0,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -135,6 +162,42 @@ export default function RevenueOverview() {
         lifetimePurchases: activeLifetime.length,
         canceledSubscriptions: canceled.length,
       });
+
+      // Fetch affiliate earnings (owner only)
+      if (isOwner) {
+        const { data: affiliateData, error: affiliateError } = await supabase
+          .from("affiliate_earnings")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        if (!affiliateError && affiliateData) {
+          // Fetch referrer emails from profiles
+          const referrerIds = [...new Set(affiliateData.map(a => a.referrer_id))];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, display_name")
+            .in("user_id", referrerIds);
+
+          const profileMap = new Map(profiles?.map(p => [p.user_id, p.display_name]) || []);
+
+          const enrichedEarnings = affiliateData.map(earning => ({
+            ...earning,
+            referrer_email: profileMap.get(earning.referrer_id) || earning.referrer_id.slice(0, 8),
+          }));
+
+          setAffiliateEarnings(enrichedEarnings);
+
+          const pending = affiliateData.filter(e => e.status === "pending");
+          const paid = affiliateData.filter(e => e.status === "paid");
+
+          setAffiliateStats({
+            totalCommissions: affiliateData.reduce((sum, e) => sum + Number(e.commission_amount), 0),
+            pendingCommissions: pending.reduce((sum, e) => sum + Number(e.commission_amount), 0),
+            paidCommissions: paid.reduce((sum, e) => sum + Number(e.commission_amount), 0),
+            totalReferrals: affiliateData.length,
+          });
+        }
+      }
 
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unbekannter Fehler";
@@ -476,6 +539,96 @@ export default function RevenueOverview() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Affiliate Earnings Section - Owner Only */}
+        {isOwner && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <DollarSign className="w-5 h-5 text-green-500" />
+                Affiliate Provisionen
+              </CardTitle>
+              <CardDescription>
+                Übersicht aller Affiliate-Einnahmen und Auszahlungen
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Affiliate Stats */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <p className="text-2xl font-bold text-green-500">
+                    {new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(affiliateStats.totalCommissions)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Gesamt-Provisionen</p>
+                </div>
+                <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                  <p className="text-2xl font-bold text-yellow-500">
+                    {new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(affiliateStats.pendingCommissions)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Ausstehend</p>
+                </div>
+                <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <p className="text-2xl font-bold text-blue-500">
+                    {new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(affiliateStats.paidCommissions)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Ausgezahlt</p>
+                </div>
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                  <p className="text-2xl font-bold text-primary">{affiliateStats.totalReferrals}</p>
+                  <p className="text-xs text-muted-foreground">Vermittlungen</p>
+                </div>
+              </div>
+
+              {/* Affiliate Table */}
+              {affiliateEarnings.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground">
+                  <DollarSign className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                  <p>Noch keine Affiliate-Provisionen</p>
+                  <p className="text-sm">Provisionen werden automatisch bei Abo-Zahlungen erstellt</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Affiliate</TableHead>
+                      <TableHead>Zahlung</TableHead>
+                      <TableHead>Provision (20%)</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Datum</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {affiliateEarnings.slice(0, 20).map((earning) => (
+                      <TableRow key={earning.id}>
+                        <TableCell className="font-medium">
+                          {earning.referrer_email || earning.referrer_id.slice(0, 8)}
+                        </TableCell>
+                        <TableCell>
+                          {new Intl.NumberFormat("de-DE", { style: "currency", currency: earning.currency.toUpperCase() }).format(earning.payment_amount)}
+                        </TableCell>
+                        <TableCell className="text-green-500 font-medium">
+                          {new Intl.NumberFormat("de-DE", { style: "currency", currency: earning.currency.toUpperCase() }).format(earning.commission_amount)}
+                        </TableCell>
+                        <TableCell>
+                          {earning.status === "pending" ? (
+                            <Badge className="bg-yellow-500/20 text-yellow-500">Ausstehend</Badge>
+                          ) : earning.status === "paid" ? (
+                            <Badge className="bg-green-500/20 text-green-500">Ausgezahlt</Badge>
+                          ) : (
+                            <Badge variant="secondary">{earning.status}</Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {format(new Date(earning.created_at), "dd.MM.yyyy", { locale: de })}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         )}
