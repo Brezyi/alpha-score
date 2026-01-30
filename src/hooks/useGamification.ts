@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { triggerConfetti } from "@/components/ui/confetti";
 
 interface UserXP {
   currentXp: number;
@@ -305,6 +306,8 @@ export const useGamification = () => {
             title: "Level Up! 🎊",
             description: `Du bist jetzt Level ${result.new_level}!`,
           });
+          // Trigger level up confetti
+          triggerConfetti("levelUp");
         }
 
         await fetchXp();
@@ -342,6 +345,9 @@ export const useGamification = () => {
           title: `🏆 Achievement freigeschaltet!`,
           description: `${achievement.icon} ${achievement.name} - +${achievement.xpReward} XP`,
         });
+
+        // Trigger achievement confetti
+        triggerConfetti("achievement");
 
         // Update local state
         setAchievements((prev) =>
