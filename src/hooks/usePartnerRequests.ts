@@ -55,9 +55,9 @@ export function usePartnerRequests() {
       userIds.add(req.addressee_id);
     });
 
-    // Fetch profiles
+    // Fetch public_profiles (safe view)
     const { data: profiles } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("user_id, display_name, avatar_url")
       .in("user_id", Array.from(userIds));
 
@@ -141,12 +141,12 @@ export function usePartnerRequests() {
 
     // No need to check for pending - we just deleted everything
 
-    // Get friend's profile for the success message
+    // Get friend's public profile for the success message
     const { data: friendProfile } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("display_name")
       .eq("user_id", friendId)
-      .single();
+      .maybeSingle();
 
     const friendName = friendProfile?.display_name || "Freund";
 

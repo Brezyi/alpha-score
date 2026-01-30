@@ -111,32 +111,29 @@ export function useFriends() {
       return;
     }
 
-    // Fetch profiles and friend codes
-    const [profilesRes, codesRes, privacyRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", friendUserIds),
-      supabase.from("friend_codes").select("user_id, code").in("user_id", friendUserIds),
+    // Fetch public_profiles (safe view) and privacy settings
+    const [profilesRes, privacyRes] = await Promise.all([
+      supabase.from("public_profiles").select("user_id, display_name, avatar_url").in("user_id", friendUserIds),
       supabase.from("friend_privacy_settings").select("*").in("user_id", friendUserIds)
     ]);
 
     const profilesMap = new Map(profilesRes.data?.map(p => [p.user_id, p]) || []);
-    const codesMap = new Map(codesRes.data?.map(c => [c.user_id, c.code]) || []);
     const privacyMap = new Map(privacyRes.data?.map(p => [p.user_id, p]) || []);
 
     const friendsList: Friend[] = data?.map(conn => {
       const friendId = conn.requester_id === user.id ? conn.addressee_id : conn.requester_id;
       const profile = profilesMap.get(friendId);
       const privacy = privacyMap.get(friendId);
-      const friendCode = codesMap.get(friendId) || "";
       
-      // Use display_name, fallback to friend code prefix, then to generic name
-      const displayName = profile?.display_name || (friendCode ? `Nutzer ${friendCode.slice(0, 4)}` : null);
+      // Use display_name, fallback to generic name
+      const displayName = profile?.display_name || "Nutzer";
 
       return {
         id: friendId,
         user_id: friendId,
         display_name: displayName,
         avatar_url: profile?.avatar_url || null,
-        friend_code: friendCode,
+        friend_code: "", // Friend codes are no longer publicly readable
         privacy_settings: {
           show_score: (privacy?.show_score as "none" | "delta_only" | "full") || "delta_only",
           show_streak: privacy?.show_streak ?? true,
@@ -172,29 +169,19 @@ export function useFriends() {
 
     const requesterIds = data.map(r => r.requester_id);
     
-    // Fetch profiles and friend codes - profiles have priority for display_name
-    const [profilesRes, codesRes] = await Promise.all([
-      supabase.from("profiles").select("user_id, display_name, avatar_url").in("user_id", requesterIds),
-      supabase.from("friend_codes").select("user_id, code").in("user_id", requesterIds)
-    ]);
+    // Fetch public_profiles (safe view) for pending requesters
+    const { data: profilesData } = await supabase
+      .from("public_profiles")
+      .select("user_id, display_name, avatar_url")
+      .in("user_id", requesterIds);
 
-    const profilesMap = new Map(profilesRes.data?.map(p => [p.user_id, p]) || []);
-    const codesMap = new Map(codesRes.data?.map(c => [c.user_id, c.code]) || []);
+    const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
 
     const requests: FriendRequest[] = data.map(req => {
       const profile = profilesMap.get(req.requester_id);
-      const code = codesMap.get(req.requester_id);
       
-      // PRIORITY: 1. profile.display_name, 2. Friend code prefix, 3. Generic fallback
-      // Check that display_name is not null/undefined/empty string
-      let displayName: string;
-      if (profile?.display_name && profile.display_name.trim() !== '') {
-        displayName = profile.display_name;
-      } else if (code) {
-        displayName = `Nutzer ${code.slice(0, 4)}`;
-      } else {
-        displayName = "Neuer Nutzer";
-      }
+      // Use display_name or generic fallback
+      const displayName = profile?.display_name?.trim() || "Neuer Nutzer";
       
       return {
         id: req.id,
@@ -266,13 +253,11 @@ export function useFriends() {
   const sendFriendRequest = async (code: string): Promise<boolean> => {
     if (!user || !code.trim()) return false;
 
-    // Find user by code and get their profile for the success message
-    const { data: codeData, error: codeError } = await supabase
-      .from("friend_codes")
-      .select("user_id")
-      .eq("code", code.toUpperCase())
-      .maybeSingle();
+    // Use secure RPC to resolve friend code (avoids direct SELECT on friend_codes)
+    const { data: codeResults, error: codeError } = await supabase
+      .rpc("resolve_friend_code", { p_code: code.toUpperCase() });
 
+    const codeData = codeResults?.[0];
     if (codeError || !codeData) {
       toast({
         title: "Code nicht gefunden",
@@ -282,14 +267,7 @@ export function useFriends() {
       return false;
     }
 
-    // Get the profile of the target user for the toast message
-    const { data: profileData } = await supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("user_id", codeData.user_id)
-      .single();
-
-    const targetName = profileData?.display_name || `Nutzer ${code.slice(0, 4)}`;
+    const targetName = codeData.display_name || "Nutzer";
 
     return sendFriendRequestByUserId(codeData.user_id, targetName);
   };
@@ -358,10 +336,10 @@ export function useFriends() {
     let displayName = targetDisplayName;
     if (!displayName) {
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("public_profiles")
         .select("display_name")
         .eq("user_id", targetUserId)
-        .single();
+        .maybeSingle();
       displayName = profile?.display_name || "Nutzer";
     }
 
@@ -382,8 +360,9 @@ export function useFriends() {
   }>> => {
     if (!user || query.length < 2) return [];
 
+    // Search in public_profiles (safe view) only
     const { data: profiles } = await supabase
-      .from("profiles")
+      .from("public_profiles")
       .select("user_id, display_name, avatar_url")
       .ilike("display_name", `%${query}%`)
       .neq("user_id", user.id)
@@ -391,19 +370,11 @@ export function useFriends() {
 
     if (!profiles || profiles.length === 0) return [];
 
-    const userIds = profiles.map(p => p.user_id);
-    const { data: codes } = await supabase
-      .from("friend_codes")
-      .select("user_id, code")
-      .in("user_id", userIds);
-
-    const codesMap = new Map(codes?.map(c => [c.user_id, c.code]) || []);
-
     return profiles.map(p => ({
       user_id: p.user_id,
       display_name: p.display_name,
       avatar_url: p.avatar_url,
-      friend_code: codesMap.get(p.user_id) || "",
+      friend_code: "", // Friend codes are no longer publicly accessible
     }));
   };
 
