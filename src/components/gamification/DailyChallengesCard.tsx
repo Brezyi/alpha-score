@@ -198,15 +198,7 @@ export const DailyChallengesCard = memo(({
 
   const handleComplete = useCallback(async (id: string) => {
     await onComplete(id);
-    // Trigger confetti on challenge completion
-    const remaining = challenges.filter(c => !c.completed && c.challengeId !== id).length;
-    if (remaining === 0) {
-      // All challenges done - big celebration!
-      triggerConfetti("celebration");
-    } else {
-      triggerConfetti("achievement");
-    }
-  }, [onComplete, challenges]);
+  }, [onComplete]);
 
   if (loading) {
     return (
