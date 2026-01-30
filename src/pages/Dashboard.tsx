@@ -64,6 +64,7 @@ import { SleepScoreCorrelation } from "@/components/dashboard/SleepScoreCorrelat
 import { StreakRewards } from "@/components/gamification/StreakRewards";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { useReferral } from "@/hooks/useReferral";
+import { AffiliateCard } from "@/components/affiliate/AffiliateCard";
 import { Capacitor } from "@capacitor/core";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
@@ -1140,6 +1141,9 @@ const Dashboard = () => {
                 hasPersonalizedResults={hasPersonalizedResults}
               />
             )}
+            
+            {/* Affiliate Card */}
+            <AffiliateCard compact />
           </div>
         )}
 

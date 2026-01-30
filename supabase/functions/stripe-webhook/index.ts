@@ -69,6 +69,8 @@ serve(async (req) => {
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice;
         await handleInvoicePaid(supabaseClient, stripe, invoice);
+        // Process affiliate commission
+        await processAffiliateCommission(supabaseClient, stripe, invoice);
         break;
       }
 
@@ -291,4 +293,86 @@ async function handlePaymentFailed(
     _new_values: { invoice_id: invoice.id, amount: invoice.amount_due },
     _metadata: { event: "Payment failed" },
   });
+}
+
+// Process affiliate commission when invoice is paid
+// deno-lint-ignore no-explicit-any
+async function processAffiliateCommission(
+  supabase: SupabaseClient<any>,
+  stripe: Stripe,
+  invoice: Stripe.Invoice
+) {
+  try {
+    const customerId = invoice.customer as string;
+    const customer = await stripe.customers.retrieve(customerId);
+    const customerEmail = !customer.deleted ? customer.email : null;
+
+    if (!customerEmail) {
+      logStep("No customer email for affiliate check");
+      return;
+    }
+
+    // Find user by email
+    const { data: users } = await supabase.auth.admin.listUsers();
+    const user = users?.users?.find((u: { email?: string }) => u.email === customerEmail);
+    
+    if (!user) {
+      logStep("User not found for affiliate check");
+      return;
+    }
+
+    // Check if this user was referred
+    const { data: referral } = await supabase
+      .from("referrals")
+      .select("referrer_id")
+      .eq("referred_id", user.id)
+      .maybeSingle();
+
+    if (!referral) {
+      logStep("No referral found for user");
+      return;
+    }
+
+    logStep("Referral found, processing commission", { 
+      referrerId: referral.referrer_id, 
+      referredId: user.id,
+      amount: invoice.amount_paid 
+    });
+
+    // Get subscription info
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
+      .maybeSingle();
+
+    const commissionRate = 0.20; // 20%
+    const commissionAmount = (invoice.amount_paid / 100) * commissionRate; // Convert from cents
+
+    // Record the affiliate earning
+    const { error } = await supabase.from("affiliate_earnings").insert({
+      referrer_id: referral.referrer_id,
+      referred_id: user.id,
+      subscription_id: subscription?.id || null,
+      payment_amount: invoice.amount_paid / 100,
+      commission_rate: commissionRate,
+      commission_amount: commissionAmount,
+      currency: invoice.currency.toUpperCase(),
+      status: "pending",
+    });
+
+    if (error) {
+      logStep("Error inserting affiliate earning", { error });
+    } else {
+      logStep("Affiliate commission recorded", { 
+        amount: commissionAmount, 
+        currency: invoice.currency 
+      });
+    }
+  } catch (error) {
+    logStep("Error processing affiliate commission", { 
+      error: error instanceof Error ? error.message : String(error) 
+    });
+  }
 }
