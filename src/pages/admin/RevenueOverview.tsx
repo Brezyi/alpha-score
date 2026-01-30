@@ -31,6 +31,7 @@ import { de } from "date-fns/locale";
 
 interface SubscriptionData {
   id: string;
+  user_id: string;
   stripe_customer_id: string;
   stripe_subscription_id: string | null;
   plan_type: "premium" | "lifetime";
@@ -41,6 +42,7 @@ interface SubscriptionData {
   current_period_end: string | null;
   created_at: string;
   cancel_at_period_end: boolean;
+  display_name?: string; // From profiles join
 }
 
 interface PaymentData {
@@ -139,6 +141,15 @@ export default function RevenueOverview() {
         throw new Error("Fehler beim Laden der Abonnements");
       }
 
+      // Fetch user display names from profiles
+      const userIds = [...new Set((subsData || []).map(s => s.user_id).filter(Boolean))];
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
+      
+      const profileMap = new Map(profilesData?.map(p => [p.user_id, p.display_name]) || []);
+
       // Fetch recent payments
       const { data: paymentsData, error: paymentsError } = await supabase
         .from("payments")
@@ -151,7 +162,11 @@ export default function RevenueOverview() {
         console.error("Error fetching payments:", paymentsError);
       }
 
-      const subs = (subsData || []) as SubscriptionData[];
+      // Enrich subscriptions with display names
+      const subs = (subsData || []).map(s => ({
+        ...s,
+        display_name: profileMap.get(s.user_id) || null,
+      })) as SubscriptionData[];
       const pays = (paymentsData || []) as PaymentData[];
 
       setSubscriptions(subs);
@@ -274,12 +289,15 @@ export default function RevenueOverview() {
   // Get customer display name based on source
   const getCustomerDisplay = (sub: SubscriptionData) => {
     const source = getSubscriptionSource(sub.stripe_customer_id);
+    const displayName = sub.display_name || sub.customer_email || "Unbekannt";
     
     if (source === "promo") {
       return (
         <div className="flex flex-col">
-          <span className="text-muted-foreground text-xs">Promo-Code</span>
-          <span className="text-xs text-purple-500">{sub.stripe_customer_id.replace("promo_PREMIUM_", "").replace("promo_LIFETIME_", "").slice(0, 8)}...</span>
+          <span className="font-medium">{displayName}</span>
+          <Badge variant="outline" className="w-fit text-xs border-purple-500/50 text-purple-500">
+            Promo-Code
+          </Badge>
         </div>
       );
     }
@@ -287,13 +305,15 @@ export default function RevenueOverview() {
     if (source === "admin") {
       return (
         <div className="flex flex-col">
-          <span className="text-muted-foreground text-xs">Von Admin vergeben</span>
-          <span className="text-xs text-amber-500">{sub.stripe_customer_id.replace("admin_granted_", "").slice(0, 8)}...</span>
+          <span className="font-medium">{displayName}</span>
+          <Badge variant="outline" className="w-fit text-xs border-amber-500/50 text-amber-500">
+            Von Admin vergeben
+          </Badge>
         </div>
       );
     }
     
-    return sub.customer_email || "Unbekannt";
+    return displayName;
   };
 
   // Get amount display with source indication
@@ -302,21 +322,21 @@ export default function RevenueOverview() {
     
     if (source === "promo") {
       return (
-        <span className="text-purple-500 text-sm">
+        <span className="text-purple-500 text-sm font-medium">
           Gratis (Promo)
         </span>
       );
     }
     
-    if (source === "admin" && sub.amount === 0) {
+    if (source === "admin") {
       return (
-        <span className="text-amber-500 text-sm">
+        <span className="text-amber-500 text-sm font-medium">
           Gratis (Admin)
         </span>
       );
     }
     
-    // Real payment or admin-granted with value
+    // Real Stripe payment
     return formatCurrency(sub.amount, sub.currency);
   };
 
