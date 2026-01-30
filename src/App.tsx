@@ -54,6 +54,7 @@ const PromoCodes = lazy(() => import("./pages/admin/PromoCodes"));
 const AdminPasswordManagement = lazy(() => import("./pages/admin/AdminPasswordManagement"));
 const StripeCoupons = lazy(() => import("./pages/admin/StripeCoupons"));
 const RefundManagement = lazy(() => import("./pages/admin/RefundManagement"));
+const Affiliate = lazy(() => import("./pages/Affiliate"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,6 +116,7 @@ const App = () => (
                         <Route path="/impressum" element={<Impressum />} />
                         <Route path="/agb" element={<AGB />} />
                         <Route path="/confirm-deletion" element={<ConfirmDeletion />} />
+                        <Route path="/affiliate" element={<Affiliate />} />
                         <Route path="/admin-password-reset" element={<AdminPasswordReset />} />
                         
                         {/* Admin Routes - Protected by role */}

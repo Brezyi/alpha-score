@@ -233,6 +233,62 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_earnings: {
+        Row: {
+          commission_amount: number
+          commission_rate: number
+          created_at: string
+          currency: string
+          id: string
+          paid_at: string | null
+          payment_amount: number
+          payout_method: string | null
+          payout_reference: string | null
+          referred_id: string
+          referrer_id: string
+          status: string
+          subscription_id: string | null
+        }
+        Insert: {
+          commission_amount: number
+          commission_rate?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          payment_amount: number
+          payout_method?: string | null
+          payout_reference?: string | null
+          referred_id: string
+          referrer_id: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Update: {
+          commission_amount?: number
+          commission_rate?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          paid_at?: string | null
+          payment_amount?: number
+          payout_method?: string | null
+          payout_reference?: string | null
+          referred_id?: string
+          referrer_id?: string
+          status?: string
+          subscription_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_earnings_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analyses: {
         Row: {
           created_at: string
@@ -1321,6 +1377,8 @@ export type Database = {
           display_name_changed_at: string | null
           gender: string | null
           id: string
+          payout_email: string | null
+          payout_method: string | null
           theme: string | null
           updated_at: string
           user_id: string
@@ -1336,6 +1394,8 @@ export type Database = {
           display_name_changed_at?: string | null
           gender?: string | null
           id?: string
+          payout_email?: string | null
+          payout_method?: string | null
           theme?: string | null
           updated_at?: string
           user_id: string
@@ -1351,6 +1411,8 @@ export type Database = {
           display_name_changed_at?: string | null
           gender?: string | null
           id?: string
+          payout_email?: string | null
+          payout_method?: string | null
           theme?: string | null
           updated_at?: string
           user_id?: string
