@@ -3103,6 +3103,7 @@ export type Database = {
         Args: { p_current_user_id?: string; p_display_name: string }
         Returns: boolean
       }
+      check_email_exists: { Args: { _email: string }; Returns: boolean }
       check_rate_limit: {
         Args: {
           _action_type: string
