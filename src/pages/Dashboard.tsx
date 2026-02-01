@@ -31,8 +31,7 @@ import {
   Heart,
   Users,
   DollarSign,
-  BarChart3,
-  Compass
+  BarChart3
 } from "lucide-react";
 import {
   Collapsible,
@@ -142,14 +141,6 @@ const quickActions = [
     title: "Affiliate",
     description: "Verdiene 20% pro Abo",
     href: "/affiliate",
-    color: "bg-primary/10 text-primary",
-    premium: false,
-  },
-  {
-    icon: Compass,
-    title: "Entdecken",
-    description: "Alle Features auf einen Blick",
-    href: "/discover",
     color: "bg-primary/10 text-primary",
     premium: false,
   },
