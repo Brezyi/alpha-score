@@ -1,28 +1,46 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 
-const sendEmail = async (to: string, subject: string, html: string, from: string) => {
-  const response = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${RESEND_API_KEY}`,
-    },
-    body: JSON.stringify({ from, to: [to], subject, html }),
-  });
-  
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`Failed to send email: ${error}`);
+const sendEmail = async (to: string, subject: string, html: string): Promise<{ success: boolean; error?: string }> => {
+  if (!RESEND_API_KEY) {
+    console.log("[CONFIRM-ACCOUNT-DELETION] RESEND_API_KEY not configured");
+    return { success: false, error: "RESEND_API_KEY not configured" };
   }
-  
-  return response.json();
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "GLOWMAXXED AI <onboarding@resend.dev>",
+        to: [to],
+        subject,
+        html,
+      }),
+    });
+
+    const responseText = await response.text();
+    console.log("[CONFIRM-ACCOUNT-DELETION] Resend API response:", response.status, responseText);
+
+    if (!response.ok) {
+      return { success: false, error: `Resend API error: ${response.status} - ${responseText}` };
+    }
+
+    return { success: true };
+  } catch (error: any) {
+    console.log("[CONFIRM-ACCOUNT-DELETION] Email send error:", error.message);
+    return { success: false, error: error.message };
+  }
 };
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface ConfirmDeleteBody {
@@ -306,7 +324,7 @@ serve(async (req) => {
     });
 
     // Get app name for email
-    let appName = "Glow Up AI";
+    let appName = "GLOWMAXXED AI";
     try {
       const { data: settingsData } = await supabaseAdmin
         .from("system_settings")
@@ -314,7 +332,7 @@ serve(async (req) => {
         .eq("key", "app_name")
         .single();
       if (settingsData?.value) {
-        appName = String(settingsData.value);
+        appName = String(settingsData.value).replace(/"/g, "");
       }
     } catch (e) {
       logStep("Could not fetch app name, using default");
@@ -322,16 +340,22 @@ serve(async (req) => {
 
     // Send confirmation email before deleting the user
     try {
+      logStep("Attempting to send deletion confirmation email", { to: userEmail, appName });
+      
       const emailHtml = generateDeletionConfirmationEmail(appName);
-      const emailResponse = await sendEmail(
+      const emailResult = await sendEmail(
         userEmail,
         `Dein Konto wurde erfolgreich gelöscht - ${appName}`,
-        emailHtml,
-        `${appName} <noreply@glowupai.de>`
+        emailHtml
       );
-      logStep("Deletion confirmation email sent", emailResponse);
+      
+      if (emailResult.success) {
+        logStep("Deletion confirmation email sent successfully");
+      } else {
+        logStep("Failed to send deletion confirmation email", emailResult.error);
+      }
     } catch (emailError: any) {
-      logStep("Error sending confirmation email", emailError.message);
+      logStep("Error sending confirmation email", { message: emailError.message });
       // Continue with deletion even if email fails
     }
 
