@@ -122,13 +122,16 @@ export function ProtectedRoute({
               <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
                 <Shield className="w-10 h-10 text-primary" />
               </div>
-              <h1 className="text-2xl font-bold mb-2">Admin-Bereich</h1>
-              <p className="text-muted-foreground mb-6">
-                Für den Zugang zum Admin-Bereich ist ein zusätzliches Passwort erforderlich.
+              <h1 className="text-2xl font-bold mb-2">Geschützter Bereich</h1>
+              <p className="text-muted-foreground mb-4">
+                Dieser Bereich enthält sensible Einstellungen und ist zusätzlich geschützt.
               </p>
-              <Button onClick={() => setShowAdminPasswordDialog(true)} variant="hero">
+              <p className="text-sm text-muted-foreground mb-6">
+                Um fortzufahren, bestätige bitte deine Identität mit deinem Admin-Passwort.
+              </p>
+              <Button onClick={() => setShowAdminPasswordDialog(true)} variant="hero" size="lg">
                 <Lock className="w-4 h-4" />
-                Passwort eingeben
+                Zugang freischalten
               </Button>
             </div>
           </div>

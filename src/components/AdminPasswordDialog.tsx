@@ -22,6 +22,39 @@ interface AdminPasswordDialogProps {
   onCancel: () => void;
 }
 
+// Helper to get user-friendly content based on mode
+function getModeContent(mode: "setup" | "expired" | "verify") {
+  switch (mode) {
+    case "setup":
+      return {
+        title: "Zusätzlichen Schutz einrichten",
+        subtitle: "Erstelle ein separates Passwort für sensible Bereiche",
+        description: "Dieses Passwort schützt den Zugang zu administrativen Funktionen. Es ist unabhängig von deinem Login-Passwort und bietet eine zusätzliche Sicherheitsebene.",
+        buttonText: "Schutz aktivieren",
+        inputLabel: "Neues Admin-Passwort",
+        inputPlaceholder: "Mindestens 8 Zeichen",
+      };
+    case "expired":
+      return {
+        title: "Passwort erneuern",
+        subtitle: "Dein Admin-Passwort ist abgelaufen",
+        description: "Aus Sicherheitsgründen muss das Admin-Passwort alle 3 Monate erneuert werden. Bitte erstelle jetzt ein neues Passwort.",
+        buttonText: "Neues Passwort speichern",
+        inputLabel: "Neues Admin-Passwort",
+        inputPlaceholder: "Mindestens 8 Zeichen",
+      };
+    case "verify":
+      return {
+        title: "Zugang bestätigen",
+        subtitle: "Gib dein Admin-Passwort ein",
+        description: "Um auf sensible Einstellungen zuzugreifen, bestätige bitte deine Identität mit dem Admin-Passwort.",
+        buttonText: "Zugang freischalten",
+        inputLabel: "Admin-Passwort",
+        inputPlaceholder: "Dein Admin-Passwort",
+      };
+  }
+}
+
 export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPasswordDialogProps) {
   const { status, loading, setPassword, verifyPassword, isVerified } = useAdminPassword();
   const { isOwner } = useUserRole();
@@ -35,6 +68,7 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
 
   // Mode: "setup" (create new), "expired" (must renew), or "verify" (enter existing)
   const mode = !status?.hasPassword ? "setup" : status.isExpired ? "expired" : "verify";
+  const content = getModeContent(mode);
 
   // If already verified, trigger success
   useEffect(() => {
@@ -149,39 +183,44 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-primary" />
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <Shield className="w-6 h-6 text-primary" />
             </div>
-            <div>
-              <DialogTitle>
-                {mode === "setup" && "Admin-Passwort erstellen"}
-                {mode === "expired" && "Passwort erneuern"}
-                {mode === "verify" && "Admin-Bereich entsperren"}
+            <div className="flex-1">
+              <DialogTitle className="text-lg">
+                {content.title}
               </DialogTitle>
-              <DialogDescription>
-                {mode === "setup" && "Erstelle ein separates Passwort für den Admin-Zugang"}
-                {mode === "expired" && "Dein Admin-Passwort ist abgelaufen (3 Monate)"}
-                {mode === "verify" && "Gib dein Admin-Passwort ein, um fortzufahren"}
+              <DialogDescription className="text-sm">
+                {content.subtitle}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
+          {/* Context info box - always shown for setup, hidden for verify */}
+          {(mode === "setup" || mode === "expired") && (
+            <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {content.description}
+              </p>
+            </div>
+          )}
+
           {mode === "expired" && (
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Dein Admin-Passwort ist abgelaufen. Bitte erstelle ein neues Passwort.
+                Aus Sicherheitsgründen ist eine Erneuerung erforderlich.
               </AlertDescription>
             </Alert>
           )}
 
           {mode === "verify" && status?.daysUntilExpiry !== undefined && status.daysUntilExpiry <= 14 && (
-            <Alert>
-              <Calendar className="h-4 w-4" />
-              <AlertDescription>
-                Dein Admin-Passwort läuft in {status.daysUntilExpiry} Tagen ab
+            <Alert className="border-warning/50 bg-warning/10">
+              <Calendar className="h-4 w-4 text-warning" />
+              <AlertDescription className="text-warning">
+                Dein Passwort läuft in {status.daysUntilExpiry} Tagen ab – denk daran, es bald zu erneuern.
               </AlertDescription>
             </Alert>
           )}
@@ -195,8 +234,8 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
 
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label htmlFor="admin-password">
-                {mode === "verify" ? "Admin-Passwort" : "Neues Admin-Passwort"}
+              <Label htmlFor="admin-password" className="text-sm font-medium">
+                {content.inputLabel}
               </Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -205,8 +244,8 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPasswordValue(e.target.value)}
-                  placeholder={mode === "verify" ? "Passwort eingeben" : "Mind. 8 Zeichen"}
-                  className="pl-10 pr-10"
+                  placeholder={content.inputPlaceholder}
+                  className="pl-10 pr-10 h-11"
                   autoComplete="off"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && mode === "verify") {
@@ -218,6 +257,7 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                  aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -226,7 +266,7 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
 
             {(mode === "setup" || mode === "expired") && (
               <div className="space-y-2">
-                <Label htmlFor="confirm-password">Passwort bestätigen</Label>
+                <Label htmlFor="confirm-password" className="text-sm font-medium">Passwort bestätigen</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -235,7 +275,7 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Passwort wiederholen"
-                    className="pl-10"
+                    className="pl-10 h-11"
                     autoComplete="off"
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
@@ -249,42 +289,59 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
           </div>
 
           {(mode === "setup" || mode === "expired") && (
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p>• Mindestens 8 Zeichen</p>
-              <p>• Groß- und Kleinbuchstaben</p>
-              <p>• Mindestens eine Zahl</p>
-              <p>• Muss alle 3 Monate erneuert werden</p>
+            <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
+              <p className="text-xs font-medium text-foreground mb-2">Passwort-Anforderungen:</p>
+              <ul className="text-xs text-muted-foreground space-y-1">
+                <li className="flex items-center gap-2">
+                  <span className={password.length >= 8 ? "text-success" : ""}>
+                    {password.length >= 8 ? "✓" : "○"}
+                  </span>
+                  Mindestens 8 Zeichen
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className={/[A-Z]/.test(password) && /[a-z]/.test(password) ? "text-success" : ""}>
+                    {/[A-Z]/.test(password) && /[a-z]/.test(password) ? "✓" : "○"}
+                  </span>
+                  Groß- und Kleinbuchstaben
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className={/[0-9]/.test(password) ? "text-success" : ""}>
+                    {/[0-9]/.test(password) ? "✓" : "○"}
+                  </span>
+                  Mindestens eine Zahl
+                </li>
+              </ul>
             </div>
           )}
 
           {/* Forgot Password - different for owners vs admins */}
           {mode === "verify" && !showForgotPassword && (
-            <>
+            <div className="text-center pt-1">
               {isOwner ? (
                 <button
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
-                  className="text-sm text-primary hover:underline w-full text-center"
+                  className="text-sm text-primary hover:underline"
                 >
-                  Admin-Passwort vergessen?
+                  Passwort vergessen?
                 </button>
               ) : (
-                <p className="text-xs text-muted-foreground text-center">
-                  Passwort vergessen? Kontaktiere den Owner für einen Reset-Link.
+                <p className="text-xs text-muted-foreground">
+                  Passwort vergessen? Bitte kontaktiere den Account-Inhaber.
                 </p>
               )}
-            </>
+            </div>
           )}
 
           {/* Forgot Password Form - only for owners */}
           {showForgotPassword && isOwner && (
-            <div className="p-4 rounded-lg bg-muted/50 border space-y-3">
+            <div className="p-4 rounded-lg bg-primary/5 border border-primary/20 space-y-3">
               <div className="flex items-center gap-2 text-sm font-medium">
                 <Mail className="w-4 h-4 text-primary" />
-                Passwort per E-Mail zurücksetzen
+                Passwort zurücksetzen
               </div>
               <p className="text-xs text-muted-foreground">
-                Ein Reset-Link wird an deine registrierte E-Mail-Adresse gesendet.
+                Wir senden dir einen sicheren Link an deine E-Mail-Adresse, mit dem du ein neues Passwort erstellen kannst.
               </p>
               <div className="flex gap-2">
                 <Button
@@ -294,7 +351,7 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
                   disabled={sendingResetEmail}
                   className="flex-1"
                 >
-                  Abbrechen
+                  Zurück
                 </Button>
                 <Button
                   size="sm"
@@ -305,31 +362,26 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
                   {sendingResetEmail ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
                   ) : (
-                    <>
-                      <Mail className="w-4 h-4 mr-1" />
-                      Link senden
-                    </>
+                    "Link senden"
                   )}
                 </Button>
               </div>
             </div>
           )}
 
-          <div className="flex gap-3 pt-2">
-            <Button variant="outline" onClick={onCancel} className="flex-1">
+          <div className="flex gap-3 pt-3">
+            <Button variant="outline" onClick={onCancel} className="flex-1 h-11">
               Abbrechen
             </Button>
             <Button
               onClick={mode === "verify" ? handleVerify : handleSetup}
               disabled={submitting}
-              className="flex-1"
+              className="flex-1 h-11"
             >
               {submitting ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-              ) : mode === "verify" ? (
-                "Entsperren"
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                "Passwort speichern"
+                content.buttonText
               )}
             </Button>
           </div>
