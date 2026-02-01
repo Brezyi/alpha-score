@@ -44,12 +44,13 @@ const activityIcons = {
   level_up: Zap,
 };
 
+// Using semantic colors from design system
 const activityColors = {
-  achievement: "text-amber-500 bg-amber-500/10",
-  streak: "text-orange-500 bg-orange-500/10",
+  achievement: "text-warning bg-warning/10",
+  streak: "text-accent bg-accent/10",
   analysis: "text-primary bg-primary/10",
-  friend: "text-emerald-500 bg-emerald-500/10",
-  level_up: "text-purple-500 bg-purple-500/10",
+  friend: "text-success bg-success/10",
+  level_up: "text-secondary bg-secondary/10",
 };
 
 export function ActivityFeed() {
@@ -97,32 +98,9 @@ export function ActivityFeed() {
 
         setFriends(friendsData);
 
-        // Generate mock activities based on friends
-        // In a real app, you'd fetch actual activity data from a dedicated table
-        const mockActivities: FriendActivity[] = friendsData.slice(0, 5).map((friend, idx) => {
-          const types: FriendActivity["type"][] = ["achievement", "streak", "analysis", "level_up"];
-          const messages = {
-            achievement: "hat ein neues Achievement freigeschaltet! 🏆",
-            streak: "hat einen 7-Tage Streak erreicht! 🔥",
-            analysis: "hat eine neue Analyse durchgeführt",
-            level_up: "ist auf Level 5 aufgestiegen! ⚡",
-          };
-          
-          const type = types[idx % types.length];
-          
-          return {
-            id: `${friend.id}-${idx}`,
-            type,
-            userId: friend.id,
-            userName: friend.display_name || "Unbekannt",
-            avatarUrl: friend.avatar_url || undefined,
-            message: messages[type],
-            timestamp: new Date(Date.now() - Math.random() * 86400000 * 2),
-            isOnline: isOnline(friend.id),
-          };
-        });
-
-        setActivities(mockActivities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime()));
+        // No activity table exists yet - show empty state instead of fake data
+        // TODO: Create activities table when real activity tracking is needed
+        setActivities([]);
       } catch (error) {
         console.error("Error fetching activities:", error);
       } finally {
@@ -168,11 +146,7 @@ export function ActivityFeed() {
                     </AvatarFallback>
                   </Avatar>
                   {/* Pulse indicator */}
-                  <motion.span
-                    className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-background"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success rounded-full border-2 border-background animate-pulse" />
                 </div>
               ))}
               {onlineFriends.length > 5 && (
@@ -197,8 +171,8 @@ export function ActivityFeed() {
             </Link>
           </div>
         ) : (
-          <AnimatePresence>
-            <div className="space-y-3">
+          <div className="space-y-3">
+            <AnimatePresence mode="popLayout">
               {activities.slice(0, 4).map((activity, index) => {
                 const Icon = activityIcons[activity.type];
                 const colorClass = activityColors[activity.type];
@@ -206,8 +180,10 @@ export function ActivityFeed() {
                 return (
                   <motion.div
                     key={activity.id}
+                    layout
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
                     transition={{ delay: index * 0.1 }}
                     className="flex items-start gap-3 group"
                   >
@@ -220,11 +196,7 @@ export function ActivityFeed() {
                         </AvatarFallback>
                       </Avatar>
                       {activity.isOnline && (
-                        <motion.span
-                          className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-card"
-                          animate={{ scale: [1, 1.3, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        />
+                        <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full border-2 border-card animate-pulse" />
                       )}
                     </div>
                     
@@ -246,8 +218,8 @@ export function ActivityFeed() {
                   </motion.div>
                 );
               })}
-            </div>
-          </AnimatePresence>
+            </AnimatePresence>
+          </div>
         )}
         
         {activities.length > 4 && (
