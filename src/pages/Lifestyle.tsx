@@ -19,7 +19,7 @@ import { MealPlanner } from "@/components/lifestyle/MealPlanner";
 import { CalorieCalculator } from "@/components/lifestyle/CalorieCalculator";
 import { MotivationCard } from "@/components/lifestyle/MotivationCard";
 import { FoodSearch } from "@/components/lifestyle/FoodSearch";
-import { HealthConnectCard } from "@/components/lifestyle/HealthConnectCard";
+import { StepsCaloriesTracker } from "@/components/lifestyle/StepsCaloriesTracker";
 import { ProgressPhotosTracker } from "@/components/lifestyle/ProgressPhotosTracker";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeeklyChallengeCard } from "@/components/challenges/WeeklyChallengeCard";
@@ -270,16 +270,14 @@ export default function Lifestyle() {
               <MotivationCard />
             </motion.div>
 
-            {/* Health Connect - only render wrapper on native to avoid empty gaps on web */}
-            {isNative && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-              >
-                <HealthConnectCard />
-              </motion.div>
-            )}
+            {/* Steps & Calories Tracker */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <StepsCaloriesTracker selectedDate={selectedDate} />
+            </motion.div>
 
             {/* Mood Tracker */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
@@ -318,6 +316,9 @@ export default function Lifestyle() {
           {/* Activity Tab */}
           <TabsContent value="activity" className="space-y-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+              <StepsCaloriesTracker selectedDate={selectedDate} />
+            </motion.div>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <ActivityTracker />
             </motion.div>
           </TabsContent>
