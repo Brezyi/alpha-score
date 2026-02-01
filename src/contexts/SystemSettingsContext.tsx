@@ -110,7 +110,6 @@ export const SystemSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
           accent_color: typeof parsed.accent_color === "string" ? parsed.accent_color : defaultSettings.accent_color,
         };
 
-        console.log("[SystemSettings] Loaded:", newSettings);
         setSettings(newSettings);
       }
     } catch (error) {
@@ -133,8 +132,7 @@ export const SystemSettingsProvider: React.FC<{ children: ReactNode }> = ({ chil
           schema: "public",
           table: "system_settings",
         },
-        (payload) => {
-          console.log("[SystemSettings] Realtime update:", payload);
+        () => {
           // Refetch all settings on any change
           fetchSettings();
         }

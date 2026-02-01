@@ -17,24 +17,18 @@ import { Loader2 } from "lucide-react";
 const IS_NATIVE_PLATFORM = Capacitor.isNativePlatform();
 const NATIVE_PLATFORM = Capacitor.getPlatform();
 
-console.log("[Index] Platform detection:", { IS_NATIVE_PLATFORM, NATIVE_PLATFORM });
-
 const Index = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
-    console.log("[Index] useEffect:", { IS_NATIVE_PLATFORM, loading, user: !!user, hasRedirected });
-    
     // On native platforms, skip landing page and go directly to app
     if (IS_NATIVE_PLATFORM && !loading && !hasRedirected) {
       setHasRedirected(true);
       if (user) {
-        console.log("[Index] Redirecting to dashboard");
         navigate("/dashboard", { replace: true });
       } else {
-        console.log("[Index] Redirecting to login");
         navigate("/login", { replace: true });
       }
     }

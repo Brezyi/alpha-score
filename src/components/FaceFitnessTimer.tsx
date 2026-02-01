@@ -65,8 +65,8 @@ export function FaceFitnessTimer({
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.1);
       }
-    } catch (e) {
-      console.log("Audio not supported");
+    } catch {
+      // Audio not supported on this device
     }
   }, [soundEnabled]);
 
