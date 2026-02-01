@@ -32,7 +32,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener FIRST (important for race condition prevention)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
+        // Handle signed out event
+        if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        // Verify user still exists when we have a session
+        if (currentSession?.user) {
+          try {
+            const { error } = await supabase.auth.getUser();
+            if (error?.message?.includes('User from sub claim in JWT does not exist')) {
+              // User was deleted - sign out
+              await supabase.auth.signOut();
+              setSession(null);
+              setUser(null);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // Ignore errors, proceed normally
+          }
+        }
+
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
         setLoading(false);
@@ -40,7 +65,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
+      if (currentSession?.user) {
+        // Verify user still exists
+        const { error } = await supabase.auth.getUser();
+        if (error?.message?.includes('User from sub claim in JWT does not exist')) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      }
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       setLoading(false);
