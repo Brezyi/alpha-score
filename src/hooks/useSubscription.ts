@@ -54,11 +54,11 @@ export function useSubscription() {
         const isExpiringSoon = expiresAt && (expiresAt - now) < 60;
         
         if (isExpiringSoon) {
-          console.log("Token expiring soon, refreshing proactively...");
+          // Token expiring soon, refreshing proactively
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
           
           if (refreshError) {
-            console.error("Session refresh failed:", refreshError);
+            // Session refresh failed - user needs to login again
             // Refresh token is also expired - user needs to login again
             await supabase.auth.signOut();
             setState({
@@ -115,11 +115,11 @@ export function useSubscription() {
                             errorMessage.includes("Token");
         
         if (isTokenError && retryCount < 1) {
-          console.log("Token error detected, attempting refresh...", { retryCount });
+          // Token error detected, attempting refresh
           const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
           
           if (refreshError) {
-            console.error("Session refresh failed, signing out:", refreshError);
+            // Session refresh failed, signing out
             await supabase.auth.signOut();
             setState({
               isPremium: false,
@@ -153,11 +153,11 @@ export function useSubscription() {
 
       // Check for token_expired in response body
       if (data?.token_expired && retryCount < 1) {
-        console.log("Token expired flag in response, attempting refresh...");
+        // Token expired flag in response, attempting refresh
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         
         if (refreshError) {
-          console.error("Session refresh failed, signing out:", refreshError);
+          // Session refresh failed, signing out
           await supabase.auth.signOut();
           setState({
             isPremium: false,
@@ -184,8 +184,8 @@ export function useSubscription() {
         loading: false,
         error: null,
       });
-    } catch (error: any) {
-      console.error("Subscription check failed:", error);
+    } catch {
+      // Subscription check failed silently
       setState({
         isPremium: false,
         subscriptionType: null,
@@ -231,8 +231,8 @@ export function useSubscription() {
       if (data?.url) {
         window.open(data.url, "_blank");
       }
-    } catch (error: any) {
-      console.error("Checkout error:", error);
+    } catch (error: unknown) {
+      // Checkout error
       throw error;
     }
   };
@@ -246,8 +246,8 @@ export function useSubscription() {
       if (data?.url) {
         window.open(data.url, "_blank");
       }
-    } catch (error: any) {
-      console.error("Customer portal error:", error);
+    } catch (error: unknown) {
+      // Customer portal error
       throw error;
     }
   };
