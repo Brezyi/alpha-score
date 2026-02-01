@@ -198,14 +198,12 @@ export function AdminPasswordDialog({ open, onSuccess, onCancel }: AdminPassword
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          {/* Context info box - always shown for setup, hidden for verify */}
-          {(mode === "setup" || mode === "expired") && (
-            <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {content.description}
-              </p>
-            </div>
-          )}
+          {/* Context info box - shown for all modes */}
+          <div className="p-3 rounded-lg bg-muted/50 border border-border/50">
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {content.description}
+            </p>
+          </div>
 
           {mode === "expired" && (
             <Alert variant="destructive">
