@@ -165,7 +165,7 @@ export function FaceFitnessTimer({
                 strokeLinecap="round"
                 className={cn(
                   "transition-all duration-300",
-                  isCompleted ? "text-green-500" : "text-primary"
+                  isCompleted ? "text-success" : "text-primary"
                 )}
                 style={{
                   strokeDasharray: circumference,
@@ -182,7 +182,7 @@ export function FaceFitnessTimer({
                     key="complete"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="text-green-500"
+                    className="text-success"
                   >
                     <Check className="w-12 h-12" strokeWidth={3} />
                   </motion.div>
@@ -227,7 +227,7 @@ export function FaceFitnessTimer({
                 size="lg"
                 className={cn(
                   "h-14 w-14 rounded-full",
-                  isRunning && "bg-orange-500 hover:bg-orange-600"
+                  isRunning && "bg-warning hover:bg-warning/90"
                 )}
                 onClick={toggleTimer}
               >
