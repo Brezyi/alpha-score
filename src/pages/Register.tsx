@@ -5,7 +5,7 @@ import { ArrowLeft, Mail, Lock, User, Loader2, Check, AlertCircle, Gift } from "
 import { ScannerLogo } from "@/components/ScannerLogo";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -41,11 +41,69 @@ const Register = () => {
   const [referralCode, setReferralCode] = useState(searchParams.get("ref") || "");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { settings } = useGlobalSettings();
   const isNative = Capacitor.isNativePlatform();
+
+  const RATE_LIMIT_STORAGE_KEY = "register_rate_limit_until";
+  const rateLimitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const startRateLimitCooldown = useCallback((seconds: number) => {
+    const safe = Math.max(0, Math.min(seconds, 5 * 60));
+    const until = Date.now() + safe * 1000;
+    localStorage.setItem(RATE_LIMIT_STORAGE_KEY, String(until));
+    setRateLimitSeconds(safe);
+  }, []);
+
+  // Restore cooldown (e.g. after refresh)
+  useEffect(() => {
+    const raw = localStorage.getItem(RATE_LIMIT_STORAGE_KEY);
+    const until = raw ? Number(raw) : 0;
+    if (!Number.isFinite(until) || until <= Date.now()) {
+      localStorage.removeItem(RATE_LIMIT_STORAGE_KEY);
+      return;
+    }
+    const remaining = Math.ceil((until - Date.now()) / 1000);
+    if (remaining > 0) setRateLimitSeconds(remaining);
+  }, []);
+
+  // Countdown timer for rate limit cooldown
+  useEffect(() => {
+    if (rateLimitTimerRef.current) {
+      clearInterval(rateLimitTimerRef.current);
+      rateLimitTimerRef.current = null;
+    }
+
+    if (rateLimitSeconds > 0) {
+      rateLimitTimerRef.current = setInterval(() => {
+        setRateLimitSeconds((prev) => {
+          const next = Math.max(0, prev - 1);
+          if (next === 0) {
+            localStorage.removeItem(RATE_LIMIT_STORAGE_KEY);
+          }
+          return next;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (rateLimitTimerRef.current) {
+        clearInterval(rateLimitTimerRef.current);
+        rateLimitTimerRef.current = null;
+      }
+    };
+  }, [rateLimitSeconds]);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -89,6 +147,16 @@ const Register = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (rateLimitSeconds > 0) {
+      toast({
+        title: "Zu viele Anfragen",
+        description: `Bitte warte ${formatTime(rateLimitSeconds)} und versuche es dann erneut.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -155,9 +223,36 @@ const Register = () => {
         return;
       }
 
+      // Avoid triggering signup email if the email is already registered
+      const normalizedEmail = normalizeEmail(email);
+      try {
+        const { data: exists, error: existsError } = await supabase.rpc("check_email_exists", {
+          _email: normalizedEmail,
+        });
+
+        if (existsError) {
+          const m = existsError.message?.toLowerCase?.() ?? "";
+          if (m.includes("rate") || m.includes("too many")) {
+            startRateLimitCooldown(120);
+            throw new Error("email rate limit");
+          }
+          // If the helper fails, continue with signup attempt (fallback behavior)
+        } else if (exists === true) {
+          toast({
+            title: "E-Mail bereits registriert",
+            description: "Diese E-Mail existiert bereits. Bitte melde dich an (oder bestätige ggf. zuerst deine E-Mail).",
+            variant: "destructive",
+          });
+          navigate("/login");
+          return;
+        }
+      } catch {
+        // handled below by the main error catch
+      }
+
       // Sign up user
       const { data: signUpData, error } = await supabase.auth.signUp({
-        email,
+        email: normalizeEmail(email),
         password,
         options: {
           data: {
@@ -202,11 +297,13 @@ const Register = () => {
       let errorTitle = "Registrierung fehlgeschlagen";
       let errorDescription = error.message || "Bitte versuche es erneut.";
 
+      const errorLower = error.message?.toLowerCase?.() ?? "";
+
       // Check for rate limit error
-      if (error.message?.toLowerCase().includes("rate limit") ||
-          error.message?.toLowerCase().includes("email rate limit")) {
+      if (errorLower.includes("rate limit") || errorLower.includes("email rate limit") || error?.status === 429) {
         errorTitle = "Zu viele Anfragen";
         errorDescription = "Es wurden zu viele E-Mails gesendet. Bitte warte 1-2 Minuten und versuche es dann erneut.";
+        startRateLimitCooldown(120);
       }
       // Check for weak/pwned password error
       else if (error.message?.toLowerCase().includes("weak") || 
@@ -426,13 +523,15 @@ const Register = () => {
                 variant="hero" 
                 size="lg" 
                 className="w-full h-12 mt-2"
-                disabled={loading || googleLoading || !passwordsMatch}
+                disabled={loading || googleLoading || !passwordsMatch || rateLimitSeconds > 0}
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Registrieren...
                   </>
+                ) : rateLimitSeconds > 0 ? (
+                  `Bitte warten (${formatTime(rateLimitSeconds)})`
                 ) : (
                   "Registrieren"
                 )}
@@ -455,7 +554,7 @@ const Register = () => {
                 size="lg"
                 className="w-full h-12"
                 onClick={handleGoogleSignup}
-                disabled={loading || googleLoading}
+                disabled={loading || googleLoading || rateLimitSeconds > 0}
               >
                 {googleLoading ? (
                   <>
@@ -812,13 +911,15 @@ const Register = () => {
               variant="hero" 
               size="lg" 
               className="w-full"
-              disabled={loading || googleLoading}
+              disabled={loading || googleLoading || rateLimitSeconds > 0}
             >
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Wird erstellt...
                 </>
+              ) : rateLimitSeconds > 0 ? (
+                `Bitte warten (${formatTime(rateLimitSeconds)})`
               ) : (
                 "Kostenlos registrieren"
               )}
@@ -843,7 +944,7 @@ const Register = () => {
               size="lg"
               className="w-full"
               onClick={handleGoogleSignup}
-              disabled={loading || googleLoading}
+              disabled={loading || googleLoading || rateLimitSeconds > 0}
             >
               {googleLoading ? (
                 <>
