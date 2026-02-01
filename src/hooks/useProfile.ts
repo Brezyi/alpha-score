@@ -136,7 +136,6 @@ export function useProfile() {
             filter: `user_id=eq.${user.id}`,
           },
           (payload) => {
-            console.log("[Profile] Realtime update:", payload);
             const newProfile = payload.new as Profile;
             const oldProfile = payload.old as Profile | null;
             

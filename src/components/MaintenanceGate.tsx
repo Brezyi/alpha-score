@@ -66,7 +66,6 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
 
       if (!settingsError && settingsData) {
         const maintenanceValue = parseSettingValue(settingsData.value);
-        console.log("[MaintenanceGate] Maintenance mode:", maintenanceValue, "raw:", settingsData.value);
         setMaintenanceMode(maintenanceValue);
       }
 
@@ -92,7 +91,6 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
       } else {
         const ownerStatus = roleData === "owner";
         setIsOwner(ownerStatus);
-        console.log("[MaintenanceGate] Role check complete:", { role: roleData, isOwner: ownerStatus });
       }
     } catch (err) {
       console.error("Maintenance/Role check error:", err);
@@ -108,8 +106,6 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      console.log("[MaintenanceGate] Auth state changed:", event);
-      
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
         checkMaintenanceAndRole();
       } else if (event === 'SIGNED_OUT') {
@@ -132,7 +128,6 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
           filter: "key=eq.maintenance_mode",
         },
         (payload) => {
-          console.log("[MaintenanceGate] Maintenance mode changed:", payload);
           if (payload.new && 'value' in payload.new) {
             const newValue = parseSettingValue(payload.new.value);
             setMaintenanceMode(newValue);
@@ -185,15 +180,6 @@ export const MaintenanceCheck: React.FC<{ children: React.ReactNode }> = ({ chil
   // - User is NOT an owner
   // - Current route is NOT a public route
   const shouldShowMaintenance = maintenanceMode && isLoggedIn && !isOwner && !isPublicRoute;
-  
-  console.log("[MaintenanceCheck]", { 
-    maintenanceMode, 
-    isLoggedIn, 
-    isOwner, 
-    isPublicRoute, 
-    path: location.pathname,
-    shouldShowMaintenance 
-  });
 
   if (shouldShowMaintenance) {
     return (

@@ -56,13 +56,8 @@ export function useNativeApp() {
 
     // App lifecycle listeners
     const stateListener = App.addListener("appStateChange", ({ isActive }) => {
-      if (isActive) {
-        // App came to foreground
-        console.log("App became active");
-      } else {
-        // App went to background
-        console.log("App went to background");
-      }
+      // App lifecycle events can be handled here if needed
+      // For now, we just track the state change silently
     });
 
     // Handle back button on Android
