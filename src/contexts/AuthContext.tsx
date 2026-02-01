@@ -30,27 +30,61 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isMounted = true;
+
     // Set up auth state listener FIRST (important for race condition prevention)
+    // Keep it synchronous to avoid UI getting stuck if any awaited call hangs.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
-        // Handle signed out event
-        if (event === 'SIGNED_OUT') {
+      (event, currentSession) => {
+        if (!isMounted) return;
+
+        if (event === "SIGNED_OUT") {
           setSession(null);
           setUser(null);
           setLoading(false);
           return;
         }
 
-        // Verify user still exists when we have a session
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
+        setLoading(false);
+
+        // Verify user still exists (best-effort, non-blocking)
+        if (currentSession?.user) {
+          supabase.auth
+            .getUser()
+            .then(({ error }) => {
+              if (!isMounted) return;
+              if (error?.message?.includes("User from sub claim in JWT does not exist")) {
+                supabase.auth.signOut().finally(() => {
+                  if (!isMounted) return;
+                  setSession(null);
+                  setUser(null);
+                  setLoading(false);
+                });
+              }
+            })
+            .catch(() => {
+              // Ignore errors, proceed normally
+            });
+        }
+      }
+    );
+
+    // Initial session check (must always end by clearing loading)
+    const initialize = async () => {
+      try {
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+
         if (currentSession?.user) {
           try {
             const { error } = await supabase.auth.getUser();
-            if (error?.message?.includes('User from sub claim in JWT does not exist')) {
-              // User was deleted - sign out
+            if (error?.message?.includes("User from sub claim in JWT does not exist")) {
               await supabase.auth.signOut();
+              if (!isMounted) return;
               setSession(null);
               setUser(null);
-              setLoading(false);
               return;
             }
           } catch {
@@ -60,29 +94,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
-        setLoading(false);
+      } finally {
+        if (isMounted) setLoading(false);
       }
-    );
+    };
 
-    // Then check for existing session
-    supabase.auth.getSession().then(async ({ data: { session: currentSession } }) => {
-      if (currentSession?.user) {
-        // Verify user still exists
-        const { error } = await supabase.auth.getUser();
-        if (error?.message?.includes('User from sub claim in JWT does not exist')) {
-          await supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setLoading(false);
-          return;
-        }
-      }
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setLoading(false);
-    });
+    initialize();
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);

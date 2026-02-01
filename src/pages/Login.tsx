@@ -269,7 +269,7 @@ const Login = () => {
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizeEmail(email),
         password,
       });
 
@@ -277,8 +277,8 @@ const Login = () => {
         throw error;
       }
 
-      // Clear failed attempts on success
-      await clearFailedAttempts(email);
+      // Clear failed attempts on success (non-blocking)
+      void clearFailedAttempts(normalizeEmail(email));
 
       // Check if MFA is required
       const mfaRequired = await checkMFARequired();
@@ -315,22 +315,21 @@ const Login = () => {
       if (errorLower.includes("email not confirmed") || errorLower.includes("email confirmation")) {
         errorTitle = "E-Mail nicht bestätigt";
         errorMessage = "Bitte bestätige zuerst deine E-Mail-Adresse. Überprüfe deinen Posteingang.";
+        const normalized = normalizeEmail(email);
+        if (normalized) {
+          // Bring the user directly to the resend screen
+          navigate(`/email-confirmation?email=${encodeURIComponent(normalized)}`);
+        }
       } else if (isLocked) {
         errorMessage = `Konto für ${formatTime(lockoutSeconds)} gesperrt.`;
       } else if (errorLower.includes("invalid login credentials")) {
-        // Only record lockout/attempts for existing emails
-        const exists = await getEmailExists(email);
-        if (exists === false) {
-          errorTitle = "E-Mail nicht gefunden";
-          errorMessage = "Diese E-Mail-Adresse ist nicht registriert. Bitte überprüfe die Eingabe oder registriere dich.";
-        } else {
-          // Exists === true OR unknown (null) => keep generic UX, but only increment attempts when exists is true.
-          if (exists === true) {
-            await recordFailedAttempt(normalizeEmail(email));
-          }
-          errorTitle = "Falsches Passwort";
-          errorMessage = "Das eingegebene Passwort ist falsch. Bitte versuche es erneut.";
-        }
+        // IMPORTANT: Don't block the UI on helper RPCs here.
+        // If check_email_exists or record_failed_login gets slow/rate-limited, we still must stop the spinner.
+        errorTitle = "Anmeldung fehlgeschlagen";
+        errorMessage = "E-Mail oder Passwort ist falsch. Wenn du dein Passwort vergessen hast, nutze 'Vergessen?'.";
+
+        // Best-effort security tracking (non-blocking)
+        void recordFailedAttempt(normalizeEmail(email));
       }
       
       toast({
