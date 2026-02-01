@@ -31,7 +31,8 @@ import {
   Heart,
   Users,
   DollarSign,
-  BarChart3
+  BarChart3,
+  Compass
 } from "lucide-react";
 import {
   Collapsible,
@@ -109,7 +110,7 @@ const quickActions = [
     title: "Mein Plan",
     description: "Dein personalisierter Looksmax-Plan",
     href: "/plan",
-    color: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+    color: "bg-secondary/50 text-secondary-foreground",
     premium: true,
   },
   {
@@ -117,7 +118,7 @@ const quickActions = [
     title: "Lifestyle",
     description: "Tracke Schlaf, Wasser & Supplements",
     href: "/lifestyle",
-    color: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+    color: "bg-secondary/50 text-secondary-foreground",
     premium: true,
   },
   {
@@ -125,7 +126,7 @@ const quickActions = [
     title: "Freunde",
     description: "Verbinde dich mit anderen",
     href: "/friends",
-    color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+    color: "bg-secondary/50 text-secondary-foreground",
     premium: false,
   },
   {
@@ -133,7 +134,7 @@ const quickActions = [
     title: "Fortschritt",
     description: "Verfolge deine Entwicklung",
     href: "/progress",
-    color: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
+    color: "bg-secondary/50 text-secondary-foreground",
     premium: true,
   },
   {
@@ -141,7 +142,15 @@ const quickActions = [
     title: "Affiliate",
     description: "Verdiene 20% pro Abo",
     href: "/affiliate",
-    color: "bg-green-500/10 text-green-600 dark:text-green-400",
+    color: "bg-primary/10 text-primary",
+    premium: false,
+  },
+  {
+    icon: Compass,
+    title: "Entdecken",
+    description: "Alle Features auf einen Blick",
+    href: "/discover",
+    color: "bg-primary/10 text-primary",
     premium: false,
   },
 ];
