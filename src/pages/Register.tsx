@@ -49,6 +49,7 @@ const Register = () => {
   const isNative = Capacitor.isNativePlatform();
 
   const RATE_LIMIT_STORAGE_KEY = "register_rate_limit_until";
+  const RATE_LIMIT_HITS_KEY = "register_email_rate_limit_hits";
   const rateLimitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
@@ -60,10 +61,24 @@ const Register = () => {
   };
 
   const startRateLimitCooldown = useCallback((seconds: number) => {
-    const safe = Math.max(0, Math.min(seconds, 5 * 60));
+    // Backend "email rate limit" can be longer than 2 minutes. Allow up to 60 minutes on the client.
+    const safe = Math.max(0, Math.min(seconds, 60 * 60));
     const until = Date.now() + safe * 1000;
     localStorage.setItem(RATE_LIMIT_STORAGE_KEY, String(until));
     setRateLimitSeconds(safe);
+  }, []);
+
+  const getNextEmailRateLimitCooldownSeconds = useCallback(() => {
+    const steps = [120, 300, 900, 1800, 3600]; // 2m, 5m, 15m, 30m, 60m
+    const raw = localStorage.getItem(RATE_LIMIT_HITS_KEY);
+    const hits = Math.max(0, Number(raw ?? 0) || 0);
+    const nextHits = Math.min(hits + 1, steps.length);
+    localStorage.setItem(RATE_LIMIT_HITS_KEY, String(nextHits));
+    return steps[nextHits - 1];
+  }, []);
+
+  const resetEmailRateLimitBackoff = useCallback(() => {
+    localStorage.removeItem(RATE_LIMIT_HITS_KEY);
   }, []);
 
   // Restore cooldown (e.g. after refresh)
@@ -160,6 +175,12 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // If user got rate limited earlier, avoid repeated /signup attempts.
+      // The cooldown is enforced at the top, but this guards against stale state.
+      if (rateLimitSeconds > 0) {
+        return;
+      }
+
       // Validate name format
       if (!isValidName(firstName.trim()) || !isValidName(lastName.trim())) {
         toast({
@@ -233,17 +254,17 @@ const Register = () => {
         if (existsError) {
           const m = existsError.message?.toLowerCase?.() ?? "";
           if (m.includes("rate") || m.includes("too many")) {
-            startRateLimitCooldown(120);
+            startRateLimitCooldown(getNextEmailRateLimitCooldownSeconds());
             throw new Error("email rate limit");
           }
           // If the helper fails, continue with signup attempt (fallback behavior)
         } else if (exists === true) {
           toast({
             title: "E-Mail bereits registriert",
-            description: "Diese E-Mail existiert bereits. Bitte melde dich an (oder bestätige ggf. zuerst deine E-Mail).",
+            description: "Diese E-Mail existiert bereits. Falls du noch keine Bestätigung hast, sende die Bestätigungs-Mail erneut.",
             variant: "destructive",
           });
-          navigate("/login");
+          navigate(`/email-confirmation?email=${encodeURIComponent(normalizedEmail)}`);
           return;
         }
       } catch {
@@ -266,6 +287,9 @@ const Register = () => {
       });
 
       if (error) throw error;
+
+      // Reset backoff after a successful signup request
+      resetEmailRateLimitBackoff();
 
       // Store sensitive data for later (will be processed on first login after email verification)
       if (signUpData?.user) {
@@ -302,8 +326,14 @@ const Register = () => {
       // Check for rate limit error
       if (errorLower.includes("rate limit") || errorLower.includes("email rate limit") || error?.status === 429) {
         errorTitle = "Zu viele Anfragen";
-        errorDescription = "Es wurden zu viele E-Mails gesendet. Bitte warte 1-2 Minuten und versuche es dann erneut.";
-        startRateLimitCooldown(120);
+        errorDescription = "Es wurden zu viele Bestätigungs-E-Mails angefordert. Bitte warte etwas länger und versuche es dann erneut.";
+        startRateLimitCooldown(getNextEmailRateLimitCooldownSeconds());
+
+        // If a signup request happened, the account may already exist. Send user to the confirmation page.
+        const normalizedEmail = normalizeEmail(email);
+        if (normalizedEmail) {
+          navigate(`/email-confirmation?email=${encodeURIComponent(normalizedEmail)}`);
+        }
       }
       // Check for weak/pwned password error
       else if (error.message?.toLowerCase().includes("weak") || 

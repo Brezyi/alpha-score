@@ -19,6 +19,21 @@ const EmailConfirmation = () => {
   const { user, loading: authLoading } = useAuth();
   const isNative = Capacitor.isNativePlatform();
 
+  const RATE_LIMIT_HITS_KEY = "email_confirm_rate_limit_hits";
+
+  const getNextCooldownSeconds = () => {
+    const steps = [60, 120, 300, 900]; // 1m, 2m, 5m, 15m
+    const raw = localStorage.getItem(RATE_LIMIT_HITS_KEY);
+    const hits = Math.max(0, Number(raw ?? 0) || 0);
+    const nextHits = Math.min(hits + 1, steps.length);
+    localStorage.setItem(RATE_LIMIT_HITS_KEY, String(nextHits));
+    return steps[nextHits - 1];
+  };
+
+  const resetCooldownBackoff = () => {
+    localStorage.removeItem(RATE_LIMIT_HITS_KEY);
+  };
+
   // Redirect to dashboard if already logged in (email confirmed)
   useEffect(() => {
     if (!authLoading && user) {
@@ -83,15 +98,16 @@ const EmailConfirmation = () => {
         title: "E-Mail gesendet!",
         description: "Bitte überprüfe deinen Posteingang.",
       });
+      resetCooldownBackoff();
       setCooldown(60);
     } catch (error: any) {
       if (error.message?.toLowerCase().includes("rate limit")) {
         toast({
           title: "Zu viele Anfragen",
-          description: "Bitte warte einen Moment und versuche es dann erneut.",
+          description: "Du hast zu oft eine Bestätigungs-Mail angefordert. Bitte warte etwas länger und versuche es dann erneut.",
           variant: "destructive",
         });
-        setCooldown(60);
+        setCooldown(getNextCooldownSeconds());
       } else {
         toast({
           title: "Fehler beim Senden",
@@ -190,8 +206,8 @@ const EmailConfirmation = () => {
       </div>
 
       {/* Warning */}
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
-        <p className="text-sm text-amber-600 dark:text-amber-400">
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mb-6">
+        <p className="text-sm text-muted-foreground">
           ⚠️ Du hast <strong>7 Tage</strong> Zeit, deine E-Mail zu bestätigen. Danach wird dein Konto automatisch gelöscht.
         </p>
       </div>
