@@ -61,6 +61,7 @@ const Login = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const [failedAttempts, setFailedAttempts] = useState(0);
+  const [emailExists, setEmailExists] = useState<boolean | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
@@ -93,20 +94,39 @@ const Login = () => {
     }
   }, [lockoutSeconds]);
 
-  // Check lockout status when email changes
+  // Check lockout status and email existence when email changes
   const checkLockout = useCallback(async (emailToCheck: string) => {
-    if (!emailToCheck) return;
+    if (!emailToCheck) {
+      setEmailExists(null);
+      setFailedAttempts(0);
+      setIsLocked(false);
+      return;
+    }
     
     try {
-      const { data, error } = await supabase.rpc('check_account_lockout', {
+      // First check if email exists
+      const { data: exists } = await supabase.rpc('check_email_exists', {
         _email: emailToCheck
       });
+      setEmailExists(exists === true);
       
-      if (!error && data && data.length > 0) {
-        const lockoutData = data[0];
-        setIsLocked(lockoutData.is_locked);
-        setLockoutSeconds(lockoutData.remaining_seconds);
-        setFailedAttempts(lockoutData.failed_attempts);
+      // Only check lockout if email exists
+      if (exists) {
+        const { data, error } = await supabase.rpc('check_account_lockout', {
+          _email: emailToCheck
+        });
+        
+        if (!error && data && data.length > 0) {
+          const lockoutData = data[0];
+          setIsLocked(lockoutData.is_locked);
+          setLockoutSeconds(lockoutData.remaining_seconds);
+          setFailedAttempts(lockoutData.failed_attempts);
+        }
+      } else {
+        // Reset lockout state for non-existent emails
+        setIsLocked(false);
+        setLockoutSeconds(0);
+        setFailedAttempts(0);
       }
     } catch (err) {
       console.error('Error checking lockout:', err);
@@ -288,8 +308,8 @@ const Login = () => {
               </p>
             </div>
 
-            {/* Lockout Warning */}
-            {isLocked && (
+            {/* Lockout Warning - only show if email exists */}
+            {isLocked && emailExists && (
               <Alert variant="destructive" className="mb-6">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
@@ -299,11 +319,11 @@ const Login = () => {
               </Alert>
             )}
 
-            {/* Failed Attempts Warning */}
-            {!isLocked && failedAttempts > 0 && failedAttempts < 5 && (
-              <Alert variant="default" className="mb-6 border-yellow-500/50 bg-yellow-500/10">
-                <AlertTriangle className="h-4 w-4 text-yellow-500" />
-                <AlertDescription className="text-yellow-500">
+            {/* Failed Attempts Warning - only show if email exists */}
+            {!isLocked && emailExists && failedAttempts > 0 && failedAttempts < 5 && (
+              <Alert variant="default" className="mb-6 border-amber-500/50 bg-amber-500/10">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <AlertDescription className="text-amber-500">
                   {5 - failedAttempts} Versuche verbleibend
                 </AlertDescription>
               </Alert>
@@ -462,8 +482,8 @@ const Login = () => {
             </p>
           </div>
 
-          {/* Lockout Warning */}
-          {isLocked && (
+          {/* Lockout Warning - only show if email exists */}
+          {isLocked && emailExists && (
             <Alert variant="destructive" className="mb-6">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
@@ -476,11 +496,11 @@ const Login = () => {
             </Alert>
           )}
 
-          {/* Failed Attempts Warning */}
-          {!isLocked && failedAttempts > 0 && failedAttempts < 5 && (
-            <Alert variant="default" className="mb-6 border-yellow-500/50 bg-yellow-500/10">
-              <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              <AlertDescription className="text-yellow-500">
+          {/* Failed Attempts Warning - only show if email exists */}
+          {!isLocked && emailExists && failedAttempts > 0 && failedAttempts < 5 && (
+            <Alert variant="default" className="mb-6 border-amber-500/50 bg-amber-500/10">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-amber-500">
                 {5 - failedAttempts} Versuche verbleibend bevor dein Konto für 5 Minuten gesperrt wird.
               </AlertDescription>
             </Alert>
