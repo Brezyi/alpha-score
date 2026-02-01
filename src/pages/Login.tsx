@@ -1,10 +1,10 @@
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Mail, Lock, Loader2, AlertTriangle } from "lucide-react";
 import { ScannerLogo } from "@/components/ScannerLogo";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -94,43 +94,72 @@ const Login = () => {
     }
   }, [lockoutSeconds]);
 
-  // Check lockout status and email existence when email changes
+  // Debounced check to avoid too many API calls
+  const checkLockoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Check lockout status and email existence when email changes (debounced)
   const checkLockout = useCallback(async (emailToCheck: string) => {
-    if (!emailToCheck) {
+    // Clear any pending timeout
+    if (checkLockoutTimeoutRef.current) {
+      clearTimeout(checkLockoutTimeoutRef.current);
+    }
+    
+    if (!emailToCheck || !emailToCheck.includes('@')) {
       setEmailExists(null);
       setFailedAttempts(0);
       setIsLocked(false);
       return;
     }
     
-    try {
-      // First check if email exists
-      const { data: exists } = await supabase.rpc('check_email_exists', {
-        _email: emailToCheck
-      });
-      setEmailExists(exists === true);
-      
-      // Only check lockout if email exists
-      if (exists) {
-        const { data, error } = await supabase.rpc('check_account_lockout', {
+    // Debounce the API call by 500ms
+    checkLockoutTimeoutRef.current = setTimeout(async () => {
+      try {
+        // First check if email exists
+        const { data: exists, error: existsError } = await supabase.rpc('check_email_exists', {
           _email: emailToCheck
         });
         
-        if (!error && data && data.length > 0) {
-          const lockoutData = data[0];
-          setIsLocked(lockoutData.is_locked);
-          setLockoutSeconds(lockoutData.remaining_seconds);
-          setFailedAttempts(lockoutData.failed_attempts);
+        // Handle rate limit errors gracefully
+        if (existsError) {
+          if (existsError.message?.toLowerCase().includes('rate') || 
+              existsError.message?.toLowerCase().includes('too many')) {
+            console.log('Rate limited on email check, skipping');
+            return;
+          }
+          console.error('Error checking email:', existsError);
+          return;
         }
-      } else {
-        // Reset lockout state for non-existent emails
-        setIsLocked(false);
-        setLockoutSeconds(0);
-        setFailedAttempts(0);
+        
+        setEmailExists(exists === true);
+        
+        // Only check lockout if email exists
+        if (exists) {
+          const { data, error } = await supabase.rpc('check_account_lockout', {
+            _email: emailToCheck
+          });
+          
+          if (!error && data && data.length > 0) {
+            const lockoutData = data[0];
+            setIsLocked(lockoutData.is_locked);
+            setLockoutSeconds(lockoutData.remaining_seconds);
+            setFailedAttempts(lockoutData.failed_attempts);
+          }
+        } else {
+          // Reset lockout state for non-existent emails
+          setIsLocked(false);
+          setLockoutSeconds(0);
+          setFailedAttempts(0);
+        }
+      } catch (err: any) {
+        // Silently handle rate limit errors
+        if (err?.message?.toLowerCase().includes('rate') || 
+            err?.message?.toLowerCase().includes('too many')) {
+          console.log('Rate limited, skipping check');
+          return;
+        }
+        console.error('Error checking lockout:', err);
       }
-    } catch (err) {
-      console.error('Error checking lockout:', err);
-    }
+    }, 500);
   }, []);
 
   // Check MFA requirement after login
