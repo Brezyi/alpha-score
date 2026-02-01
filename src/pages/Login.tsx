@@ -213,25 +213,23 @@ const Login = () => {
       } else if (isLocked) {
         errorMessage = `Konto für ${formatTime(lockoutSeconds)} gesperrt.`;
       } else if (error.message?.toLowerCase().includes("invalid login credentials")) {
-        // Check if email exists by trying password reset (doesn't reveal if email exists to external attackers)
-        // We check our own database for a more helpful error message
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('user_id')
-          .ilike('user_id', email)
-          .maybeSingle();
-        
-        // Try to check via auth - use signInWithOtp which fails silently if email doesn't exist
-        // Instead, give a more helpful generic message or check public_profiles
-        const { count } = await supabase
-          .from('public_profiles')
-          .select('*', { count: 'exact', head: true })
-          .or(`username.ilike.${email}`);
-        
-        // Since we can't reliably check email existence without security issues,
-        // we provide context-aware messaging
-        errorTitle = "Anmeldung fehlgeschlagen";
-        errorMessage = "E-Mail-Adresse nicht gefunden oder Passwort ist falsch. Bitte überprüfe deine Eingaben.";
+        // Check if the email exists in the database
+        try {
+          const { data: emailExists } = await supabase.rpc('check_email_exists', {
+            _email: email
+          });
+          
+          if (emailExists === false) {
+            errorTitle = "E-Mail nicht gefunden";
+            errorMessage = "Diese E-Mail-Adresse ist nicht registriert. Bitte überprüfe die Eingabe oder registriere dich.";
+          } else {
+            errorTitle = "Falsches Passwort";
+            errorMessage = "Das eingegebene Passwort ist falsch. Bitte versuche es erneut.";
+          }
+        } catch {
+          // Fallback to generic message if check fails
+          errorMessage = "E-Mail oder Passwort ist falsch.";
+        }
       }
       
       toast({
