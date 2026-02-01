@@ -48,12 +48,7 @@ export function ProtectedRoute({
     }
   }, [authLoading, user, navigate, redirectTo]);
 
-  // Show admin password dialog when accessing admin routes
-  useEffect(() => {
-    if (!roleLoading && needsAdminPasswordVerification) {
-      setShowAdminPasswordDialog(true);
-    }
-  }, [roleLoading, needsAdminPasswordVerification]);
+  // Don't auto-open dialog - let user read the explanation and click the button
 
   // Loading state
   const isLoading = authLoading || roleLoading || maintenanceLoading;
