@@ -225,15 +225,15 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
 
   const getDeltaIcon = (delta: number | null) => {
     if (delta === null) return <Minus className="w-4 h-4 text-muted-foreground" />;
-    if (delta > 0) return <TrendingUp className="w-4 h-4 text-emerald-500" />;
-    if (delta < 0) return <TrendingDown className="w-4 h-4 text-red-500" />;
+    if (delta > 0) return <TrendingUp className="w-4 h-4 text-success" />;
+    if (delta < 0) return <TrendingDown className="w-4 h-4 text-destructive" />;
     return <Minus className="w-4 h-4 text-muted-foreground" />;
   };
 
   const getDeltaColor = (delta: number | null) => {
     if (delta === null) return "text-muted-foreground";
-    if (delta > 0) return "text-emerald-500";
-    if (delta < 0) return "text-red-500";
+    if (delta > 0) return "text-success";
+    if (delta < 0) return "text-destructive";
     return "text-muted-foreground";
   };
 
@@ -245,7 +245,7 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
           <h3 className="font-bold">Freunde-Vergleich</h3>
         </div>
         {userRank && userRank <= 3 && (
-          <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30">
+          <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
             <Trophy className="w-3 h-3 mr-1" />
             #{userRank}
           </Badge>
