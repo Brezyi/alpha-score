@@ -62,11 +62,14 @@ const Login = () => {
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const [failedAttempts, setFailedAttempts] = useState(0);
   const [emailExists, setEmailExists] = useState<boolean | null>(null);
+  const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { settings } = useGlobalSettings();
   const { sendSecurityAlert } = useSecurityAlerts();
+
+  const emailExistsCacheRef = useRef<{ email: string; exists: boolean } | null>(null);
   
   // Check if running as native app
   const isNative = Capacitor.isNativePlatform();
@@ -94,8 +97,53 @@ const Login = () => {
     }
   }, [lockoutSeconds]);
 
+  // Countdown timer for auth rate limit cooldown
+  useEffect(() => {
+    if (rateLimitSeconds > 0) {
+      const timer = setInterval(() => {
+        setRateLimitSeconds((prev) => Math.max(0, prev - 1));
+      }, 1000);
+      return () => clearInterval(timer);
+    }
+  }, [rateLimitSeconds]);
+
+  const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
+  const getEmailExists = useCallback(async (emailToCheck: string): Promise<boolean | null> => {
+    const normalized = normalizeEmail(emailToCheck);
+    if (!normalized || !normalized.includes("@")) return null;
+
+    if (emailExistsCacheRef.current?.email === normalized) {
+      return emailExistsCacheRef.current.exists;
+    }
+
+    const { data, error } = await supabase.rpc("check_email_exists", { _email: normalized });
+
+    if (error) {
+      // If we get rate-limited on this helper, do NOT show a toast.
+      // Just fall back to generic auth messaging.
+      const msg = error.message?.toLowerCase?.() ?? "";
+      if (msg.includes("rate") || msg.includes("too many")) return null;
+      console.error("check_email_exists error:", error);
+      return null;
+    }
+
+    const exists = data === true;
+    emailExistsCacheRef.current = { email: normalized, exists };
+    setEmailExists(exists);
+    return exists;
+  }, []);
+
   // Debounced check to avoid too many API calls
-  const checkLockoutTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const checkLockoutTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (checkLockoutTimeoutRef.current) {
+        clearTimeout(checkLockoutTimeoutRef.current);
+      }
+    };
+  }, []);
   
   // Check lockout status and email existence when email changes (debounced)
   const checkLockout = useCallback(async (emailToCheck: string) => {
@@ -104,7 +152,8 @@ const Login = () => {
       clearTimeout(checkLockoutTimeoutRef.current);
     }
     
-    if (!emailToCheck || !emailToCheck.includes('@')) {
+    const normalized = normalizeEmail(emailToCheck);
+    if (!normalized || !normalized.includes('@')) {
       setEmailExists(null);
       setFailedAttempts(0);
       setIsLocked(false);
@@ -114,28 +163,12 @@ const Login = () => {
     // Debounce the API call by 500ms
     checkLockoutTimeoutRef.current = setTimeout(async () => {
       try {
-        // First check if email exists
-        const { data: exists, error: existsError } = await supabase.rpc('check_email_exists', {
-          _email: emailToCheck
-        });
-        
-        // Handle rate limit errors gracefully
-        if (existsError) {
-          if (existsError.message?.toLowerCase().includes('rate') || 
-              existsError.message?.toLowerCase().includes('too many')) {
-            console.log('Rate limited on email check, skipping');
-            return;
-          }
-          console.error('Error checking email:', existsError);
-          return;
-        }
-        
-        setEmailExists(exists === true);
+        const exists = await getEmailExists(normalized);
         
         // Only check lockout if email exists
-        if (exists) {
+        if (exists === true) {
           const { data, error } = await supabase.rpc('check_account_lockout', {
-            _email: emailToCheck
+            _email: normalized
           });
           
           if (!error && data && data.length > 0) {
@@ -144,7 +177,7 @@ const Login = () => {
             setLockoutSeconds(lockoutData.remaining_seconds);
             setFailedAttempts(lockoutData.failed_attempts);
           }
-        } else {
+        } else if (exists === false) {
           // Reset lockout state for non-existent emails
           setIsLocked(false);
           setLockoutSeconds(0);
@@ -212,6 +245,15 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (rateLimitSeconds > 0) {
+      toast({
+        title: "Zu viele Anfragen",
+        description: `Bitte warte ${formatTime(rateLimitSeconds)} und versuche es dann erneut.`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     // Check if account is locked
     if (isLocked) {
@@ -232,8 +274,6 @@ const Login = () => {
       });
 
       if (error) {
-        // Record the failed attempt
-        await recordFailedAttempt(email);
         throw error;
       }
 
@@ -254,30 +294,42 @@ const Login = () => {
       // Check for email not confirmed error
       let errorMessage = error.message || "Bitte überprüfe deine Eingaben.";
       let errorTitle = "Anmeldung fehlgeschlagen";
+
+      const errorLower = error?.message?.toLowerCase?.() ?? "";
+
+      // Handle backend rate limits (429)
+      if (
+        error?.status === 429 ||
+        errorLower.includes("rate limit") ||
+        errorLower.includes("too many requests")
+      ) {
+        setRateLimitSeconds(90);
+        toast({
+          title: "Zu viele Anfragen",
+          description: "Bitte warte 1-2 Minuten und versuche es dann erneut.",
+          variant: "destructive",
+        });
+        return;
+      }
       
-      if (error.message?.toLowerCase().includes("email not confirmed") ||
-          error.message?.toLowerCase().includes("email confirmation")) {
+      if (errorLower.includes("email not confirmed") || errorLower.includes("email confirmation")) {
         errorTitle = "E-Mail nicht bestätigt";
         errorMessage = "Bitte bestätige zuerst deine E-Mail-Adresse. Überprüfe deinen Posteingang.";
       } else if (isLocked) {
         errorMessage = `Konto für ${formatTime(lockoutSeconds)} gesperrt.`;
-      } else if (error.message?.toLowerCase().includes("invalid login credentials")) {
-        // Check if the email exists in the database
-        try {
-          const { data: emailExists } = await supabase.rpc('check_email_exists', {
-            _email: email
-          });
-          
-          if (emailExists === false) {
-            errorTitle = "E-Mail nicht gefunden";
-            errorMessage = "Diese E-Mail-Adresse ist nicht registriert. Bitte überprüfe die Eingabe oder registriere dich.";
-          } else {
-            errorTitle = "Falsches Passwort";
-            errorMessage = "Das eingegebene Passwort ist falsch. Bitte versuche es erneut.";
+      } else if (errorLower.includes("invalid login credentials")) {
+        // Only record lockout/attempts for existing emails
+        const exists = await getEmailExists(email);
+        if (exists === false) {
+          errorTitle = "E-Mail nicht gefunden";
+          errorMessage = "Diese E-Mail-Adresse ist nicht registriert. Bitte überprüfe die Eingabe oder registriere dich.";
+        } else {
+          // Exists === true OR unknown (null) => keep generic UX, but only increment attempts when exists is true.
+          if (exists === true) {
+            await recordFailedAttempt(normalizeEmail(email));
           }
-        } catch {
-          // Fallback to generic message if check fails
-          errorMessage = "E-Mail oder Passwort ist falsch.";
+          errorTitle = "Falsches Passwort";
+          errorMessage = "Das eingegebene Passwort ist falsch. Bitte versuche es erneut.";
         }
       }
       
@@ -350,9 +402,9 @@ const Login = () => {
 
             {/* Failed Attempts Warning - only show if email exists */}
             {!isLocked && emailExists && failedAttempts > 0 && failedAttempts < 5 && (
-              <Alert variant="default" className="mb-6 border-amber-500/50 bg-amber-500/10">
-                <AlertTriangle className="h-4 w-4 text-amber-500" />
-                <AlertDescription className="text-amber-500">
+              <Alert variant="default" className="mb-6 border-primary/30 bg-primary/5">
+                <AlertTriangle className="h-4 w-4 text-primary" />
+                <AlertDescription className="text-primary">
                   {5 - failedAttempts} Versuche verbleibend
                 </AlertDescription>
               </Alert>
@@ -372,7 +424,7 @@ const Login = () => {
                     onChange={(e) => setEmail(e.target.value)}
                     onBlur={() => checkLockout(email)}
                     className="pl-10 h-12 bg-card border-border text-base"
-                    disabled={isLocked}
+                    disabled={isLocked || rateLimitSeconds > 0}
                     required
                     autoComplete="email"
                   />
@@ -395,7 +447,7 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 h-12 bg-card border-border text-base"
-                    disabled={isLocked}
+                    disabled={isLocked || rateLimitSeconds > 0}
                     required
                     autoComplete="current-password"
                   />
@@ -407,7 +459,7 @@ const Login = () => {
                 variant="hero" 
                 size="lg" 
                 className="w-full h-12"
-                disabled={loading || googleLoading || isLocked}
+                disabled={loading || googleLoading || isLocked || rateLimitSeconds > 0}
               >
                 {loading ? (
                   <>
@@ -438,7 +490,7 @@ const Login = () => {
                 size="lg"
                 className="w-full h-12"
                 onClick={handleGoogleLogin}
-                disabled={loading || googleLoading}
+                disabled={loading || googleLoading || rateLimitSeconds > 0}
               >
                 {googleLoading ? (
                   <>
@@ -527,9 +579,9 @@ const Login = () => {
 
           {/* Failed Attempts Warning - only show if email exists */}
           {!isLocked && emailExists && failedAttempts > 0 && failedAttempts < 5 && (
-            <Alert variant="default" className="mb-6 border-amber-500/50 bg-amber-500/10">
-              <AlertTriangle className="h-4 w-4 text-amber-500" />
-              <AlertDescription className="text-amber-500">
+            <Alert variant="default" className="mb-6 border-primary/30 bg-primary/5">
+              <AlertTriangle className="h-4 w-4 text-primary" />
+              <AlertDescription className="text-primary">
                 {5 - failedAttempts} Versuche verbleibend bevor dein Konto für 5 Minuten gesperrt wird.
               </AlertDescription>
             </Alert>
@@ -549,7 +601,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={() => checkLockout(email)}
                   className="pl-10 h-12 bg-card border-border"
-                  disabled={isLocked}
+                  disabled={isLocked || rateLimitSeconds > 0}
                   required
                 />
               </div>
@@ -571,7 +623,7 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 h-12 bg-card border-border"
-                  disabled={isLocked}
+                  disabled={isLocked || rateLimitSeconds > 0}
                   required
                 />
               </div>
@@ -582,7 +634,7 @@ const Login = () => {
               variant="hero" 
               size="lg" 
               className="w-full"
-              disabled={loading || googleLoading || isLocked}
+              disabled={loading || googleLoading || isLocked || rateLimitSeconds > 0}
             >
               {loading ? (
                 <>
@@ -613,7 +665,7 @@ const Login = () => {
               size="lg"
               className="w-full"
               onClick={handleGoogleLogin}
-              disabled={loading || googleLoading}
+              disabled={loading || googleLoading || rateLimitSeconds > 0}
             >
               {googleLoading ? (
                 <>
