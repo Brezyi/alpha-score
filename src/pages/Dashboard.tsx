@@ -110,7 +110,7 @@ const quickActions = [
     title: "Mein Plan",
     description: "Dein personalisierter Looksmax-Plan",
     href: "/plan",
-    color: "bg-secondary/50 text-secondary-foreground",
+    color: "bg-primary/15 text-primary",
     premium: true,
   },
   {
@@ -118,7 +118,7 @@ const quickActions = [
     title: "Lifestyle",
     description: "Tracke Schlaf, Wasser & Supplements",
     href: "/lifestyle",
-    color: "bg-secondary/50 text-secondary-foreground",
+    color: "bg-destructive/10 text-destructive",
     premium: true,
   },
   {
@@ -126,7 +126,7 @@ const quickActions = [
     title: "Freunde",
     description: "Verbinde dich mit anderen",
     href: "/friends",
-    color: "bg-secondary/50 text-secondary-foreground",
+    color: "bg-accent text-accent-foreground",
     premium: false,
   },
   {
@@ -134,7 +134,7 @@ const quickActions = [
     title: "Fortschritt",
     description: "Verfolge deine Entwicklung",
     href: "/progress",
-    color: "bg-secondary/50 text-secondary-foreground",
+    color: "bg-muted text-muted-foreground",
     premium: true,
   },
   {
