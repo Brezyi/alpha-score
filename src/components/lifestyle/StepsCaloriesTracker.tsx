@@ -222,28 +222,28 @@ export function StepsCaloriesTracker({ selectedDate }: StepsCaloriesTrackerProps
         )}
 
         {/* Main Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4">
           {/* Steps Card */}
           <motion.div
-            className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20"
+            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20"
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 rounded-lg bg-blue-500/20">
-                <Footprints className="h-4 w-4 text-blue-500" />
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+              <div className="p-1 sm:p-1.5 rounded-lg bg-blue-500/20">
+                <Footprints className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
               </div>
-              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">Schritte</span>
+              <span className="text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300">Schritte</span>
             </div>
-            <div className="text-2xl font-bold mb-2">
+            <div className="text-xl sm:text-2xl font-bold mb-1.5 sm:mb-2">
               {currentSteps.toLocaleString("de-DE")}
             </div>
             <div className="space-y-1">
-              <Progress value={stepPercent} className="h-2" />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <Progress value={stepPercent} className="h-1.5 sm:h-2" />
+              <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground">
                 <span>{Math.round(stepPercent)}%</span>
-                <span className="flex items-center gap-1">
-                  <Target className="h-3 w-3" />
+                <span className="flex items-center gap-0.5 sm:gap-1">
+                  <Target className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   {STEP_GOAL.toLocaleString("de-DE")}
                 </span>
               </div>
@@ -252,26 +252,26 @@ export function StepsCaloriesTracker({ selectedDate }: StepsCaloriesTrackerProps
 
           {/* Calories Card */}
           <motion.div
-            className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/5 border border-orange-500/20"
+            className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-red-500/5 border border-orange-500/20"
             whileHover={{ scale: 1.02 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1.5 rounded-lg bg-orange-500/20">
-                <Flame className="h-4 w-4 text-orange-500" />
+            <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+              <div className="p-1 sm:p-1.5 rounded-lg bg-orange-500/20">
+                <Flame className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-orange-500" />
               </div>
-              <span className="text-sm font-medium text-orange-700 dark:text-orange-300">Kalorien</span>
+              <span className="text-xs sm:text-sm font-medium text-orange-700 dark:text-orange-300">Kalorien</span>
             </div>
-            <div className="text-2xl font-bold mb-2">
+            <div className="text-xl sm:text-2xl font-bold mb-1.5 sm:mb-2">
               {currentCalories.toLocaleString("de-DE")}
-              <span className="text-sm font-normal text-muted-foreground ml-1">kcal</span>
+              <span className="text-xs sm:text-sm font-normal text-muted-foreground ml-1">kcal</span>
             </div>
             <div className="space-y-1">
-              <Progress value={caloriePercent} className="h-2" />
-              <div className="flex justify-between text-xs text-muted-foreground">
+              <Progress value={caloriePercent} className="h-1.5 sm:h-2" />
+              <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground">
                 <span>{Math.round(caloriePercent)}%</span>
-                <span className="flex items-center gap-1">
-                  <Zap className="h-3 w-3" />
+                <span className="flex items-center gap-0.5 sm:gap-1">
+                  <Zap className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                   {CALORIE_GOAL} kcal
                 </span>
               </div>
