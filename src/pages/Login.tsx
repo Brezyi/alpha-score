@@ -202,13 +202,23 @@ const Login = () => {
         navigate("/dashboard");
       }
     } catch (error: any) {
-      const message = isLocked 
-        ? `Konto für ${formatTime(lockoutSeconds)} gesperrt.`
-        : error.message || "Bitte überprüfe deine Eingaben.";
+      // Check for email not confirmed error
+      let errorMessage = error.message || "Bitte überprüfe deine Eingaben.";
+      let errorTitle = "Anmeldung fehlgeschlagen";
+      
+      if (error.message?.toLowerCase().includes("email not confirmed") ||
+          error.message?.toLowerCase().includes("email confirmation")) {
+        errorTitle = "E-Mail nicht bestätigt";
+        errorMessage = "Bitte bestätige zuerst deine E-Mail-Adresse. Überprüfe deinen Posteingang.";
+      } else if (isLocked) {
+        errorMessage = `Konto für ${formatTime(lockoutSeconds)} gesperrt.`;
+      } else if (error.message?.toLowerCase().includes("invalid login credentials")) {
+        errorMessage = "E-Mail oder Passwort ist falsch.";
+      }
       
       toast({
-        title: "Anmeldung fehlgeschlagen",
-        description: message,
+        title: errorTitle,
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

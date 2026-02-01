@@ -57,6 +57,7 @@ const StripeCoupons = lazy(() => import("./pages/admin/StripeCoupons"));
 const RefundManagement = lazy(() => import("./pages/admin/RefundManagement"));
 const Affiliate = lazy(() => import("./pages/Affiliate"));
 const Discover = lazy(() => import("./pages/Discover"));
+const EmailConfirmation = lazy(() => import("./pages/EmailConfirmation"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -101,6 +102,7 @@ const App = () => (
                         {/* Lazy loaded routes */}
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/email-confirmation" element={<EmailConfirmation />} />
                         <Route path="/dashboard" element={<Dashboard />} />
                         <Route path="/upload" element={<AnalysisUpload />} />
                         <Route path="/analysis/:id" element={<AnalysisResults />} />

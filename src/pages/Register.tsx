@@ -187,19 +187,16 @@ const Register = () => {
 
       // Check if email confirmation is required
       if (signUpData?.user && !signUpData.session) {
-        // Email confirmation required
-        toast({
-          title: "📧 Bestätigungs-E-Mail gesendet!",
-          description: "Bitte bestätige deine E-Mail innerhalb von 7 Tagen. Danach wird dein Konto automatisch gelöscht und du musst dich neu registrieren.",
-          duration: 10000,
-        });
+        // Email confirmation required - redirect to confirmation page
+        navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
+        return;
       } else {
         toast({
           title: "Konto erstellt!",
           description: "Du kannst dich jetzt anmelden.",
         });
+        navigate("/login");
       }
-      navigate("/login");
     } catch (error: any) {
       // Handle specific error cases with user-friendly messages
       let errorTitle = "Registrierung fehlgeschlagen";
