@@ -113,11 +113,12 @@ export function useHealthData() {
     try {
       setLoading(true);
 
-      // Query latest samples in parallel
-      const [stepsResult, sleepResult, exerciseResult] = await Promise.all([
+      // Query latest samples in parallel (including calories)
+      const [stepsResult, sleepResult, exerciseResult, caloriesResult] = await Promise.all([
         healthPlugin.queryLatestSample({ dataType: "steps" }).catch(() => null),
         healthPlugin.queryLatestSample({ dataType: "sleep" }).catch(() => null),
         healthPlugin.queryLatestSample({ dataType: "exercise-time" }).catch(() => null),
+        healthPlugin.queryLatestSample({ dataType: "active-calories" }).catch(() => null),
       ]);
 
       const steps = (stepsResult as QueryLatestSampleResponse | null)?.value || 0;
@@ -125,11 +126,13 @@ export function useHealthData() {
         ? ((sleepResult as QueryLatestSampleResponse).value! / 60) 
         : 0; // Convert minutes to hours
       const activeMinutes = (exerciseResult as QueryLatestSampleResponse | null)?.value || 0;
+      const calories = (caloriesResult as QueryLatestSampleResponse | null)?.value || 0;
 
       return {
         steps: Math.round(steps),
         activeMinutes: Math.round(activeMinutes),
         sleepHours: Math.round(sleepHours * 10) / 10,
+        calories: Math.round(calories),
       };
     } catch (error) {
       console.error("Error getting today's summary:", error);
