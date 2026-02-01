@@ -3205,6 +3205,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_maintenance_mode: { Args: never; Returns: boolean }
       get_my_sensitive_data: {
         Args: never
         Returns: {

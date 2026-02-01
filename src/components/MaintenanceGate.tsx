@@ -57,16 +57,15 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
     setLoading(true);
     
     try {
-      // Fetch maintenance mode directly
-      const { data: settingsData, error: settingsError } = await supabase
-        .from("system_settings")
-        .select("value")
-        .eq("key", "maintenance_mode")
-        .single();
+      // Use the security-definer helper to bypass RLS
+      const { data: modeData, error: modeError } = await supabase.rpc("get_maintenance_mode");
 
-      if (!settingsError && settingsData) {
-        const maintenanceValue = parseSettingValue(settingsData.value);
-        setMaintenanceMode(maintenanceValue);
+      if (modeError) {
+        console.error("get_maintenance_mode error:", modeError);
+        // Fallback: maintenance = false so users can proceed
+        setMaintenanceMode(false);
+      } else {
+        setMaintenanceMode(modeData === true);
       }
 
       // Check user session and role
@@ -95,6 +94,8 @@ export const MaintenanceProvider: React.FC<MaintenanceProviderProps> = ({ childr
     } catch (err) {
       console.error("Maintenance/Role check error:", err);
       setIsOwner(false);
+      // Make sure we don't leave the app in a loading state
+      setMaintenanceMode(false);
     } finally {
       setLoading(false);
     }
