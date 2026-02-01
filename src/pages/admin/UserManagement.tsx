@@ -18,6 +18,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole, AppRole } from "@/hooks/useUserRole";
 import { useToast } from "@/hooks/use-toast";
@@ -32,7 +43,9 @@ import {
   Copy,
   Check,
   Sparkles,
-  Star
+  Star,
+  Trash2,
+  Loader2
 } from "lucide-react";
 
 interface UserWithRole {
@@ -56,6 +69,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState<string | null>(null);
   const [updatingSub, setUpdatingSub] = useState<string | null>(null);
+  const [deletingUser, setDeletingUser] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -274,6 +288,44 @@ export default function UserManagement() {
     }
   };
 
+  const deleteUser = async (userId: string) => {
+    if (!isOwner) {
+      toast({
+        title: "Keine Berechtigung",
+        description: "Nur Owner können Nutzer löschen",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setDeletingUser(userId);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-delete-user", {
+        body: { targetUserId: userId },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      // Remove user from local state
+      setUsers(prev => prev.filter(u => u.user_id !== userId));
+
+      toast({
+        title: "Nutzer gelöscht",
+        description: "Das Konto und alle Daten wurden entfernt. Der Nutzer kann sich jetzt neu registrieren.",
+      });
+    } catch (error: any) {
+      console.error("Error deleting user:", error);
+      toast({
+        title: "Fehler",
+        description: error.message || "Nutzer konnte nicht gelöscht werden",
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingUser(null);
+    }
+  };
+
   const getUserSubscriptionType = (user: UserWithRole): SubscriptionType => {
     if (!user.subscription_status || user.subscription_status !== 'active') return "none";
     if (user.plan_type === 'lifetime') return "lifetime";
@@ -308,7 +360,7 @@ export default function UserManagement() {
     switch (subType) {
       case "lifetime":
         return (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/20 text-amber-500">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/20 text-yellow-600 dark:text-yellow-400">
             <Star className="w-3 h-3" />
             Lifetime
           </span>
@@ -390,6 +442,7 @@ export default function UserManagement() {
                       <TableHead>Erstellt</TableHead>
                       {isOwner && <TableHead>Rolle ändern</TableHead>}
                       {isOwner && <TableHead>Abo ändern</TableHead>}
+                      {isOwner && <TableHead>Aktionen</TableHead>}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -472,6 +525,55 @@ export default function UserManagement() {
                                 <SelectItem value="lifetime">Lifetime</SelectItem>
                               </SelectContent>
                             </Select>
+                          </TableCell>
+                        )}
+                        {isOwner && (
+                          <TableCell>
+                            {user.role !== "owner" ? (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                    disabled={deletingUser === user.user_id}
+                                  >
+                                    {deletingUser === user.user_id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Trash2 className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Nutzer löschen?</AlertDialogTitle>
+                                    <AlertDialogDescription className="space-y-2">
+                                      <p>
+                                        Möchtest du das Konto von <strong>{user.display_name || user.email || 'diesem Nutzer'}</strong> wirklich löschen?
+                                      </p>
+                                      <p className="text-destructive font-medium">
+                                        Diese Aktion löscht alle Daten unwiderruflich!
+                                      </p>
+                                      <p>
+                                        Der Nutzer kann sich danach mit derselben E-Mail-Adresse neu registrieren.
+                                      </p>
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => deleteUser(user.user_id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Endgültig löschen
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">-</span>
+                            )}
                           </TableCell>
                         )}
                       </TableRow>
