@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Mail, CheckCircle2, RefreshCw, Loader2 } from "lucide-react";
 import { ScannerLogo } from "@/components/ScannerLogo";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +13,7 @@ const EmailConfirmation = () => {
   const email = searchParams.get("email") || "";
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [isConfirmed, setIsConfirmed] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
@@ -21,9 +22,37 @@ const EmailConfirmation = () => {
   // Redirect to dashboard if already logged in (email confirmed)
   useEffect(() => {
     if (!authLoading && user) {
-      navigate("/dashboard");
+      setIsConfirmed(true);
+      toast({
+        title: "E-Mail bestätigt! 🎉",
+        description: "Du wirst jetzt weitergeleitet...",
+      });
+      const timer = setTimeout(() => {
+        navigate("/dashboard");
+      }, 1500);
+      return () => clearTimeout(timer);
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, toast]);
+
+  // Poll for session changes (detects confirmation from other tabs/windows)
+  useEffect(() => {
+    if (isConfirmed || !email) return;
+
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setIsConfirmed(true);
+      }
+    };
+
+    // Check immediately
+    checkSession();
+
+    // Poll every 3 seconds
+    const interval = setInterval(checkSession, 3000);
+
+    return () => clearInterval(interval);
+  }, [email, isConfirmed]);
 
   // Cooldown timer
   useEffect(() => {
@@ -74,6 +103,31 @@ const EmailConfirmation = () => {
       setResending(false);
     }
   };
+
+  // Show confirmed state
+  if (isConfirmed) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col justify-center items-center px-8">
+        <div className="w-full max-w-md mx-auto text-center">
+          <div className="mb-8 flex justify-center">
+            <ScannerLogo size="lg" labelSize="lg" />
+          </div>
+          <div className="mb-6 flex justify-center">
+            <div className="w-24 h-24 rounded-full bg-primary/20 flex items-center justify-center">
+              <CheckCircle2 className="w-16 h-16 text-primary animate-pulse" />
+            </div>
+          </div>
+          <h1 className="text-2xl md:text-3xl font-bold mb-3 text-primary">
+            E-Mail bestätigt! 🎉
+          </h1>
+          <p className="text-muted-foreground mb-6">
+            Du wirst automatisch zum Dashboard weitergeleitet...
+          </p>
+          <Loader2 className="w-6 h-6 animate-spin text-primary mx-auto" />
+        </div>
+      </div>
+    );
+  }
 
   const content = (
     <div className="w-full max-w-md mx-auto text-center">
