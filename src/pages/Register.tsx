@@ -246,29 +246,50 @@ const Register = () => {
 
       // Avoid triggering signup email if the email is already registered
       const normalizedEmail = normalizeEmail(email);
+      
+      // Check if email exists (with timeout to avoid hanging)
+      let emailAlreadyExists = false;
       try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
         const { data: exists, error: existsError } = await supabase.rpc("check_email_exists", {
           _email: normalizedEmail,
         });
+        
+        clearTimeout(timeoutId);
 
         if (existsError) {
           const m = existsError.message?.toLowerCase?.() ?? "";
           if (m.includes("rate") || m.includes("too many")) {
             startRateLimitCooldown(getNextEmailRateLimitCooldownSeconds());
-            throw new Error("email rate limit");
+            toast({
+              title: "Zu viele Anfragen",
+              description: "Bitte warte einige Minuten und versuche es dann erneut.",
+              variant: "destructive",
+            });
+            setLoading(false);
+            return;
           }
-          // If the helper fails, continue with signup attempt (fallback behavior)
+          // If the helper fails for other reasons, continue with signup attempt
+          console.error("check_email_exists error:", existsError);
         } else if (exists === true) {
-          toast({
-            title: "E-Mail bereits registriert",
-            description: "Diese E-Mail existiert bereits. Falls du noch keine Bestätigung hast, sende die Bestätigungs-Mail erneut.",
-            variant: "destructive",
-          });
-          navigate(`/email-confirmation?email=${encodeURIComponent(normalizedEmail)}`);
-          return;
+          emailAlreadyExists = true;
         }
-      } catch {
-        // handled below by the main error catch
+      } catch (checkError: any) {
+        // If aborted or network error, continue with signup
+        console.error("Email check failed:", checkError);
+      }
+
+      if (emailAlreadyExists) {
+        toast({
+          title: "E-Mail bereits registriert",
+          description: "Diese E-Mail existiert bereits. Falls du noch keine Bestätigung hast, sende die Bestätigungs-Mail erneut.",
+          variant: "destructive",
+        });
+        navigate(`/email-confirmation?email=${encodeURIComponent(normalizedEmail)}`);
+        setLoading(false);
+        return;
       }
 
       // Sign up user
@@ -326,13 +347,15 @@ const Register = () => {
       // Check for rate limit error
       if (errorLower.includes("rate limit") || errorLower.includes("email rate limit") || error?.status === 429) {
         errorTitle = "Zu viele Anfragen";
-        errorDescription = "Es wurden zu viele Bestätigungs-E-Mails angefordert. Bitte warte etwas länger und versuche es dann erneut.";
+        errorDescription = "Das E-Mail-Limit wurde erreicht. Bitte warte ca. 1 Stunde oder verwende eine andere E-Mail-Adresse.";
         startRateLimitCooldown(getNextEmailRateLimitCooldownSeconds());
 
         // If a signup request happened, the account may already exist. Send user to the confirmation page.
         const normalizedEmail = normalizeEmail(email);
         if (normalizedEmail) {
-          navigate(`/email-confirmation?email=${encodeURIComponent(normalizedEmail)}`);
+          setTimeout(() => {
+            navigate(`/email-confirmation?email=${encodeURIComponent(normalizedEmail)}`);
+          }, 2000);
         }
       }
       // Check for weak/pwned password error
