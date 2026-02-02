@@ -72,6 +72,7 @@ import { SkeletonDashboard } from "@/components/ui/skeleton-card";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
 import { NewUserWelcome } from "@/components/help/NewUserWelcome";
+import { HelpFAB } from "@/components/help/HelpFAB";
 import { useDashboardTour } from "@/hooks/useOnboardingTour";
 import {
   AlertDialog,
@@ -1468,6 +1469,9 @@ const Dashboard = () => {
             onDismiss={handleDismissWelcome} 
           />
         )}
+        
+        {/* Help FAB - always visible */}
+        <HelpFAB onStartTour={startManualTour} />
       </main>
     </div>
   );
