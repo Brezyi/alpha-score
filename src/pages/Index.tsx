@@ -23,14 +23,24 @@ const Index = () => {
   const [hasRedirected, setHasRedirected] = useState(false);
 
   useEffect(() => {
+    // Skip if still loading
+    if (loading || hasRedirected) return;
+    
     // On native platforms, skip landing page and go directly to app
-    if (IS_NATIVE_PLATFORM && !loading && !hasRedirected) {
+    if (IS_NATIVE_PLATFORM) {
       setHasRedirected(true);
       if (user) {
         navigate("/dashboard", { replace: true });
       } else {
         navigate("/login", { replace: true });
       }
+      return;
+    }
+    
+    // On web: If user is logged in (e.g., after email confirmation), redirect to dashboard
+    if (user) {
+      setHasRedirected(true);
+      navigate("/dashboard", { replace: true });
     }
   }, [loading, user, navigate, hasRedirected]);
 

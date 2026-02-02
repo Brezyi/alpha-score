@@ -110,14 +110,30 @@ export function OnboardingTourProvider({ children }: OnboardingTourProviderProps
   const currentStepData = steps[currentStep];
   const padding = currentStepData?.spotlightPadding ?? 8;
 
-  // Calculate tooltip position
+  // Calculate tooltip position - improved for mobile
   const getTooltipPosition = () => {
-    if (!targetRect) return { top: "50%", left: "50%" };
+    if (!targetRect) return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
 
-    const position = currentStepData?.position || "bottom";
-    const tooltipWidth = 300;
-    const tooltipHeight = 150;
-    const gap = 12;
+    const isMobile = window.innerWidth < 640;
+    const tooltipWidth = isMobile ? Math.min(280, window.innerWidth - 32) : 300;
+    const tooltipHeight = 180; // Slightly more height for better estimation
+    const gap = isMobile ? 8 : 12;
+    const safeArea = isMobile ? 80 : 16; // Extra bottom safe area for mobile nav
+
+    let position = currentStepData?.position || "bottom";
+    
+    // Auto-adjust position if element is near edges
+    const spaceAbove = targetRect.top;
+    const spaceBelow = window.innerHeight - targetRect.bottom - safeArea;
+    
+    // If not enough space below, try above
+    if (position === "bottom" && spaceBelow < tooltipHeight + gap && spaceAbove > tooltipHeight + gap) {
+      position = "top";
+    }
+    // If not enough space above, try below
+    if (position === "top" && spaceAbove < tooltipHeight + gap && spaceBelow > tooltipHeight + gap) {
+      position = "bottom";
+    }
 
     let top = 0;
     let left = 0;
@@ -141,8 +157,9 @@ export function OnboardingTourProvider({ children }: OnboardingTourProviderProps
         break;
     }
 
-    // Keep within viewport
-    top = Math.max(16, Math.min(top, window.innerHeight - tooltipHeight - 16));
+    // Keep within viewport with mobile-safe bottom area
+    const maxTop = window.innerHeight - tooltipHeight - safeArea;
+    top = Math.max(16, Math.min(top, maxTop));
     left = Math.max(16, Math.min(left, window.innerWidth - tooltipWidth - 16));
 
     return { top: `${top}px`, left: `${left}px` };
@@ -200,7 +217,7 @@ export function OnboardingTourProvider({ children }: OnboardingTourProviderProps
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="fixed z-[10000] w-[300px] p-4 bg-card border border-border rounded-2xl shadow-xl"
+              className="fixed z-[10000] w-[calc(100vw-32px)] sm:w-[300px] max-w-[300px] p-4 bg-card border border-border rounded-2xl shadow-xl"
               style={getTooltipPosition()}
               onClick={e => e.stopPropagation()}
             >
