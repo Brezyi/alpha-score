@@ -19,7 +19,18 @@ export function useDashboardTour() {
     
     // Wait for DOM to be ready
     const timer = setTimeout(() => {
-      startTour(dashboardTourSteps);
+      // Only keep steps that actually exist on the current dashboard.
+      // This prevents mismatches like "Level & XP" highlighting unrelated cards
+      // and avoids dead steps (e.g. discover-link on desktop).
+      const availableSteps = dashboardTourSteps.filter((step) => {
+        try {
+          return !!document.querySelector(step.target);
+        } catch {
+          return false;
+        }
+      });
+
+      startTour(availableSteps.length > 0 ? availableSteps : dashboardTourSteps);
     }, 1500);
 
     return () => clearTimeout(timer);
@@ -54,7 +65,15 @@ export function useDashboardTour() {
   }, [isActive]);
 
   const startManualTour = useCallback(() => {
-    startTour(dashboardTourSteps);
+    const availableSteps = dashboardTourSteps.filter((step) => {
+      try {
+        return !!document.querySelector(step.target);
+      } catch {
+        return false;
+      }
+    });
+
+    startTour(availableSteps.length > 0 ? availableSteps : dashboardTourSteps);
   }, [startTour]);
 
   const resetTour = useCallback(() => {
