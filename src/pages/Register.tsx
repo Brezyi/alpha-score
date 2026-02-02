@@ -5,7 +5,7 @@ import { ArrowLeft, Mail, Lock, User, Loader2, Check, AlertCircle, Gift } from "
 import { ScannerLogo } from "@/components/ScannerLogo";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -41,84 +41,15 @@ const Register = () => {
   const [referralCode, setReferralCode] = useState(searchParams.get("ref") || "");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [rateLimitSeconds, setRateLimitSeconds] = useState(0);
+  // Rate limiting removed for development
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
   const { settings } = useGlobalSettings();
   const isNative = Capacitor.isNativePlatform();
 
-  const RATE_LIMIT_STORAGE_KEY = "register_rate_limit_until";
-  const RATE_LIMIT_HITS_KEY = "register_email_rate_limit_hits";
-  const rateLimitTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
-
-  const startRateLimitCooldown = useCallback((seconds: number) => {
-    // Backend "email rate limit" can be longer than 2 minutes. Allow up to 60 minutes on the client.
-    const safe = Math.max(0, Math.min(seconds, 60 * 60));
-    const until = Date.now() + safe * 1000;
-    localStorage.setItem(RATE_LIMIT_STORAGE_KEY, String(until));
-    setRateLimitSeconds(safe);
-  }, []);
-
-  const getNextEmailRateLimitCooldownSeconds = useCallback(() => {
-    const steps = [120, 300, 900, 1800, 3600]; // 2m, 5m, 15m, 30m, 60m
-    const raw = localStorage.getItem(RATE_LIMIT_HITS_KEY);
-    const hits = Math.max(0, Number(raw ?? 0) || 0);
-    const nextHits = Math.min(hits + 1, steps.length);
-    localStorage.setItem(RATE_LIMIT_HITS_KEY, String(nextHits));
-    return steps[nextHits - 1];
-  }, []);
-
-  const resetEmailRateLimitBackoff = useCallback(() => {
-    localStorage.removeItem(RATE_LIMIT_HITS_KEY);
-  }, []);
-
-  // Restore cooldown (e.g. after refresh)
-  useEffect(() => {
-    const raw = localStorage.getItem(RATE_LIMIT_STORAGE_KEY);
-    const until = raw ? Number(raw) : 0;
-    if (!Number.isFinite(until) || until <= Date.now()) {
-      localStorage.removeItem(RATE_LIMIT_STORAGE_KEY);
-      return;
-    }
-    const remaining = Math.ceil((until - Date.now()) / 1000);
-    if (remaining > 0) setRateLimitSeconds(remaining);
-  }, []);
-
-  // Countdown timer for rate limit cooldown
-  useEffect(() => {
-    if (rateLimitTimerRef.current) {
-      clearInterval(rateLimitTimerRef.current);
-      rateLimitTimerRef.current = null;
-    }
-
-    if (rateLimitSeconds > 0) {
-      rateLimitTimerRef.current = setInterval(() => {
-        setRateLimitSeconds((prev) => {
-          const next = Math.max(0, prev - 1);
-          if (next === 0) {
-            localStorage.removeItem(RATE_LIMIT_STORAGE_KEY);
-          }
-          return next;
-        });
-      }, 1000);
-    }
-
-    return () => {
-      if (rateLimitTimerRef.current) {
-        clearInterval(rateLimitTimerRef.current);
-        rateLimitTimerRef.current = null;
-      }
-    };
-  }, [rateLimitSeconds]);
 
   // Redirect to dashboard if already logged in
   useEffect(() => {
@@ -163,23 +94,9 @@ const Register = () => {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (rateLimitSeconds > 0) {
-      toast({
-        title: "Zu viele Anfragen",
-        description: `Bitte warte ${formatTime(rateLimitSeconds)} und versuche es dann erneut.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setLoading(true);
 
     try {
-      // If user got rate limited earlier, avoid repeated /signup attempts.
-      // The cooldown is enforced at the top, but this guards against stale state.
-      if (rateLimitSeconds > 0) {
-        return;
-      }
 
       // Validate name format
       if (!isValidName(firstName.trim()) || !isValidName(lastName.trim())) {
@@ -260,18 +177,7 @@ const Register = () => {
         clearTimeout(timeoutId);
 
         if (existsError) {
-          const m = existsError.message?.toLowerCase?.() ?? "";
-          if (m.includes("rate") || m.includes("too many")) {
-            startRateLimitCooldown(getNextEmailRateLimitCooldownSeconds());
-            toast({
-              title: "Zu viele Anfragen",
-              description: "Bitte warte einige Minuten und versuche es dann erneut.",
-              variant: "destructive",
-            });
-            setLoading(false);
-            return;
-          }
-          // If the helper fails for other reasons, continue with signup attempt
+          // If the helper fails, continue with signup attempt
           console.error("check_email_exists error:", existsError);
         } else if (exists === true) {
           emailAlreadyExists = true;
@@ -309,8 +215,7 @@ const Register = () => {
 
       if (error) throw error;
 
-      // Reset backoff after a successful signup request
-      resetEmailRateLimitBackoff();
+      if (error) throw error;
 
       // Store sensitive data for later (will be processed on first login after email verification)
       if (signUpData?.user) {
@@ -348,7 +253,6 @@ const Register = () => {
       if (errorLower.includes("rate limit") || errorLower.includes("email rate limit") || error?.status === 429) {
         errorTitle = "Zu viele Anfragen";
         errorDescription = "Das E-Mail-Limit wurde erreicht. Bitte warte ca. 1 Stunde oder verwende eine andere E-Mail-Adresse.";
-        startRateLimitCooldown(getNextEmailRateLimitCooldownSeconds());
 
         // If a signup request happened, the account may already exist. Send user to the confirmation page.
         const normalizedEmail = normalizeEmail(email);
@@ -576,15 +480,13 @@ const Register = () => {
                 variant="hero" 
                 size="lg" 
                 className="w-full h-12 mt-2"
-                disabled={loading || googleLoading || !passwordsMatch || rateLimitSeconds > 0}
+                disabled={loading || googleLoading || !passwordsMatch}
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Registrieren...
                   </>
-                ) : rateLimitSeconds > 0 ? (
-                  `Bitte warten (${formatTime(rateLimitSeconds)})`
                 ) : (
                   "Registrieren"
                 )}
@@ -607,7 +509,7 @@ const Register = () => {
                 size="lg"
                 className="w-full h-12"
                 onClick={handleGoogleSignup}
-                disabled={loading || googleLoading || rateLimitSeconds > 0}
+                disabled={loading || googleLoading}
               >
                 {googleLoading ? (
                   <>
@@ -964,15 +866,13 @@ const Register = () => {
               variant="hero" 
               size="lg" 
               className="w-full"
-              disabled={loading || googleLoading || rateLimitSeconds > 0}
+              disabled={loading || googleLoading}
             >
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
                   Wird erstellt...
                 </>
-              ) : rateLimitSeconds > 0 ? (
-                `Bitte warten (${formatTime(rateLimitSeconds)})`
               ) : (
                 "Kostenlos registrieren"
               )}
@@ -997,7 +897,7 @@ const Register = () => {
               size="lg"
               className="w-full"
               onClick={handleGoogleSignup}
-              disabled={loading || googleLoading || rateLimitSeconds > 0}
+              disabled={loading || googleLoading}
             >
               {googleLoading ? (
                 <>
