@@ -249,18 +249,10 @@ const Register = () => {
 
       const errorLower = error.message?.toLowerCase?.() ?? "";
 
-      // Check for rate limit error
+      // Check for rate limit error - no redirect, just show message
       if (errorLower.includes("rate limit") || errorLower.includes("email rate limit") || error?.status === 429) {
         errorTitle = "Zu viele Anfragen";
         errorDescription = "Das E-Mail-Limit wurde erreicht. Bitte warte ca. 1 Stunde oder verwende eine andere E-Mail-Adresse.";
-
-        // If a signup request happened, the account may already exist. Send user to the confirmation page.
-        const normalizedEmail = normalizeEmail(email);
-        if (normalizedEmail) {
-          setTimeout(() => {
-            navigate(`/email-confirmation?email=${encodeURIComponent(normalizedEmail)}`);
-          }, 2000);
-        }
       }
       // Check for weak/pwned password error
       else if (error.message?.toLowerCase().includes("weak") || 
