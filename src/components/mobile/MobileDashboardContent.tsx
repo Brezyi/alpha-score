@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { NewUserWelcome } from "@/components/help/NewUserWelcome";
+import { HelpFAB } from "@/components/help/HelpFAB";
 import { useDashboardTour } from "@/hooks/useOnboardingTour";
 
 type Analysis = {
@@ -535,6 +536,9 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
           onDismiss={handleDismissWelcome} 
         />
       )}
+      
+      {/* Help FAB */}
+      <HelpFAB onStartTour={startManualTour} />
     </div>
   );
 };
