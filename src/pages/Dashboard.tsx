@@ -1158,10 +1158,11 @@ const Dashboard = () => {
 
         {/* Gamification Section - XP, Challenges */}
         {isPremiumUser && (
-          <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }} data-tour="gamification">
+          <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }}>
             <h2 className="text-xl font-bold">Dein Fortschritt</h2>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* XP, Challenges, Activity - this is the gamification tour target */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" data-tour="gamification">
               {/* XP & Level Card */}
               <XpLevelCard
                 level={xp.level}
