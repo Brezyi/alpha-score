@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./skeleton";
 
@@ -8,38 +9,40 @@ interface SkeletonCardProps {
   showImage?: boolean;
 }
 
-export function SkeletonCard({ 
-  className, 
-  lines = 3, 
-  showAvatar = false,
-  showImage = false 
-}: SkeletonCardProps) {
-  return (
-    <div className={cn(
-      "p-5 rounded-2xl glass-card space-y-4 animate-pulse",
-      className
-    )}>
-      {showImage && (
-        <Skeleton className="h-32 w-full rounded-xl" />
-      )}
-      
-      <div className="flex items-start gap-3">
-        {showAvatar && (
-          <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+export const SkeletonCard = forwardRef<HTMLDivElement, SkeletonCardProps>(
+  ({ className, lines = 3, showAvatar = false, showImage = false }, ref) => {
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "p-5 rounded-2xl glass-card space-y-4 animate-pulse",
+          className
         )}
-        <div className="space-y-2 flex-1">
-          <Skeleton className="h-4 w-3/4" />
-          {Array.from({ length: lines - 1 }).map((_, i) => (
-            <Skeleton 
-              key={i} 
-              className={cn("h-3", i === lines - 2 ? "w-1/2" : "w-full")} 
-            />
-          ))}
+      >
+        {showImage && (
+          <Skeleton className="h-32 w-full rounded-xl" />
+        )}
+
+        <div className="flex items-start gap-3">
+          {showAvatar && (
+            <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+          )}
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-4 w-3/4" />
+            {Array.from({ length: lines - 1 }).map((_, i) => (
+              <Skeleton
+                key={i}
+                className={cn("h-3", i === lines - 2 ? "w-1/2" : "w-full")}
+              />
+            ))}
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+);
+
+SkeletonCard.displayName = "SkeletonCard";
 
 export function SkeletonStats({ className }: { className?: string }) {
   return (
