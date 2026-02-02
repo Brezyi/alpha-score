@@ -49,22 +49,40 @@ const EmailConfirmation = () => {
     }
   }, [user, authLoading, navigate, toast]);
 
-  // Poll for session changes (detects confirmation from other tabs/windows)
+  // Poll for session changes (detects confirmation from other devices/tabs)
   useEffect(() => {
     if (isConfirmed || !email) return;
 
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        setIsConfirmed(true);
+    const checkAndRefreshSession = async () => {
+      try {
+        // First try to refresh the session - this forces a server check
+        // and will pick up email confirmation done on other devices
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshData?.session?.user?.email_confirmed_at) {
+          // Email is now confirmed!
+          setIsConfirmed(true);
+          return;
+        }
+        
+        // If refresh didn't work, check current session
+        if (!refreshError) {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user?.email_confirmed_at) {
+            setIsConfirmed(true);
+          }
+        }
+      } catch (error) {
+        // Ignore errors, just continue polling
+        console.debug("Session check failed, will retry:", error);
       }
     };
 
     // Check immediately
-    checkSession();
+    checkAndRefreshSession();
 
     // Poll every 3 seconds
-    const interval = setInterval(checkSession, 3000);
+    const interval = setInterval(checkAndRefreshSession, 3000);
 
     return () => clearInterval(interval);
   }, [email, isConfirmed]);
