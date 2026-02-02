@@ -302,6 +302,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.1 }}
+        data-tour="score-card"
       >
         {latestScore !== null ? (
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-card/50 border border-border p-6">
@@ -397,6 +398,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
         className="grid grid-cols-3 gap-3"
+        data-tour="gamification"
       >
         {[
           { value: currentStreak, label: "Streak", icon: Flame, color: "text-orange-500" },
@@ -423,6 +425,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
         className="space-y-3"
+        data-tour="quick-actions"
       >
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-1">Schnellzugriff</h2>
         <div className="grid grid-cols-4 gap-3">
@@ -510,6 +513,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
+        data-tour="discover-link"
       >
         <Link
           to="/progress"
