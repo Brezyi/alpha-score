@@ -107,7 +107,7 @@ export function useSubscription() {
 
       const { data, error } = await supabase.functions.invoke("check-subscription");
 
-      // Handle token expiration errors
+      // Handle token expiration errors or deleted user errors
       if (error) {
         const errorMessage = error.message || '';
         const isTokenError = errorMessage.includes("401") || 
@@ -140,6 +140,21 @@ export function useSubscription() {
         }
         
         // Set as not premium but don't show error for auth issues
+        setState({
+          isPremium: false,
+          subscriptionType: null,
+          subscriptionEnd: null,
+          isAdminGranted: false,
+          loading: false,
+          error: null,
+        });
+        return;
+      }
+
+      // Check if response indicates user doesn't exist (deleted account)
+      if (data?.error?.includes("User from sub claim in JWT does not exist")) {
+        // User was deleted, sign out and clear state
+        await supabase.auth.signOut();
         setState({
           isPremium: false,
           subscriptionType: null,
