@@ -84,26 +84,62 @@ export function OnboardingTourProvider({ children }: OnboardingTourProviderProps
     const currentStepData = steps[currentStep];
     if (!currentStepData) return;
 
-    const findTarget = () => {
-      const target = document.querySelector(currentStepData.target);
-      if (target) {
-        const rect = target.getBoundingClientRect();
-        setTargetRect(rect);
-        
-        // Scroll target into view if needed
+    const isMobile = window.innerWidth < 640;
+    const safeAreaBottom = isMobile ? 80 : 16; // avoid mobile bottom nav
+    const viewportPadding = 16;
+
+    const resolveTarget = () => document.querySelector(currentStepData.target) as HTMLElement | null;
+
+    const updateRect = () => {
+      const target = resolveTarget();
+      if (!target) {
+        // Important: don't keep the previous step's rect (otherwise the highlight appears on random cards)
+        setTargetRect(null);
+        return;
+      }
+      setTargetRect(target.getBoundingClientRect());
+    };
+
+    const ensureInView = () => {
+      const target = resolveTarget();
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+
+      const isFullyVisible =
+        rect.top >= viewportPadding &&
+        rect.bottom <= window.innerHeight - safeAreaBottom - viewportPadding;
+
+      if (!isFullyVisible) {
         target.scrollIntoView({ behavior: "smooth", block: "center" });
       }
     };
 
-    // Small delay to allow DOM to settle
-    const timer = setTimeout(findTarget, 100);
-    
-    // Update on resize
-    window.addEventListener("resize", findTarget);
-    
+    let rafId = 0;
+    const onViewportChange = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateRect);
+    };
+
+    // Give the DOM a moment to settle, then measure + (if needed) scroll.
+    const t0 = window.setTimeout(() => {
+      updateRect();
+      ensureInView();
+    }, 100);
+
+    // Re-measure during/after smooth scroll so the spotlight doesn't get "stuck" at the old position.
+    const t1 = window.setTimeout(updateRect, 250);
+    const t2 = window.setTimeout(updateRect, 700);
+
+    window.addEventListener("resize", onViewportChange, { passive: true } as AddEventListenerOptions);
+    window.addEventListener("scroll", onViewportChange, { passive: true } as AddEventListenerOptions);
+
     return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", findTarget);
+      window.clearTimeout(t0);
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", onViewportChange);
+      window.removeEventListener("scroll", onViewportChange);
     };
   }, [isActive, currentStep, steps]);
 
@@ -311,8 +347,8 @@ export const dashboardTourSteps: TourStep[] = [
   {
     id: "discover-hint",
     target: "[data-tour='discover-link']",
-    title: "Alle Features entdecken",
-    description: "Klicke hier um alle verfügbaren Features der App auf einen Blick zu sehen.",
+    title: "Fortschritt entdecken",
+    description: "Hier kommst du zur Progress-Seite mit Timeline, Achievements und mehr Details.",
     position: "bottom",
   },
 ];
