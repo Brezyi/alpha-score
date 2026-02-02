@@ -30,6 +30,9 @@ import { useGamification } from "@/hooks/useGamification";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
+import { HelpFAB } from "@/components/help/HelpFAB";
+import { NewUserWelcome } from "@/components/help/NewUserWelcome";
+import { useDashboardTour } from "@/hooks/useOnboardingTour";
 
 type Analysis = {
   id: string;
@@ -152,8 +155,27 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
   const { isPremium, subscriptionType } = useSubscription();
   const { currentStreak } = useStreak();
   const { xp } = useGamification();
+  const { startManualTour, hasCompletedTour } = useDashboardTour();
+  
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(() => {
+    try {
+      return !localStorage.getItem("welcome-banner-dismissed");
+    } catch {
+      return true;
+    }
+  });
 
   const needsOnboarding = !profileLoading && profile && !profile.gender;
+  
+  // Show welcome for new users without analyses
+  const shouldShowWelcome = !needsOnboarding && showWelcomeBanner && !hasCompletedTour && analyses.length === 0 && !analysesLoading;
+  
+  const handleDismissWelcome = () => {
+    setShowWelcomeBanner(false);
+    try {
+      localStorage.setItem("welcome-banner-dismissed", "true");
+    } catch {}
+  };
 
   const handleOnboardingComplete = async (data: { gender: "male" | "female"; country: string }) => {
     await updateProfile({ gender: data.gender, country: data.country });
@@ -506,6 +528,17 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
           </div>
         </Link>
       </motion.div>
+      
+      {/* Help FAB */}
+      <HelpFAB onStartTour={startManualTour} className="bottom-24" />
+      
+      {/* Welcome Banner for new users */}
+      {shouldShowWelcome && (
+        <NewUserWelcome 
+          onStartTour={startManualTour} 
+          onDismiss={handleDismissWelcome} 
+        />
+      )}
     </div>
   );
 };

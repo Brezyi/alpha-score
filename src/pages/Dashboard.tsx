@@ -72,6 +72,9 @@ import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { SkeletonDashboard } from "@/components/ui/skeleton-card";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
+import { HelpFAB } from "@/components/help/HelpFAB";
+import { NewUserWelcome } from "@/components/help/NewUserWelcome";
+import { useDashboardTour } from "@/hooks/useOnboardingTour";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -249,6 +252,16 @@ const Dashboard = () => {
   // Gamification
   const { xp, achievements, dailyChallenges, loading: gamificationLoading, challengesLoading, completeChallenge, checkAchievements } = useGamification();
   
+  // Onboarding tour for new users
+  const { startManualTour, hasCompletedTour, autoStartTour } = useDashboardTour();
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(() => {
+    try {
+      return !localStorage.getItem("welcome-banner-dismissed");
+    } catch {
+      return true;
+    }
+  });
+  
   // Check if results should be locked (free user without enough referrals)
   const isResultsLocked = !isPremium && !hasEnoughReferrals;
   
@@ -300,6 +313,19 @@ const Dashboard = () => {
 
   // Check if onboarding is needed (profile loaded but no gender set)
   const needsOnboarding = !profileLoading && profile && !profile.gender;
+  
+  // Show welcome banner for new users who haven't completed the tour
+  const shouldShowWelcome = !needsOnboarding && showWelcomeBanner && !hasCompletedTour && analyses.length === 0;
+  
+  // Handle dismissing the welcome banner
+  const handleDismissWelcome = () => {
+    setShowWelcomeBanner(false);
+    try {
+      localStorage.setItem("welcome-banner-dismissed", "true");
+    } catch {
+      // Ignore localStorage errors
+    }
+  };
 
   // Handle onboarding completion
   const handleOnboardingComplete = async (data: { gender: "male" | "female"; country: string }) => {
@@ -1439,6 +1465,17 @@ const Dashboard = () => {
 
         {/* Floating Action Button */}
         <FloatingActionButton />
+        
+        {/* Help FAB */}
+        <HelpFAB onStartTour={startManualTour} />
+        
+        {/* Welcome Banner for new users */}
+        {shouldShowWelcome && (
+          <NewUserWelcome 
+            onStartTour={startManualTour} 
+            onDismiss={handleDismissWelcome} 
+          />
+        )}
       </main>
     </div>
   );
