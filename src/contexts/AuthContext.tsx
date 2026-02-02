@@ -55,8 +55,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             .getUser()
             .then(({ error }) => {
               if (!isMounted) return;
-              if (error?.message?.includes("User from sub claim in JWT does not exist")) {
-                supabase.auth.signOut().finally(() => {
+              if (error?.message?.includes("User from sub claim in JWT does not exist") ||
+                  error?.message?.includes("user_not_found")) {
+                // User was deleted - force clear local session
+                supabase.auth.signOut().catch(() => {
+                  // If signOut also fails (user doesn't exist), manually clear storage
+                  localStorage.removeItem('sb-zutwifgosunupwyvcaym-auth-token');
+                  sessionStorage.removeItem('sb-zutwifgosunupwyvcaym-auth-token');
+                }).finally(() => {
                   if (!isMounted) return;
                   setSession(null);
                   setUser(null);
@@ -80,8 +86,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (currentSession?.user) {
           try {
             const { error } = await supabase.auth.getUser();
-            if (error?.message?.includes("User from sub claim in JWT does not exist")) {
-              await supabase.auth.signOut();
+            if (error?.message?.includes("User from sub claim in JWT does not exist") ||
+                error?.message?.includes("user_not_found")) {
+              // User was deleted - force clear local session
+              try {
+                await supabase.auth.signOut();
+              } catch {
+                // If signOut fails, manually clear storage
+                localStorage.removeItem('sb-zutwifgosunupwyvcaym-auth-token');
+                sessionStorage.removeItem('sb-zutwifgosunupwyvcaym-auth-token');
+              }
               if (!isMounted) return;
               setSession(null);
               setUser(null);
