@@ -68,11 +68,9 @@ import { WeeklySummaryCard } from "@/components/dashboard/WeeklySummaryCard";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { useReferral } from "@/hooks/useReferral";
 import { Capacitor } from "@capacitor/core";
-import { FloatingActionButton } from "@/components/ui/floating-action-button";
 import { SkeletonDashboard } from "@/components/ui/skeleton-card";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileDashboardContent } from "@/components/mobile/MobileDashboardContent";
-import { HelpFAB } from "@/components/help/HelpFAB";
 import { NewUserWelcome } from "@/components/help/NewUserWelcome";
 import { useDashboardTour } from "@/hooks/useOnboardingTour";
 import {
@@ -1463,12 +1461,6 @@ const Dashboard = () => {
           </AlertDialogContent>
         </AlertDialog>
 
-        {/* Floating Action Button */}
-        <FloatingActionButton />
-        
-        {/* Help FAB */}
-        <HelpFAB onStartTour={startManualTour} />
-        
         {/* Welcome Banner for new users */}
         {shouldShowWelcome && (
           <NewUserWelcome 

@@ -30,7 +30,6 @@ import { useGamification } from "@/hooks/useGamification";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
-import { HelpFAB } from "@/components/help/HelpFAB";
 import { NewUserWelcome } from "@/components/help/NewUserWelcome";
 import { useDashboardTour } from "@/hooks/useOnboardingTour";
 
@@ -528,9 +527,6 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
           </div>
         </Link>
       </motion.div>
-      
-      {/* Help FAB */}
-      <HelpFAB onStartTour={startManualTour} className="bottom-24" />
       
       {/* Welcome Banner for new users */}
       {shouldShowWelcome && (
