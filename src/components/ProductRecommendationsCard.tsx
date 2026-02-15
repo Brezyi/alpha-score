@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Product {
   id: string;
@@ -48,16 +49,6 @@ const priceLabels: Record<string, { label: string; color: string }> = {
   premium: { label: "€€€", color: "text-orange-500" },
 };
 
-const categoryNames: Record<string, string> = {
-  serum: "Serum",
-  treatment: "Behandlung",
-  exfoliant: "Peeling",
-  sunscreen: "Sonnenschutz",
-  hair: "Haarpflege",
-  tool: "Werkzeug",
-};
-
-// Memoized product item component
 const ProductItem = memo(({ 
   product, 
   index, 
@@ -66,11 +57,12 @@ const ProductItem = memo(({
   shouldReduce
 }: { 
   product: Product; 
-  index: number;
+  index: number; 
   onProductClick: (product: Product) => void;
   onBuyClick: (product: Product, e?: React.MouseEvent) => void;
   shouldReduce: boolean;
 }) => {
+  const { t } = useLanguage();
   const isHighMatch = product.matchScore && product.matchScore >= 5;
   
   return (
@@ -85,7 +77,7 @@ const ProductItem = memo(({
     >
       {isHighMatch && (
         <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-[10px] px-1.5 py-0.5 rounded-full font-medium">
-          Top-Match
+          {t("products.topMatch")}
         </div>
       )}
       
@@ -143,14 +135,27 @@ export const ProductRecommendationsCard = memo(({
   products,
   loading,
   maxDisplay = 4,
-  title = "Für dich empfohlen",
+  title,
   hasPersonalizedResults = false,
 }: ProductRecommendationsCardProps) => {
+  const { t } = useLanguage();
   const [showAllProducts, setShowAllProducts] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const shouldReduce = useReducedMotion();
   
   const displayProducts = useMemo(() => products.slice(0, maxDisplay), [products, maxDisplay]);
+
+  // Dynamic translated category names
+  const categoryNames: Record<string, string> = {
+    serum: "Serum",
+    treatment: t("products.treatment"),
+    exfoliant: t("products.exfoliant"),
+    sunscreen: t("products.sunscreen"),
+    hair: t("products.haircare"),
+    tool: t("products.tool"),
+  };
+
+  const displayTitle = title || t("products.recommended");
 
   const handleProductClick = useCallback((product: Product) => {
     setSelectedProduct(product);
@@ -191,16 +196,16 @@ export const ProductRecommendationsCard = memo(({
           <div>
             <h3 className="font-bold text-lg flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-primary" />
-              {title}
+              {displayTitle}
             </h3>
             {hasPersonalizedResults && (
               <p className="text-xs text-muted-foreground mt-0.5">
-                Basierend auf deiner Analyse
+                {t("products.basedOn")}
               </p>
             )}
           </div>
           <Badge variant="outline" className="text-xs">
-            {products.length} Produkte
+            {products.length} {t("products.count")}
           </Badge>
         </div>
 
@@ -223,7 +228,7 @@ export const ProductRecommendationsCard = memo(({
             className="w-full mt-3 text-sm"
             onClick={() => setShowAllProducts(true)}
           >
-            Alle {products.length} Produkte anzeigen
+            {t("products.showAll")} {products.length} {t("products.showAllProducts")}
             <ExternalLink className="w-4 h-4 ml-2" />
           </Button>
         )}
@@ -235,7 +240,7 @@ export const ProductRecommendationsCard = memo(({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <ShoppingBag className="w-5 h-5 text-primary" />
-              Alle empfohlenen Produkte ({products.length})
+              {t("products.allRecommended")} ({products.length})
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 mt-4">
@@ -283,7 +288,7 @@ export const ProductRecommendationsCard = memo(({
 
               {selectedProduct.targetIssues.length > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2">Hilft bei:</p>
+                  <p className="text-xs text-muted-foreground mb-2">{t("products.helpsFor")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedProduct.targetIssues.map((issue) => (
                       <Badge key={issue} variant="secondary">
@@ -299,7 +304,7 @@ export const ProductRecommendationsCard = memo(({
                 onClick={() => handleBuyClick(selectedProduct)}
               >
                 <ExternalLink className="w-4 h-4 mr-2" />
-                Auf Amazon suchen
+                {t("products.searchOnAmazon")}
               </Button>
             </div>
           )}

@@ -27,6 +27,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HelpCenterDialogProps {
   open: boolean;
@@ -36,116 +37,117 @@ interface HelpCenterDialogProps {
 
 type TabId = "quickstart" | "features" | "faq";
 
-const TABS = [
-  { id: "quickstart" as TabId, label: "Schnellstart", icon: Play },
-  { id: "features" as TabId, label: "Features", icon: BookOpen },
-  { id: "faq" as TabId, label: "FAQ", icon: Lightbulb },
-];
-
-const QUICKSTART_STEPS = [
-  {
-    step: 1,
-    icon: Camera,
-    title: "Fotos hochladen",
-    description: "Lade 3 Fotos hoch: frontal, seitlich und ganzkörper. Unsere KI analysiert über 50 Gesichtsmerkmale.",
-    gradient: "from-blue-500 to-cyan-400",
-    bgGlow: "bg-blue-500/20",
-  },
-  {
-    step: 2,
-    icon: TrendingUp,
-    title: "Score & Analyse erhalten",
-    description: "Du erhältst einen objektiven Score, siehst dein Potential und verstehst deine Stärken und Verbesserungsmöglichkeiten.",
-    gradient: "from-primary to-emerald-400",
-    bgGlow: "bg-primary/20",
-  },
-  {
-    step: 3,
-    icon: Target,
-    title: "Personalisierten Plan umsetzen",
-    description: "Folge deinem maßgeschneiderten Plan mit konkreten, wissenschaftlich fundierten Schritten für sichtbare Verbesserungen.",
-    gradient: "from-amber-500 to-orange-400",
-    bgGlow: "bg-amber-500/20",
-  },
-];
-
-const FEATURES = [
-  {
-    icon: Camera,
-    title: "KI-Analyse",
-    description: "Objektive Bewertung basierend auf wissenschaftlichen Proportionen",
-    href: "/upload",
-    gradient: "from-blue-500 to-cyan-400",
-  },
-  {
-    icon: Target,
-    title: "Persönlicher Plan",
-    description: "Maßgeschneiderte Empfehlungen für alle Bereiche",
-    href: "/plan",
-    gradient: "from-primary to-emerald-400",
-  },
-  {
-    icon: Heart,
-    title: "Lifestyle Tracking",
-    description: "Tracke Schlaf, Wasser, Ernährung und mehr",
-    href: "/lifestyle",
-    gradient: "from-pink-500 to-rose-400",
-  },
-  {
-    icon: TrendingUp,
-    title: "Fortschritt",
-    description: "Verfolge deine Entwicklung über Zeit",
-    href: "/progress",
-    gradient: "from-violet-500 to-purple-400",
-  },
-  {
-    icon: MessageSquare,
-    title: "AI Coach",
-    description: "Persönlicher Assistent für alle Fragen",
-    href: "/coach",
-    gradient: "from-amber-500 to-orange-400",
-  },
-  {
-    icon: Users,
-    title: "Community",
-    description: "Verbinde dich mit Freunden",
-    href: "/friends",
-    gradient: "from-teal-500 to-cyan-400",
-  },
-];
-
-const FAQ_ITEMS = [
-  {
-    question: "Wie genau ist die KI-Analyse?",
-    answer: "Die KI analysiert über 50 Gesichtsmerkmale basierend auf wissenschaftlich belegten Attraktivitäts-Standards. Die Genauigkeit liegt bei etwa 85-90% im Vergleich zu menschlichen Bewertungen.",
-    icon: Zap,
-  },
-  {
-    question: "Wie oft sollte ich eine Analyse machen?",
-    answer: "Wir empfehlen eine neue Analyse alle 4-8 Wochen, um deinen Fortschritt zu tracken. Zu häufige Analysen zeigen keine signifikanten Änderungen.",
-    icon: Target,
-  },
-  {
-    question: "Sind meine Fotos sicher?",
-    answer: "Ja! Deine Fotos werden verschlüsselt gespeichert und niemals an Dritte weitergegeben. Du kannst sie jederzeit vollständig löschen.",
-    icon: CheckCircle2,
-  },
-  {
-    question: "Was bringt Premium?",
-    answer: "Mit Premium erhältst du unbegrenzte Analysen, detaillierte Ergebnisse, den AI Coach, alle Lifestyle-Tracker und den personalisierten Plan.",
-    icon: Trophy,
-  },
-  {
-    question: "Kann ich meinen Score verbessern?",
-    answer: "Ja! Die meisten Nutzer verbessern ihren Score um 0.5-2 Punkte innerhalb von 3-6 Monaten durch konsequente Umsetzung des Plans.",
-    icon: TrendingUp,
-  },
-];
-
 export function HelpCenterDialog({ open, onOpenChange, onStartTour }: HelpCenterDialogProps) {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<TabId>("quickstart");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const navigate = useNavigate();
+
+  const TABS = [
+    { id: "quickstart" as TabId, label: t("help.quickstart"), icon: Play },
+    { id: "features" as TabId, label: t("help.features"), icon: BookOpen },
+    { id: "faq" as TabId, label: t("help.faq"), icon: Lightbulb },
+  ];
+
+  const QUICKSTART_STEPS = [
+    {
+      step: 1,
+      icon: Camera,
+      title: t("help.step1Title"),
+      description: t("help.step1Desc"),
+      gradient: "from-blue-500 to-cyan-400",
+      bgGlow: "bg-blue-500/20",
+    },
+    {
+      step: 2,
+      icon: TrendingUp,
+      title: t("help.step2Title"),
+      description: t("help.step2Desc"),
+      gradient: "from-primary to-emerald-400",
+      bgGlow: "bg-primary/20",
+    },
+    {
+      step: 3,
+      icon: Target,
+      title: t("help.step3Title"),
+      description: t("help.step3Desc"),
+      gradient: "from-amber-500 to-orange-400",
+      bgGlow: "bg-amber-500/20",
+    },
+  ];
+
+  const FEATURES = [
+    {
+      icon: Camera,
+      title: t("help.aiAnalysis"),
+      description: t("help.aiAnalysisDesc"),
+      href: "/upload",
+      gradient: "from-blue-500 to-cyan-400",
+    },
+    {
+      icon: Target,
+      title: t("help.personalPlan"),
+      description: t("help.personalPlanDesc"),
+      href: "/plan",
+      gradient: "from-primary to-emerald-400",
+    },
+    {
+      icon: Heart,
+      title: t("help.lifestyleTracking"),
+      description: t("help.lifestyleTrackingDesc"),
+      href: "/lifestyle",
+      gradient: "from-pink-500 to-rose-400",
+    },
+    {
+      icon: TrendingUp,
+      title: t("help.progressTracking"),
+      description: t("help.progressTrackingDesc"),
+      href: "/progress",
+      gradient: "from-violet-500 to-purple-400",
+    },
+    {
+      icon: MessageSquare,
+      title: t("help.aiCoach"),
+      description: t("help.aiCoachDesc"),
+      href: "/coach",
+      gradient: "from-amber-500 to-orange-400",
+    },
+    {
+      icon: Users,
+      title: t("help.community"),
+      description: t("help.communityDesc"),
+      href: "/friends",
+      gradient: "from-teal-500 to-cyan-400",
+    },
+  ];
+
+  const FAQ_ITEMS = [
+    {
+      question: t("help.faq1Q"),
+      answer: t("help.faq1A"),
+      icon: Zap,
+    },
+    {
+      question: t("help.faq2Q"),
+      answer: t("help.faq2A"),
+      icon: Target,
+    },
+    {
+      question: t("help.faq3Q"),
+      answer: t("help.faq3A"),
+      icon: CheckCircle2,
+    },
+    {
+      question: t("help.faq4Q"),
+      answer: t("help.faq4A"),
+      icon: Trophy,
+    },
+    {
+      question: t("help.faq5Q"),
+      answer: t("help.faq5A"),
+      icon: TrendingUp,
+    },
+  ];
 
   const handleStartTour = () => {
     onOpenChange(false);
@@ -176,8 +178,8 @@ export function HelpCenterDialog({ open, onOpenChange, onStartTour }: HelpCenter
               <HelpCircle className="w-5 h-5 text-primary-foreground" />
             </motion.div>
             <div>
-              <span className="text-lg font-bold">Hilfe-Center</span>
-              <p className="text-xs text-muted-foreground font-normal">Alles was du wissen musst</p>
+              <span className="text-lg font-bold">{t("help.title")}</span>
+              <p className="text-xs text-muted-foreground font-normal">{t("help.subtitle")}</p>
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -224,7 +226,7 @@ export function HelpCenterDialog({ open, onOpenChange, onStartTour }: HelpCenter
                 {/* Hero text */}
                 <div className="text-center py-2">
                   <p className="text-sm text-muted-foreground">
-                    In <span className="text-primary font-semibold">3 einfachen Schritten</span> zu deinem besten Selbst
+                    In <span className="text-primary font-semibold">{t("help.3steps")}</span> {t("help.toBestSelf")}
                   </p>
                 </div>
 
@@ -253,7 +255,7 @@ export function HelpCenterDialog({ open, onOpenChange, onStartTour }: HelpCenter
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                            Schritt {item.step}
+                            {t("help.step")} {item.step}
                           </span>
                         </div>
                         <h4 className="font-bold text-base mb-1">{item.title}</h4>
@@ -276,7 +278,7 @@ export function HelpCenterDialog({ open, onOpenChange, onStartTour }: HelpCenter
                     className="w-full h-12 gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20"
                   >
                     <Sparkles className="w-5 h-5" />
-                    <span className="font-semibold">Interaktive Tour starten</span>
+                    <span className="font-semibold">{t("help.startTour")}</span>
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </motion.div>
@@ -392,7 +394,7 @@ export function HelpCenterDialog({ open, onOpenChange, onStartTour }: HelpCenter
                     className="w-full flex items-center justify-center gap-2 p-4 rounded-2xl bg-gradient-to-r from-muted/50 to-muted/30 hover:from-muted hover:to-muted/50 border border-border/30 transition-all text-sm font-medium group"
                   >
                     <MessageSquare className="w-4 h-4 text-primary" />
-                    <span>Noch Fragen? Zum Support-Center</span>
+                    <span>{t("help.moreQuestions")}</span>
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </motion.div>

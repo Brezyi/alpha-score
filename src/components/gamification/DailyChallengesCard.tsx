@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Challenge {
   challengeId: string;
@@ -56,7 +57,7 @@ const useCountdownToMidnight = () => {
 
 // Check if a challenge is an "avoid/abstain" type that requires waiting until evening
 const isAvoidChallenge = (title: string): boolean => {
-  const avoidKeywords = ["verzichte", "vermeide", "kein", "ohne", "nicht"];
+  const avoidKeywords = ["verzichte", "vermeide", "kein", "ohne", "nicht", "avoid", "no ", "without", "don't"];
   const lowerTitle = title.toLowerCase();
   return avoidKeywords.some(keyword => lowerTitle.includes(keyword));
 };
@@ -104,6 +105,7 @@ const ChallengeItem = memo(({
   onComplete: (id: string) => void;
   shouldReduce: boolean;
 }) => {
+  const { t } = useLanguage();
   const isAvoid = isAvoidChallenge(challenge.title);
   const canComplete = !challenge.completed && (!isAvoid || isEvening);
   const isLocked = isAvoid && !isEvening && !challenge.completed;
@@ -130,14 +132,14 @@ const ChallengeItem = memo(({
             {challenge.title}
           </h4>
           <span className={cn("text-xs", getDifficultyColor(challenge.difficulty))}>
-            {challenge.difficulty === "easy" && "Einfach"}
-            {challenge.difficulty === "medium" && "Mittel"}
-            {challenge.difficulty === "hard" && "Schwer"}
+            {challenge.difficulty === "easy" && t("challenges.easy")}
+            {challenge.difficulty === "medium" && t("challenges.medium")}
+            {challenge.difficulty === "hard" && t("challenges.hard")}
           </span>
           {isLocked && (
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Lock className="w-3 h-3" />
-              ab 20:00
+              {t("challenges.from20")}
             </span>
           )}
         </div>
@@ -161,7 +163,7 @@ const ChallengeItem = memo(({
               </div>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Diese Challenge kann erst ab 20:00 Uhr abgeschlossen werden</p>
+              <p>{t("challenges.lockedUntil")}</p>
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -186,6 +188,7 @@ export const DailyChallengesCard = memo(({
   loading,
   onComplete,
 }: DailyChallengesCardProps) => {
+  const { t } = useLanguage();
   const completedCount = challenges.filter((c) => c.completed).length;
   const totalXpPossible = challenges.reduce((acc, c) => acc + c.xpReward, 0);
   const earnedXp = challenges
@@ -215,10 +218,10 @@ export const DailyChallengesCard = memo(({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="font-bold text-lg flex items-center gap-2">
-              🎯 Tägliche Challenges
+              🎯 {t("challenges.title")}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {completedCount}/{challenges.length} abgeschlossen
+              {completedCount}/{challenges.length} {t("challenges.completed")}
             </p>
           </div>
           <div className="flex flex-col items-end gap-1">
@@ -251,7 +254,7 @@ export const DailyChallengesCard = memo(({
         {completedCount === challenges.length && challenges.length > 0 && (
           <div className="mt-4 p-3 rounded-xl bg-gradient-to-r from-emerald-500/20 to-primary/20 text-center">
             <p className="text-sm font-medium">
-              🎉 Alle Challenges abgeschlossen! Komm morgen wieder!
+              {t("challenges.allDone")}
             </p>
           </div>
         )}
