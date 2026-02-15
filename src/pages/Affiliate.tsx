@@ -94,7 +94,12 @@ export default function Affiliate() {
 
   const shareViaWhatsApp = () => {
     const text = `Hey! Ich nutze Glowmaxxed für meine Looksmaxxing-Journey und bin begeistert. Mit meinem Link bekommst du Zugang: ${referralLink}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    const encoded = encodeURIComponent(text);
+    // Try native WhatsApp URI first, fallback to wa.me
+    const whatsappUrl = /Android|iPhone|iPad/i.test(navigator.userAgent)
+      ? `whatsapp://send?text=${encoded}`
+      : `https://wa.me/?text=${encoded}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   const canRequestPayout = stats.pendingEarnings >= 50 && !payoutRequests.some(r => r.status === "pending");
