@@ -53,10 +53,7 @@ export function SocialShareCard({ score, potentialScore, displayName, open, onOp
 
   const handleWhatsApp = () => {
     const encoded = encodeURIComponent(`${shareText}\n${shareUrl}`);
-    const whatsappUrl = /Android|iPhone|iPad/i.test(navigator.userAgent)
-      ? `whatsapp://send?text=${encoded}`
-      : `https://wa.me/?text=${encoded}`;
-    window.open(whatsappUrl, "_blank");
+    window.location.href = `whatsapp://send?text=${encoded}`;
   };
 
   return (
