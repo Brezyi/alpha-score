@@ -205,7 +205,7 @@ const AnimatedNumber = React.forwardRef<
 });
 AnimatedNumber.displayName = "AnimatedNumber";
 
-import { motivationalQuotes, getDailyQuote } from "@/data/motivationalQuotes";
+
 
 type UserTask = {
   id: string;
@@ -227,7 +227,7 @@ const Dashboard = () => {
   const [shareOpen, setShareOpen] = useState(false);
   const [tasks, setTasks] = useState<UserTask[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
-  const [dailyQuote] = useState(() => getDailyQuote());
+  
   const [viewedDetails, setViewedDetails] = useState<Set<string>>(() => {
     try {
       const stored = localStorage.getItem('dashboard-viewed-details');
@@ -812,8 +812,8 @@ const Dashboard = () => {
               <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform relative overflow-hidden" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
                 {/* Animated flame background for active streaks */}
                 {!streakLoading && currentStreak >= 3 && (
-                  <div className="absolute inset-0 bg-gradient-to-t from-orange-500/10 via-transparent to-transparent animate-pulse" />
-                )}
+                   <div className="absolute inset-0 bg-gradient-to-t from-orange-500/10 via-transparent to-transparent" />
+                 )}
                 <div className="relative flex items-center justify-center gap-1">
                   <span className="text-2xl font-bold">
                     {streakLoading ? (
@@ -822,10 +822,7 @@ const Dashboard = () => {
                   </span>
                   {!streakLoading && currentStreak > 0 && (
                     <div className="relative">
-                      <Flame className={`w-5 h-5 text-orange-500 ${currentStreak >= 7 ? 'animate-bounce' : currentStreak >= 3 ? 'animate-pulse' : ''}`} />
-                      {currentStreak >= 7 && (
-                        <Flame className="absolute inset-0 w-5 h-5 text-orange-400 animate-ping opacity-50" />
-                      )}
+                    <Flame className="w-5 h-5 text-orange-500" />
                     </div>
                   )}
                 </div>
@@ -833,7 +830,7 @@ const Dashboard = () => {
                   {currentStreak >= 7 ? "🔥 On Fire!" : currentStreak >= 3 ? "Streak" : "Streak"}
                 </div>
                 {!streakLoading && !isActiveToday && currentStreak > 0 && (
-                  <div className="relative text-[10px] text-orange-400 mt-1 animate-pulse font-medium">Heute aktiv werden!</div>
+                  <div className="relative text-[10px] text-orange-400 mt-1 font-medium">Heute aktiv werden!</div>
                 )}
               </div>
               {/* Ranking - Locked for free users */}
@@ -859,25 +856,8 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* New Widgets Row: Motivation Quote + Next Steps */}
+        {/* Next Steps Widget */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Motivation Quote Widget */}
-          <div className="p-5 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up relative overflow-hidden" style={{ animationDelay: "400ms", animationFillMode: "forwards" }}>
-            <div className="absolute top-3 right-3">
-              <Quote className="w-8 h-8 text-primary/10" />
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-xs text-muted-foreground mb-1">Motivation des Tages</div>
-                <p className="text-sm font-medium leading-relaxed mb-2">"{dailyQuote.text}"</p>
-                <p className="text-xs text-muted-foreground">— {dailyQuote.author}</p>
-              </div>
-            </div>
-          </div>
-
           {/* Next Steps Widget */}
           <div className="p-5 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up" style={{ animationDelay: "450ms", animationFillMode: "forwards" }}>
             <div className="flex items-center justify-between mb-3">
@@ -971,7 +951,7 @@ const Dashboard = () => {
               <>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+                    <Sparkles className="w-5 h-5 text-primary" />
                     <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
                   </div>
                   <div className="text-sm text-muted-foreground">
