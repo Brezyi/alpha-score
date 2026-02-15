@@ -49,6 +49,7 @@ import { useStreak } from "@/hooks/useStreak";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { ProfileOnboardingModal } from "@/components/ProfileOnboardingModal";
+import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, ComposedChart } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { ScannerLogo } from "@/components/ScannerLogo";
@@ -331,6 +332,21 @@ const Dashboard = () => {
     await updateProfile({ gender: data.gender, country: data.country });
   };
 
+  // Goal wizard: show after profile onboarding if goals not set yet
+  const [showGoalWizard, setShowGoalWizard] = useState(false);
+  const needsGoals = !needsOnboarding && profile?.gender && !localStorage.getItem("onboarding-goals-set");
+  
+  useEffect(() => {
+    if (needsGoals && analyses.length === 0) {
+      setShowGoalWizard(true);
+    }
+  }, [needsGoals, analyses.length]);
+
+  const handleGoalsComplete = (goals: string[]) => {
+    localStorage.setItem("onboarding-goals-set", JSON.stringify(goals));
+    setShowGoalWizard(false);
+  };
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
@@ -519,6 +535,12 @@ const Dashboard = () => {
       <ProfileOnboardingModal 
         open={needsOnboarding} 
         onComplete={handleOnboardingComplete} 
+      />
+      
+      {/* Goal Selection Wizard */}
+      <OnboardingWizard 
+        open={showGoalWizard} 
+        onComplete={handleGoalsComplete} 
       />
 
       {/* Header */}

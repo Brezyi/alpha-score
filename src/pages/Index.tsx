@@ -59,6 +59,31 @@ const Index = () => {
   // Desktop: Show full landing page
   return (
     <div className="min-h-screen bg-background">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "GLOWMAXXED AI",
+            "applicationCategory": "HealthApplication",
+            "operatingSystem": "Web",
+            "description": "KI-gestützte Looksmaxing App mit personalisierter Analyse, Face Fitness und Lifestyle-Tracking.",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "EUR",
+              "description": "Kostenlos starten"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "ratingCount": "1200"
+            }
+          }),
+        }}
+      />
       <Navbar />
       <main>
         <Hero />

@@ -33,29 +33,29 @@
 
 @layer base {
   :root {
-    /* Core Dark Theme */
-    --background: 0 0% 4.3%;
-    --foreground: 0 0% 98%;
+    /* Core Dark Theme (default) */
+    --background: 220 15% 5%;
+    --foreground: 210 20% 96%;
 
-    --card: 0 0% 7.8%;
-    --card-foreground: 0 0% 98%;
+    --card: 220 13% 9%;
+    --card-foreground: 210 20% 96%;
 
-    --popover: 0 0% 7.8%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 220 15% 8%;
+    --popover-foreground: 210 20% 96%;
 
     /* Neon Green Accent */
     --primary: 142 100% 50%;
     --primary-foreground: 0 0% 4%;
 
-    /* Gray Tones */
-    --secondary: 0 0% 12.2%;
-    --secondary-foreground: 0 0% 98%;
+    /* Gray Tones with slight blue undertone */
+    --secondary: 220 12% 14%;
+    --secondary-foreground: 210 20% 96%;
 
-    --muted: 0 0% 12.2%;
-    --muted-foreground: 0 0% 63.9%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 215 10% 55%;
 
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 220 10% 16%;
+    --accent-foreground: 210 20% 96%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
@@ -66,35 +66,35 @@
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 4.3%;
 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
+    --border: 220 10% 16%;
+    --input: 220 10% 16%;
     --ring: 142 100% 50%;
 
     --radius: 0.75rem;
 
     /* Custom Variables */
     --glow-green: 142 100% 50%;
-    --surface-dark: 0 0% 7.8%;
-    --surface-darker: 0 0% 4.3%;
+    --surface-dark: 220 13% 9%;
+    --surface-darker: 220 15% 5%;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(142, 100%, 50%) 0%, hsl(142, 100%, 35%) 100%);
-    --gradient-dark: linear-gradient(180deg, hsl(0, 0%, 7.8%) 0%, hsl(0, 0%, 4.3%) 100%);
+    --gradient-dark: linear-gradient(180deg, hsl(220, 13%, 9%) 0%, hsl(220, 15%, 5%) 100%);
     --gradient-glow: radial-gradient(ellipse at center, hsl(142, 100%, 50%, 0.15) 0%, transparent 70%);
     
     /* Shadows */
-    --shadow-glow: 0 0 40px hsl(142, 100%, 50%, 0.3);
-    --shadow-card: 0 4px 24px hsl(0, 0%, 0%, 0.4);
-    --shadow-elevated: 0 8px 32px hsl(0, 0%, 0%, 0.5);
+    --shadow-glow: 0 0 40px hsl(142, 100%, 50%, 0.25);
+    --shadow-card: 0 4px 24px hsl(220, 50%, 3%, 0.6);
+    --shadow-elevated: 0 8px 32px hsl(220, 50%, 2%, 0.7);
 
     /* Sidebar */
-    --sidebar-background: 0 0% 4.3%;
-    --sidebar-foreground: 0 0% 98%;
+    --sidebar-background: 220 15% 5%;
+    --sidebar-foreground: 210 20% 96%;
     --sidebar-primary: 142 100% 50%;
     --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 12.2%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 14.9%;
+    --sidebar-accent: 220 12% 14%;
+    --sidebar-accent-foreground: 210 20% 96%;
+    --sidebar-border: 220 10% 16%;
     --sidebar-ring: 142 100% 50%;
   }
 
@@ -143,29 +143,36 @@
     --sidebar-ring: 142 100% 40%;
   }
 
-  /* Dark mode overrides */
+  /* Dark mode overrides - enhanced contrast & depth */
   .dark {
-    --background: 0 0% 4.3%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 7.8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 7.8%;
-    --popover-foreground: 0 0% 98%;
+    --background: 220 15% 5%;
+    --foreground: 210 20% 96%;
+    --card: 220 13% 9%;
+    --card-foreground: 210 20% 96%;
+    --popover: 220 15% 8%;
+    --popover-foreground: 210 20% 96%;
     --primary: 142 100% 50%;
     --primary-foreground: 0 0% 4%;
-    --secondary: 0 0% 12.2%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 12.2%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --secondary: 220 12% 14%;
+    --secondary-foreground: 210 20% 96%;
+    --muted: 220 12% 14%;
+    --muted-foreground: 215 10% 55%;
+    --accent: 220 10% 16%;
+    --accent-foreground: 210 20% 96%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
     --success: 142 76% 36%;
     --success-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 4.3%;
+    --border: 220 10% 16%;
+    --input: 220 10% 16%;
     --ring: 142 100% 50%;
+
+    /* Enhanced shadows for dark mode depth */
+    --shadow-glow: 0 0 40px hsl(142, 100%, 50%, 0.25);
+    --shadow-card: 0 4px 24px hsl(220, 50%, 3%, 0.6);
+    --shadow-elevated: 0 8px 32px hsl(220, 50%, 2%, 0.7);
   }
 }
 
