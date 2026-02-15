@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { 
   DollarSign, Copy, Share2, Users, TrendingUp,
   Wallet, ArrowLeft, Check, Clock, Info, MessageCircle,
-  Banknote, AlertCircle
+  Banknote, AlertCircle, CheckCircle2
 } from "lucide-react";
 import { useAffiliate } from "@/hooks/useAffiliate";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { validateIban, validateBic, formatIban } from "@/lib/ibanValidation";
 
 export default function Affiliate() {
   const { 
@@ -37,6 +38,8 @@ export default function Affiliate() {
   const [newAccountHolder, setNewAccountHolder] = useState(bankDetails.payout_account_holder || "");
   const [isSaving, setIsSaving] = useState(false);
   const [isRequesting, setIsRequesting] = useState(false);
+  const [ibanError, setIbanError] = useState<string | null>(null);
+  const [bicError, setBicError] = useState<string | null>(null);
 
   useEffect(() => {
     if (payoutEmail) setNewPayoutEmail(payoutEmail);
@@ -46,10 +49,38 @@ export default function Affiliate() {
     if (bankDetails.payout_account_holder) setNewAccountHolder(bankDetails.payout_account_holder);
   }, [payoutEmail, payoutMethod, bankDetails]);
 
+  const handleIbanChange = (val: string) => {
+    const formatted = formatIban(val);
+    setNewIban(formatted);
+    if (formatted.replace(/\s/g, "").length >= 5) {
+      const result = validateIban(formatted);
+      setIbanError(result.valid ? null : result.error || null);
+    } else {
+      setIbanError(null);
+    }
+  };
+
+  const handleBicChange = (val: string) => {
+    const upper = val.toUpperCase().replace(/\s/g, "");
+    setNewBic(upper);
+    if (upper.length >= 4) {
+      const result = validateBic(upper);
+      setBicError(result.valid ? null : result.error || null);
+    } else {
+      setBicError(null);
+    }
+  };
+
   const handleSavePayoutSettings = async () => {
+    if (newPayoutMethod === "bank") {
+      const ibanResult = validateIban(newIban);
+      const bicResult = validateBic(newBic);
+      if (!ibanResult.valid) { setIbanError(ibanResult.error || "Ungültig"); return; }
+      if (!bicResult.valid) { setBicError(bicResult.error || "Ungültig"); return; }
+    }
     setIsSaving(true);
     const bank = newPayoutMethod === "bank"
-      ? { iban: newIban, bic: newBic, accountHolder: newAccountHolder }
+      ? { iban: newIban.replace(/\s/g, ""), bic: newBic, accountHolder: newAccountHolder }
       : undefined;
     await updatePayoutSettings(newPayoutEmail, newPayoutMethod, bank);
     setIsSaving(false);
@@ -69,9 +100,12 @@ export default function Affiliate() {
   const canRequestPayout = stats.pendingEarnings >= 50 && !payoutRequests.some(r => r.status === "pending");
   const hasPendingRequest = payoutRequests.some(r => r.status === "pending");
 
+  const ibanValid = newIban.replace(/\s/g, "").length >= 15 && !ibanError;
+  const bicValid = newBic.length >= 8 && !bicError;
+  
   const isPayoutSettingsComplete = newPayoutMethod === "paypal"
     ? !!newPayoutEmail
-    : !!(newIban && newBic && newAccountHolder);
+    : !!(newAccountHolder && ibanValid && bicValid);
 
   if (isLoading) {
     return (
@@ -280,14 +314,22 @@ export default function Affiliate() {
                   placeholder="Max Mustermann" className="mt-1" />
               </div>
               <div>
-                <Label>IBAN</Label>
-                <Input value={newIban} onChange={(e) => setNewIban(e.target.value.toUpperCase())}
-                  placeholder="DE89 3704 0044 0532 0130 00" className="mt-1 font-mono" />
+                <Label className="flex items-center gap-2">
+                  IBAN
+                  {ibanValid && <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />}
+                </Label>
+                <Input value={newIban} onChange={(e) => handleIbanChange(e.target.value)}
+                  placeholder="DE89 3704 0044 0532 0130 00" className={cn("mt-1 font-mono", ibanError && "border-destructive")} />
+                {ibanError && <p className="text-xs text-destructive mt-1">{ibanError}</p>}
               </div>
               <div>
-                <Label>BIC / SWIFT</Label>
-                <Input value={newBic} onChange={(e) => setNewBic(e.target.value.toUpperCase())}
-                  placeholder="COBADEFFXXX" className="mt-1 font-mono" />
+                <Label className="flex items-center gap-2">
+                  BIC / SWIFT
+                  {bicValid && <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />}
+                </Label>
+                <Input value={newBic} onChange={(e) => handleBicChange(e.target.value)}
+                  placeholder="COBADEFFXXX" className={cn("mt-1 font-mono", bicError && "border-destructive")} />
+                {bicError && <p className="text-xs text-destructive mt-1">{bicError}</p>}
               </div>
             </div>
           )}
