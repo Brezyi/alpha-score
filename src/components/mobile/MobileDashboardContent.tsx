@@ -33,6 +33,7 @@ import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { NewUserWelcome } from "@/components/help/NewUserWelcome";
 import { HelpFAB } from "@/components/help/HelpFAB";
 import { useDashboardTour } from "@/hooks/useOnboardingTour";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Analysis = {
   id: string;
@@ -95,34 +96,10 @@ const CircularProgress = ({
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
-      {/* Background glow */}
       <div className="absolute inset-0 rounded-full bg-primary/20 blur-2xl scale-110" />
-      
-      {/* Background ring */}
       <svg width={size} height={size} className="rotate-[-90deg]">
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="hsl(var(--muted))"
-          strokeWidth={strokeWidth}
-          opacity={0.3}
-        />
-        {/* Progress ring */}
-        <motion.circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          fill="none"
-          stroke="url(#scoreGradient)"
-          strokeWidth={strokeWidth}
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          initial={{ strokeDashoffset: circumference }}
-          animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1.5, ease: "easeOut" }}
-        />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth={strokeWidth} opacity={0.3} />
+        <motion.circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="url(#scoreGradient)" strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} initial={{ strokeDashoffset: circumference }} animate={{ strokeDashoffset: offset }} transition={{ duration: 1.5, ease: "easeOut" }} />
         <defs>
           <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="hsl(var(--primary))" />
@@ -130,8 +107,6 @@ const CircularProgress = ({
           </linearGradient>
         </defs>
       </svg>
-      
-      {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-4xl font-bold text-foreground">
           <AnimatedCounter value={score} decimals={1} />
@@ -156,6 +131,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
   const { currentStreak } = useStreak();
   const { xp } = useGamification();
   const { startManualTour, hasCompletedTour } = useDashboardTour();
+  const { t, language } = useLanguage();
   
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(() => {
     try {
@@ -166,8 +142,6 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
   });
 
   const needsOnboarding = !profileLoading && profile && !profile.gender;
-  
-  // Show welcome for new users without analyses
   const shouldShowWelcome = !needsOnboarding && showWelcomeBanner && !hasCompletedTour && analyses.length === 0 && !analysesLoading;
   
   const handleDismissWelcome = () => {
@@ -196,7 +170,6 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
   useEffect(() => {
     const fetchAnalyses = async () => {
       if (!user) return;
-      
       try {
         const { data, error } = await supabase
           .from("analyses")
@@ -204,7 +177,6 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
           .eq("user_id", user.id)
           .order("created_at", { ascending: false })
           .limit(5);
-
         if (error) throw error;
         setAnalyses(data || []);
       } catch (error) {
@@ -213,7 +185,6 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
         setAnalysesLoading(false);
       }
     };
-
     if (user) {
       fetchAnalyses();
     }
@@ -227,7 +198,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
             <div className="w-16 h-16 rounded-full border-4 border-primary/20" />
             <div className="absolute inset-0 w-16 h-16 rounded-full border-4 border-primary border-t-transparent animate-spin" />
           </div>
-          <span className="text-sm text-muted-foreground">Wird geladen...</span>
+          <span className="text-sm text-muted-foreground">{t("common.loading")}</span>
         </div>
       </div>
     );
@@ -246,18 +217,19 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
 
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Guten Morgen";
-    if (hour < 18) return "Guten Tag";
-    return "Guten Abend";
+    if (hour < 12) return t("dashboard.greeting.morning");
+    if (hour < 18) return t("dashboard.greeting.afternoon");
+    return t("dashboard.greeting.evening");
   };
 
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
+  const dateLocale = language === "en" ? "en-GB" : "de-DE";
 
   const quickActions = [
-    { icon: Camera, label: "Analyse", path: "/upload", color: "bg-primary/15 text-primary" },
-    { icon: Target, label: "Plan", path: "/plan", color: "bg-blue-500/15 text-blue-500" },
-    { icon: Heart, label: "Lifestyle", path: "/lifestyle", color: "bg-pink-500/15 text-pink-500" },
-    { icon: Users, label: "Freunde", path: "/friends", color: "bg-emerald-500/15 text-emerald-500" },
+    { icon: Camera, label: t("mobile.analysis"), path: "/upload", color: "bg-primary/15 text-primary" },
+    { icon: Target, label: t("mobile.plan"), path: "/plan", color: "bg-blue-500/15 text-blue-500" },
+    { icon: Heart, label: t("mobile.lifestyle"), path: "/lifestyle", color: "bg-pink-500/15 text-pink-500" },
+    { icon: Users, label: t("mobile.friends"), path: "/friends", color: "bg-emerald-500/15 text-emerald-500" },
   ];
 
   return (
@@ -306,12 +278,10 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
       >
         {latestScore !== null ? (
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-card/50 border border-border p-6">
-            {/* Decorative elements */}
             <div className="absolute -top-20 -right-20 w-40 h-40 bg-primary/10 rounded-full blur-3xl" />
             <div className="absolute -bottom-10 -left-10 w-32 h-32 bg-primary/5 rounded-full blur-2xl" />
             
             <div className="relative flex flex-col items-center">
-              {/* Score Ring */}
               <CircularProgress 
                 progress={progress}
                 score={latestScore}
@@ -319,7 +289,6 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
                 strokeWidth={12}
               />
               
-              {/* Score Change */}
               {scoreDiff !== null && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
@@ -335,20 +304,19 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
                   {scoreDiff > 0 ? <ArrowUpRight className="w-4 h-4" /> :
                    scoreDiff < 0 ? <ArrowDownRight className="w-4 h-4" /> :
                    <Minus className="w-4 h-4" />}
-                  {scoreDiff > 0 && "+"}{scoreDiff.toFixed(1)} seit letzter Analyse
+                  {scoreDiff > 0 && "+"}{scoreDiff.toFixed(1)} {t("dashboard.sinceLastAnalysis")}
                 </motion.div>
               )}
 
-              {/* Potential indicator */}
               {latestPotential && (
                 <div className="flex items-center gap-4 mt-6 pt-4 border-t border-border/50 w-full">
                   <div className="flex-1 text-center">
-                    <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Potenzial</span>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">{t("dashboard.potential_label")}</span>
                     <span className="text-xl font-bold text-primary">{latestPotential.toFixed(1)}</span>
                   </div>
                   <div className="w-px h-10 bg-border" />
                   <div className="flex-1 text-center">
-                    <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Fortschritt</span>
+                    <span className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">{t("dashboard.progress")}</span>
                     <span className="text-xl font-bold">{progress}%</span>
                   </div>
                 </div>
@@ -356,7 +324,6 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
             </div>
           </div>
         ) : (
-          /* No Score - Start CTA */
           <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/30 p-8">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl" />
             
@@ -370,9 +337,9 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
                 <Camera className="w-10 h-10 text-primary-foreground" />
               </motion.div>
               <div>
-                <h3 className="text-xl font-bold mb-1">Starte deine Reise</h3>
+                <h3 className="text-xl font-bold mb-1">{t("dashboard.startJourney")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Lade Fotos hoch und erhalte deine persönliche KI-Analyse
+                  {t("dashboard.uploadPhotos")}
                 </p>
               </div>
               <Button 
@@ -385,7 +352,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
                 }}
               >
                 <Zap className="w-5 h-5 mr-2" />
-                Erste Analyse starten
+                {t("dashboard.firstAnalysis")}
               </Button>
             </div>
           </div>
@@ -401,9 +368,9 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
         data-tour="gamification"
       >
         {[
-          { value: currentStreak, label: "Streak", icon: Flame, color: "text-orange-500" },
-          { value: `Lv.${xp.level}`, label: "Level", icon: Zap, color: "text-primary" },
-          { value: completedAnalyses.length, label: "Scans", icon: Camera, color: "text-blue-500" },
+          { value: currentStreak, label: t("dashboard.streak"), icon: Flame, color: "text-orange-500" },
+          { value: `Lv.${xp.level}`, label: t("dashboard.level"), icon: Zap, color: "text-primary" },
+          { value: completedAnalyses.length, label: t("dashboard.scans"), icon: Camera, color: "text-blue-500" },
         ].map((stat, i) => (
           <motion.div
             key={stat.label}
@@ -427,7 +394,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
         className="space-y-3"
         data-tour="quick-actions"
       >
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-1">Schnellzugriff</h2>
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-1">{t("dashboard.quickAccess")}</h2>
         <div className="grid grid-cols-4 gap-3">
           {quickActions.map((action, i) => (
             <motion.div
@@ -460,13 +427,13 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
           className="space-y-3"
         >
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Letzte Analysen</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{t("dashboard.recentAnalyses")}</h2>
             <Link 
               to="/progress" 
               className="flex items-center gap-1 text-xs text-primary font-medium"
               onClick={handleHaptic}
             >
-              Alle
+              {t("dashboard.all")}
               <ChevronRight className="w-4 h-4" />
             </Link>
           </div>
@@ -493,7 +460,7 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
                       <span className="text-sm text-muted-foreground">/10</span>
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
-                      {new Date(analysis.created_at).toLocaleDateString("de-DE", {
+                      {new Date(analysis.created_at).toLocaleDateString(dateLocale, {
                         day: "2-digit",
                         month: "long",
                         year: "numeric"
@@ -525,15 +492,14 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
               <Trophy className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground">Achievements</h3>
-              <p className="text-xs text-muted-foreground">Schalte Belohnungen frei und tracke deinen Fortschritt</p>
+              <h3 className="font-semibold text-foreground">{t("dashboard.achievements")}</h3>
+              <p className="text-xs text-muted-foreground">{t("dashboard.achievementsDesc")}</p>
             </div>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </div>
         </Link>
       </motion.div>
       
-      {/* Welcome Banner for new users */}
       {shouldShowWelcome && (
         <NewUserWelcome 
           onStartTour={startManualTour} 
@@ -541,7 +507,6 @@ export const MobileDashboardContent = ({ className }: MobileDashboardContentProp
         />
       )}
       
-      {/* Help FAB */}
       <HelpFAB onStartTour={startManualTour} />
     </div>
   );
