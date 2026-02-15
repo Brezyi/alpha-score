@@ -19,6 +19,7 @@ interface TourOverlayProps {
  */
 export function TourOverlay({ steps, currentStep, onNext, onPrev, onSkip }: TourOverlayProps) {
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [isReady, setIsReady] = useState(false);
   const tooltipRef = useRef<HTMLDivElement>(null);
   const swipeX = useMotionValue(0);
   const swipeOpacity = useTransform(swipeX, [-120, 0, 120], [0.5, 1, 0.5]);
@@ -27,51 +28,89 @@ export function TourOverlay({ steps, currentStep, onNext, onPrev, onSkip }: Tour
   const padding = currentStepData?.spotlightPadding ?? 8;
   const progress = steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0;
 
-  // ─── Measure target ──────────────────────────────────────
+  // ─── Measure target with retries ──────────────────────────
   useEffect(() => {
     if (!currentStepData) return;
 
-    const resolveTarget = () =>
-      document.querySelector(currentStepData.target) as HTMLElement | null;
+    setIsReady(false);
+    let cancelled = false;
+    let observer: MutationObserver | null = null;
+    let retryTimer: ReturnType<typeof setTimeout>;
 
-    const updateRect = () => {
-      const el = resolveTarget();
-      if (!el) {
-        setTargetRect(null);
-        return;
-      }
-      setTargetRect(el.getBoundingClientRect());
-    };
+    const measureElement = (): boolean => {
+      const el = document.querySelector(currentStepData.target) as HTMLElement | null;
+      if (!el) return false;
 
-    const ensureInView = () => {
-      const el = resolveTarget();
-      if (!el) return;
+      // Check visibility
+      const style = getComputedStyle(el);
+      if (style.display === "none" || style.visibility === "hidden") return false;
+      const opacity = parseFloat(style.opacity);
+      if (opacity < 0.1) return false;
+
       const rect = el.getBoundingClientRect();
-      const safeBottom = window.innerWidth < 640 ? 80 : 16;
-      const pad = 16;
-      const visible =
-        rect.top >= pad && rect.bottom <= window.innerHeight - safeBottom - pad;
-      if (!visible) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (rect.width < 2 || rect.height < 2) return false;
+
+      if (!cancelled) {
+        setTargetRect(rect);
+        setIsReady(true);
+
+        // Scroll into view if needed
+        const safeBottom = window.innerWidth < 640 ? 80 : 16;
+        const pad = 16;
+        const visible = rect.top >= pad && rect.bottom <= window.innerHeight - safeBottom - pad;
+        if (!visible) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          // Re-measure after scroll
+          setTimeout(() => {
+            if (!cancelled) {
+              setTargetRect(el.getBoundingClientRect());
+            }
+          }, 400);
+        }
+      }
+      return true;
     };
 
+    // Retry logic: try measuring up to 2s with increasing delays
+    // This handles elements that start with opacity:0 CSS animations
+    const retryDelays = [50, 150, 300, 500, 800, 1200, 2000];
+    let retryIndex = 0;
+
+    const tryMeasure = () => {
+      if (cancelled) return;
+      if (measureElement()) return; // Success
+      if (retryIndex < retryDelays.length) {
+        retryTimer = setTimeout(tryMeasure, retryDelays[retryIndex]);
+        retryIndex++;
+      }
+    };
+
+    tryMeasure();
+
+    // Also observe DOM mutations in case elements appear dynamically
+    observer = new MutationObserver(() => {
+      if (cancelled || isReady) return;
+      measureElement();
+    });
+    observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["style", "class"] });
+
+    // Re-measure on resize/scroll
     let rafId = 0;
     const onViewportChange = () => {
       cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(updateRect);
+      rafId = requestAnimationFrame(() => {
+        if (!cancelled) measureElement();
+      });
     };
-
-    const t0 = setTimeout(() => { updateRect(); ensureInView(); }, 100);
-    const t1 = setTimeout(updateRect, 300);
-    const t2 = setTimeout(updateRect, 700);
 
     window.addEventListener("resize", onViewportChange, { passive: true } as AddEventListenerOptions);
     window.addEventListener("scroll", onViewportChange, { passive: true, capture: true } as AddEventListenerOptions);
 
     return () => {
-      clearTimeout(t0);
-      clearTimeout(t1);
-      clearTimeout(t2);
+      cancelled = true;
+      clearTimeout(retryTimer);
       cancelAnimationFrame(rafId);
+      observer?.disconnect();
       window.removeEventListener("resize", onViewportChange);
       window.removeEventListener("scroll", onViewportChange, { capture: true } as EventListenerOptions);
     };
@@ -148,11 +187,23 @@ export function TourOverlay({ steps, currentStep, onNext, onPrev, onSkip }: Tour
 
   if (!currentStepData) return null;
 
+  // Don't render anything until we've successfully measured the target element
+  if (!isReady || !targetRect) {
+    return (
+      <div className="fixed inset-0 z-[9998] bg-black/60 flex items-center justify-center">
+        <div className="text-center text-white">
+          <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-2" />
+          <p className="text-sm text-white/60">Laden...</p>
+        </div>
+      </div>
+    );
+  }
+
   // SVG spotlight cut-out coordinates
-  const cx = targetRect ? targetRect.left - padding : 0;
-  const cy = targetRect ? targetRect.top - padding : 0;
-  const cw = targetRect ? targetRect.width + padding * 2 : 0;
-  const ch = targetRect ? targetRect.height + padding * 2 : 0;
+  const cx = targetRect.left - padding;
+  const cy = targetRect.top - padding;
+  const cw = targetRect.width + padding * 2;
+  const ch = targetRect.height + padding * 2;
 
   return (
     <AnimatePresence>
@@ -170,19 +221,17 @@ export function TourOverlay({ steps, currentStep, onNext, onPrev, onSkip }: Tour
           <defs>
             <mask id="tour-spotlight">
               <rect width="100%" height="100%" fill="white" />
-              {targetRect && (
-                <motion.rect
-                  x={cx}
-                  y={cy}
-                  width={cw}
-                  height={ch}
-                  rx={12}
-                  fill="black"
-                  initial={false}
-                  animate={{ x: cx, y: cy, width: cw, height: ch }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
-              )}
+              <motion.rect
+                x={cx}
+                y={cy}
+                width={cw}
+                height={ch}
+                rx={12}
+                fill="black"
+                initial={false}
+                animate={{ x: cx, y: cy, width: cw, height: ch }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
             </mask>
           </defs>
           <rect
@@ -194,38 +243,34 @@ export function TourOverlay({ steps, currentStep, onNext, onPrev, onSkip }: Tour
         </motion.svg>
 
         {/* ── Spotlight border ring ────────────────────────── */}
-        {targetRect && (
-          <motion.div
-            key="ring"
-            className="fixed z-[9999] border-2 border-primary rounded-xl pointer-events-none"
-            initial={false}
-            animate={{
-              top: cy,
-              left: cx,
-              width: cw,
-              height: ch,
-            }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            style={{
-              boxShadow:
-                "0 0 0 4px hsl(var(--primary) / 0.2), 0 0 20px hsl(var(--primary) / 0.3)",
-            }}
-          />
-        )}
+        <motion.div
+          key="ring"
+          className="fixed z-[9999] border-2 border-primary rounded-xl pointer-events-none"
+          initial={false}
+          animate={{
+            top: cy,
+            left: cx,
+            width: cw,
+            height: ch,
+          }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          style={{
+            boxShadow:
+              "0 0 0 4px hsl(var(--primary) / 0.2), 0 0 20px hsl(var(--primary) / 0.3)",
+          }}
+        />
 
         {/* ── Allow clicking the highlighted element ──────── */}
-        {targetRect && (
-          <div
-            className="fixed z-[9999] pointer-events-none"
-            style={{
-              top: targetRect.top,
-              left: targetRect.left,
-              width: targetRect.width,
-              height: targetRect.height,
-              pointerEvents: "auto",
-            }}
-          />
-        )}
+        <div
+          className="fixed z-[9999] pointer-events-none"
+          style={{
+            top: targetRect.top,
+            left: targetRect.left,
+            width: targetRect.width,
+            height: targetRect.height,
+            pointerEvents: "auto",
+          }}
+        />
 
         {/* ── Tooltip with swipe ──────────────────────────── */}
         <motion.div

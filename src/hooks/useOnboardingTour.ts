@@ -108,10 +108,11 @@ function usePageTour(tourId: string, allSteps: TourStep[]) {
 
   const autoStartTour = useCallback(() => {
     if (hasCompleted || isActive) return;
+    // Wait 3s so CSS fade-in animations (opacity:0 → 1) complete first
     const timer = setTimeout(() => {
       const available = filterAvailableSteps(allSteps);
       if (available.length > 0) startTour(available);
-    }, 1500);
+    }, 3000);
     return () => clearTimeout(timer);
   }, [hasCompleted, isActive, startTour, allSteps]);
 

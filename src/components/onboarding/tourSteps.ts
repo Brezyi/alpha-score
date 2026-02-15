@@ -99,13 +99,34 @@ export const progressTourSteps: TourStep[] = [
 ];
 
 /**
- * Filter step list to only include steps whose target exists in the DOM.
- * Prevents highlights on wrong elements and dead/empty steps.
+ * Check if an element is truly visible (not just in DOM).
+ * Elements with opacity:0, display:none, or zero dimensions are excluded.
+ */
+function isElementVisible(el: HTMLElement): boolean {
+  const style = getComputedStyle(el);
+  if (style.display === "none" || style.visibility === "hidden") return false;
+  
+  const rect = el.getBoundingClientRect();
+  // Element must have actual dimensions
+  if (rect.width < 2 || rect.height < 2) return false;
+  
+  // Check computed opacity (handles CSS animations starting at 0)
+  const opacity = parseFloat(style.opacity);
+  if (opacity < 0.1) return false;
+  
+  return true;
+}
+
+/**
+ * Filter step list to only include steps whose target exists in the DOM
+ * AND is actually visible. Prevents highlights on invisible/animating elements.
  */
 export function filterAvailableSteps(steps: TourStep[]): TourStep[] {
   return steps.filter((step) => {
     try {
-      return !!document.querySelector(step.target);
+      const el = document.querySelector(step.target) as HTMLElement | null;
+      if (!el) return false;
+      return isElementVisible(el);
     } catch {
       return false;
     }
