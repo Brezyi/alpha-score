@@ -434,11 +434,13 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
   }
 
   return (
-    <Card className={cn("", className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Activity className="w-5 h-5 text-primary" />
-          Lifestyle Tracker
+    <Card className={cn("border-border/50 bg-card/80 backdrop-blur-sm shadow-sm", className)}>
+      <CardHeader className="pb-4">
+        <CardTitle className="flex items-center gap-2 text-base font-semibold">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Activity className="w-4 h-4 text-primary" />
+          </div>
+          Wochenübersicht
           <AnimatePresence>
             {saving && (
               <motion.span
@@ -455,7 +457,7 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="ml-auto flex items-center gap-1 text-xs text-green-500 font-normal"
+                className="ml-auto flex items-center gap-1 text-xs text-success font-normal"
               >
                 <Check className="w-3 h-3" />
                 Gespeichert
@@ -647,11 +649,11 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
         </div>
 
         {canEdit ? (
-          <div className="space-y-5">
+          <div className="space-y-6">
             {/* Sleep Section */}
-            <div className="space-y-3 p-3 rounded-lg bg-indigo-500/5 border border-indigo-500/10">
+            <div className="space-y-3 p-4 rounded-xl bg-muted/30 border border-border/50">
               <div className="flex items-center gap-2 text-sm font-medium">
-                <Moon className="w-4 h-4 text-indigo-400" />
+                <Moon className="w-4 h-4 text-primary" />
                 Schlaf
                 <span className="ml-auto text-lg font-bold">{sleepHours}h</span>
               </div>
@@ -770,14 +772,14 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
             </div>
 
             {/* New Habits Section */}
-            <div className="pt-2 border-t border-border space-y-4">
+            <div className="pt-3 border-t border-border/50 space-y-3">
               <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Tägliche Habits</h4>
               
               {/* Sunscreen Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-medium">Sonnenschutz aufgetragen</span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-2.5">
+                  <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">Sonnenschutz</span>
                 </div>
                 <Switch 
                   checked={sunscreenApplied} 
@@ -786,10 +788,10 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
               </div>
 
               {/* Skincare Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-pink-500/5 border border-pink-500/10">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-pink-500" />
-                  <span className="text-sm font-medium">Skincare-Routine erledigt</span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">Skincare-Routine</span>
                 </div>
                 <Switch 
                   checked={skincareCompleted} 
@@ -798,10 +800,10 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
               </div>
 
               {/* Supplements Toggle */}
-              <div className="flex items-center justify-between p-3 rounded-lg bg-green-500/5 border border-green-500/10">
-                <div className="flex items-center gap-2">
-                  <Pill className="w-4 h-4 text-green-500" />
-                  <span className="text-sm font-medium">Supplements genommen</span>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50">
+                <div className="flex items-center gap-2.5">
+                  <Pill className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-sm">Supplements</span>
                 </div>
                 <Switch 
                   checked={supplementsTaken} 
@@ -810,11 +812,11 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
               </div>
 
               {/* Nutrition Quality */}
-              <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/10 space-y-2">
+              <div className="p-4 rounded-xl bg-muted/30 border border-border/50 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Utensils className="w-4 h-4 text-emerald-500" />
-                    <span className="text-sm font-medium">Ernährungsqualität</span>
+                  <div className="flex items-center gap-2.5">
+                    <Utensils className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm">Ernährung</span>
                   </div>
                   <span className="text-sm font-bold">{nutritionQuality}/5</span>
                 </div>
@@ -824,10 +826,10 @@ export function LifestyleTracker({ className, compact = false, onDateChange }: L
                       key={rating}
                       onClick={() => handleValueChange('nutrition', rating)}
                       className={cn(
-                        "flex-1 py-1.5 rounded-md transition-all text-xs font-medium",
+                        "flex-1 py-1.5 rounded-lg transition-all text-xs font-medium",
                         nutritionQuality >= rating 
-                          ? "bg-emerald-500/20 border-emerald-500/50 border text-emerald-500" 
-                          : "bg-muted border border-transparent hover:border-muted-foreground/30 text-muted-foreground"
+                          ? "bg-primary/15 border-primary/30 border text-primary" 
+                          : "bg-muted/50 border border-transparent hover:border-border text-muted-foreground"
                       )}
                     >
                       {rating}
