@@ -52,7 +52,11 @@ export function SocialShareCard({ score, potentialScore, displayName, open, onOp
   };
 
   const handleWhatsApp = () => {
-    window.open(`https://wa.me/?text=${encodeURIComponent(`${shareText}\n${shareUrl}`)}`, "_blank");
+    const encoded = encodeURIComponent(`${shareText}\n${shareUrl}`);
+    const whatsappUrl = /Android|iPhone|iPad/i.test(navigator.userAgent)
+      ? `whatsapp://send?text=${encoded}`
+      : `https://wa.me/?text=${encoded}`;
+    window.open(whatsappUrl, "_blank");
   };
 
   return (
