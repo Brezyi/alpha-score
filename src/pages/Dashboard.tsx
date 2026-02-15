@@ -219,7 +219,7 @@ type UserTask = {
 const Dashboard = () => {
   const isNative = Capacitor.isNativePlatform();
   const { user, loading } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const quickActions = getQuickActions(t);
   const { profile, updateProfile, loading: profileLoading } = useProfile();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
@@ -293,7 +293,7 @@ const Dashboard = () => {
     const formatEndDate = (dateStr: string | null) => {
       if (!dateStr) return null;
       const date = new Date(dateStr);
-      return date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+      return date.toLocaleDateString(language === "en" ? "en-GB" : "de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
     };
 
     switch (subscriptionType) {
@@ -303,7 +303,7 @@ const Dashboard = () => {
         return { label: "Lifetime", icon: Sparkles, className: "bg-primary/20 text-primary border-primary/30" };
       case "premium":
         return { 
-          label: `Premium${subscriptionEnd ? ` bis ${formatEndDate(subscriptionEnd)}` : ""}`, 
+          label: `Premium${subscriptionEnd ? ` ${language === "en" ? "until" : "bis"} ${formatEndDate(subscriptionEnd)}` : ""}`, 
           icon: Crown, 
           className: "bg-primary/20 text-primary border-primary/30" 
         };
@@ -520,8 +520,8 @@ const Dashboard = () => {
     const prevScore = index > 0 ? chartDataRaw[index - 1].looks_score : null;
     const change = a.looks_score !== null && prevScore !== null ? a.looks_score - prevScore : null;
     return {
-      date: new Date(a.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
-      fullDate: new Date(a.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "long", year: "numeric" }),
+      date: new Date(a.created_at).toLocaleDateString(language === "en" ? "en-GB" : "de-DE", { day: "2-digit", month: "2-digit" }),
+      fullDate: new Date(a.created_at).toLocaleDateString(language === "en" ? "en-GB" : "de-DE", { day: "2-digit", month: "long", year: "numeric" }),
       score: a.looks_score,
       potential: a.potential_score,
       change,
@@ -530,7 +530,7 @@ const Dashboard = () => {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return date.toLocaleDateString("de-DE", { 
+    return date.toLocaleDateString(language === "en" ? "en-GB" : "de-DE", { 
       day: "2-digit", 
       month: "2-digit",
       year: "numeric",
@@ -621,11 +621,11 @@ const Dashboard = () => {
             {!isResultsLocked && isPersonalBest && (
               <div className="absolute top-3 right-3 flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-medium">
                 <Trophy className="w-3 h-3" />
-                <span>Bestwert</span>
+                <span>{t("dashboard.personalBest")}</span>
               </div>
             )}
             <div className="text-center">
-              <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
+              <div className="text-sm text-muted-foreground mb-3">{t("dashboard.score")}</div>
               
               {/* Locked state for free users without referrals */}
               {shouldHideData ? (
@@ -659,7 +659,7 @@ const Dashboard = () => {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-4xl font-black text-primary">—</span>
-                      <span className="text-xs text-muted-foreground">von 10</span>
+                      <span className="text-xs text-muted-foreground">{t("dashboard.outOf")} 10</span>
                     </div>
                   </div>
                   
@@ -668,10 +668,10 @@ const Dashboard = () => {
                     <div className="w-16 h-16 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center mb-2">
                       <Lock className="w-8 h-8 text-primary" />
                     </div>
-                    <p className="text-sm font-medium mb-2">Ergebnis gesperrt</p>
+                     <p className="text-sm font-medium mb-2">{t("dashboard.resultLocked")}</p>
                     <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
                       <Button size="sm" variant="hero">
-                        Freischalten
+                        {t("dashboard.unlock")}
                       </Button>
                     </Link>
                   </div>
@@ -771,7 +771,7 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <Sparkles className="w-5 h-5 text-primary" />
-                          <span className="font-medium">Dein Potenzial</span>
+                          <span className="font-medium">{t("dashboard.potential")}</span>
                         </div>
                         <span className="text-2xl font-bold text-primary">—</span>
                       </div>
@@ -806,7 +806,7 @@ const Dashboard = () => {
             <div className="grid grid-cols-3 gap-3">
               <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform" style={{ animationDelay: "250ms", animationFillMode: "forwards" }}>
                 <div className="text-2xl font-bold">{completedAnalyses.length}</div>
-                <div className="text-xs text-muted-foreground">Analysen</div>
+                <div className="text-xs text-muted-foreground">{t("dashboard.analyses")}</div>
               </div>
               <div className="p-4 rounded-xl bg-muted/50 text-center opacity-0 animate-fade-in-up hover:scale-[1.02] transition-transform relative overflow-hidden" style={{ animationDelay: "300ms", animationFillMode: "forwards" }}>
                 {/* Animated flame background for active streaks */}
@@ -829,7 +829,7 @@ const Dashboard = () => {
                   {currentStreak >= 7 ? "🔥 On Fire!" : currentStreak >= 3 ? "Streak" : "Streak"}
                 </div>
                 {!streakLoading && !isActiveToday && currentStreak > 0 && (
-                  <div className="relative text-[10px] text-orange-400 mt-1 font-medium">Heute aktiv werden!</div>
+                  <div className="relative text-[10px] text-orange-400 mt-1 font-medium">{t("dashboard.activeToday")}</div>
                 )}
               </div>
               {/* Ranking - Locked for free users */}
@@ -838,7 +838,7 @@ const Dashboard = () => {
                   <>
                     <div className="blur-md opacity-50 pointer-events-none select-none">
                       <div className="text-2xl font-bold text-primary">Top —%</div>
-                      <div className="text-xs text-muted-foreground">Ranking</div>
+                       <div className="text-xs text-muted-foreground">{t("dashboard.ranking")}</div>
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <Lock className="w-4 h-4 text-primary" />
@@ -847,7 +847,7 @@ const Dashboard = () => {
                 ) : (
                   <>
                     <div className="text-2xl font-bold text-primary">{latestPotential ? `Top ${Math.round((1 - (latestScore || 0) / 10) * 100)}%` : "—"}</div>
-                    <div className="text-xs text-muted-foreground">Ranking</div>
+                    <div className="text-xs text-muted-foreground">{t("dashboard.ranking")}</div>
                   </>
                 )}
               </div>
@@ -865,10 +865,10 @@ const Dashboard = () => {
                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <Target className="w-4 h-4 text-blue-500" />
                 </div>
-                <span className="font-semibold text-sm">Nächste Schritte</span>
+                <span className="font-semibold text-sm">{t("dashboard.nextSteps")}</span>
               </div>
               <Link to="/plan" className="text-xs text-primary hover:underline flex items-center gap-1 group">
-                Alle
+                 {t("dashboard.all")}
                 <ChevronRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </div>
@@ -879,18 +879,18 @@ const Dashboard = () => {
               </div>
             ) : tasks.length === 0 ? (
               <div className="text-center py-3">
-                <p className="text-sm text-muted-foreground mb-2">Keine offenen Tasks</p>
+                 <p className="text-sm text-muted-foreground mb-2">{t("dashboard.noOpenTasks")}</p>
                 {isPremiumUser ? (
                   <Link to="/plan">
                     <Button variant="outline" size="sm" className="text-xs">
-                      Plan erstellen
+                      {t("dashboard.createPlan")}
                     </Button>
                   </Link>
                 ) : (
                   <Link to="/pricing">
                     <Button variant="outline" size="sm" className="text-xs gap-1">
                       <Lock className="w-3 h-3" />
-                      Premium freischalten
+                      {t("dashboard.unlockPremium")}
                     </Button>
                   </Link>
                 )}
@@ -923,7 +923,7 @@ const Dashboard = () => {
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-primary" />
-                      <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
+                       <h3 className="font-semibold">{t("dashboard.progressToPotential")}</h3>
                     </div>
                     <div className="text-sm text-muted-foreground">
                       <span className="text-foreground font-bold">—</span>
@@ -941,10 +941,10 @@ const Dashboard = () => {
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <Lock className="w-6 h-6 text-primary mb-2" />
                   <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
-                    <Button size="sm" variant="hero">
-                      Freischalten
-                    </Button>
-                  </Link>
+                     <Button size="sm" variant="hero">
+                       {t("dashboard.unlock")}
+                     </Button>
+                   </Link>
                 </div>
               </>
             ) : (
@@ -952,7 +952,7 @@ const Dashboard = () => {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold">Fortschritt zu deinem Potenzial</h3>
+                    <h3 className="font-semibold">{t("dashboard.progressToPotential")}</h3>
                   </div>
                   <div className="text-sm text-muted-foreground">
                     <span className="text-foreground font-bold">{latestScore?.toFixed(1)}</span>
@@ -970,10 +970,10 @@ const Dashboard = () => {
                 </div>
                 <div className="flex items-center justify-between mt-2 text-sm">
                   <span className="text-muted-foreground">
-                    Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> möglich
+                    Noch <span className="text-primary font-semibold">+{pointsToGo} {t("dashboard.pointsReachable")}</span> {t("dashboard.pointsPossible")}
                   </span>
-                  <Link to="/plan" className="text-primary hover:underline flex items-center gap-1 group">
-                    Plan ansehen
+                   <Link to="/plan" className="text-primary hover:underline flex items-center gap-1 group">
+                     {t("dashboard.viewPlan")}
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                 </div>
@@ -1001,20 +1001,20 @@ const Dashboard = () => {
                 <div className="blur-md opacity-50 pointer-events-none select-none">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-bold flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-primary" />
-                      Score-Entwicklung
+                       <TrendingUp className="w-5 h-5 text-primary" />
+                       {t("dashboard.scoreChart")}
                     </h2>
                   </div>
                   <div className="h-44 flex items-center justify-center bg-muted/20 rounded-lg">
-                    <div className="text-muted-foreground">Chart gesperrt</div>
+                    <div className="text-muted-foreground">{t("dashboard.chartLocked")}</div>
                   </div>
                 </div>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <Lock className="w-6 h-6 text-primary mb-2" />
                   <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
-                    <Button size="sm" variant="hero">
-                      Freischalten
-                    </Button>
+                     <Button size="sm" variant="hero">
+                       {t("dashboard.unlock")}
+                     </Button>
                   </Link>
                 </div>
               </>
@@ -1022,8 +1022,8 @@ const Dashboard = () => {
               <>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-bold flex items-center gap-2">
-                    <TrendingUp className="w-5 h-5 text-primary" />
-                    Score-Entwicklung
+                     <TrendingUp className="w-5 h-5 text-primary" />
+                     {t("dashboard.scoreChart")}
                   </h2>
                   <div className="flex items-center gap-4 text-xs">
                     <div className="flex items-center gap-1.5">
@@ -1034,7 +1034,7 @@ const Dashboard = () => {
                       <svg className="w-4 h-2" viewBox="0 0 16 2">
                         <line x1="0" y1="1" x2="16" y2="1" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="3 2" strokeOpacity="0.5" />
                       </svg>
-                      <span className="text-muted-foreground">Potenzial</span>
+                      <span className="text-muted-foreground">{t("dashboard.potential_label")}</span>
                     </div>
                   </div>
                 </div>
@@ -1081,7 +1081,7 @@ const Dashboard = () => {
                             const changeStr = change !== null ? ` (${change > 0 ? '+' : ''}${change.toFixed(1)})` : '';
                             return [`${Number(value).toFixed(1)}${changeStr}`, "Score"];
                           }
-                          return [Number(value).toFixed(1), "Potenzial"];
+                          return [Number(value).toFixed(1), t("dashboard.potential_label")];
                         }}
                       />
                       {/* Area fill under score line */}
@@ -1125,15 +1125,15 @@ const Dashboard = () => {
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-2">
                 <Crown className="w-5 h-5 text-primary animate-float" />
-                <span className="text-sm font-medium text-primary">Premium Feature</span>
+                <span className="text-sm font-medium text-primary">{t("dashboard.premiumFeature")}</span>
               </div>
-              <h3 className="text-xl font-bold mb-2">Schalte alle Features frei</h3>
-              <p className="text-muted-foreground mb-4 max-w-md">
-                Erhalte detaillierte Analysen, deinen personalisierten Plan und Zugang zum AI Coach.
-              </p>
+               <h3 className="text-xl font-bold mb-2">{t("dashboard.unlockAll")}</h3>
+               <p className="text-muted-foreground mb-4 max-w-md">
+                 {t("dashboard.unlockAllDesc")}
+               </p>
               <Link to="/pricing">
                 <Button variant="hero" className="group">
-                  Premium werden
+                  {t("dashboard.goPremium")}
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
@@ -1173,32 +1173,10 @@ const Dashboard = () => {
               );
             })}
             
-            {/* Owner-Only: Revenue Quick Access */}
-            {isOwner && (
-              <Link 
-                to="/admin/billing"
-                className="group relative p-6 rounded-2xl glass-card border-amber-500/30 hover:border-amber-500/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-amber-500/10"
-                style={{ animationDelay: `${850 + quickActions.length * 100}ms`, animationFillMode: "forwards" }}
-              >
-                <div className="absolute top-3 right-3">
-                  <Crown className="w-4 h-4 text-amber-500" />
-                </div>
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                  <BarChart3 className="w-6 h-6 text-amber-500" />
-                </div>
-                <h3 className="font-semibold mb-1 group-hover:text-amber-500 transition-colors">
-                  Umsatz & Abos
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Revenue & Affiliate-Übersicht
-                </p>
-              </Link>
-            )}
-
-            {/* Skin Type Analyzer Quick Action */}
+            {/* Skin Type Analyzer Quick Action - between Affiliate and Revenue */}
             <div
               className="group relative p-6 rounded-2xl glass-card hover-glow hover-lift transition-all duration-300 opacity-0 animate-fade-in"
-              style={{ animationDelay: `${950 + quickActions.length * 100}ms`, animationFillMode: "forwards" }}
+              style={{ animationDelay: `${850 + quickActions.length * 100}ms`, animationFillMode: "forwards" }}
             >
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
                 <Sparkles className="w-6 h-6 text-pink-500" />
@@ -1211,6 +1189,28 @@ const Dashboard = () => {
               </p>
               <SkinTypeAnalyzer />
             </div>
+
+            {/* Owner-Only: Revenue Quick Access */}
+            {isOwner && (
+              <Link 
+                to="/admin/billing"
+                className="group relative p-6 rounded-2xl glass-card border-amber-500/30 hover:border-amber-500/50 transition-all duration-300 opacity-0 animate-fade-in hover:shadow-lg hover:shadow-amber-500/10"
+                style={{ animationDelay: `${950 + quickActions.length * 100}ms`, animationFillMode: "forwards" }}
+              >
+                <div className="absolute top-3 right-3">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <BarChart3 className="w-6 h-6 text-amber-500" />
+                </div>
+                <h3 className="font-semibold mb-1 group-hover:text-amber-500 transition-colors">
+                  {t("dashboard.revenueAndSubs")}
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {t("dashboard.revenueDesc")}
+                </p>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -1259,7 +1259,7 @@ const Dashboard = () => {
                 products={recommendedProducts}
                 loading={productsLoading}
                 maxDisplay={4}
-                title="Empfohlene Produkte für dich"
+                title={t("dashboard.recommendedProducts")}
                 hasPersonalizedResults={hasPersonalizedResults}
               />
             )}
@@ -1269,10 +1269,10 @@ const Dashboard = () => {
         {/* Analysis History - Show last 5 */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "1200ms", animationFillMode: "forwards" }}>
-            <h2 className="text-xl font-bold">Letzte Analysen</h2>
+             <h2 className="text-xl font-bold">{t("dashboard.recentAnalyses")}</h2>
             {analyses.length > 5 && !shouldHideData && (
               <Link to="/progress#timeline" className="text-sm text-primary hover:underline flex items-center gap-1 group">
-                Alle {analyses.length} anzeigen
+                {t("dashboard.all")} {analyses.length} {t("dashboard.showAll")}
                 <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             )}
@@ -1285,14 +1285,14 @@ const Dashboard = () => {
           ) : analyses.length === 0 ? (
             <div className="text-center p-8 rounded-2xl glass-card opacity-0 animate-scale-in" style={{ animationDelay: "1300ms", animationFillMode: "forwards" }}>
               <Camera className="w-12 h-12 text-primary mx-auto mb-4 animate-bounce-subtle" />
-              <h3 className="text-xl font-bold mb-2">Noch keine Analysen</h3>
+               <h3 className="text-xl font-bold mb-2">{t("dashboard.noAnalyses")}</h3>
               <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-                Lade ein Foto hoch und erhalte in wenigen Sekunden deinen Looks Score.
+                {t("dashboard.noAnalysesDesc")}
               </p>
               <Link to="/upload">
                 <Button variant="hero" size="lg" className="group">
                   <Camera className="w-5 h-5" />
-                  Erste Analyse starten
+                  {t("dashboard.firstAnalysis")}
                 </Button>
               </Link>
             </div>
@@ -1311,10 +1311,10 @@ const Dashboard = () => {
               </div>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <Lock className="w-8 h-8 text-primary mb-3" />
-                <p className="text-sm font-medium mb-3">Analysen gesperrt</p>
+                 <p className="text-sm font-medium mb-3">{t("dashboard.analysesLocked")}</p>
                 <Link to={`/analysis/${completedAnalyses[0]?.id}`}>
                   <Button variant="hero">
-                    Freischalten
+                    {t("dashboard.unlock")}
                   </Button>
                 </Link>
               </div>
@@ -1369,11 +1369,11 @@ const Dashboard = () => {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
                           <span className="font-medium">
-                            {analysis.status === "completed" ? "Analyse abgeschlossen" : 
-                             analysis.status === "processing" ? "Wird analysiert..." : 
-                             analysis.status === "validation_failed" ? "Validierung fehlgeschlagen" :
-                             analysis.status === "failed" ? "Fehlgeschlagen" :
-                             "Ausstehend"}
+                            {analysis.status === "completed" ? t("dashboard.analysisComplete") : 
+                             analysis.status === "processing" ? t("dashboard.analyzing") : 
+                             analysis.status === "validation_failed" ? t("dashboard.validationFailed") :
+                             analysis.status === "failed" ? t("dashboard.failed") :
+                             t("dashboard.pending")}
                           </span>
                           {analysis.status === "completed" && (
                             <span className={`px-2 py-0.5 rounded-full text-xs ${
@@ -1383,14 +1383,14 @@ const Dashboard = () => {
                                 ? "bg-yellow-500/20 text-yellow-400"
                                 : "bg-red-500/20 text-red-400"
                             }`}>
-                              {analysis.looks_score && analysis.looks_score >= 7 ? "Top" : 
-                               analysis.looks_score && analysis.looks_score >= 5 ? "Durchschnitt" : 
-                               "Potenzial"}
+                               {analysis.looks_score && analysis.looks_score >= 7 ? t("dashboard.top") : 
+                               analysis.looks_score && analysis.looks_score >= 5 ? t("dashboard.average") : 
+                               t("dashboard.potential_badge")}
                             </span>
                           )}
                           {isPending && (
                             <span className="px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
-                              In Bearbeitung
+                              {t("dashboard.inProgress")}
                             </span>
                           )}
                         </div>
@@ -1407,7 +1407,7 @@ const Dashboard = () => {
                             ))}
                             {analysis.strengths.length > 3 && (
                               <span className="text-xs text-muted-foreground">
-                                +{analysis.strengths.length - 3} mehr
+                                 +{analysis.strengths.length - 3} {t("dashboard.more")}
                               </span>
                             )}
                           </div>
@@ -1440,14 +1440,14 @@ const Dashboard = () => {
         {/* CTA for more analyses */}
         {analyses.length > 0 && (
           <div className="text-center p-6 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up" style={{ animationDelay: "1800ms", animationFillMode: "forwards" }}>
-            <h3 className="text-lg font-bold mb-2">Neue Analyse starten</h3>
+             <h3 className="text-lg font-bold mb-2">{t("dashboard.startNewAnalysis")}</h3>
             <p className="text-muted-foreground mb-4 text-sm">
-              Tracke deinen Fortschritt mit regelmäßigen Analysen.
+              {t("dashboard.trackProgress")}
             </p>
             <Link to="/upload">
               <Button variant="hero" className="group">
                 <Camera className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                Foto analysieren
+                {t("dashboard.analyzePhoto")}
               </Button>
             </Link>
           </div>
@@ -1461,21 +1461,21 @@ const Dashboard = () => {
                 <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
                   <AlertTriangle className="w-5 h-5 text-destructive" />
                 </div>
-                <AlertDialogTitle>
+                 <AlertDialogTitle>
                   {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
-                    ? "Analyse abbrechen?"
-                    : "Analyse entfernen?"}
+                    ? t("dialog.cancelAnalysis")
+                    : t("dialog.removeAnalysis")}
                 </AlertDialogTitle>
               </div>
               <AlertDialogDescription>
-                {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
-                  ? "Diese laufende Analyse wird abgebrochen und gelöscht. Diese Aktion kann nicht rückgängig gemacht werden."
-                  : "Diese fehlgeschlagene Analyse wird aus deiner Historie entfernt. Diese Aktion kann nicht rückgängig gemacht werden."}
+                 {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
+                  ? t("dialog.cancelAnalysisDesc")
+                  : t("dialog.removeAnalysisDesc")}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
-                Abbrechen
+               <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
+                 {t("dialog.cancelBtn")}
               </AlertDialogCancel>
               <AlertDialogAction
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
@@ -1491,17 +1491,17 @@ const Dashboard = () => {
                     if (error) throw error;
                     
                     setAnalyses(prev => prev.filter(a => a.id !== analysisToDelete.id));
-                    toast({
+                     toast({
                       title: analysisToDelete.status === "pending" || analysisToDelete.status === "processing"
-                        ? "Analyse abgebrochen"
-                        : "Analyse entfernt",
-                      description: "Die Analyse wurde erfolgreich gelöscht.",
+                        ? t("dialog.analysisCancelled")
+                        : t("dialog.analysisRemoved"),
+                      description: t("dialog.analysisDeleted"),
                     });
                   } catch (err) {
                     console.error("Error deleting analysis:", err);
-                    toast({
-                      title: "Fehler",
-                      description: "Die Analyse konnte nicht gelöscht werden.",
+                     toast({
+                      title: t("dialog.error"),
+                      description: t("dialog.deleteError"),
                       variant: "destructive",
                     });
                   } finally {
@@ -1510,9 +1510,9 @@ const Dashboard = () => {
                   }
                 }}
               >
-                {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
-                  ? "Analyse abbrechen"
-                  : "Analyse entfernen"}
+                 {analysisToDelete?.status === "pending" || analysisToDelete?.status === "processing"
+                  ? t("dialog.cancelAnalysisBtn")
+                  : t("dialog.removeAnalysisBtn")}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

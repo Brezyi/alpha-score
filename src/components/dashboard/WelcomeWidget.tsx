@@ -1,24 +1,26 @@
 import { motion } from "framer-motion";
 import { Sun, Moon, Sunrise, Sunset, Sparkles } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-const getGreeting = () => {
+const getGreetingKey = () => {
   const hour = new Date().getHours();
   
   if (hour >= 5 && hour < 12) {
-    return { text: "Guten Morgen", icon: Sunrise, gradient: "from-amber-500 to-orange-500" };
+    return { key: "dashboard.greeting.morning", icon: Sunrise, gradient: "from-amber-500 to-orange-500" };
   } else if (hour >= 12 && hour < 17) {
-    return { text: "Guten Tag", icon: Sun, gradient: "from-yellow-500 to-amber-500" };
+    return { key: "dashboard.greeting.afternoon", icon: Sun, gradient: "from-yellow-500 to-amber-500" };
   } else if (hour >= 17 && hour < 21) {
-    return { text: "Guten Abend", icon: Sunset, gradient: "from-orange-500 to-rose-500" };
+    return { key: "dashboard.greeting.evening", icon: Sunset, gradient: "from-orange-500 to-rose-500" };
   } else {
-    return { text: "Gute Nacht", icon: Moon, gradient: "from-indigo-500 to-purple-500" };
+    return { key: "dashboard.greeting.night", icon: Moon, gradient: "from-indigo-500 to-purple-500" };
   }
 };
 
 export function WelcomeWidget() {
   const { profile } = useProfile();
-  const greeting = getGreeting();
+  const { t } = useLanguage();
+  const greeting = getGreetingKey();
   const Icon = greeting.icon;
   
   const displayName = profile?.display_name || "Champion";
@@ -61,14 +63,13 @@ export function WelcomeWidget() {
         </motion.div>
         
         <div className="flex-1">
-          {/* Greeting text with stagger */}
           <motion.p
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3, duration: 0.4 }}
             className="text-sm text-muted-foreground"
           >
-            {greeting.text}
+            {t(greeting.key)}
           </motion.p>
           
           <motion.h2
@@ -89,14 +90,13 @@ export function WelcomeWidget() {
         </div>
       </div>
       
-      {/* Motivational subtitle */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7, duration: 0.5 }}
         className="mt-3 text-sm text-muted-foreground"
       >
-        Bereit für einen weiteren Tag voller Fortschritt? 💪
+        {t("motivation.readyForProgress")}
       </motion.p>
     </motion.div>
   );
