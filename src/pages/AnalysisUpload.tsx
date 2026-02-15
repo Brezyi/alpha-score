@@ -373,7 +373,8 @@ export default function AnalysisUpload() {
             <span>Zurück</span>
           </button>
           <h1 className="text-lg font-bold">KI-Analyse</h1>
-          <PhotoGuidelinesModal 
+          <PhotoGuidelinesModal
+            data-tour="photo-guidelines"
             trigger={
               <button className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
                 <HelpCircle className="w-5 h-5" />
@@ -448,7 +449,7 @@ export default function AnalysisUpload() {
         </div>
 
         {/* Photo type selector */}
-        <div className="grid grid-cols-3 gap-3 mb-6">
+        <div data-tour="upload-area" className="grid grid-cols-3 gap-3 mb-6">
           {photoTypes.map((type, index) => {
             const photo = getPhotoForType(type.id);
             const Icon = type.icon;

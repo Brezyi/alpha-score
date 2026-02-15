@@ -1,95 +1,147 @@
 import { useCallback, useEffect, useState } from "react";
-import { useOnboardingTour as useOnboardingTourContext, dashboardTourSteps } from "@/components/onboarding/OnboardingTour";
+import { useOnboardingTour as useOnboardingTourContext } from "@/components/onboarding/OnboardingTourProvider";
+import {
+  dashboardTourSteps,
+  uploadTourSteps,
+  lifestyleTourSteps,
+  progressTourSteps,
+  filterAvailableSteps,
+} from "@/components/onboarding/tourSteps";
+import type { TourStep } from "@/components/onboarding/tourSteps";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-const TOUR_COMPLETED_KEY = "glowmaxxed-dashboard-tour-completed";
+// ── Shared helpers ───────────────────────────────────────
 
-export function useDashboardTour() {
-  const { startTour, isActive, endTour } = useOnboardingTourContext();
-  const [hasCompletedTour, setHasCompletedTour] = useState(() => {
-    try {
-      return localStorage.getItem(TOUR_COMPLETED_KEY) === "true";
-    } catch {
-      return false;
-    }
-  });
+const LS_PREFIX = "glowmaxxed-tour-completed-";
 
-  // Start tour automatically for new users after a delay
-  const autoStartTour = useCallback(() => {
-    if (hasCompletedTour || isActive) return;
-    
-    // Wait for DOM to be ready
-    const timer = setTimeout(() => {
-      // Only keep steps that actually exist on the current dashboard.
-      // This prevents mismatches like "Level & XP" highlighting unrelated cards
-      // and avoids dead steps (e.g. discover-link on desktop).
-      const availableSteps = dashboardTourSteps.filter((step) => {
-        try {
-          return !!document.querySelector(step.target);
-        } catch {
-          return false;
-        }
-      });
+function isTourCompletedLocal(tourId: string): boolean {
+  try {
+    return localStorage.getItem(`${LS_PREFIX}${tourId}`) === "true";
+  } catch {
+    return false;
+  }
+}
 
-      startTour(availableSteps.length > 0 ? availableSteps : dashboardTourSteps);
-    }, 1500);
+function markTourCompletedLocal(tourId: string) {
+  try {
+    localStorage.setItem(`${LS_PREFIX}${tourId}`, "true");
+  } catch {
+    /* ignore */
+  }
+}
 
-    return () => clearTimeout(timer);
-  }, [hasCompletedTour, isActive, startTour]);
+/** Persist completed tour to the user's profile (best-effort). */
+async function syncTourToDb(userId: string | undefined, tourId: string) {
+  if (!userId) return;
+  try {
+    // Read current
+    const { data } = await supabase
+      .from("profiles")
+      .select("completed_tours")
+      .eq("user_id", userId)
+      .single();
 
-  // Mark tour as completed when it ends
+    const current: string[] = (data as any)?.completed_tours ?? [];
+    if (current.includes(tourId)) return;
+
+    await supabase
+      .from("profiles")
+      .update({ completed_tours: [...current, tourId] } as any)
+      .eq("user_id", userId);
+  } catch {
+    /* best-effort */
+  }
+}
+
+/** Load completed tours from DB and hydrate localStorage. */
+async function hydrateTourStatusFromDb(userId: string | undefined) {
+  if (!userId) return;
+  try {
+    const { data } = await supabase
+      .from("profiles")
+      .select("completed_tours")
+      .eq("user_id", userId)
+      .single();
+
+    const tours: string[] = (data as any)?.completed_tours ?? [];
+    tours.forEach((t) => markTourCompletedLocal(t));
+  } catch {
+    /* best-effort */
+  }
+}
+
+// ── Generic page tour hook ───────────────────────────────
+
+function usePageTour(tourId: string, allSteps: TourStep[]) {
+  const { startTour, isActive } = useOnboardingTourContext();
+  const { user } = useAuth();
+  const [hasCompleted, setHasCompleted] = useState(() => isTourCompletedLocal(tourId));
+
+  // Hydrate from DB on mount
   useEffect(() => {
-    if (!isActive && !hasCompletedTour) {
-      // Check if tour was actually started before
+    if (user?.id) {
+      hydrateTourStatusFromDb(user.id).then(() => {
+        setHasCompleted(isTourCompletedLocal(tourId));
+      });
+    }
+  }, [user?.id, tourId]);
+
+  // Mark completed when tour ends
+  useEffect(() => {
+    if (!isActive && !hasCompleted) {
       const wasStarted = localStorage.getItem("tour-was-started");
       if (wasStarted) {
-        try {
-          localStorage.setItem(TOUR_COMPLETED_KEY, "true");
-          localStorage.removeItem("tour-was-started");
-          setHasCompletedTour(true);
-        } catch {
-          // Ignore localStorage errors
-        }
+        markTourCompletedLocal(tourId);
+        syncTourToDb(user?.id, tourId);
+        localStorage.removeItem("tour-was-started");
+        setHasCompleted(true);
       }
     }
-  }, [isActive, hasCompletedTour]);
+  }, [isActive, hasCompleted, tourId, user?.id]);
 
-  // Mark tour as started when it begins
   useEffect(() => {
     if (isActive) {
-      try {
-        localStorage.setItem("tour-was-started", "true");
-      } catch {
-        // Ignore localStorage errors
-      }
+      try { localStorage.setItem("tour-was-started", "true"); } catch { /* */ }
     }
   }, [isActive]);
 
-  const startManualTour = useCallback(() => {
-    const availableSteps = dashboardTourSteps.filter((step) => {
-      try {
-        return !!document.querySelector(step.target);
-      } catch {
-        return false;
-      }
-    });
+  const autoStartTour = useCallback(() => {
+    if (hasCompleted || isActive) return;
+    const timer = setTimeout(() => {
+      const available = filterAvailableSteps(allSteps);
+      if (available.length > 0) startTour(available);
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, [hasCompleted, isActive, startTour, allSteps]);
 
-    startTour(availableSteps.length > 0 ? availableSteps : dashboardTourSteps);
-  }, [startTour]);
+  const startManualTour = useCallback(() => {
+    const available = filterAvailableSteps(allSteps);
+    if (available.length > 0) startTour(available);
+  }, [startTour, allSteps]);
 
   const resetTour = useCallback(() => {
-    try {
-      localStorage.removeItem(TOUR_COMPLETED_KEY);
-      setHasCompletedTour(false);
-    } catch {
-      // Ignore localStorage errors
-    }
-  }, []);
+    try { localStorage.removeItem(`${LS_PREFIX}${tourId}`); } catch { /* */ }
+    setHasCompleted(false);
+  }, [tourId]);
 
-  return {
-    autoStartTour,
-    startManualTour,
-    resetTour,
-    hasCompletedTour,
-    isActive,
-  };
+  return { autoStartTour, startManualTour, resetTour, hasCompletedTour: hasCompleted, isActive };
+}
+
+// ── Exported per-page hooks ──────────────────────────────
+
+export function useDashboardTour() {
+  return usePageTour("dashboard", dashboardTourSteps);
+}
+
+export function useUploadTour() {
+  return usePageTour("upload", uploadTourSteps);
+}
+
+export function useLifestyleTour() {
+  return usePageTour("lifestyle", lifestyleTourSteps);
+}
+
+export function useProgressTour() {
+  return usePageTour("progress", progressTourSteps);
 }
