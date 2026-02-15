@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Crown, Moon, Droplets, CheckCircle2, AlertTriangle, Lock } from "lucide-react";
+import { ArrowLeft, Crown, Moon, Droplets, CheckCircle2, AlertTriangle, Lock, Sparkles } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useLifestyle } from "@/hooks/useLifestyle";
@@ -55,12 +55,12 @@ function HealthAlerts() {
           <Card className="border-success/20 bg-success/5">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-5 h-5 text-success" />
+                <div className="w-9 h-9 rounded-xl bg-success/15 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-4 h-4 text-success" />
                 </div>
                 <div>
                   <p className="text-sm font-medium text-success">Alles im grünen Bereich!</p>
-                  <p className="text-xs text-muted-foreground">Du hast gut geschlafen und genug getrunken.</p>
+                  <p className="text-xs text-muted-foreground">Gut geschlafen und genug getrunken.</p>
                 </div>
               </div>
             </CardContent>
@@ -82,8 +82,8 @@ function HealthAlerts() {
         <Card key={alert.type} className="border-warning/20 bg-warning/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-5 h-5 text-warning" />
+              <div className="w-9 h-9 rounded-xl bg-warning/15 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-4 h-4 text-warning" />
               </div>
               <p className="text-sm">{alert.message}</p>
             </div>
@@ -93,6 +93,12 @@ function HealthAlerts() {
     </motion.div>
   );
 }
+
+const fadeUp = (delay = 0) => ({
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0 },
+  transition: { delay, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+});
 
 export default function Lifestyle() {
   const { user, loading: authLoading } = useAuth();
@@ -178,28 +184,30 @@ export default function Lifestyle() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-4xl mx-auto px-4 py-8">
+      <div className="container max-w-3xl mx-auto px-4 py-8 pb-16">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="w-4 h-4" />
+        <motion.div {...fadeUp(0)} className="mb-10">
+          <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 group">
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
             Dashboard
           </Link>
-          <div className="flex items-center gap-2 text-sm text-primary">
-            <Crown className="w-4 h-4" />
-            Premium
+          
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Tägliches Tracking</h1>
+              <p className="text-sm text-muted-foreground mt-1">Deine Gewohnheiten auf einen Blick</p>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs font-medium text-primary bg-primary/10 px-3 py-1.5 rounded-full">
+              <Sparkles className="w-3.5 h-3.5" />
+              Premium
+            </div>
           </div>
-        </div>
-
-        <motion.div className="mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl font-bold mb-1">Tägliches Tracking</h1>
-          <p className="text-sm text-muted-foreground">Tracke deine täglichen Gewohnheiten für bessere Ergebnisse</p>
         </motion.div>
 
-        {/* Clean single-column daily content */}
-        <div className="space-y-6">
+        {/* Content */}
+        <div className="space-y-8">
           {/* Weekly Tracker */}
-          <motion.div data-tour="main-tracker" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div {...fadeUp(0.05)} data-tour="main-tracker">
             <LifestyleTracker onDateChange={setSelectedDate} />
           </motion.div>
 
@@ -207,41 +215,41 @@ export default function Lifestyle() {
           <HealthAlerts />
 
           {/* Motivation */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <motion.div {...fadeUp(0.1)}>
             <MotivationCard />
           </motion.div>
 
-          {/* Steps & Calories */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-            <StepsCaloriesTracker selectedDate={selectedDate} />
-          </motion.div>
-
-          {/* Mood */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <MoodTracker selectedDate={selectedDate} />
-          </motion.div>
+          {/* Steps & Calories + Mood in a grid */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <motion.div {...fadeUp(0.15)}>
+              <StepsCaloriesTracker selectedDate={selectedDate} />
+            </motion.div>
+            <motion.div {...fadeUp(0.2)}>
+              <MoodTracker selectedDate={selectedDate} />
+            </motion.div>
+          </div>
 
           {/* Water & Fasting */}
           <div className="grid md:grid-cols-2 gap-6 auto-rows-fr">
-            <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+            <motion.div className="h-full [&>div]:h-full" {...fadeUp(0.25)}>
               <WaterTrackerAdvanced />
             </motion.div>
-            <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <motion.div className="h-full [&>div]:h-full" {...fadeUp(0.3)}>
               <FastingTimer />
             </motion.div>
           </div>
 
           {/* Supplements */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <motion.div {...fadeUp(0.35)}>
             <SupplementTracker selectedDate={selectedDate} />
           </motion.div>
 
           {/* Goals & Challenges */}
           <div className="grid md:grid-cols-2 gap-6 auto-rows-fr">
-            <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+            <motion.div className="h-full [&>div]:h-full" {...fadeUp(0.4)}>
               <GoalCard currentScore={currentScore} />
             </motion.div>
-            <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <motion.div className="h-full [&>div]:h-full" {...fadeUp(0.45)}>
               <WeeklyChallengeCard />
             </motion.div>
           </div>
