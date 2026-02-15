@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Zap, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface XpLevelCardProps {
   level: number;
@@ -12,26 +13,15 @@ interface XpLevelCardProps {
   compact?: boolean;
 }
 
-const LEVEL_TITLES = [
-  "Anfänger",
-  "Lehrling",
-  "Aufsteiger",
-  "Veteran",
-  "Experte",
-  "Elite",
-  "Meister",
-  "Legende"
-];
-
-const getLevelTitle = (level: number): string => {
-  if (level >= 50) return "Legende";
-  if (level >= 30) return "Meister";
-  if (level >= 20) return "Elite";
-  if (level >= 15) return "Experte";
-  if (level >= 10) return "Veteran";
-  if (level >= 5) return "Aufsteiger";
-  if (level >= 3) return "Lehrling";
-  return "Anfänger";
+const getLevelTitle = (level: number, t: (key: string) => string): string => {
+  if (level >= 50) return t("xp.legend");
+  if (level >= 30) return t("xp.master");
+  if (level >= 20) return t("xp.elite");
+  if (level >= 15) return t("xp.expert");
+  if (level >= 10) return t("xp.veteran");
+  if (level >= 5) return t("xp.riser");
+  if (level >= 3) return t("xp.apprentice");
+  return t("xp.beginner");
 };
 
 export const XpLevelCard = memo(({
@@ -41,9 +31,10 @@ export const XpLevelCard = memo(({
   progress,
   compact = false,
 }: XpLevelCardProps) => {
+  const { t } = useLanguage();
   const shouldReduce = useReducedMotion();
   const xpInLevel = useMemo(() => currentXp % xpForNextLevel, [currentXp, xpForNextLevel]);
-  const title = useMemo(() => getLevelTitle(level), [level]);
+  const title = useMemo(() => getLevelTitle(level, t), [level, t]);
 
   if (compact) {
     return (
@@ -58,7 +49,7 @@ export const XpLevelCard = memo(({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs font-medium">Level {level}</span>
+            <span className="text-xs font-medium">{t("xp.level")} {level}</span>
             <span className="text-[10px] text-muted-foreground">
               {xpInLevel} / {xpForNextLevel} XP
             </span>
@@ -96,7 +87,7 @@ export const XpLevelCard = memo(({
               </div>
             </div>
             <div>
-              <h3 className="font-bold text-lg">Level {level}</h3>
+              <h3 className="font-bold text-lg">{t("xp.level")} {level}</h3>
               <p className="text-sm text-muted-foreground">{title}</p>
             </div>
           </div>
@@ -105,13 +96,13 @@ export const XpLevelCard = memo(({
               <Zap className="w-4 h-4" />
               <span className="font-bold">{currentXp}</span>
             </div>
-            <span className="text-xs text-muted-foreground">Total XP</span>
+            <span className="text-xs text-muted-foreground">{t("xp.totalXp")}</span>
           </div>
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Fortschritt zu Level {level + 1}</span>
+            <span className="text-muted-foreground">{t("xp.progressTo")} {level + 1}</span>
             <span className="font-medium">{progress}%</span>
           </div>
           <Progress value={progress} className="h-3" />

@@ -36,6 +36,7 @@ import { useSensitiveData } from "@/hooks/useSensitiveData";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { SecuritySettingsDialog } from "@/components/SecuritySettingsDialog";
 import { RedeemCodeDialog } from "@/components/RedeemCodeDialog";
 import { RefundRequestDialog } from "@/components/RefundRequestDialog";
@@ -109,6 +110,7 @@ export function ProfileMenu() {
   const { theme, accentColor, backgroundStyle, setTheme, setAccentColor, setBackgroundStyle } = useTheme();
   const { role } = useUserRole();
   const { isPremium, subscriptionType, subscriptionEnd, isAdminGranted, openCustomerPortal, createCheckout } = useSubscription();
+  const { t, language } = useLanguage();
   const expirationInfo = getExpirationWarning(subscriptionEnd);
   const [profileOpen, setProfileOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -178,13 +180,13 @@ export function ProfileMenu() {
     if (trimmedName) {
       const nameValidation = validateDisplayName(trimmedName);
       if (!nameValidation.valid) {
-        toast.error(nameValidation.error || "Dieser Anzeigename ist nicht erlaubt");
+        toast.error(nameValidation.error || t("register.invalidDisplayName"));
         return;
       }
     }
     
     if (trimmedName && trimmedName.toLowerCase() !== profile?.display_name?.toLowerCase() && nameAvailable === false) {
-      toast.error("Dieser Anzeigename ist bereits vergeben");
+      toast.error(t("profile.nameTaken"));
       return;
     }
     
@@ -203,10 +205,10 @@ export function ProfileMenu() {
             sensitiveSuccess = await storeSensitiveData(trimmedFirstName, trimmedLastName);
           }
           if (!sensitiveSuccess) {
-            toast.error("Fehler beim Speichern des Namens");
+            toast.error(t("common.error"));
             return;
           }
-          toast.success("Name erfolgreich aktualisiert");
+          toast.success(t("common.success"));
         }
       }
       
@@ -242,7 +244,7 @@ export function ProfileMenu() {
 
   const handleRequestDeletion = async () => {
     if (!user?.email) {
-      toast.error("Keine E-Mail-Adresse gefunden");
+      toast.error(t("common.error"));
       return;
     }
 
@@ -259,11 +261,11 @@ export function ProfileMenu() {
         return;
       }
 
-      toast.success("Bestätigungs-E-Mail gesendet! Überprüfe dein Postfach.");
+      toast.success(t("forgot.sent"));
       setDeleteAccountOpen(false);
     } catch (error: any) {
       console.error("Deletion request error:", error);
-      toast.error("Fehler beim Senden der E-Mail: " + error.message);
+      toast.error(t("common.error") + ": " + error.message);
     } finally {
       setIsSendingDeleteEmail(false);
     }
@@ -273,7 +275,7 @@ export function ProfileMenu() {
     try {
       await openCustomerPortal();
     } catch (error: any) {
-      toast.error("Fehler beim Öffnen des Kundenportals");
+      toast.error(t("common.error"));
     }
   };
 
@@ -303,7 +305,7 @@ export function ProfileMenu() {
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
               <p className="text-sm font-medium leading-none">
-                {profile?.display_name || "Benutzer"}
+                {profile?.display_name || t("profile.user")}
               </p>
               <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
               {role && role !== "user" && (
@@ -317,30 +319,30 @@ export function ProfileMenu() {
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => setProfileOpen(true)} className="cursor-pointer">
             <User className="mr-2 h-4 w-4" />
-            <span>Profil bearbeiten</span>
+            <span>{t("profile.edit")}</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer">
             <Palette className="mr-2 h-4 w-4" />
-            <span>Design anpassen</span>
+            <span>{t("profile.settings")}</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setSecurityOpen(true)} className="cursor-pointer">
             <Key className="mr-2 h-4 w-4" />
-            <span>Sicherheit</span>
+            <span>{t("profile.security")}</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => navigate("/support")} className="cursor-pointer">
             <HelpCircle className="mr-2 h-4 w-4" />
-            <span>Support</span>
+            <span>{t("profile.support")}</span>
           </DropdownMenuItem>
           {(role === "admin" || role === "owner") && (
             <DropdownMenuItem onClick={() => navigate("/admin")} className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
-              <span>Admin Dashboard</span>
+              <span>{t("profile.admin")}</span>
             </DropdownMenuItem>
           )}
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive">
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Ausloggen</span>
+            <span>{t("profile.logout")}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -349,9 +351,9 @@ export function ProfileMenu() {
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Profil bearbeiten</DialogTitle>
+            <DialogTitle>{t("profile.edit")}</DialogTitle>
             <DialogDescription>
-              Aktualisiere deinen Namen und dein Profilbild
+              {t("profile.editDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
@@ -377,40 +379,40 @@ export function ProfileMenu() {
                 disabled={isUploading}
               >
                 <Upload className="w-4 h-4 mr-2" />
-                {isUploading ? "Wird hochgeladen..." : "Bild ändern"}
+                {isUploading ? t("profile.uploading") : t("profile.changeImage")}
               </Button>
             </div>
 
             {/* Private Name - Always Editable */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">Vorname</Label>
+                <Label htmlFor="firstName">{t("profile.firstName")}</Label>
                 <Input 
                   id="firstName"
                   value={editFirstName} 
                   onChange={(e) => setEditFirstName(e.target.value)}
-                  placeholder="Vorname eingeben"
+                  placeholder={t("profile.firstNamePlaceholder")}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Nachname</Label>
+                <Label htmlFor="lastName">{t("profile.lastName")}</Label>
                 <Input 
                   id="lastName"
                   value={editLastName} 
                   onChange={(e) => setEditLastName(e.target.value)}
-                  placeholder="Nachname eingeben"
+                  placeholder={t("profile.lastNamePlaceholder")}
                 />
               </div>
             </div>
 
             {/* Display Name (editable) */}
             <div className="space-y-2">
-              <Label htmlFor="displayName">Anzeigename</Label>
+              <Label htmlFor="displayName">{t("profile.displayName")}</Label>
               {displayNameChangeStatus && !displayNameChangeStatus.allowed && (
                 <div className="flex items-center gap-2 p-2 rounded-md bg-muted/50 border border-border text-sm text-muted-foreground">
                   <Clock className="h-4 w-4 shrink-0" />
                   <span>
-                    Nächste Änderung möglich in {displayNameChangeStatus.days_remaining} {displayNameChangeStatus.days_remaining === 1 ? "Tag" : "Tagen"}
+                    {t("profile.displayNameNextChange")} {displayNameChangeStatus.days_remaining} {displayNameChangeStatus.days_remaining === 1 ? t("profile.day") : t("profile.days")}
                   </span>
                 </div>
               )}
@@ -419,7 +421,7 @@ export function ProfileMenu() {
                   id="displayName"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Dein Anzeigename"
+                  placeholder={t("profile.displayNamePlaceholder")}
                   disabled={displayNameChangeStatus && !displayNameChangeStatus.allowed}
                   className={cn(
                     displayNameChangeStatus && !displayNameChangeStatus.allowed && "opacity-70",
@@ -446,29 +448,29 @@ export function ProfileMenu() {
               {nameAvailable === false && (
                 <p className="text-sm text-destructive flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
-                  Dieser Name ist bereits vergeben
+                  {t("profile.nameTaken")}
                 </p>
               )}
               {nameAvailable === true && displayName.trim().toLowerCase() !== profile?.display_name?.toLowerCase() && (
                 <p className="text-sm text-primary flex items-center gap-1">
                   <Check className="h-3 w-3" />
-                  Name ist verfügbar
+                  {t("profile.nameAvailable")}
                 </p>
               )}
               <p className="text-xs text-muted-foreground">
-                Dein Anzeigename kann einmal pro Monat geändert werden.
+                {t("profile.displayNameHint")}
               </p>
             </div>
 
             {/* Email (read-only) */}
             <div className="space-y-2">
-              <Label>E-Mail</Label>
+              <Label>{t("profile.email")}</Label>
               <Input value={user.email || ""} disabled className="opacity-70" />
             </div>
 
             {/* User ID (read-only) */}
             <div className="space-y-2">
-              <Label>Deine User-ID</Label>
+              <Label>{t("profile.userId")}</Label>
               <div className="flex items-center gap-2">
                 <Input 
                   value={user.id} 
@@ -482,20 +484,20 @@ export function ProfileMenu() {
                   className="shrink-0"
                   onClick={async () => {
                     await navigator.clipboard.writeText(user.id);
-                    toast.success("User-ID kopiert!");
+                    toast.success(t("profile.userIdCopied"));
                   }}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Für Support-Anfragen oder zur Identifikation
+                {t("profile.userIdHint")}
               </p>
             </div>
 
             {/* Subscription Status */}
             <div className="space-y-2">
-              <Label>Abo-Status</Label>
+              <Label>{t("profile.subStatus")}</Label>
               <div className={cn(
                 "p-3 rounded-lg border",
                 expirationInfo.warning 
@@ -512,25 +514,25 @@ export function ProfileMenu() {
                   </span>
                   {isPremium && !expirationInfo.warning && (
                     <span className="text-xs px-2 py-1 rounded-full bg-primary/20 text-primary">
-                      Aktiv
+                      {t("profile.active")}
                     </span>
                   )}
                   {expirationInfo.warning && (
                     <span className="text-xs px-2 py-1 rounded-full bg-destructive/20 text-destructive flex items-center gap-1">
                       <AlertTriangle className="w-3 h-3" />
-                      Läuft bald ab
+                      {t("profile.expiresSoon")}
                     </span>
                   )}
                 </div>
                 {expirationInfo.warning && subscriptionType === "premium" && (
                   <p className="text-sm text-destructive mt-2 flex items-center gap-1">
                     <AlertTriangle className="w-4 h-4" />
-                    Dein Abo läuft in {expirationInfo.daysLeft} {expirationInfo.daysLeft === 1 ? "Tag" : "Tagen"} ab!
+                    {t("profile.expiresIn")} {expirationInfo.daysLeft} {expirationInfo.daysLeft === 1 ? t("profile.day") : t("profile.days")} {t("profile.expiresInDays")}
                   </p>
                 )}
                 {subscriptionEnd && subscriptionType === "premium" && !expirationInfo.warning && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Verlängert am: {new Date(subscriptionEnd).toLocaleDateString("de-DE", {
+                    {t("profile.renewsAt")} {new Date(subscriptionEnd).toLocaleDateString(language === "en" ? "en-GB" : "de-DE", {
                       day: "2-digit",
                       month: "long",
                       year: "numeric"
@@ -539,12 +541,12 @@ export function ProfileMenu() {
                 )}
                 {subscriptionType === "lifetime" && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Unbegrenzte Laufzeit
+                    {t("profile.unlimitedDuration")}
                   </p>
                 )}
                 {!isPremium && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    Upgrade für alle Premium-Features
+                    {t("profile.upgradeHint")}
                   </p>
                 )}
               </div>
@@ -590,7 +592,7 @@ export function ProfileMenu() {
               className="w-full text-muted-foreground"
             >
               <Gift className="w-4 h-4 mr-2" />
-              Promocode einlösen
+              {t("profile.redeemCode")}
             </Button>
 
             <Button 
@@ -601,10 +603,10 @@ export function ProfileMenu() {
               {isSavingProfile ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Speichern...
+                  {t("common.saving")}
                 </>
               ) : (
-                "Speichern"
+                t("common.save")
               )}
             </Button>
 
@@ -620,7 +622,7 @@ export function ProfileMenu() {
                 className="w-full"
               >
                 <CreditCard className="w-4 h-4 mr-2" />
-                Abo verwalten
+                {t("profile.manageSub")}
               </Button>
             )}
 
@@ -637,7 +639,7 @@ export function ProfileMenu() {
                   className="flex-1 text-muted-foreground"
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  Widerrufsrecht
+                  {t("profile.refund")}
                 </Button>
                 <Button
                   variant="ghost"
@@ -648,7 +650,7 @@ export function ProfileMenu() {
                   }}
                   className="flex-1 text-muted-foreground"
                 >
-                  Anträge ansehen
+                  {t("profile.viewRequests")}
                 </Button>
               </div>
             )}
@@ -657,7 +659,7 @@ export function ProfileMenu() {
             {isPremium && isAdminGranted && (
               <div className="flex items-center justify-center gap-2 py-2 px-3 rounded-lg bg-primary/10 border border-primary/20 text-sm text-primary">
                 <Shield className="w-4 h-4" />
-                <span>Von Admin vergeben</span>
+                <span>{t("profile.adminGranted")}</span>
               </div>
             )}
 
@@ -671,7 +673,7 @@ export function ProfileMenu() {
               className="w-full text-muted-foreground hover:text-destructive"
             >
               <Trash2 className="w-4 h-4 mr-2" />
-              Konto löschen
+              {t("profile.deleteAccount")}
             </Button>
           </div>
         </DialogContent>
@@ -681,29 +683,29 @@ export function ProfileMenu() {
       <AlertDialog open={deleteAccountOpen} onOpenChange={setDeleteAccountOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Konto löschen anfordern</AlertDialogTitle>
+            <AlertDialogTitle>{t("profile.deleteAccountTitle")}</AlertDialogTitle>
             <AlertDialogDescription className="space-y-3">
               <span className="block">
-                Wir senden dir eine Bestätigungs-E-Mail an <strong>{user?.email}</strong>.
+                {t("profile.deleteAccountDesc1")} <strong>{user?.email}</strong>.
               </span>
               <span className="block">
-                Klicke auf den Link in der E-Mail und gib dein Passwort ein, um die Löschung endgültig zu bestätigen.
+                {t("profile.deleteAccountDesc2")}
               </span>
               {isPremium && subscriptionType === "premium" && (
                 <span className="block mt-2 text-destructive font-medium">
-                  Hinweis: Dein aktives Abo wird separat über Stripe gekündigt.
+                  {t("profile.deleteAccountSubHint")}
                 </span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSendingDeleteEmail}>Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel disabled={isSendingDeleteEmail}>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleRequestDeletion}
               disabled={isSendingDeleteEmail}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isSendingDeleteEmail ? "Wird gesendet..." : "Bestätigungs-E-Mail senden"}
+              {isSendingDeleteEmail ? t("profile.sendingEmail") : t("profile.sendConfirmEmail")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -713,15 +715,15 @@ export function ProfileMenu() {
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Design anpassen</DialogTitle>
+            <DialogTitle>{t("profile.settings")}</DialogTitle>
             <DialogDescription>
-              Personalisiere das Aussehen der App
+              {t("profile.settingsDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
             {/* Theme Toggle */}
             <div className="space-y-2">
-              <Label>Modus</Label>
+              <Label>{t("profile.mode")}</Label>
               <div className="flex gap-2">
                 <Button
                   variant={theme === "dark" ? "default" : "outline"}
@@ -729,7 +731,7 @@ export function ProfileMenu() {
                   onClick={() => setTheme("dark")}
                 >
                   <Moon className="w-4 h-4 mr-2" />
-                  Dunkel
+                  {t("profile.dark")}
                 </Button>
                 <Button
                   variant={theme === "light" ? "default" : "outline"}
@@ -737,14 +739,14 @@ export function ProfileMenu() {
                   onClick={() => setTheme("light")}
                 >
                   <Sun className="w-4 h-4 mr-2" />
-                  Hell
+                  {t("profile.light")}
                 </Button>
               </div>
             </div>
 
             {/* Accent Color */}
             <div className="space-y-2">
-              <Label>Akzentfarbe</Label>
+              <Label>{t("profile.accentColor")}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {ACCENT_COLORS.map((color) => (
                   <button
@@ -771,7 +773,7 @@ export function ProfileMenu() {
 
             {/* Background Style */}
             <div className="space-y-2">
-              <Label>Hintergrund</Label>
+              <Label>{t("profile.background")}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {(theme === "dark" ? BACKGROUND_STYLES_DARK : BACKGROUND_STYLES_LIGHT).map((bg) => (
                   <button
