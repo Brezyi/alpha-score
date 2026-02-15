@@ -1,17 +1,11 @@
 import { useState, useEffect } from "react";
 import { 
-  Calendar, 
-  Flame, 
-  TrendingUp, 
-  Trophy, 
-  Sparkles, 
-  Target,
-  ChevronRight,
-  Zap
+  Calendar, Flame, TrendingUp, Trophy, Sparkles, Target, ChevronRight, Zap
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -37,6 +31,7 @@ interface WeeklySummaryCardProps {
 
 export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: WeeklySummaryCardProps) {
   const { user } = useAuth();
+  const { t, language } = useLanguage();
   const [stats, setStats] = useState<WeeklyStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +43,6 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
       }
 
       try {
-        // Calculate week boundaries (Monday to Sunday)
         const now = new Date();
         const dayOfWeek = now.getDay();
         const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
@@ -61,9 +55,7 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
         weekEnd.setDate(weekStart.getDate() + 6);
         weekEnd.setHours(23, 59, 59, 999);
 
-        // Fetch all data in parallel
         const [analysesRes, achievementsRes, challengesRes] = await Promise.all([
-          // Analyses this week
           supabase
             .from("analyses")
             .select("looks_score, created_at")
@@ -72,16 +64,12 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
             .gte("created_at", weekStart.toISOString())
             .lte("created_at", weekEnd.toISOString())
             .order("created_at", { ascending: true }),
-          
-          // Achievements unlocked this week
           supabase
             .from("user_achievements")
             .select("id")
             .eq("user_id", user.id)
             .gte("unlocked_at", weekStart.toISOString())
             .lte("unlocked_at", weekEnd.toISOString()),
-          
-          // Challenges completed this week
           supabase
             .from("user_challenge_progress")
             .select("id")
@@ -91,7 +79,6 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
             .lte("completed_at", weekEnd.toISOString()),
         ]);
 
-        // Calculate score change
         let scoreChange: number | null = null;
         const analyses = analysesRes.data || [];
         if (analyses.length >= 2) {
@@ -102,7 +89,6 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
           }
         }
 
-        // Estimate XP earned this week (simplified calculation)
         const xpFromAnalyses = analyses.length * 50;
         const xpFromChallenges = (challengesRes.data?.length || 0) * 25;
         const xpFromAchievements = (achievementsRes.data?.length || 0) * 100;
@@ -147,13 +133,13 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
   if (!stats) return null;
 
   const formatDateRange = () => {
+    const locale = language === "en" ? "en-GB" : "de-DE";
     const options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
-    const start = stats.weekStart.toLocaleDateString("de-DE", options);
-    const end = stats.weekEnd.toLocaleDateString("de-DE", options);
+    const start = stats.weekStart.toLocaleDateString(locale, options);
+    const end = stats.weekEnd.toLocaleDateString(locale, options);
     return `${start} - ${end}`;
   };
 
-  // Calculate week progress (0-100%)
   const now = new Date();
   const weekProgress = Math.min(
     100,
@@ -164,27 +150,9 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
   );
 
   const highlights = [
-    {
-      icon: Target,
-      label: "Analysen",
-      value: stats.analysesCompleted,
-      color: "text-blue-500",
-      bgColor: "bg-blue-500/10",
-    },
-    {
-      icon: Flame,
-      label: "Streak",
-      value: `${stats.streakDays}d`,
-      color: "text-orange-500",
-      bgColor: "bg-orange-500/10",
-    },
-    {
-      icon: Zap,
-      label: "XP",
-      value: `+${stats.xpEarned}`,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-    },
+    { icon: Target, label: t("weekly.analyses"), value: stats.analysesCompleted, color: "text-blue-500", bgColor: "bg-blue-500/10" },
+    { icon: Flame, label: "Streak", value: `${stats.streakDays}d`, color: "text-orange-500", bgColor: "bg-orange-500/10" },
+    { icon: Zap, label: "XP", value: `+${stats.xpEarned}`, color: "text-primary", bgColor: "bg-primary/10" },
   ];
 
   return (
@@ -192,32 +160,24 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Calendar className="w-5 h-5 text-primary" />
-          <h3 className="font-bold">Wochenrückblick</h3>
+          <h3 className="font-bold">{t("weekly.review")}</h3>
         </div>
         <Badge variant="outline" className="text-xs">
           {formatDateRange()}
         </Badge>
       </div>
 
-      {/* Week Progress */}
       <div className="mb-4">
         <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-          <span>Woche</span>
+          <span>{t("weekly.week")}</span>
           <span>{weekProgress}%</span>
         </div>
         <Progress value={weekProgress} className="h-1.5" />
       </div>
 
-      {/* Highlight Stats */}
       <div className="grid grid-cols-3 gap-3 mb-4">
         {highlights.map((item) => (
-          <div 
-            key={item.label}
-            className={cn(
-              "p-3 rounded-xl text-center",
-              item.bgColor
-            )}
-          >
+          <div key={item.label} className={cn("p-3 rounded-xl text-center", item.bgColor)}>
             <item.icon className={cn("w-5 h-5 mx-auto mb-1", item.color)} />
             <p className="text-lg font-bold">{item.value}</p>
             <p className="text-[10px] text-muted-foreground">{item.label}</p>
@@ -225,29 +185,21 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
         ))}
       </div>
 
-      {/* Score Change */}
       {stats.scoreChange !== null && (
         <div className={cn(
           "p-3 rounded-xl mb-4 flex items-center justify-between",
           stats.scoreChange > 0 ? "bg-emerald-500/10" : stats.scoreChange < 0 ? "bg-red-500/10" : "bg-muted/50"
         )}>
           <div className="flex items-center gap-2">
-            <TrendingUp className={cn(
-              "w-5 h-5",
-              stats.scoreChange > 0 ? "text-emerald-500" : stats.scoreChange < 0 ? "text-red-500" : "text-muted-foreground"
-            )} />
-            <span className="text-sm font-medium">Score-Entwicklung</span>
+            <TrendingUp className={cn("w-5 h-5", stats.scoreChange > 0 ? "text-emerald-500" : stats.scoreChange < 0 ? "text-red-500" : "text-muted-foreground")} />
+            <span className="text-sm font-medium">{t("weekly.scoreChange")}</span>
           </div>
-          <span className={cn(
-            "font-bold",
-            stats.scoreChange > 0 ? "text-emerald-500" : stats.scoreChange < 0 ? "text-red-500" : "text-muted-foreground"
-          )}>
+          <span className={cn("font-bold", stats.scoreChange > 0 ? "text-emerald-500" : stats.scoreChange < 0 ? "text-red-500" : "text-muted-foreground")}>
             {stats.scoreChange > 0 ? "+" : ""}{stats.scoreChange}
           </span>
         </div>
       )}
 
-      {/* Achievements & Challenges */}
       {(stats.achievementsUnlocked > 0 || stats.challengesCompleted > 0) && (
         <div className="flex items-center gap-2 flex-wrap">
           {stats.achievementsUnlocked > 0 && (
@@ -267,7 +219,7 @@ export function WeeklySummaryCard({ currentStreak, currentXp, isPremium }: Weekl
 
       <Link to="/progress" className="block mt-4">
         <Button variant="ghost" size="sm" className="w-full text-xs">
-          Vollständigen Fortschritt ansehen
+          {t("weekly.viewFullProgress")}
           <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </Link>

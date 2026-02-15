@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useFriends } from "@/hooks/useFriends";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ interface FriendScoreData {
   displayName: string;
   avatarUrl: string | null;
   showScore: "none" | "delta_only" | "full";
-  scoreDelta: number | null; // Score change in last 30 days
+  scoreDelta: number | null;
   currentScore: number | null;
   rank: number;
 }
@@ -27,6 +28,7 @@ interface FriendComparisonWidgetProps {
 
 export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComparisonWidgetProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const { friends, loading: friendsLoading } = useFriends();
   const [friendScores, setFriendScores] = useState<FriendScoreData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,7 +41,6 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
       }
 
       try {
-        // Get friend IDs who allow score sharing
         const friendsWithScoreAccess = friends.filter(
           f => f.privacy_settings.show_score !== "none"
         );
@@ -51,8 +52,6 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
         }
 
         const friendIds = friendsWithScoreAccess.map(f => f.user_id);
-
-        // Fetch analyses from last 30 days for these friends
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -66,32 +65,26 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
 
         if (error) throw error;
 
-        // Calculate score deltas for each friend
         const scoreDataMap = new Map<string, { scores: number[]; dates: Date[] }>();
         
         analysesData?.forEach(analysis => {
           if (analysis.looks_score === null) return;
-          
           if (!scoreDataMap.has(analysis.user_id)) {
             scoreDataMap.set(analysis.user_id, { scores: [], dates: [] });
           }
-          
           const data = scoreDataMap.get(analysis.user_id)!;
           data.scores.push(analysis.looks_score);
           data.dates.push(new Date(analysis.created_at));
         });
 
-        // Build friend score data
-        const friendScoreData: FriendScoreData[] = friendsWithScoreAccess.map((friend, index) => {
+        const friendScoreData: FriendScoreData[] = friendsWithScoreAccess.map((friend) => {
           const scoreData = scoreDataMap.get(friend.user_id);
           let scoreDelta: number | null = null;
           let currentScore: number | null = null;
 
           if (scoreData && scoreData.scores.length >= 2) {
-            const firstScore = scoreData.scores[0];
-            const lastScore = scoreData.scores[scoreData.scores.length - 1];
-            scoreDelta = Number((lastScore - firstScore).toFixed(1));
-            currentScore = lastScore;
+            scoreDelta = Number((scoreData.scores[scoreData.scores.length - 1] - scoreData.scores[0]).toFixed(1));
+            currentScore = scoreData.scores[scoreData.scores.length - 1];
           } else if (scoreData && scoreData.scores.length === 1) {
             currentScore = scoreData.scores[0];
             scoreDelta = 0;
@@ -99,25 +92,21 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
 
           return {
             friendId: friend.user_id,
-            displayName: friend.display_name || "Freund",
+            displayName: friend.display_name || t("friendComp.friend"),
             avatarUrl: friend.avatar_url,
             showScore: friend.privacy_settings.show_score,
             scoreDelta,
             currentScore,
-            rank: 0, // Will be calculated below
+            rank: 0,
           };
         });
 
-        // Sort by delta (highest improvement first) and assign ranks
         const sortedData = friendScoreData
           .filter(f => f.scoreDelta !== null)
           .sort((a, b) => (b.scoreDelta || 0) - (a.scoreDelta || 0));
 
-        sortedData.forEach((f, i) => {
-          f.rank = i + 1;
-        });
-
-        setFriendScores(sortedData.slice(0, 5)); // Top 5
+        sortedData.forEach((f, i) => { f.rank = i + 1; });
+        setFriendScores(sortedData.slice(0, 5));
       } catch (error) {
         console.error("Error fetching friend scores:", error);
       } finally {
@@ -128,41 +117,31 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
     if (!friendsLoading) {
       fetchFriendScores();
     }
-  }, [user, friends, friendsLoading]);
+  }, [user, friends, friendsLoading, t]);
 
-  // Calculate user's rank among friends
   const userRank = useMemo(() => {
     if (userScoreDelta === null) return null;
-    
     const allDeltas = [...friendScores.map(f => f.scoreDelta || 0), userScoreDelta];
     allDeltas.sort((a, b) => b - a);
     return allDeltas.indexOf(userScoreDelta) + 1;
   }, [friendScores, userScoreDelta]);
 
-  // Create sorted list combining user and friends by rank
   const sortedRankings = useMemo(() => {
     const userEntry = {
-      id: "user",
-      isUser: true as const,
-      displayName: "Du",
+      id: "user", isUser: true as const,
+      displayName: t("friendComp.you"),
       avatarUrl: null as string | null,
       scoreDelta: userScoreDelta,
       showScore: "full" as const,
       rank: userRank || 999,
     };
-
     const friendEntries = friendScores.map(f => ({
-      id: f.friendId,
-      isUser: false as const,
-      displayName: f.displayName,
-      avatarUrl: f.avatarUrl,
-      scoreDelta: f.scoreDelta,
-      showScore: f.showScore,
-      rank: f.rank,
+      id: f.friendId, isUser: false as const,
+      displayName: f.displayName, avatarUrl: f.avatarUrl,
+      scoreDelta: f.scoreDelta, showScore: f.showScore, rank: f.rank,
     }));
-
     return [...friendEntries, userEntry].sort((a, b) => a.rank - b.rank);
-  }, [friendScores, userScoreDelta, userRank]);
+  }, [friendScores, userScoreDelta, userRank, t]);
 
   if (friendsLoading || loading) {
     return (
@@ -184,22 +163,19 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
     );
   }
 
-  // No friends yet
   if (friends.length === 0) {
     return (
       <div className="p-5 rounded-2xl glass-card">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-primary" />
-          <h3 className="font-bold">Freunde-Vergleich</h3>
+          <h3 className="font-bold">{t("friendComp.title")}</h3>
         </div>
         <div className="text-center py-6">
           <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2 opacity-50" />
-          <p className="text-sm text-muted-foreground mb-3">
-            Füge Freunde hinzu, um eure Fortschritte zu vergleichen
-          </p>
+          <p className="text-sm text-muted-foreground mb-3">{t("friendComp.addFriends")}</p>
           <Link to="/friends">
             <Button variant="outline" size="sm">
-              Freunde finden
+              {t("friendComp.findFriends")}
               <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </Link>
@@ -208,17 +184,14 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
     );
   }
 
-  // No scores to compare
   if (friendScores.length === 0) {
     return (
       <div className="p-5 rounded-2xl glass-card">
         <div className="flex items-center gap-2 mb-4">
           <Users className="w-5 h-5 text-primary" />
-          <h3 className="font-bold">Freunde-Vergleich</h3>
+          <h3 className="font-bold">{t("friendComp.title")}</h3>
         </div>
-        <p className="text-sm text-muted-foreground text-center py-4">
-          Noch keine Vergleichsdaten verfügbar
-        </p>
+        <p className="text-sm text-muted-foreground text-center py-4">{t("friendComp.noData")}</p>
       </div>
     );
   }
@@ -242,7 +215,7 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <Users className="w-5 h-5 text-primary" />
-          <h3 className="font-bold">Freunde-Vergleich</h3>
+          <h3 className="font-bold">{t("friendComp.title")}</h3>
         </div>
         {userRank && userRank <= 3 && (
           <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
@@ -252,56 +225,31 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground mb-4">
-        Score-Verbesserung der letzten 30 Tage
-      </p>
+      <p className="text-xs text-muted-foreground mb-4">{t("friendComp.last30Days")}</p>
 
       <div className="space-y-3">
         {sortedRankings.map((entry) => (
-          <div 
-            key={entry.id} 
-            className={cn(
-              "flex items-center gap-3 p-2 rounded-lg transition-colors",
-              entry.isUser 
-                ? "bg-primary/5 border border-primary/20" 
-                : "hover:bg-muted/50"
-            )}
-          >
-            <div className={cn(
-              "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold",
-              entry.isUser 
-                ? "bg-primary/20 text-primary" 
-                : "bg-muted text-muted-foreground"
-            )}>
+          <div key={entry.id} className={cn("flex items-center gap-3 p-2 rounded-lg transition-colors", entry.isUser ? "bg-primary/5 border border-primary/20" : "hover:bg-muted/50")}>
+            <div className={cn("w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold", entry.isUser ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground")}>
               {entry.rank}
             </div>
             {entry.isUser ? (
               <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <span className="text-xs font-bold text-primary">DU</span>
+                <span className="text-xs font-bold text-primary">{t("friendComp.you").toUpperCase().substring(0, 2)}</span>
               </div>
             ) : (
               <Avatar className="h-8 w-8">
                 <AvatarImage src={entry.avatarUrl || undefined} />
-                <AvatarFallback className="text-xs">
-                  {entry.displayName.charAt(0).toUpperCase()}
-                </AvatarFallback>
+                <AvatarFallback className="text-xs">{entry.displayName.charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
             )}
-            <span className={cn(
-              "font-medium text-sm flex-1 truncate",
-              entry.isUser && "text-primary"
-            )}>
-              {entry.displayName}
-            </span>
+            <span className={cn("font-medium text-sm flex-1 truncate", entry.isUser && "text-primary")}>{entry.displayName}</span>
             <div className="flex items-center gap-1">
               {entry.isUser || entry.showScore === "delta_only" || entry.showScore === "full" ? (
                 <>
                   {getDeltaIcon(entry.scoreDelta)}
                   <span className={cn("text-sm font-medium", getDeltaColor(entry.scoreDelta))}>
-                    {entry.scoreDelta !== null 
-                      ? `${entry.scoreDelta > 0 ? "+" : ""}${entry.scoreDelta}`
-                      : "-"
-                    }
+                    {entry.scoreDelta !== null ? `${entry.scoreDelta > 0 ? "+" : ""}${entry.scoreDelta}` : "-"}
                   </span>
                 </>
               ) : (
@@ -314,7 +262,7 @@ export function FriendComparisonWidget({ userScoreDelta, isPremium }: FriendComp
 
       <Link to="/friends" className="block mt-4">
         <Button variant="ghost" size="sm" className="w-full text-xs">
-          Alle Freunde ansehen
+          {t("friendComp.viewAll")}
           <ChevronRight className="w-4 h-4 ml-1" />
         </Button>
       </Link>
