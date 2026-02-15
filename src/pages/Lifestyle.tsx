@@ -1,32 +1,20 @@
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Crown, AlertTriangle, Droplets, Moon, CheckCircle2, Calculator, Camera, GlassWater, CalendarDays, Lightbulb } from "lucide-react";
+import { ArrowLeft, Crown, Moon, Droplets, CheckCircle2, AlertTriangle, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useLifestyle } from "@/hooks/useLifestyle";
 import { LifestyleTracker } from "@/components/lifestyle/LifestyleTracker";
 import { SupplementTracker } from "@/components/lifestyle/SupplementTracker";
 import { FastingTimer } from "@/components/lifestyle/FastingTimer";
-import { NutritionTracker } from "@/components/lifestyle/NutritionTracker";
-import { BodyMeasurementsTracker } from "@/components/lifestyle/BodyMeasurementsTracker";
-import { AdvancedStatistics } from "@/components/lifestyle/AdvancedStatistics";
 import { MoodTracker } from "@/components/lifestyle/MoodTracker";
-import { ActivityTracker } from "@/components/lifestyle/ActivityTracker";
-import { RecipeDatabase } from "@/components/lifestyle/RecipeDatabase";
-import { GroceryListTracker } from "@/components/lifestyle/GroceryListTracker";
-import { AIFoodScanner } from "@/components/lifestyle/AIFoodScanner";
 import { WaterTrackerAdvanced } from "@/components/lifestyle/WaterTrackerAdvanced";
-import { MealPlanner } from "@/components/lifestyle/MealPlanner";
-import { CalorieCalculator } from "@/components/lifestyle/CalorieCalculator";
 import { MotivationCard } from "@/components/lifestyle/MotivationCard";
-import { FoodSearch } from "@/components/lifestyle/FoodSearch";
 import { StepsCaloriesTracker } from "@/components/lifestyle/StepsCaloriesTracker";
-import { ProgressPhotosTracker } from "@/components/lifestyle/ProgressPhotosTracker";
 import { GoalCard } from "@/components/goals/GoalCard";
 import { WeeklyChallengeCard } from "@/components/challenges/WeeklyChallengeCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Lock, UtensilsCrossed, Timer, Ruler, BarChart3, Smile, Footprints, ChefHat, ShoppingCart } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,45 +29,37 @@ function HealthAlerts() {
   
   const alerts = [];
   
-  // Check sleep (less than 6 hours is warning)
   if (todayEntry?.sleep_hours && todayEntry.sleep_hours < 6) {
     alerts.push({
       type: "sleep",
       icon: Moon,
-      color: "text-indigo-400",
-      bgColor: "bg-indigo-500/10 border-indigo-500/20",
       message: `Nur ${todayEntry.sleep_hours}h geschlafen – gönn dir mehr Ruhe!`
     });
   }
   
-  // Check water (less than 1.5L is warning)
   if (todayEntry?.water_liters && todayEntry.water_liters < 1.5) {
     alerts.push({
       type: "water",
       icon: Droplets,
-      color: "text-cyan-400",
-      bgColor: "bg-cyan-500/10 border-cyan-500/20",
       message: `Nur ${todayEntry.water_liters}L getrunken – trink mehr Wasser!`
     });
   }
 
-  // Show positive message if everything is good
   if (todayEntry && alerts.length === 0 && todayEntry.sleep_hours && todayEntry.water_liters) {
     if (todayEntry.sleep_hours >= 7 && todayEntry.water_liters >= 2) {
       return (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
         >
-          <Card className="border-green-500/20 bg-green-500/5">
+          <Card className="border-success/20 bg-success/5">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-5 h-5 text-green-400" />
+                <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5 text-success" />
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-green-400">Alles im grünen Bereich!</p>
+                  <p className="text-sm font-medium text-success">Alles im grünen Bereich!</p>
                   <p className="text-xs text-muted-foreground">Du hast gut geschlafen und genug getrunken.</p>
                 </div>
               </div>
@@ -96,22 +76,16 @@ function HealthAlerts() {
     <motion.div
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-6 space-y-3"
+      className="space-y-3"
     >
       {alerts.map((alert) => (
-        <Card key={alert.type} className={cn("border", alert.bgColor)}>
+        <Card key={alert.type} className="border-warning/20 bg-warning/5">
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
-              <div className={cn("w-10 h-10 rounded-full flex items-center justify-center shrink-0", alert.bgColor)}>
-                <alert.icon className={cn("w-5 h-5", alert.color)} />
+              <div className="w-10 h-10 rounded-full bg-warning/10 flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-5 h-5 text-warning" />
               </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="text-xs font-medium text-amber-400">Achtung</span>
-                </div>
-                <p className="text-sm">{alert.message}</p>
-              </div>
+              <p className="text-sm">{alert.message}</p>
             </div>
           </CardContent>
         </Card>
@@ -204,9 +178,9 @@ export default function Lifestyle() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container max-w-6xl mx-auto px-4 py-8">
+      <div className="container max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-8">
           <Link to="/dashboard" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" />
             Dashboard
@@ -217,179 +191,61 @@ export default function Lifestyle() {
           </div>
         </div>
 
-        <motion.div className="mb-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl font-bold mb-1">Lifestyle Tracker</h1>
-          <p className="text-sm text-muted-foreground">Tracke Schlaf, Ernährung, Körpermaße & mehr</p>
+        <motion.div className="mb-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+          <h1 className="text-2xl font-bold mb-1">Tägliches Tracking</h1>
+          <p className="text-sm text-muted-foreground">Tracke deine täglichen Gewohnheiten für bessere Ergebnisse</p>
         </motion.div>
 
-        {/* Tabs Navigation */}
-        <Tabs defaultValue="daily" className="space-y-6">
-          <TabsList data-tour="lifestyle-tabs" className="grid w-full grid-cols-4 lg:grid-cols-7 h-auto gap-1">
-            <TabsTrigger value="daily" className="flex flex-col gap-1 py-2">
-              <Moon className="h-4 w-4" />
-              <span className="text-xs">Tägliches</span>
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="flex flex-col gap-1 py-2">
-              <Footprints className="h-4 w-4" />
-              <span className="text-xs">Aktivität</span>
-            </TabsTrigger>
-            <TabsTrigger value="nutrition" className="flex flex-col gap-1 py-2">
-              <UtensilsCrossed className="h-4 w-4" />
-              <span className="text-xs">Ernährung</span>
-            </TabsTrigger>
-            <TabsTrigger value="recipes" className="flex flex-col gap-1 py-2">
-              <ChefHat className="h-4 w-4" />
-              <span className="text-xs">Rezepte</span>
-            </TabsTrigger>
-            <TabsTrigger value="grocery" className="flex flex-col gap-1 py-2">
-              <ShoppingCart className="h-4 w-4" />
-              <span className="text-xs">Einkauf</span>
-            </TabsTrigger>
-            <TabsTrigger value="body" className="flex flex-col gap-1 py-2">
-              <Ruler className="h-4 w-4" />
-              <span className="text-xs">Körper</span>
-            </TabsTrigger>
-            <TabsTrigger value="stats" className="flex flex-col gap-1 py-2">
-              <BarChart3 className="h-4 w-4" />
-              <span className="text-xs">Statistik</span>
-            </TabsTrigger>
-          </TabsList>
+        {/* Clean single-column daily content */}
+        <div className="space-y-6">
+          {/* Weekly Tracker */}
+          <motion.div data-tour="main-tracker" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <LifestyleTracker onDateChange={setSelectedDate} />
+          </motion.div>
 
-          {/* Daily Tracking Tab */}
-          <TabsContent value="daily" className="space-y-6">
-            {/* Weekly Tracker - Date Selection First */}
-            <motion.div data-tour="main-tracker" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <LifestyleTracker onDateChange={setSelectedDate} />
+          {/* Health Alerts */}
+          <HealthAlerts />
+
+          {/* Motivation */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+            <MotivationCard />
+          </motion.div>
+
+          {/* Steps & Calories */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+            <StepsCaloriesTracker selectedDate={selectedDate} />
+          </motion.div>
+
+          {/* Mood */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <MoodTracker selectedDate={selectedDate} />
+          </motion.div>
+
+          {/* Water & Fasting */}
+          <div className="grid md:grid-cols-2 gap-6 auto-rows-fr">
+            <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <WaterTrackerAdvanced />
             </motion.div>
-
-            {/* Health Alerts */}
-            <HealthAlerts />
-
-            {/* Motivation Tip */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-              <MotivationCard />
-            </motion.div>
-
-            {/* Steps & Calories Tracker */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-            >
-              <StepsCaloriesTracker selectedDate={selectedDate} />
-            </motion.div>
-
-            {/* Mood Tracker */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-              <MoodTracker selectedDate={selectedDate} />
-            </motion.div>
-
-            {/* Water & Fasting Row */}
-            <div className="grid md:grid-cols-2 gap-6 auto-rows-fr">
-              <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                <WaterTrackerAdvanced />
-              </motion.div>
-              
-              <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                <FastingTimer />
-              </motion.div>
-            </div>
-
-            {/* Supplements */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-              <SupplementTracker selectedDate={selectedDate} />
-            </motion.div>
-
-            {/* Goals & Challenges */}
-            <div className="grid md:grid-cols-2 gap-6 auto-rows-fr">
-              <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-                <GoalCard currentScore={currentScore} />
-              </motion.div>
-              
-              <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                <WeeklyChallengeCard />
-              </motion.div>
-            </div>
-          </TabsContent>
-
-
-          {/* Activity Tab */}
-          <TabsContent value="activity" className="space-y-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <StepsCaloriesTracker selectedDate={selectedDate} />
-            </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <ActivityTracker />
-            </motion.div>
-          </TabsContent>
-
-          {/* Nutrition Tab */}
-          <TabsContent value="nutrition" className="space-y-6">
-            {/* AI Scanner & Food Search */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-                <AIFoodScanner />
-              </motion.div>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-                <Card>
-                  <CardContent className="p-4">
-                    <FoodSearch mealType="lunch" />
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </div>
-            
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <NutritionTracker />
-            </motion.div>
-
-            {/* Meal Planner & Calorie Calculator */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-                <MealPlanner />
-              </motion.div>
-              
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                <CalorieCalculator />
-              </motion.div>
-            </div>
-            
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+            <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
               <FastingTimer />
             </motion.div>
-          </TabsContent>
+          </div>
 
-          {/* Recipes Tab */}
-          <TabsContent value="recipes" className="space-y-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <RecipeDatabase />
-            </motion.div>
-          </TabsContent>
+          {/* Supplements */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+            <SupplementTracker selectedDate={selectedDate} />
+          </motion.div>
 
-          {/* Grocery List Tab */}
-          <TabsContent value="grocery" className="space-y-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <GroceryListTracker />
+          {/* Goals & Challenges */}
+          <div className="grid md:grid-cols-2 gap-6 auto-rows-fr">
+            <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
+              <GoalCard currentScore={currentScore} />
             </motion.div>
-          </TabsContent>
-
-          {/* Body Measurements Tab */}
-          <TabsContent value="body" className="space-y-6">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <BodyMeasurementsTracker />
+            <motion.div className="h-full [&>div]:h-full" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+              <WeeklyChallengeCard />
             </motion.div>
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-              <ProgressPhotosTracker />
-            </motion.div>
-          </TabsContent>
-
-          {/* Statistics Tab */}
-          <TabsContent value="stats">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <AdvancedStatistics />
-            </motion.div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </div>
       </div>
     </div>
   );
