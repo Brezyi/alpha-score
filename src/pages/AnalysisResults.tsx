@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -42,6 +43,7 @@ export default function AnalysisResults() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const [analysis, setAnalysis] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -157,7 +159,7 @@ export default function AnalysisResults() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Analyse wird geladen...</p>
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -178,11 +180,11 @@ export default function AnalysisResults() {
 
   if (isProcessing) {
     const analysisSteps = [
-      { label: "Gesichtserkennung", icon: "👁️" },
-      { label: "Symmetrie-Analyse", icon: "📐" },
-      { label: "Proportionen messen", icon: "📏" },
-      { label: "Merkmale bewerten", icon: "✨" },
-      { label: "Potenzial berechnen", icon: "🎯" },
+      { label: t("results.step1"), icon: "👁️" },
+      { label: t("results.step2"), icon: "📐" },
+      { label: t("results.step3"), icon: "📏" },
+      { label: t("results.step4"), icon: "✨" },
+      { label: t("results.step5"), icon: "🎯" },
     ];
 
     return (
@@ -316,7 +318,7 @@ export default function AnalysisResults() {
             animate={{ backgroundPosition: ["0%", "200%"] }}
             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
           >
-            KI analysiert deine Fotos
+            {t("results.processing")}
           </motion.h2>
           
           {/* Analysis steps */}
@@ -365,7 +367,7 @@ export default function AnalysisResults() {
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}
           >
-            Dies kann bis zu 30 Sekunden dauern...
+            {t("results.waitMessage")}
           </motion.p>
           
           <motion.div 
@@ -380,7 +382,7 @@ export default function AnalysisResults() {
             >
               <RefreshCw className="w-3 h-3" />
             </motion.div>
-            <span>Automatische Aktualisierung aktiv</span>
+            <span>{t("common.refresh")}</span>
           </motion.div>
         </div>
       </div>
@@ -390,7 +392,7 @@ export default function AnalysisResults() {
   // Handle validation_failed status (face not detected)
   if (analysis?.status === 'validation_failed') {
     const validationError = (analysis.detailed_results as any)?.validation_error || 
-      "Kein Gesicht erkannt. Bitte lade ein klares Foto deines Gesichts hoch (frontal, gute Beleuchtung).";
+      t("results.validationError");
     
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -398,7 +400,7 @@ export default function AnalysisResults() {
           <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
             <AlertTriangle className="w-10 h-10 text-warning" />
           </div>
-          <h2 className="text-xl font-bold mb-2">Foto nicht geeignet</h2>
+          <h2 className="text-xl font-bold mb-2">{t("results.validationFailed")}</h2>
           <p className="text-muted-foreground mb-6">
             {validationError}
           </p>
@@ -408,24 +410,23 @@ export default function AnalysisResults() {
             <CardContent className="p-4">
               <p className="font-medium text-sm mb-2 flex items-center gap-2">
                 <Camera className="w-4 h-4 text-primary" />
-                Tipps für ein gutes Foto:
+                {t("upload.tipsTitle")}
               </p>
               <ul className="text-sm text-muted-foreground space-y-1">
-                <li>• Frontale Aufnahme, Blick in die Kamera</li>
-                <li>• Gute Beleuchtung (Tageslicht ideal)</li>
-                <li>• Keine Sonnenbrille oder Maske</li>
-                <li>• Gesicht sollte gut sichtbar sein</li>
-                <li>• Scharfes, nicht verschwommenes Bild</li>
+                <li>• {t("upload.tip1")}</li>
+                <li>• {t("upload.tip2")}</li>
+                <li>• {t("upload.tip3")}</li>
+                <li>• {t("upload.tip4")}</li>
               </ul>
             </CardContent>
           </Card>
           
           <Button onClick={() => navigate("/upload")} variant="hero" size="lg" className="w-full">
             <Camera className="w-5 h-5" />
-            Neues Foto hochladen
+            {t("skin.retry")}
           </Button>
           <p className="text-xs text-muted-foreground mt-3">
-            Keine Kosten entstanden – versuche es einfach erneut
+            {t("results.noCostRetry")}
           </p>
         </div>
       </div>
@@ -439,12 +440,12 @@ export default function AnalysisResults() {
           <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
             <Target className="w-8 h-8 text-destructive" />
           </div>
-          <h2 className="text-xl font-bold mb-2">Analyse fehlgeschlagen</h2>
+          <h2 className="text-xl font-bold mb-2">{t("skin.error")}</h2>
           <p className="text-muted-foreground mb-6">
-            Leider konnte die Analyse nicht abgeschlossen werden. Bitte versuche es erneut.
+            {t("results.failedDesc")}
           </p>
           <Button onClick={() => navigate("/upload")} variant="hero">
-            Erneut versuchen
+            {t("common.retry")}
           </Button>
         </div>
       </div>
@@ -461,9 +462,9 @@ export default function AnalysisResults() {
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span>Zurück</span>
+            <span>{t("common.back")}</span>
           </button>
-          <h1 className="text-lg font-bold">Ergebnisse</h1>
+          <h1 className="text-lg font-bold">{t("results.title")}</h1>
           <div className="w-10" /> {/* Spacer for centering */}
         </div>
       </header>
@@ -533,7 +534,7 @@ export default function AnalysisResults() {
                 </motion.button>
               ))}
             </div>
-            <p className="text-center text-xs text-muted-foreground mt-2">Tippe auf ein Foto zum Vergrößern</p>
+            <p className="text-center text-xs text-muted-foreground mt-2">{t("results.tapToEnlarge")}</p>
           </motion.div>
         )}
 
@@ -599,7 +600,7 @@ export default function AnalysisResults() {
               <div className="grid md:grid-cols-2 gap-8 items-center">
                 {/* Circular Score Display */}
                 <div className="text-center">
-                  <div className="text-sm text-muted-foreground mb-3">Dein Looks Score</div>
+                  <div className="text-sm text-muted-foreground mb-3">{t("dashboard.score")}</div>
                   <div className="relative inline-flex items-center justify-center">
                     <svg className="w-40 h-40 transform -rotate-90">
                       <circle
@@ -640,7 +641,7 @@ export default function AnalysisResults() {
                       >
                         {analysis?.looks_score?.toFixed(1) || "?"}
                       </motion.span>
-                      <span className="text-xs text-muted-foreground">von 10</span>
+                      <span className="text-xs text-muted-foreground">{t("dashboard.outOf")} 10</span>
                     </div>
                   </div>
                 </div>
@@ -662,7 +663,7 @@ export default function AnalysisResults() {
                         >
                           <Zap className="w-5 h-5 text-primary" />
                         </motion.div>
-                        <span className="font-medium">Dein Potenzial</span>
+                        <span className="font-medium">{t("dashboard.potential_label")}</span>
                       </div>
                       <span className="text-2xl font-bold text-primary">
                         {analysis?.potential_score?.toFixed(1) || (analysis?.looks_score ? (Math.min(10, analysis.looks_score + 1.5)).toFixed(1) : "?")}
@@ -676,7 +677,7 @@ export default function AnalysisResults() {
                         transition={{ delay: 1 }}
                       >
                         <TrendingUp className="w-4 h-4" />
-                        <span>+{(analysis.potential_score - analysis.looks_score).toFixed(1)} Punkte möglich</span>
+                        <span>+{(analysis.potential_score - analysis.looks_score).toFixed(1)} {t("dashboard.pointsPossible")}</span>
                       </motion.div>
                     )}
                   </motion.div>
@@ -689,12 +690,12 @@ export default function AnalysisResults() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.7 }}
                     >
-                      <div className="text-lg font-bold text-foreground">
+                        <div className="text-lg font-bold text-foreground">
                         Top {Math.round((1 - (analysis?.looks_score || 0) / 10) * 100)}%
                       </div>
-                      <div className="text-xs text-muted-foreground">Ranking</div>
+                      <div className="text-xs text-muted-foreground">{t("dashboard.ranking")}</div>
                     </motion.div>
-                    <motion.div 
+                    <motion.div  
                       className="p-3 rounded-xl bg-muted/50 text-center"
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -705,7 +706,7 @@ export default function AnalysisResults() {
                           ? (analysis.potential_score - analysis.looks_score).toFixed(1) 
                           : "1.5"}
                       </div>
-                      <div className="text-xs text-muted-foreground">Potenzial</div>
+                      <div className="text-xs text-muted-foreground">{t("dashboard.potential_badge")}</div>
                     </motion.div>
                   </div>
                 </div>
@@ -717,7 +718,7 @@ export default function AnalysisResults() {
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.1 }}
               >
-                Dein persönlicher Ausgangswert und erreichbares Potenzial
+                {t("results.scoreDesc")}
               </motion.p>
             </CardContent>
           </Card>
@@ -729,12 +730,12 @@ export default function AnalysisResults() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Zap className="w-5 h-5 text-primary" />
-                <h2 className="font-semibold">Dein Potenzial</h2>
+                <h2 className="font-semibold">{t("results.potential")}</h2>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {/* Current Photo */}
                 <div>
-                  <p className="text-xs text-muted-foreground mb-2 text-center">Aktuell</p>
+                  <p className="text-xs text-muted-foreground mb-2 text-center">{t("progress.current")}</p>
                   <div className="aspect-square rounded-xl overflow-hidden border border-border">
                     {photoUrls[0] && (
                       <img 
@@ -749,7 +750,7 @@ export default function AnalysisResults() {
                 <div>
                   <p className="text-xs text-primary mb-2 text-center flex items-center justify-center gap-1">
                     <Sparkles className="w-3 h-3" />
-                    Potenzial
+                    {t("progress.potential")}
                   </p>
                   <div className="aspect-square rounded-xl overflow-hidden border-2 border-primary/40 relative">
                     <img 
@@ -776,12 +777,12 @@ export default function AnalysisResults() {
             <CardContent className="p-8 text-center">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
               <Zap className="w-10 h-10 text-primary mx-auto mb-3" />
-              <h3 className="font-semibold mb-2">KI-Potenzial-Vorschau</h3>
+              <h3 className="font-semibold mb-2">{t("results.potentialPreview")}</h3>
               <p className="text-sm text-muted-foreground mb-4">
-                Sieh, wie du mit optimaler Pflege und Styling aussehen könntest
+                {t("results.potentialPreviewDesc")}
               </p>
               <Lock className="w-6 h-6 text-muted-foreground mx-auto" />
-              <p className="text-xs text-muted-foreground mt-2">Premium-Feature</p>
+              <p className="text-xs text-muted-foreground mt-2">{t("common.premiumFeature")}</p>
             </CardContent>
           </Card>
         )}
@@ -790,7 +791,7 @@ export default function AnalysisResults() {
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold">Stärken</h2>
+            <h2 className="font-semibold">{t("results.strengths")}</h2>
           </div>
           {isPremium ? (
             <div className="space-y-2">
@@ -809,9 +810,9 @@ export default function AnalysisResults() {
             <Card className="bg-card border-border relative overflow-hidden">
               <CardContent className="p-8 text-center">
                 <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground mb-1">Premium-Feature</p>
+                <p className="text-muted-foreground mb-1">{t("common.premiumFeature")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Entsperre deine detaillierten Stärken
+                  {t("results.unlockStrengths")}
                 </p>
               </CardContent>
             </Card>
@@ -822,7 +823,7 @@ export default function AnalysisResults() {
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
             <TrendingDown className="w-5 h-5 text-destructive" />
-            <h2 className="font-semibold">Verbesserungspotenzial</h2>
+            <h2 className="font-semibold">{t("results.weaknesses")}</h2>
           </div>
           {isPremium ? (
             <div className="space-y-2">
@@ -841,9 +842,9 @@ export default function AnalysisResults() {
             <Card className="bg-card border-border relative overflow-hidden">
               <CardContent className="p-8 text-center">
                 <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground mb-1">Premium-Feature</p>
+                <p className="text-muted-foreground mb-1">{t("common.premiumFeature")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Entsperre detailliertes Verbesserungspotenzial
+                  {t("results.unlockWeaknesses")}
                 </p>
               </CardContent>
             </Card>
@@ -857,7 +858,7 @@ export default function AnalysisResults() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
         >
-          <h3 className="text-xl font-bold mb-4">Detaillierte Analyse</h3>
+          <h3 className="text-xl font-bold mb-4">{t("results.detailedResults")}</h3>
           {isPremium ? (
             <div className="space-y-4">
               {(() => {
@@ -893,7 +894,7 @@ export default function AnalysisResults() {
                 const featureScores = [
                   { 
                     key: "face_symmetry",
-                    label: "Gesichtssymmetrie", 
+                    label: t("plan.symmetry"), 
                     score: extractScore(detailedResults?.face_symmetry, Math.min(10, baseScore + 0.3)),
                     color: "bg-emerald-500",
                     iconBg: "bg-emerald-500/20",
@@ -904,7 +905,7 @@ export default function AnalysisResults() {
                   },
                   { 
                     key: "jawline",
-                    label: "Jawline Definition", 
+                    label: t("plan.jawline"), 
                     score: extractScore(detailedResults?.jawline, Math.min(10, baseScore - 0.2)),
                     color: "bg-blue-500",
                     iconBg: "bg-blue-500/20",
@@ -915,7 +916,7 @@ export default function AnalysisResults() {
                   },
                   { 
                     key: "eyes",
-                    label: "Augenbereich", 
+                    label: t("plan.eyes"), 
                     score: extractScore(detailedResults?.eyes || detailedResults?.eye_area, Math.min(10, baseScore + 0.5)),
                     color: "bg-purple-500",
                     iconBg: "bg-purple-500/20",
@@ -926,7 +927,7 @@ export default function AnalysisResults() {
                   },
                   { 
                     key: "skin",
-                    label: "Hautqualität", 
+                    label: t("plan.skin"), 
                     score: extractScore(detailedResults?.skin || detailedResults?.skin_quality, Math.min(10, baseScore - 0.5)),
                     color: "bg-orange-500",
                     iconBg: "bg-orange-500/20",
@@ -937,7 +938,7 @@ export default function AnalysisResults() {
                   },
                   { 
                     key: "hair",
-                    label: "Haare & Styling", 
+                    label: t("plan.hair"), 
                     score: extractScore(detailedResults?.hair || detailedResults?.hair_styling, Math.min(10, baseScore - 0.3)),
                     color: "bg-pink-500",
                     iconBg: "bg-pink-500/20",
@@ -948,7 +949,7 @@ export default function AnalysisResults() {
                   },
                   { 
                     key: "overall_vibe",
-                    label: "Ausstrahlung", 
+                    label: t("plan.charisma"), 
                     score: extractScore(detailedResults?.overall_vibe, Math.min(10, baseScore)),
                     color: "bg-amber-500",
                     iconBg: "bg-amber-500/20",
@@ -1031,7 +1032,7 @@ export default function AnalysisResults() {
                               <div className="space-y-1">
                                 <span className="text-xs font-medium text-muted-foreground flex items-center gap-1">
                                   <Info className="w-3 h-3" />
-                                  Verbesserungspotenzial:
+                                  {t("results.potential")}:
                                 </span>
                                 <ul className="text-xs text-muted-foreground space-y-0.5 pl-4">
                                   {item.issues.map((issue, i) => (
@@ -1052,9 +1053,9 @@ export default function AnalysisResults() {
             <Card className="bg-card border-border relative overflow-hidden">
               <CardContent className="p-8 text-center">
                 <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground mb-1">Premium-Feature</p>
+                <p className="text-muted-foreground mb-1">{t("common.premiumFeature")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Entsperre deine detaillierte Feature-Analyse
+                  {t("results.unlockDetails")}
                 </p>
               </CardContent>
             </Card>
@@ -1065,7 +1066,7 @@ export default function AnalysisResults() {
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Target className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold">Prioritäten</h2>
+            <h2 className="font-semibold">{t("results.priorities")}</h2>
           </div>
           {isPremium ? (
             <div className="space-y-2">
@@ -1084,9 +1085,9 @@ export default function AnalysisResults() {
             <Card className="bg-card border-border relative overflow-hidden">
               <CardContent className="p-8 text-center">
                 <Lock className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground mb-1">Premium-Feature</p>
+                <p className="text-muted-foreground mb-1">{t("common.premiumFeature")}</p>
                 <p className="text-sm text-muted-foreground">
-                  Entsperre deine persönliche Prioritätenliste
+                  {t("results.unlockPriorities")}
                 </p>
               </CardContent>
             </Card>
@@ -1098,9 +1099,9 @@ export default function AnalysisResults() {
           <Card className="bg-gradient-to-br from-primary/20 via-primary/10 to-card border-primary/30 mb-6">
             <CardContent className="p-6 text-center">
               <Crown className="w-12 h-12 text-primary mx-auto mb-4" />
-              <h3 className="text-xl font-bold mb-2">Entsperre alle Details</h3>
+              <h3 className="text-xl font-bold mb-2">{t("dashboard.unlockAll")}</h3>
               <p className="text-muted-foreground mb-6">
-                Erhalte Zugang zu deiner vollständigen Analyse, personalisierten Looksmax-Plan und AI Coach
+                {t("dashboard.unlockAllDesc")}
               </p>
               <Button 
                 variant="hero" 
@@ -1109,7 +1110,7 @@ export default function AnalysisResults() {
                 onClick={() => navigate("/pricing")}
               >
                 <Crown className="w-5 h-5" />
-                Premium freischalten
+                {t("dashboard.unlockPremium")}
               </Button>
               <p className="text-xs text-muted-foreground mt-3">
                 Ab 9,99€/Monat • Jederzeit kündbar
@@ -1124,7 +1125,7 @@ export default function AnalysisResults() {
           className="w-full"
           onClick={() => navigate("/dashboard")}
         >
-          Zurück zum Dashboard
+          {t("common.back")}
         </Button>
       </main>
     </div>
