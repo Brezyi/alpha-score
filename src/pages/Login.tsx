@@ -7,6 +7,7 @@ import { ScannerLogo } from "@/components/ScannerLogo";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { MFAVerification } from "@/components/MFAVerification";
@@ -66,6 +67,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
+  const { t } = useLanguage();
   const { settings } = useGlobalSettings();
   const { sendSecurityAlert } = useSecurityAlerts();
 
@@ -248,8 +250,8 @@ const Login = () => {
 
     if (rateLimitSeconds > 0) {
       toast({
-        title: "Zu viele Anfragen",
-        description: `Bitte warte ${formatTime(rateLimitSeconds)} und versuche es dann erneut.`,
+        title: t("login.tooManyRequests"),
+        description: t("login.waitAndRetry"),
         variant: "destructive",
       });
       return;
@@ -258,8 +260,8 @@ const Login = () => {
     // Check if account is locked
     if (isLocked) {
       toast({
-        title: "Konto gesperrt",
-        description: `Zu viele Fehlversuche. Bitte warte ${formatTime(lockoutSeconds)}.`,
+        title: t("login.accountLocked"),
+        description: `${t("login.tooManyAttempts")}. ${t("login.pleaseWait")} ${formatTime(lockoutSeconds)}.`,
         variant: "destructive",
       });
       return;
@@ -285,15 +287,15 @@ const Login = () => {
       
       if (!mfaRequired) {
         toast({
-          title: "Willkommen zurück!",
-          description: "Du wirst zum Dashboard weitergeleitet.",
+          title: t("login.welcomeBack"),
+          description: t("login.redirecting"),
         });
         navigate("/dashboard");
       }
     } catch (error: any) {
       // Check for email not confirmed error
-      let errorMessage = error.message || "Bitte überprüfe deine Eingaben.";
-      let errorTitle = "Anmeldung fehlgeschlagen";
+      let errorMessage = error.message || t("login.wrongCredentials");
+      let errorTitle = t("login.failed");
 
       const errorLower = error?.message?.toLowerCase?.() ?? "";
 
@@ -305,28 +307,26 @@ const Login = () => {
       ) {
         setRateLimitSeconds(90);
         toast({
-          title: "Zu viele Anfragen",
-          description: "Bitte warte 1-2 Minuten und versuche es dann erneut.",
+          title: t("login.tooManyRequests"),
+          description: t("login.tooManyRequestsDesc"),
           variant: "destructive",
         });
         return;
       }
       
       if (errorLower.includes("email not confirmed") || errorLower.includes("email confirmation")) {
-        errorTitle = "E-Mail nicht bestätigt";
-        errorMessage = "Bitte bestätige zuerst deine E-Mail-Adresse. Überprüfe deinen Posteingang.";
+        errorTitle = t("login.emailNotConfirmed");
+        errorMessage = t("login.emailNotConfirmedDesc");
         const normalized = normalizeEmail(email);
         if (normalized) {
           // Bring the user directly to the resend screen
           navigate(`/email-confirmation?email=${encodeURIComponent(normalized)}`);
         }
       } else if (isLocked) {
-        errorMessage = `Konto für ${formatTime(lockoutSeconds)} gesperrt.`;
+        errorMessage = `${t("login.lockedFor")} ${formatTime(lockoutSeconds)} ${t("login.locked")}`;
       } else if (errorLower.includes("invalid login credentials")) {
-        // IMPORTANT: Don't block the UI on helper RPCs here.
-        // If check_email_exists or record_failed_login gets slow/rate-limited, we still must stop the spinner.
-        errorTitle = "Anmeldung fehlgeschlagen";
-        errorMessage = "E-Mail oder Passwort ist falsch. Wenn du dein Passwort vergessen hast, nutze 'Vergessen?'.";
+        errorTitle = t("login.failed");
+        errorMessage = t("login.wrongCredentials");
 
         // Best-effort security tracking (non-blocking)
         void recordFailedAttempt(normalizeEmail(email));
@@ -361,8 +361,8 @@ const Login = () => {
       if (error) throw error;
     } catch (error: any) {
       toast({
-        title: "Google-Anmeldung fehlgeschlagen",
-        description: error.message || "Bitte versuche es erneut.",
+        title: t("login.googleFailed"),
+        description: error.message || t("common.retry"),
         variant: "destructive",
       });
       setGoogleLoading(false);
@@ -382,9 +382,9 @@ const Login = () => {
 
             {/* Header */}
             <div className="mb-8 text-center">
-              <h1 className="text-2xl font-bold mb-2">Willkommen zurück</h1>
+              <h1 className="text-2xl font-bold mb-2">{t("login.welcome")}</h1>
               <p className="text-muted-foreground text-sm">
-                Melde dich an, um fortzufahren
+                {t("login.subtitle")}
               </p>
             </div>
 
@@ -393,7 +393,7 @@ const Login = () => {
               <Alert variant="destructive" className="mb-6">
                 <AlertTriangle className="h-4 w-4" />
                 <AlertDescription>
-                  Dein Konto ist vorübergehend gesperrt. Bitte warte{" "}
+                  {t("login.accountLockedDesc")}{" "}
                   <span className="font-bold">{formatTime(lockoutSeconds)}</span>
                 </AlertDescription>
               </Alert>
@@ -404,7 +404,7 @@ const Login = () => {
               <Alert variant="default" className="mb-6 border-primary/30 bg-primary/5">
                 <AlertTriangle className="h-4 w-4 text-primary" />
                 <AlertDescription className="text-primary">
-                  {5 - failedAttempts} Versuche verbleibend
+                  {5 - failedAttempts} {t("login.attemptsRemaining")}
                 </AlertDescription>
               </Alert>
             )}
@@ -412,7 +412,7 @@ const Login = () => {
             {/* Form */}
             <form onSubmit={handleLogin} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email">E-Mail</Label>
+                <Label htmlFor="email">{t("login.email")}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                   <Input
@@ -432,9 +432,9 @@ const Login = () => {
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Passwort</Label>
+                  <Label htmlFor="password">{t("login.password")}</Label>
                   <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                    Vergessen?
+                    {t("login.forgot")}
                   </Link>
                 </div>
                 <div className="relative">
@@ -463,10 +463,10 @@ const Login = () => {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Anmelden...
+                    {t("login.submitting")}
                   </>
                 ) : (
-                  "Anmelden"
+                  t("login.submit")
                 )}
               </Button>
 
@@ -477,7 +477,7 @@ const Login = () => {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    oder
+                    {t("common.or")}
                   </span>
                 </div>
               </div>
@@ -494,12 +494,12 @@ const Login = () => {
                 {googleLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Verbinde...
+                    {t("login.googleConnecting")}
                   </>
                 ) : (
                   <>
                     <GoogleIcon />
-                    Mit Google anmelden
+                    {t("login.googleLogin")}
                   </>
                 )}
               </Button>
@@ -507,9 +507,9 @@ const Login = () => {
 
             {/* Register Link */}
             <p className="text-center text-muted-foreground mt-8 text-sm">
-              Noch kein Konto?{" "}
+              {t("login.noAccount")}{" "}
               <Link to="/register" className="text-primary hover:underline font-medium">
-                Jetzt registrieren
+                {t("login.register")}
               </Link>
             </p>
           </div>
@@ -520,11 +520,11 @@ const Login = () => {
           open={showMFADialog}
           onVerified={() => {
             setShowMFADialog(false);
-            toast({
-              title: "Willkommen zurück!",
-              description: "Du wirst zum Dashboard weitergeleitet.",
-            });
-            navigate("/dashboard");
+          toast({
+            title: t("login.welcomeBack"),
+            description: t("login.redirecting"),
+          });
+          navigate("/dashboard");
           }}
           onCancel={() => {
             setShowMFADialog(false);
@@ -546,7 +546,7 @@ const Login = () => {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
-            Zurück zur Startseite
+            {t("nav.backToHome")}
           </Link>
 
           {/* Logo */}
@@ -556,9 +556,9 @@ const Login = () => {
 
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Willkommen zurück</h1>
+            <h1 className="text-3xl font-bold mb-2">{t("login.welcome")}</h1>
             <p className="text-muted-foreground">
-              Melde dich an, um deinen Fortschritt zu tracken.
+              {t("login.subtitleDesktop")}
             </p>
           </div>
 
@@ -567,10 +567,10 @@ const Login = () => {
             <Alert variant="destructive" className="mb-6">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                Dein Konto ist vorübergehend gesperrt. Bitte warte{" "}
-                <span className="font-bold">{formatTime(lockoutSeconds)}</span> bevor du es erneut versuchst.
+                {t("login.accountLockedDesc")}{" "}
+                <span className="font-bold">{formatTime(lockoutSeconds)}</span>
                 <Link to="/forgot-password" className="block mt-2 underline hover:no-underline">
-                  Passwort vergessen? Jetzt zurücksetzen
+                  {t("login.forgotPasswordReset")}
                 </Link>
               </AlertDescription>
             </Alert>
@@ -581,7 +581,7 @@ const Login = () => {
             <Alert variant="default" className="mb-6 border-primary/30 bg-primary/5">
               <AlertTriangle className="h-4 w-4 text-primary" />
               <AlertDescription className="text-primary">
-                {5 - failedAttempts} Versuche verbleibend bevor dein Konto für 5 Minuten gesperrt wird.
+                {5 - failedAttempts} {t("login.attemptsRemaining")} {t("login.attemptsBeforeLock")}
               </AlertDescription>
             </Alert>
           )}
@@ -589,7 +589,7 @@ const Login = () => {
           {/* Form */}
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
+              <Label htmlFor="email">{t("login.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -608,9 +608,9 @@ const Login = () => {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Passwort</Label>
+                <Label htmlFor="password">{t("login.password")}</Label>
                 <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                  Vergessen?
+                  {t("login.forgot")}
                 </Link>
               </div>
               <div className="relative">
@@ -638,10 +638,10 @@ const Login = () => {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Anmelden...
+                  {t("login.submitting")}
                 </>
               ) : (
-                "Anmelden"
+                t("login.submit")
               )}
             </Button>
 
@@ -652,7 +652,7 @@ const Login = () => {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  oder
+                  {t("common.or")}
                 </span>
               </div>
             </div>
@@ -669,23 +669,23 @@ const Login = () => {
               {googleLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Verbinde mit Google...
+                  {t("login.googleConnectingFull")}
                 </>
               ) : (
                 <>
                   <GoogleIcon />
-                  Mit Google anmelden
+                  {t("login.googleLogin")}
                 </>
               )}
             </Button>
           </form>
 
           {/* Register Link */}
-          <p className="text-center text-muted-foreground mt-8">
-            Noch kein Konto?{" "}
-            <Link to="/register" className="text-primary hover:underline font-medium">
-              Jetzt registrieren
-            </Link>
+            <p className="text-center text-muted-foreground mt-8">
+              {t("login.noAccount")}{" "}
+              <Link to="/register" className="text-primary hover:underline font-medium">
+                {t("login.register")}
+              </Link>
           </p>
         </div>
       </div>
@@ -736,9 +736,9 @@ const Login = () => {
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-16">
           <div className="text-center max-w-md">
             <AnimatedScore />
-            <p className="text-xl font-semibold mb-2">Dein Potenzial wartet</p>
+            <p className="text-xl font-semibold mb-2">{t("login.potentialWaiting")}</p>
             <p className="text-muted-foreground">
-              Tracke deinen Fortschritt und erreiche deinen Ziel-Score.
+              {t("login.trackProgressGoal")}
             </p>
           </div>
         </div>
@@ -750,8 +750,8 @@ const Login = () => {
         onVerified={() => {
           setShowMFADialog(false);
           toast({
-            title: "Willkommen zurück!",
-            description: "Du wirst zum Dashboard weitergeleitet.",
+            title: t("login.welcomeBack"),
+            description: t("login.redirecting"),
           });
           navigate("/dashboard");
         }}
