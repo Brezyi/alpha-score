@@ -14,6 +14,15 @@ const initApp = async () => {
     document.documentElement.classList.add("native-app");
   }
 
+  // Register service worker for PWA
+  if ("serviceWorker" in navigator && !isNative) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("/sw.js").catch(() => {
+        // SW registration failed silently
+      });
+    });
+  }
+
   // Render the app
   createRoot(document.getElementById("root")!).render(<App />);
 };

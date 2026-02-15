@@ -21,6 +21,8 @@ import CookieConsent from "./components/CookieConsent";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { DocumentTitleUpdater } from "./components/DocumentTitleUpdater";
 import { FaviconUpdater } from "./components/FaviconUpdater";
+import { SEOHead } from "./components/SEOHead";
+import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 
 // Lazy loaded pages - reduces initial bundle size significantly
 const Dashboard = lazy(() => import("./pages/Dashboard"));
@@ -89,6 +91,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <SEOHead />
               <AdminAccessProvider>
                 <MaintenanceProvider>
                   <MaintenanceCheck>
@@ -229,6 +232,7 @@ const App = () => (
                       </Routes>
                       </Suspense>
                       <CookieConsent />
+                      <PWAInstallPrompt />
                     </OnboardingTourProvider>
                   </MaintenanceCheck>
                 </MaintenanceProvider>
