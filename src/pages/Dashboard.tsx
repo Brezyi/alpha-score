@@ -31,7 +31,8 @@ import {
   Heart,
   Users,
   DollarSign,
-  BarChart3
+  BarChart3,
+  Share2
 } from "lucide-react";
 import {
   Collapsible,
@@ -49,6 +50,11 @@ import { useStreak } from "@/hooks/useStreak";
 import { useProfile } from "@/hooks/useProfile";
 import { ProfileMenu } from "@/components/ProfileMenu";
 import { ProfileOnboardingModal } from "@/components/ProfileOnboardingModal";
+import { NotificationCenter } from "@/components/NotificationCenter";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { MotivationWidget } from "@/components/dashboard/MotivationWidget";
+import { SocialShareCard } from "@/components/SocialShareCard";
+import { SkinTypeAnalyzer } from "@/components/SkinTypeAnalyzer";
 import { OnboardingWizard } from "@/components/onboarding/OnboardingWizard";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area, AreaChart, ComposedChart } from "recharts";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
@@ -218,6 +224,7 @@ const Dashboard = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [analysisToDelete, setAnalysisToDelete] = useState<Analysis | null>(null);
   const [hasAnimated, setHasAnimated] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [tasks, setTasks] = useState<UserTask[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [dailyQuote] = useState(() => getDailyQuote());
@@ -551,7 +558,7 @@ const Dashboard = () => {
               <ScannerLogo size="sm" labelSize="lg" />
             </Link>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               {subscriptionBadge && (
                 <div className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${subscriptionBadge.className}`}>
                   <subscriptionBadge.icon className="w-3.5 h-3.5" />
@@ -577,17 +584,34 @@ const Dashboard = () => {
                   </Button>
                 </Link>
               )}
+              <div className="hidden sm:block">
+                <SkinTypeAnalyzer />
+              </div>
+              <LanguageToggle />
+              <NotificationCenter />
               <ProfileMenu />
             </div>
           </div>
         </div>
       </header>
 
+      {/* Social Share Dialog */}
+      {latestScore !== null && (
+        <SocialShareCard
+          score={latestScore}
+          potentialScore={latestPotential}
+          displayName={profile?.display_name || "User"}
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+        />
+      )}
+
       {/* Main Content */}
       <main className="container px-4 py-8">
-        {/* Welcome Widget */}
-        <div className="mb-8">
+        {/* Welcome + Motivation */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <WelcomeWidget />
+          <MotivationWidget />
         </div>
 
         {/* Stats Overview - Showcase Style */}
@@ -715,6 +739,21 @@ const Dashboard = () => {
                         <span>{parseFloat(scoreDiff) > 0 ? "+" : ""}{scoreDiff}</span>
                         <span className="text-muted-foreground font-normal">seit letzter Analyse</span>
                       </div>
+                    </div>
+                  )}
+                  
+                  {/* Share Button */}
+                  {latestScore !== null && (
+                    <div className="mt-3 flex justify-center">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="gap-2 text-muted-foreground hover:text-primary"
+                        onClick={() => setShareOpen(true)}
+                      >
+                        <Share2 className="w-4 h-4" />
+                        Teilen
+                      </Button>
                     </div>
                   )}
                 </>

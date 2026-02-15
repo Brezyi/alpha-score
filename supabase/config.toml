@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.generate-personalized-plan]
 verify_jwt = false
+
+[functions.analyze-skin-type]
+verify_jwt = false
