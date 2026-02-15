@@ -1178,8 +1178,6 @@ const Dashboard = () => {
                 onComplete={completeChallenge}
               />
               
-              {/* Activity Feed */}
-              <ActivityFeed />
             </div>
             
             {/* Social & Recap Row */}
