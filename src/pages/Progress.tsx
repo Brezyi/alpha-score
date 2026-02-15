@@ -646,6 +646,7 @@ export default function Progress() {
               <motion.div
                 ref={timelineSectionRef}
                 id="timeline"
+                data-tour="timeline"
                 initial={shouldReduce ? false : { opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={shouldReduce ? { duration: 0.2 } : { delay: 0.38 }}
@@ -899,6 +900,7 @@ export default function Progress() {
               <motion.div
                 ref={achievementsSectionRef}
                 id="achievements"
+                data-tour="achievements"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}

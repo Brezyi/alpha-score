@@ -1371,6 +1371,7 @@ export type Database = {
           accent_color: string | null
           avatar_url: string | null
           background_style: string | null
+          completed_tours: string[] | null
           country: string | null
           created_at: string
           display_name: string | null
@@ -1388,6 +1389,7 @@ export type Database = {
           accent_color?: string | null
           avatar_url?: string | null
           background_style?: string | null
+          completed_tours?: string[] | null
           country?: string | null
           created_at?: string
           display_name?: string | null
@@ -1405,6 +1407,7 @@ export type Database = {
           accent_color?: string | null
           avatar_url?: string | null
           background_style?: string | null
+          completed_tours?: string[] | null
           country?: string | null
           created_at?: string
           display_name?: string | null

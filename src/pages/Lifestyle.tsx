@@ -224,7 +224,7 @@ export default function Lifestyle() {
 
         {/* Tabs Navigation */}
         <Tabs defaultValue="daily" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:grid-cols-7 h-auto gap-1">
+          <TabsList data-tour="lifestyle-tabs" className="grid w-full grid-cols-4 lg:grid-cols-7 h-auto gap-1">
             <TabsTrigger value="daily" className="flex flex-col gap-1 py-2">
               <Moon className="h-4 w-4" />
               <span className="text-xs">Tägliches</span>
@@ -258,7 +258,7 @@ export default function Lifestyle() {
           {/* Daily Tracking Tab */}
           <TabsContent value="daily" className="space-y-6">
             {/* Weekly Tracker - Date Selection First */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <motion.div data-tour="main-tracker" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <LifestyleTracker onDateChange={setSelectedDate} />
             </motion.div>
 
