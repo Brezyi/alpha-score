@@ -1162,7 +1162,7 @@ const Dashboard = () => {
             <h2 className="text-xl font-bold">Dein Fortschritt</h2>
             
             {/* XP, Challenges, Activity - this is the gamification tour target */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" data-tour="gamification">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" data-tour="gamification">
               {/* XP & Level Card */}
               <XpLevelCard
                 level={xp.level}
@@ -1177,7 +1177,6 @@ const Dashboard = () => {
                 loading={challengesLoading}
                 onComplete={completeChallenge}
               />
-              
             </div>
             
             {/* Social & Recap Row */}
