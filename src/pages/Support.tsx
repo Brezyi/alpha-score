@@ -39,27 +39,16 @@ import {
   MoreHorizontal,
   Send,
   ChevronRight,
-  Crown,
   Zap,
 } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
-
-const CATEGORIES: { value: TicketCategory; label: string; icon: React.ReactNode }[] = [
-  { value: "technical", label: "Technisches Problem", icon: <MessageSquare className="w-4 h-4" /> },
-  { value: "payment", label: "Zahlung", icon: <CreditCard className="w-4 h-4" /> },
-  { value: "account", label: "Account", icon: <User className="w-4 h-4" /> },
-  { value: "other", label: "Sonstiges", icon: <MoreHorizontal className="w-4 h-4" /> },
-];
-
-const STATUS_CONFIG: Record<TicketStatus, { label: string; color: string; icon: React.ReactNode }> = {
-  open: { label: "Offen", color: "bg-yellow-500/20 text-yellow-400", icon: <Clock className="w-3 h-3" /> },
-  in_progress: { label: "In Bearbeitung", color: "bg-blue-500/20 text-blue-400", icon: <Loader2 className="w-3 h-3" /> },
-  closed: { label: "Geschlossen", color: "bg-green-500/20 text-green-400", icon: <CheckCircle2 className="w-3 h-3" /> },
-};
+import { de, enGB } from "date-fns/locale";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Support = () => {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "en" ? enGB : de;
   const { user, loading: authLoading } = useAuth();
   const { tickets, loading, creating, createTicket } = useSupport();
   const { isPremium, subscriptionType } = useSubscription();
@@ -70,14 +59,25 @@ const Support = () => {
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   
-  // Ticket detail dialog
   const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [replyMessage, setReplyMessage] = useState("");
   
-  // Messages hook
   const { messages, loading: messagesLoading, sending, sendMessage } = useTicketMessages(
     selectedTicket?.id || null
   );
+
+  const CATEGORIES: { value: TicketCategory; label: string; icon: React.ReactNode }[] = [
+    { value: "technical", label: t("support.technical"), icon: <MessageSquare className="w-4 h-4" /> },
+    { value: "payment", label: t("support.payment"), icon: <CreditCard className="w-4 h-4" /> },
+    { value: "account", label: t("support.account"), icon: <User className="w-4 h-4" /> },
+    { value: "other", label: t("support.other"), icon: <MoreHorizontal className="w-4 h-4" /> },
+  ];
+
+  const STATUS_CONFIG: Record<TicketStatus, { label: string; color: string; icon: React.ReactNode }> = {
+    open: { label: t("support.open"), color: "bg-yellow-500/20 text-yellow-400", icon: <Clock className="w-3 h-3" /> },
+    in_progress: { label: t("support.inProgress"), color: "bg-blue-500/20 text-blue-400", icon: <Loader2 className="w-3 h-3" /> },
+    closed: { label: t("support.closed"), color: "bg-green-500/20 text-green-400", icon: <CheckCircle2 className="w-3 h-3" /> },
+  };
 
   if (authLoading) {
     return (
@@ -94,7 +94,7 @@ const Support = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      setFiles((prev) => [...prev, ...newFiles].slice(0, 3)); // Max 3 files
+      setFiles((prev) => [...prev, ...newFiles].slice(0, 3)); 
     }
   };
 
@@ -133,14 +133,9 @@ const Support = () => {
   };
 
   const userTickets = tickets.filter((t) => t.user_id === user.id);
-  const hasUnreadAdminReply = (ticket: SupportTicket) => {
-    // Check if there are admin messages for this ticket
-    return ticket.admin_notes !== null || messages.some(m => m.is_admin && m.ticket_id === ticket.id);
-  };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="sticky top-0 z-50 glass-card border-b border-border">
         <div className="container flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-4">
@@ -151,7 +146,7 @@ const Support = () => {
             </Link>
             <div className="flex items-center gap-2">
               <HelpCircle className="w-6 h-6 text-primary" />
-              <span className="text-xl font-bold">Support</span>
+              <span className="text-xl font-bold">{t("support.title")}</span>
             </div>
           </div>
           <ProfileMenu />
@@ -161,9 +156,9 @@ const Support = () => {
       <main className="container px-4 py-8 max-w-4xl">
         <Tabs defaultValue="new" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="new">Neue Anfrage</TabsTrigger>
+            <TabsTrigger value="new">{t("support.newTicket")}</TabsTrigger>
             <TabsTrigger value="tickets">
-              Meine Tickets
+              {t("support.myTickets")}
               {userTickets.length > 0 && (
                 <Badge variant="secondary" className="ml-2">
                   {userTickets.length}
@@ -177,24 +172,23 @@ const Support = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Support-Anfrage erstellen</CardTitle>
+                    <CardTitle>{t("support.createTicket")}</CardTitle>
                     <CardDescription>
-                      Beschreibe dein Problem und wir helfen dir so schnell wie möglich.
+                      {t("support.createTicketDesc")}
                     </CardDescription>
                   </div>
                   {isPremium && (
                     <Badge className="bg-primary/20 text-primary border-primary/30 gap-1">
                       <Zap className="w-3 h-3" />
-                      {subscriptionType === "lifetime" ? "Lifetime" : subscriptionType === "owner" ? "Owner" : "Premium"} Support
+                      {subscriptionType === "lifetime" ? "Lifetime" : subscriptionType === "owner" ? "Owner" : "Premium"} {t("support.title")}
                     </Badge>
                   )}
                 </div>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  {/* Category */}
                   <div className="space-y-2">
-                    <Label>Kategorie</Label>
+                    <Label>{t("support.category")}</Label>
                     <Select value={category} onValueChange={(v) => setCategory(v as TicketCategory)}>
                       <SelectTrigger>
                         <SelectValue />
@@ -212,26 +206,24 @@ const Support = () => {
                     </Select>
                   </div>
 
-                  {/* Subject */}
                   <div className="space-y-2">
-                    <Label htmlFor="subject">Betreff (optional)</Label>
+                    <Label htmlFor="subject">{t("support.subjectOptional")}</Label>
                     <Input
                       id="subject"
-                      placeholder="Kurze Zusammenfassung des Problems"
+                      placeholder={t("support.subjectPlaceholder")}
                       value={subject}
                       onChange={(e) => setSubject(e.target.value)}
                       maxLength={100}
                     />
                   </div>
 
-                  {/* Description */}
                   <div className="space-y-2">
                     <Label htmlFor="description">
-                      Beschreibung <span className="text-destructive">*</span>
+                      {t("support.descriptionRequired")} <span className="text-destructive">*</span>
                     </Label>
                     <Textarea
                       id="description"
-                      placeholder="Beschreibe dein Problem im Detail..."
+                      placeholder={t("support.descriptionPlaceholder")}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       rows={5}
@@ -243,9 +235,8 @@ const Support = () => {
                     </p>
                   </div>
 
-                  {/* File Upload */}
                   <div className="space-y-2">
-                    <Label>Anhänge (optional, max. 3 Dateien)</Label>
+                    <Label>{t("support.attachments")}</Label>
                     <div className="flex flex-wrap gap-2">
                       {files.map((file, index) => (
                         <div
@@ -270,7 +261,7 @@ const Support = () => {
                           onClick={() => fileInputRef.current?.click()}
                         >
                           <Upload className="w-4 h-4 mr-2" />
-                          Datei hinzufügen
+                          {t("support.addFile")}
                         </Button>
                       )}
                     </div>
@@ -291,10 +282,10 @@ const Support = () => {
                     {creating ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Wird gesendet...
+                        {t("support.sending")}
                       </>
                     ) : (
-                      "Anfrage absenden"
+                      t("support.submitTicket")
                     )}
                   </Button>
                 </form>
@@ -312,9 +303,9 @@ const Support = () => {
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12 text-center">
                     <HelpCircle className="w-12 h-12 text-muted-foreground mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Keine Tickets</h3>
+                    <h3 className="text-lg font-medium mb-2">{t("support.noTickets")}</h3>
                     <p className="text-muted-foreground">
-                      Du hast noch keine Support-Anfragen erstellt.
+                      {t("support.noTicketsDesc")}
                     </p>
                   </CardContent>
                 </Card>
@@ -344,7 +335,7 @@ const Support = () => {
                               {ticket.admin_notes && (
                                 <Badge variant="secondary" className="gap-1">
                                   <MessageSquare className="w-3 h-3" />
-                                  Antwort
+                                  {t("support.reply")}
                                 </Badge>
                               )}
                             </div>
@@ -355,7 +346,7 @@ const Support = () => {
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <p className="text-xs text-muted-foreground">
-                              {format(new Date(ticket.created_at), "dd. MMM yyyy", { locale: de })}
+                              {format(new Date(ticket.created_at), "dd. MMM yyyy", { locale: dateLocale })}
                             </p>
                             <ChevronRight className="w-4 h-4 text-muted-foreground" />
                           </div>
@@ -375,13 +366,12 @@ const Support = () => {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <HelpCircle className="w-5 h-5 text-primary" />
-                Ticket Details
+                {t("support.ticketDetails")}
               </DialogTitle>
             </DialogHeader>
             
             {selectedTicket && (
               <div className="flex-1 overflow-hidden flex flex-col">
-                {/* Ticket Info */}
                 <div className="space-y-3 pb-4 border-b">
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge className={STATUS_CONFIG[selectedTicket.status].color}>
@@ -393,14 +383,13 @@ const Support = () => {
                       <span className="ml-1">{CATEGORIES.find(c => c.value === selectedTicket.category)?.label}</span>
                     </Badge>
                     <span className="text-xs text-muted-foreground">
-                      {format(new Date(selectedTicket.created_at), "dd.MM.yyyy HH:mm", { locale: de })}
+                      {format(new Date(selectedTicket.created_at), "dd.MM.yyyy HH:mm", { locale: dateLocale })}
                     </span>
                   </div>
                   <h4 className="font-semibold">{selectedTicket.subject}</h4>
                   <p className="text-sm text-muted-foreground">{selectedTicket.description}</p>
                 </div>
 
-                {/* Chat Messages */}
                 <div className="flex-1 overflow-y-auto py-4">
                   <TicketChat 
                     messages={messages} 
@@ -409,14 +398,13 @@ const Support = () => {
                   />
                 </div>
 
-                {/* Reply Input */}
                 {selectedTicket.status !== "closed" && (
                   <div className="pt-4 border-t">
                     <div className="flex gap-2">
                       <Input
                         value={replyMessage}
                         onChange={(e) => setReplyMessage(e.target.value)}
-                        placeholder="Antwort schreiben..."
+                        placeholder={t("support.replyPlaceholder")}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();
@@ -438,7 +426,7 @@ const Support = () => {
                       </Button>
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Drücke Enter zum Senden
+                      {t("support.pressEnter")}
                     </p>
                   </div>
                 )}
@@ -446,7 +434,7 @@ const Support = () => {
                 {selectedTicket.status === "closed" && (
                   <div className="pt-4 border-t text-center">
                     <p className="text-sm text-muted-foreground">
-                      Dieses Ticket ist geschlossen. Erstelle ein neues Ticket für weitere Hilfe.
+                      {t("support.ticketClosed")}
                     </p>
                   </div>
                 )}

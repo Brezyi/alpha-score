@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { 
   DollarSign, Copy, Share2, Users, TrendingUp,
-  Wallet, ArrowLeft, Check, Clock, Info, MessageCircle,
+  Wallet, ArrowLeft, Check, Clock, MessageCircle,
   Banknote, AlertCircle, CheckCircle2
 } from "lucide-react";
 import { useAffiliate } from "@/hooks/useAffiliate";
@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enGB } from "date-fns/locale";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -23,8 +23,12 @@ import {
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { validateIban, validateBic, formatIban } from "@/lib/ibanValidation";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Affiliate() {
+  const { t, language } = useLanguage();
+  const dateLocale = language === "en" ? enGB : de;
+  
   const { 
     referralCode, referralLink, stats, earnings,
     payoutEmail, payoutMethod, bankDetails, payoutRequests,
@@ -127,8 +131,8 @@ export default function Affiliate() {
           <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Affiliate Programm</h1>
-          <p className="text-muted-foreground">Verdiene 20% für jedes vermittelte Abo</p>
+          <h1 className="text-2xl font-bold">{t("affiliate.title")}</h1>
+          <p className="text-muted-foreground">{t("affiliate.subtitle")}</p>
         </div>
       </div>
 
@@ -141,8 +145,8 @@ export default function Affiliate() {
               <DollarSign className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold">20% Provision</h2>
-              <p className="text-muted-foreground">auf alle vermittelten Abos</p>
+              <h2 className="text-xl font-bold">{t("affiliate.commission")}</h2>
+              <p className="text-muted-foreground">{t("affiliate.onAllSubs")}</p>
             </div>
           </div>
 
@@ -151,7 +155,7 @@ export default function Affiliate() {
             <motion.div className="p-4 rounded-xl bg-background/50 border border-border"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <Users className="w-4 h-4" /><span className="text-xs">Einladungen</span>
+                <Users className="w-4 h-4" /><span className="text-xs">{t("affiliate.invitations")}</span>
               </div>
               <div className="text-2xl font-bold">{stats.referralCount}</div>
             </motion.div>
@@ -159,7 +163,7 @@ export default function Affiliate() {
             <motion.div className="p-4 rounded-xl bg-background/50 border border-border"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                <TrendingUp className="w-4 h-4" /><span className="text-xs">Conversions</span>
+                <TrendingUp className="w-4 h-4" /><span className="text-xs">{t("affiliate.conversions")}</span>
               </div>
               <div className="text-2xl font-bold">{stats.conversionCount}</div>
             </motion.div>
@@ -167,7 +171,7 @@ export default function Affiliate() {
             <motion.div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
               <div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400 mb-1">
-                <Clock className="w-4 h-4" /><span className="text-xs">Ausstehend</span>
+                <Clock className="w-4 h-4" /><span className="text-xs">{t("affiliate.pending")}</span>
               </div>
               <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">€{stats.pendingEarnings.toFixed(2)}</div>
             </motion.div>
@@ -175,7 +179,7 @@ export default function Affiliate() {
             <motion.div className="p-4 rounded-xl bg-green-500/10 border border-green-500/20"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
               <div className="flex items-center gap-2 text-green-600 dark:text-green-400 mb-1">
-                <Wallet className="w-4 h-4" /><span className="text-xs">Gesamt</span>
+                <Wallet className="w-4 h-4" /><span className="text-xs">{t("affiliate.totalEarnings")}</span>
               </div>
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">€{stats.totalEarnings.toFixed(2)}</div>
             </motion.div>
@@ -183,14 +187,14 @@ export default function Affiliate() {
 
           {/* Referral Link */}
           <div className="p-4 rounded-xl bg-muted/50 border border-border">
-            <div className="text-xs text-muted-foreground mb-2">Dein Affiliate-Link</div>
+            <div className="text-xs text-muted-foreground mb-2">{t("affiliate.yourLink")}</div>
             <div className="flex items-center gap-2 mb-4">
               <code className="flex-1 px-3 py-2 bg-background rounded-lg text-sm font-mono truncate">{referralLink}</code>
               <Button variant="outline" size="icon" onClick={copyReferralLink}><Copy className="w-4 h-4" /></Button>
             </div>
             <div className="flex gap-2">
               <Button className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600" onClick={copyReferralLink}>
-                <Share2 className="w-4 h-4 mr-2" />Link kopieren
+                <Share2 className="w-4 h-4 mr-2" />{t("affiliate.copyLink")}
               </Button>
               <Button variant="outline" onClick={shareViaWhatsApp} className="text-green-600">
                 <MessageCircle className="w-4 h-4" />
@@ -204,16 +208,16 @@ export default function Affiliate() {
       <Card className="p-6 mb-6 glass-card">
         <h3 className="font-bold mb-4 flex items-center gap-2">
           <Banknote className="w-5 h-5 text-primary" />
-          Auszahlung beantragen
+          {t("affiliate.requestPayout")}
         </h3>
         
         {hasPendingRequest ? (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
             <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400 shrink-0" />
             <div>
-              <p className="text-sm font-medium">Auszahlung in Bearbeitung</p>
+              <p className="text-sm font-medium">{t("affiliate.payoutProcessing")}</p>
               <p className="text-xs text-muted-foreground">
-                Deine Auszahlung von €{payoutRequests.find(r => r.status === "pending")?.amount.toFixed(2)} wird bearbeitet.
+                {t("affiliate.payoutProcessingDesc")} €{payoutRequests.find(r => r.status === "pending")?.amount.toFixed(2)} {t("affiliate.payoutProcessingDesc2")}
               </p>
             </div>
           </div>
@@ -221,9 +225,9 @@ export default function Affiliate() {
           <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border">
             <AlertCircle className="w-5 h-5 text-muted-foreground shrink-0" />
             <div>
-              <p className="text-sm font-medium">Mindestbetrag nicht erreicht</p>
+              <p className="text-sm font-medium">{t("affiliate.minNotReached")}</p>
               <p className="text-xs text-muted-foreground">
-                Du brauchst mindestens €50 ausstehende Provision. Aktuell: €{stats.pendingEarnings.toFixed(2)}
+                {t("affiliate.minNotReachedDesc")} €{stats.pendingEarnings.toFixed(2)}
               </p>
             </div>
           </div>
@@ -232,21 +236,21 @@ export default function Affiliate() {
             <AlertDialogTrigger asChild>
               <Button className="w-full bg-gradient-to-r from-green-500 to-emerald-600" disabled={!isPayoutSettingsComplete}>
                 <Wallet className="w-4 h-4 mr-2" />
-                €{stats.pendingEarnings.toFixed(2)} auszahlen lassen
+                €{stats.pendingEarnings.toFixed(2)} {t("affiliate.requestPayout")}
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Auszahlung beantragen?</AlertDialogTitle>
+                <AlertDialogTitle>{t("affiliate.payoutConfirm")}</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Du beantragst eine Auszahlung von <strong>€{stats.pendingEarnings.toFixed(2)}</strong> via {newPayoutMethod === "paypal" ? "PayPal" : "Banküberweisung"}.
-                  Die Bearbeitung kann einige Werktage dauern.
+                  {t("affiliate.payoutConfirmDesc")} <strong>€{stats.pendingEarnings.toFixed(2)}</strong> {t("affiliate.payoutConfirmDesc2")} {newPayoutMethod === "paypal" ? "PayPal" : t("affiliate.bankTransfer")}.
+                  {t("affiliate.payoutConfirmDesc3")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                 <AlertDialogAction onClick={handleRequestPayout} disabled={isRequesting}>
-                  {isRequesting ? "Wird beantragt..." : "Jetzt beantragen"}
+                  {isRequesting ? t("affiliate.requesting") : t("affiliate.requestNow")}
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -254,20 +258,20 @@ export default function Affiliate() {
         )}
 
         {!isPayoutSettingsComplete && canRequestPayout && (
-          <p className="text-xs text-destructive mt-2">Bitte speichere zuerst deine Auszahlungsdaten unten.</p>
+          <p className="text-xs text-destructive mt-2">{t("affiliate.savePayoutFirst")}</p>
         )}
       </Card>
 
       {/* How it Works */}
       <Card className="p-6 mb-6 glass-card">
         <h3 className="font-bold mb-4 flex items-center gap-2">
-          <Info className="w-5 h-5 text-primary" />So funktioniert's
+          <CheckCircle2 className="w-5 h-5 text-primary" />{t("affiliate.howItWorks")}
         </h3>
         <div className="space-y-4">
           {[
-            { step: "1", title: "Teile deinen Link", desc: "Sende deinen persönlichen Affiliate-Link an Freunde oder teile ihn in Social Media." },
-            { step: "2", title: "Dein Freund registriert sich", desc: "Wenn jemand über deinen Link ein Abo abschließt, wirst du automatisch als Referrer vermerkt." },
-            { step: "3", title: "Du verdienst 20%", desc: "Für jede Abo-Zahlung deines geworbenen Nutzers erhältst du 20% Provision.", highlight: true },
+            { step: "1", title: t("affiliate.step1Title"), desc: t("affiliate.step1Desc") },
+            { step: "2", title: t("affiliate.step2Title"), desc: t("affiliate.step2Desc") },
+            { step: "3", title: t("affiliate.step3Title"), desc: t("affiliate.step3Desc"), highlight: true },
           ].map((item) => (
             <div key={item.step} className="flex gap-4">
               <div className={cn(
@@ -286,17 +290,17 @@ export default function Affiliate() {
       {/* Payout Settings */}
       <Card className="p-6 mb-6 glass-card">
         <h3 className="font-bold mb-4 flex items-center gap-2">
-          <Wallet className="w-5 h-5 text-primary" />Auszahlungseinstellungen
+          <Wallet className="w-5 h-5 text-primary" />{t("affiliate.payoutSettings")}
         </h3>
         
         <div className="space-y-4">
           <div>
-            <Label>Auszahlungsmethode</Label>
+            <Label>{t("affiliate.payoutMethod")}</Label>
             <Select value={newPayoutMethod} onValueChange={setNewPayoutMethod}>
-              <SelectTrigger className="mt-1"><SelectValue placeholder="Methode wählen" /></SelectTrigger>
+              <SelectTrigger className="mt-1"><SelectValue placeholder={t("affiliate.selectMethod")} /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="paypal">PayPal</SelectItem>
-                <SelectItem value="bank">Banküberweisung</SelectItem>
+                <SelectItem value="bank">{t("affiliate.bankTransfer")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -310,7 +314,7 @@ export default function Affiliate() {
           ) : (
             <div className="space-y-4 p-4 rounded-xl bg-muted/30 border border-border">
               <div>
-                <Label>Kontoinhaber</Label>
+                <Label>{t("affiliate.accountHolder")}</Label>
                 <Input value={newAccountHolder} onChange={(e) => setNewAccountHolder(e.target.value)}
                   placeholder="Max Mustermann" className="mt-1" />
               </div>
@@ -336,11 +340,11 @@ export default function Affiliate() {
           )}
 
           <Button onClick={handleSavePayoutSettings} disabled={isSaving || !isPayoutSettingsComplete} className="w-full">
-            {isSaving ? "Speichern..." : "Einstellungen speichern"}
+            {isSaving ? t("common.saving") : t("affiliate.saveSettings")}
           </Button>
 
           <p className="text-xs text-muted-foreground">
-            Auszahlungen erfolgen ab einem Mindestbetrag von €50 und werden manuell bearbeitet.
+            {t("affiliate.payoutMinHint")}
           </p>
         </div>
       </Card>
@@ -349,7 +353,7 @@ export default function Affiliate() {
       {payoutRequests.length > 0 && (
         <Card className="p-6 mb-6 glass-card">
           <h3 className="font-bold mb-4 flex items-center gap-2">
-            <Banknote className="w-5 h-5 text-primary" />Auszahlungsanfragen
+            <Banknote className="w-5 h-5 text-primary" />{t("affiliate.payoutRequests")}
           </h3>
           <div className="space-y-3">
             {payoutRequests.map((req) => (
@@ -357,9 +361,9 @@ export default function Affiliate() {
                 <div>
                   <div className="font-medium">€{Number(req.amount).toFixed(2)}</div>
                   <div className="text-xs text-muted-foreground">
-                    {format(new Date(req.created_at), "dd. MMM yyyy", { locale: de })} · {req.payout_method === "bank" ? "Bank" : "PayPal"}
+                    {format(new Date(req.created_at), "dd. MMM yyyy", { locale: dateLocale })} · {req.payout_method === "bank" ? "Bank" : "PayPal"}
                   </div>
-                  {req.admin_notes && <div className="text-xs text-muted-foreground mt-1">Hinweis: {req.admin_notes}</div>}
+                  {req.admin_notes && <div className="text-xs text-muted-foreground mt-1">{t("affiliate.note")} {req.admin_notes}</div>}
                 </div>
                 <div className={cn(
                   "px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1",
@@ -367,9 +371,9 @@ export default function Affiliate() {
                     : req.status === "rejected" ? "bg-destructive/10 text-destructive"
                     : "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
                 )}>
-                  {req.status === "completed" ? <><Check className="w-3 h-3" />Ausgezahlt</>
-                    : req.status === "rejected" ? "Abgelehnt"
-                    : <><Clock className="w-3 h-3" />In Bearbeitung</>}
+                  {req.status === "completed" ? <><Check className="w-3 h-3" />{t("affiliate.paid")}</>
+                    : req.status === "rejected" ? t("affiliate.rejected")
+                    : <><Clock className="w-3 h-3" />{t("affiliate.processing")}</>}
                 </div>
               </div>
             ))}
@@ -380,22 +384,22 @@ export default function Affiliate() {
       {/* Earnings History */}
       <Card className="p-6 glass-card">
         <h3 className="font-bold mb-4 flex items-center gap-2">
-          <TrendingUp className="w-5 h-5 text-primary" />Provisionshistorie
+          <TrendingUp className="w-5 h-5 text-primary" />{t("affiliate.earningsHistory")}
         </h3>
         {earnings.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <DollarSign className="w-12 h-12 mx-auto mb-3 opacity-30" />
-            <p>Noch keine Provisionen</p>
-            <p className="text-sm">Teile deinen Link, um zu verdienen!</p>
+            <p>{t("affiliate.noEarnings")}</p>
+            <p className="text-sm">{t("affiliate.noEarningsDesc")}</p>
           </div>
         ) : (
           <div className="space-y-3">
             {earnings.map((earning) => (
               <div key={earning.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                 <div>
-                  <div className="font-medium">€{Number(earning.commission_amount).toFixed(2)} Provision</div>
+                  <div className="font-medium">€{Number(earning.commission_amount).toFixed(2)} {t("affiliate.commissionLabel")}</div>
                   <div className="text-xs text-muted-foreground">
-                    {format(new Date(earning.created_at), "dd. MMMM yyyy", { locale: de })}
+                    {format(new Date(earning.created_at), "dd. MMMM yyyy", { locale: dateLocale })}
                   </div>
                 </div>
                 <div className={cn(
@@ -403,7 +407,7 @@ export default function Affiliate() {
                   earning.status === "paid" ? "bg-green-500/10 text-green-600 dark:text-green-400"
                     : "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400"
                 )}>
-                  {earning.status === "paid" ? <><Check className="w-3 h-3" />Ausgezahlt</> : <><Clock className="w-3 h-3" />Ausstehend</>}
+                  {earning.status === "paid" ? <><Check className="w-3 h-3" />{t("affiliate.paid")}</> : <><Clock className="w-3 h-3" />{t("affiliate.pending")}</>}
                 </div>
               </div>
             ))}

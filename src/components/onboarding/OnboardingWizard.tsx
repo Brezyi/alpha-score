@@ -9,40 +9,30 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface OnboardingWizardProps {
   open: boolean;
   onComplete: (goals: string[]) => void;
 }
 
-const GOALS = [
-  { id: "looks", icon: Sparkles, label: "Aussehen optimieren", desc: "KI-Analyse & personalisierter Plan" },
-  { id: "fitness", icon: Dumbbell, label: "Fitter werden", desc: "Training, Ernährung & Body Tracking" },
-  { id: "skin", icon: Heart, label: "Hautbild verbessern", desc: "Skincare-Routinen & Produktempfehlungen" },
-  { id: "confidence", icon: Brain, label: "Selbstbewusstsein stärken", desc: "Fortschritt messen & Motivation" },
-] as const;
-
-const TIPS = [
-  {
-    title: "Lade 3 Fotos hoch",
-    desc: "Frontal, Seite und Körper – für die genaueste Analyse.",
-    icon: "📸",
-  },
-  {
-    title: "Folge deinem Plan",
-    desc: "Die KI erstellt Prioritäten basierend auf deinen Stärken & Schwächen.",
-    icon: "📋",
-  },
-  {
-    title: "Tracke täglich",
-    desc: "Wasser, Schlaf und Ernährung – kleine Gewohnheiten, große Wirkung.",
-    icon: "📊",
-  },
-];
-
 export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
+  const { t } = useLanguage();
   const [step, setStep] = useState(0);
   const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
+
+  const GOALS = [
+    { id: "looks", icon: Sparkles, label: t("onboarding.looks"), desc: t("onboarding.looksDesc") },
+    { id: "fitness", icon: Dumbbell, label: t("onboarding.fitness"), desc: t("onboarding.fitnessDesc") },
+    { id: "skin", icon: Heart, label: t("onboarding.skin"), desc: t("onboarding.skinDesc") },
+    { id: "confidence", icon: Brain, label: t("onboarding.confidence"), desc: t("onboarding.confidenceDesc") },
+  ];
+
+  const TIPS = [
+    { title: t("onboarding.tip1Title"), desc: t("onboarding.tip1Desc"), icon: "📸" },
+    { title: t("onboarding.tip2Title"), desc: t("onboarding.tip2Desc"), icon: "📋" },
+    { title: t("onboarding.tip3Title"), desc: t("onboarding.tip3Desc"), icon: "📊" },
+  ];
 
   const toggleGoal = (id: string) => {
     setSelectedGoals((prev) =>
@@ -60,16 +50,13 @@ export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Target className="w-5 h-5 text-primary" />
-            {step === 0 ? "Was sind deine Ziele?" : "Quick-Start Tipps"}
+            {step === 0 ? t("onboarding.goalsTitle") : t("onboarding.tipsTitle")}
           </DialogTitle>
           <DialogDescription>
-            {step === 0
-              ? "Wähle, was dir wichtig ist – wir passen alles darauf an."
-              : "So holst du das Maximum aus der App."}
+            {step === 0 ? t("onboarding.goalsSubtitle") : t("onboarding.tipsSubtitle")}
           </DialogDescription>
         </DialogHeader>
 
-        {/* Progress dots */}
         <div className="flex items-center justify-center gap-2 py-2">
           {[0, 1].map((s) => (
             <div
@@ -130,7 +117,7 @@ export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
                 className="w-full mt-4 gap-2"
                 size="lg"
               >
-                Weiter
+                {t("onboarding.continue")}
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </motion.div>
@@ -154,10 +141,10 @@ export function OnboardingWizard({ open, onComplete }: OnboardingWizardProps) {
 
               <div className="flex gap-2 mt-4">
                 <Button variant="ghost" onClick={() => setStep(0)} className="gap-1">
-                  <ArrowLeft className="w-4 h-4" />Zurück
+                  <ArrowLeft className="w-4 h-4" />{t("onboarding.back")}
                 </Button>
                 <Button onClick={handleComplete} className="flex-1 gap-2" size="lg">
-                  App starten
+                  {t("onboarding.startApp")}
                   <Sparkles className="w-4 h-4" />
                 </Button>
               </div>
