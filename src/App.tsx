@@ -55,6 +55,7 @@ const PromoCodes = lazy(() => import("./pages/admin/PromoCodes"));
 const AdminPasswordManagement = lazy(() => import("./pages/admin/AdminPasswordManagement"));
 const StripeCoupons = lazy(() => import("./pages/admin/StripeCoupons"));
 const RefundManagement = lazy(() => import("./pages/admin/RefundManagement"));
+const AffiliateManagement = lazy(() => import("./pages/admin/AffiliateManagement"));
 const Affiliate = lazy(() => import("./pages/Affiliate"));
 
 const EmailConfirmation = lazy(() => import("./pages/EmailConfirmation"));
@@ -211,6 +212,14 @@ const App = () => (
                           element={
                             <ProtectedRoute requiredRole={["admin", "owner"]}>
                               <RefundManagement />
+                            </ProtectedRoute>
+                          } 
+                        />
+                        <Route 
+                          path="/admin/affiliates" 
+                          element={
+                            <ProtectedRoute requiredRole={["admin", "owner"]}>
+                              <AffiliateManagement />
                             </ProtectedRoute>
                           } 
                         />

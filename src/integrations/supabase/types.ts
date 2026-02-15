@@ -1318,6 +1318,57 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_requests: {
+        Row: {
+          admin_notes: string | null
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          payout_account_holder: string | null
+          payout_bic: string | null
+          payout_email: string | null
+          payout_iban: string | null
+          payout_method: string
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payout_account_holder?: string | null
+          payout_bic?: string | null
+          payout_email?: string | null
+          payout_iban?: string | null
+          payout_method: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          payout_account_holder?: string | null
+          payout_bic?: string | null
+          payout_email?: string | null
+          payout_iban?: string | null
+          payout_method?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       product_recommendations: {
         Row: {
           affiliate_link: string | null
@@ -1378,7 +1429,10 @@ export type Database = {
           display_name_changed_at: string | null
           gender: string | null
           id: string
+          payout_account_holder: string | null
+          payout_bic: string | null
           payout_email: string | null
+          payout_iban: string | null
           payout_method: string | null
           theme: string | null
           updated_at: string
@@ -1396,7 +1450,10 @@ export type Database = {
           display_name_changed_at?: string | null
           gender?: string | null
           id?: string
+          payout_account_holder?: string | null
+          payout_bic?: string | null
           payout_email?: string | null
+          payout_iban?: string | null
           payout_method?: string | null
           theme?: string | null
           updated_at?: string
@@ -1414,7 +1471,10 @@ export type Database = {
           display_name_changed_at?: string | null
           gender?: string | null
           id?: string
+          payout_account_holder?: string | null
+          payout_bic?: string | null
           payout_email?: string | null
+          payout_iban?: string | null
           payout_method?: string | null
           theme?: string | null
           updated_at?: string
@@ -3183,6 +3243,22 @@ export type Database = {
           has_admin_password: boolean
           password_expired: boolean
           role: string
+          user_id: string
+        }[]
+      }
+      get_affiliate_overview: {
+        Args: never
+        Returns: {
+          conversion_count: number
+          display_name: string
+          email: string
+          paid_earnings: number
+          payout_method: string
+          pending_earnings: number
+          pending_payout_requests: number
+          referral_code: string
+          referral_count: number
+          total_earnings: number
           user_id: string
         }[]
       }

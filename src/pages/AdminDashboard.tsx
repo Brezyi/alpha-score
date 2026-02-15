@@ -19,7 +19,8 @@ import {
   Ticket,
   Key,
   Percent,
-  RotateCcw
+  RotateCcw,
+  DollarSign
 } from "lucide-react";
 
 interface DashboardStat {
@@ -468,6 +469,19 @@ export default function AdminDashboard() {
                   <p className="font-semibold">Widerrufe</p>
                   <p className="text-sm text-muted-foreground">
                     Widerrufsanträge verwalten
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/30 hover:border-green-500/50 transition-colors cursor-pointer"
+                onClick={() => navigate("/admin/affiliates")}
+              >
+                <CardContent className="p-6">
+                  <DollarSign className="w-8 h-8 text-green-500 mb-3" />
+                  <p className="font-semibold">Affiliate-Programm</p>
+                  <p className="text-sm text-muted-foreground">
+                    Affiliates, Provisionen & Auszahlungen
                   </p>
                 </CardContent>
               </Card>
