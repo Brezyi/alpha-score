@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useMotivation } from "@/hooks/useMotivation";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Sparkles, Heart, Dumbbell, Moon, Droplets, Lightbulb } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export function MotivationCard() {
   const { todayTip, loading, logTipViewed } = useMotivation();
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (todayTip) {
@@ -46,7 +48,7 @@ export function MotivationCard() {
             <Icon className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <p className="text-xs font-medium text-primary mb-1">Tipp des Tages</p>
+            <p className="text-xs font-medium text-primary mb-1">{t("motivation.tipOfTheDay")}</p>
             <p className="text-sm leading-relaxed">{todayTip.tip_text}</p>
           </div>
         </div>

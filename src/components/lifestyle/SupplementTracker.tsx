@@ -5,35 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLifestyle, SupplementLog } from "@/hooks/useLifestyle";
-import { 
-  Pill, 
-  Plus, 
-  Check, 
-  Loader2,
-  X,
-  Clock,
-  Trash2
-} from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Pill, Plus, Check, Loader2, X, Clock, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, setHours, setMinutes } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enGB } from "date-fns/locale";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 
@@ -63,6 +46,9 @@ interface LogDialogState {
 
 export function SupplementTracker({ className, selectedDate }: SupplementTrackerProps) {
   const { supplements, todaySupplements, loading, logSupplement, deleteSupplementLog, createCustomSupplement, fetchSupplementsForDate } = useLifestyle();
+  const { t, language } = useLanguage();
+  const dateLocale = language === "en" ? enGB : de;
+  
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newSupplementName, setNewSupplementName] = useState("");
   const [loggingId, setLoggingId] = useState<string | null>(null);
@@ -70,70 +56,42 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
   const [deleteLogId, setDeleteLogId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   
-  // State for log dialog with dosage and time
-  const [logDialog, setLogDialog] = useState<LogDialogState>({
-    open: false,
-    supplementId: "",
-    supplementName: "",
-    defaultDosage: ""
-  });
+  const [logDialog, setLogDialog] = useState<LogDialogState>({ open: false, supplementId: "", supplementName: "", defaultDosage: "" });
   const [logDosage, setLogDosage] = useState("");
   const [logTime, setLogTime] = useState("");
   
-  // State for selected date supplements
   const [dateSupplements, setDateSupplements] = useState<SupplementLog[]>([]);
   const [loadingDate, setLoadingDate] = useState(false);
 
-  // Current date being displayed
   const displayDate = selectedDate || new Date();
   const isDisplayingToday = isToday(displayDate);
 
-  // Fetch supplements for selected date
   const loadSupplementsForDate = useCallback(async () => {
-    if (isDisplayingToday) {
-      setDateSupplements(todaySupplements);
-      return;
-    }
-    
+    if (isDisplayingToday) { setDateSupplements(todaySupplements); return; }
     setLoadingDate(true);
     const data = await fetchSupplementsForDate(displayDate);
     setDateSupplements(data);
     setLoadingDate(false);
   }, [displayDate, isDisplayingToday, todaySupplements, fetchSupplementsForDate]);
 
-  useEffect(() => {
-    loadSupplementsForDate();
-  }, [loadSupplementsForDate]);
+  useEffect(() => { loadSupplementsForDate(); }, [loadSupplementsForDate]);
 
   const openLogDialog = (supplementId: string, supplementName: string, defaultDosage: string | null) => {
-    const now = new Date();
     setLogDosage(defaultDosage || "");
-    setLogTime(format(now, "HH:mm"));
-    setLogDialog({
-      open: true,
-      supplementId,
-      supplementName,
-      defaultDosage: defaultDosage || ""
-    });
+    setLogTime(format(new Date(), "HH:mm"));
+    setLogDialog({ open: true, supplementId, supplementName, defaultDosage: defaultDosage || "" });
   };
 
   const handleLogSupplement = async () => {
     if (!logDialog.supplementId) return;
-    
     setLoggingId(logDialog.supplementId);
-    
-    // Create the date with the selected time
     const [hours, minutes] = logTime.split(":").map(Number);
     const logDate = setMinutes(setHours(displayDate, hours), minutes);
-    
     await logSupplement(logDialog.supplementId, logDate, logDosage || undefined);
-    
-    // Refresh the list
     if (!isDisplayingToday) {
       const data = await fetchSupplementsForDate(displayDate);
       setDateSupplements(data);
     }
-    
     setLoggingId(null);
     setLogDialog({ open: false, supplementId: "", supplementName: "", defaultDosage: "" });
   };
@@ -142,10 +100,7 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
     if (!newSupplementName.trim()) return;
     setCreating(true);
     const result = await createCustomSupplement(newSupplementName.trim());
-    if (result) {
-      setNewSupplementName("");
-      setShowAddDialog(false);
-    }
+    if (result) { setNewSupplementName(""); setShowAddDialog(false); }
     setCreating(false);
   };
 
@@ -153,7 +108,6 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
     if (!deleteLogId) return;
     setDeleting(true);
     await deleteSupplementLog(deleteLogId);
-    // Refresh the list for non-today dates
     if (!isDisplayingToday) {
       const data = await fetchSupplementsForDate(displayDate);
       setDateSupplements(data);
@@ -167,7 +121,6 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
     return supps.some(s => s.supplement_id === supplementId);
   };
 
-  // Use the correct supplements list based on date
   const displaySupplements = isDisplayingToday ? todaySupplements : dateSupplements;
 
   if (loading || loadingDate) {
@@ -180,7 +133,6 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
     );
   }
 
-  // Group supplements by category
   const groupedSupplements = supplements.reduce((acc, s) => {
     const category = s.category || "general";
     if (!acc[category]) acc[category] = [];
@@ -189,15 +141,15 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
   }, {} as Record<string, typeof supplements>);
 
   const categoryLabels: Record<string, string> = {
-    vitamin: "Vitamine",
-    mineral: "Mineralstoffe",
-    amino: "Aminosäuren",
-    herb: "Kräuter",
-    omega: "Omega-Fettsäuren",
-    performance: "Performance",
-    skincare: "Hautpflege",
-    custom: "Eigene",
-    general: "Sonstige"
+    vitamin: t("supplements.vitamins"),
+    mineral: t("supplements.minerals"),
+    amino: t("supplements.aminoAcids"),
+    herb: t("supplements.herbs"),
+    omega: t("supplements.omegaFatty"),
+    performance: t("supplements.performance"),
+    skincare: t("supplements.skincareLabel"),
+    custom: t("supplements.customLabel"),
+    general: t("supplements.otherLabel"),
   };
 
   return (
@@ -207,37 +159,24 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2 text-lg">
               <Pill className="w-5 h-5 text-primary" />
-              Supplements
+              {t("supplements.title")}
             </CardTitle>
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm">
                   <Plus className="w-4 h-4 mr-1" />
-                  Eigenes
+                  {t("supplements.custom")}
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Eigenes Supplement hinzufügen</DialogTitle>
+                  <DialogTitle>{t("supplements.addCustom")}</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
-                  <Input
-                    placeholder="Name des Supplements"
-                    value={newSupplementName}
-                    onChange={(e) => setNewSupplementName(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleCreateSupplement()}
-                  />
-                  <Button 
-                    onClick={handleCreateSupplement} 
-                    className="w-full"
-                    disabled={creating || !newSupplementName.trim()}
-                  >
-                    {creating ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Plus className="w-4 h-4 mr-2" />
-                    )}
-                    Hinzufügen
+                  <Input placeholder={t("supplements.nameLabel")} value={newSupplementName} onChange={(e) => setNewSupplementName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateSupplement()} />
+                  <Button onClick={handleCreateSupplement} className="w-full" disabled={creating || !newSupplementName.trim()}>
+                    {creating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                    {t("supplements.add")}
                   </Button>
                 </div>
               </DialogContent>
@@ -245,45 +184,31 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
           </div>
         </CardHeader>
         <CardContent>
-          {/* Date indicator if not today */}
           {!isDisplayingToday && (
             <div className="mb-3 text-xs text-muted-foreground">
-              Supplements für {format(displayDate, "EEEE, dd. MMM", { locale: de })}
+              {t("supplements.forDate")} {format(displayDate, "EEEE, dd. MMM", { locale: dateLocale })}
             </div>
           )}
 
-          {/* Today's Log - with delete option */}
           {displaySupplements.length > 0 && (
             <div className="mb-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
               <div className="flex items-center gap-2 mb-2">
                 <Check className="w-4 h-4 text-primary" />
                 <span className="text-sm font-medium">
-                  {isDisplayingToday ? "Heute eingenommen" : "Eingenommen"}
+                  {isDisplayingToday ? t("supplements.takenToday") : t("supplements.taken")}
                 </span>
-                <Badge variant="outline" className="ml-auto">
-                  {displaySupplements.length}
-                </Badge>
+                <Badge variant="outline" className="ml-auto">{displaySupplements.length}</Badge>
               </div>
               <div className="flex flex-wrap gap-2">
                 {displaySupplements.map((log) => (
-                  <div 
-                    key={log.id} 
-                    className="group flex items-center gap-1.5 bg-background/50 rounded-md px-2 py-1 border border-border"
-                  >
-                    <span className="text-sm">{log.supplement?.name || "Unbekannt"}</span>
-                    {log.dosage && (
-                      <span className="text-xs text-primary font-medium">
-                        {log.dosage}
-                      </span>
-                    )}
+                  <div key={log.id} className="group flex items-center gap-1.5 bg-background/50 rounded-md px-2 py-1 border border-border">
+                    <span className="text-sm">{log.supplement?.name || t("supplements.unknown")}</span>
+                    {log.dosage && <span className="text-xs text-primary font-medium">{log.dosage}</span>}
                     <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                       <Clock className="w-3 h-3" />
                       {format(new Date(log.taken_at), "HH:mm")}
                     </span>
-                    <button
-                      onClick={() => setDeleteLogId(log.id)}
-                      className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/20 rounded"
-                    >
+                    <button onClick={() => setDeleteLogId(log.id)} className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-destructive/20 rounded">
                       <X className="w-3 h-3 text-destructive" />
                     </button>
                   </div>
@@ -292,60 +217,24 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
             </div>
           )}
 
-          {/* Supplement List */}
           <ScrollArea className="h-[250px] pr-2">
             <div className="space-y-4">
               {Object.entries(groupedSupplements).map(([category, supps]) => (
                 <div key={category}>
-                  <div className="text-xs font-medium text-muted-foreground mb-2">
-                    {categoryLabels[category] || category}
-                  </div>
+                  <div className="text-xs font-medium text-muted-foreground mb-2">{categoryLabels[category] || category}</div>
                   <div className="grid gap-2">
                     <AnimatePresence>
                       {supps.map((supplement) => {
                         const taken = isTakenOnDate(supplement.id);
                         const isLogging = loggingId === supplement.id;
-                        
                         return (
-                          <motion.div
-                            key={supplement.id}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className={cn(
-                              "flex items-center justify-between p-2.5 rounded-lg border transition-all",
-                              taken 
-                                ? "bg-primary/5 border-primary/20" 
-                                : "bg-card border-border hover:border-primary/30"
-                            )}
-                          >
+                          <motion.div key={supplement.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={cn("flex items-center justify-between p-2.5 rounded-lg border transition-all", taken ? "bg-primary/5 border-primary/20" : "bg-card border-border hover:border-primary/30")}>
                             <div className="flex items-center gap-2">
-                              <Badge 
-                                variant="outline" 
-                                className={cn("text-[10px] px-1.5", categoryColors[category])}
-                              >
-                                {supplement.default_dosage || "1x"}
-                              </Badge>
-                              <span className={cn(
-                                "text-sm font-medium",
-                                taken && "text-primary"
-                              )}>
-                                {supplement.name}
-                              </span>
+                              <Badge variant="outline" className={cn("text-[10px] px-1.5", categoryColors[category])}>{supplement.default_dosage || "1x"}</Badge>
+                              <span className={cn("text-sm font-medium", taken && "text-primary")}>{supplement.name}</span>
                             </div>
-                            <Button
-                              variant={taken ? "ghost" : "outline"}
-                              size="sm"
-                              className="h-7 w-7 p-0"
-                              onClick={() => openLogDialog(supplement.id, supplement.name, supplement.default_dosage)}
-                              disabled={isLogging}
-                            >
-                              {isLogging ? (
-                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                              ) : taken ? (
-                                <Check className="w-3.5 h-3.5 text-primary" />
-                              ) : (
-                                <Plus className="w-3.5 h-3.5" />
-                              )}
+                            <Button variant={taken ? "ghost" : "outline"} size="sm" className="h-7 w-7 p-0" onClick={() => openLogDialog(supplement.id, supplement.name, supplement.default_dosage)} disabled={isLogging}>
+                              {isLogging ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : taken ? <Check className="w-3.5 h-3.5 text-primary" /> : <Plus className="w-3.5 h-3.5" />}
                             </Button>
                           </motion.div>
                         );
@@ -359,7 +248,6 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
         </CardContent>
       </Card>
 
-      {/* Log Supplement Dialog with Dosage and Time */}
       <Dialog open={logDialog.open} onOpenChange={(open) => !open && setLogDialog({ open: false, supplementId: "", supplementName: "", defaultDosage: "" })}>
         <DialogContent className="sm:max-w-[350px]">
           <DialogHeader>
@@ -369,71 +257,34 @@ export function SupplementTracker({ className, selectedDate }: SupplementTracker
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 pt-2">
-            {/* Dosage Input */}
             <div className="space-y-2">
-              <Label htmlFor="dosage">Dosierung</Label>
-              <Input
-                id="dosage"
-                placeholder="z.B. 1000mg, 2 Kapseln"
-                value={logDosage}
-                onChange={(e) => setLogDosage(e.target.value)}
-              />
-              {logDialog.defaultDosage && (
-                <p className="text-xs text-muted-foreground">
-                  Standard: {logDialog.defaultDosage}
-                </p>
-              )}
+              <Label htmlFor="dosage">{t("supplements.dosage")}</Label>
+              <Input id="dosage" placeholder={t("supplements.dosagePlaceholder")} value={logDosage} onChange={(e) => setLogDosage(e.target.value)} />
+              {logDialog.defaultDosage && <p className="text-xs text-muted-foreground">{t("supplements.defaultDosage")} {logDialog.defaultDosage}</p>}
             </div>
-
-            {/* Time Input */}
             <div className="space-y-2">
-              <Label htmlFor="time">Uhrzeit</Label>
-              <Input
-                id="time"
-                type="time"
-                value={logTime}
-                onChange={(e) => setLogTime(e.target.value)}
-              />
+              <Label htmlFor="time">{t("supplements.time")}</Label>
+              <Input id="time" type="time" value={logTime} onChange={(e) => setLogTime(e.target.value)} />
             </div>
-
-            <Button 
-              onClick={handleLogSupplement} 
-              className="w-full"
-              disabled={loggingId === logDialog.supplementId}
-            >
-              {loggingId === logDialog.supplementId ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Check className="w-4 h-4 mr-2" />
-              )}
-              Einnahme speichern
+            <Button onClick={handleLogSupplement} className="w-full" disabled={loggingId === logDialog.supplementId}>
+              {loggingId === logDialog.supplementId ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Check className="w-4 h-4 mr-2" />}
+              {t("supplements.saveIntake")}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteLogId} onOpenChange={(open) => !open && setDeleteLogId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eintrag löschen?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Möchtest du diesen Supplement-Eintrag wirklich löschen?
-            </AlertDialogDescription>
+            <AlertDialogTitle>{t("supplements.deleteEntry")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("supplements.deleteEntryDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteLog}
-              disabled={deleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {deleting ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <Trash2 className="w-4 h-4 mr-2" />
-              )}
-              Löschen
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteLog} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
