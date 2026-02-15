@@ -15,8 +15,9 @@ export function LanguageToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full">
-          <Globe className="h-5 w-5" />
+        <Button variant="ghost" size="sm" className="h-10 gap-1.5 rounded-full px-3">
+          <Globe className="h-4 w-4" />
+          <span className="text-xs font-semibold uppercase">{language}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

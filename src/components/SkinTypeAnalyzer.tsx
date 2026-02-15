@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useProfile } from "@/hooks/useProfile";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -46,6 +47,7 @@ export function SkinTypeAnalyzer() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { profile } = useProfile();
+  const { t } = useLanguage();
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -84,7 +86,7 @@ export function SkinTypeAnalyzer() {
       setResult(data);
     } catch (err: any) {
       console.error("Skin analysis error:", err);
-      toast.error(err.message || "Analyse fehlgeschlagen");
+      toast.error(err.message || t("skin.error"));
     } finally {
       setLoading(false);
     }
@@ -103,11 +105,11 @@ export function SkinTypeAnalyzer() {
     <>
       <Button
         variant="outline"
-        className="gap-2"
+        className="gap-2 w-full"
         onClick={() => { setOpen(true); reset(); }}
       >
         <Sparkles className="w-4 h-4" />
-        Hauttyp erkennen
+        {t("skin.detect")}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -115,10 +117,10 @@ export function SkinTypeAnalyzer() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              AI Hauttyp-Erkennung
+              {t("skin.title")}
             </DialogTitle>
             <DialogDescription>
-              Lade ein Nahaufnahme-Foto deines Gesichts hoch für eine KI-gestützte Hauttyp-Analyse.
+              {t("skin.description")}
             </DialogDescription>
           </DialogHeader>
 
@@ -138,7 +140,7 @@ export function SkinTypeAnalyzer() {
                     {loading && (
                       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        <p className="text-sm font-medium">Hauttyp wird analysiert...</p>
+                        <p className="text-sm font-medium">{t("skin.analyzing")}</p>
                       </div>
                     )}
                   </div>
@@ -148,10 +150,10 @@ export function SkinTypeAnalyzer() {
                       <Upload className="w-8 h-8 text-primary" />
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Tippe hier, um ein Foto hochzuladen
+                      {t("skin.upload")}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Am besten: Nahaufnahme, gutes Licht, kein Make-up
+                      {t("skin.uploadTip")}
                     </p>
                   </div>
                 )}
@@ -181,13 +183,13 @@ export function SkinTypeAnalyzer() {
                     </div>
                     <h3 className="text-xl font-bold">{result.skinTypeName}</h3>
                     <p className="text-sm text-muted-foreground mt-1">
-                      {Math.round(result.confidence * 100)}% Sicherheit
+                      {Math.round(result.confidence * 100)}% {t("skin.confidence")}
                     </p>
                   </div>
 
                   {/* Characteristics */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Merkmale</h4>
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("skin.characteristics")}</h4>
                     <div className="flex flex-wrap gap-2">
                       {result.characteristics.map((c, i) => (
                         <span key={i} className="px-3 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground">
@@ -199,7 +201,7 @@ export function SkinTypeAnalyzer() {
 
                   {/* Recommendations */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Empfohlene Produkte</h4>
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("skin.recommendations")}</h4>
                     <div className="space-y-2">
                       {result.recommendations.map((rec, i) => (
                         <div key={i} className="p-3 rounded-xl bg-muted/50 border border-border">
@@ -215,7 +217,7 @@ export function SkinTypeAnalyzer() {
 
                   {/* Tips */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Tipps</h4>
+                    <h4 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">{t("skin.tips")}</h4>
                     <ul className="space-y-1">
                       {result.tips.map((tip, i) => (
                         <li key={i} className="text-sm text-muted-foreground flex items-start gap-2">
@@ -229,7 +231,7 @@ export function SkinTypeAnalyzer() {
                   {/* Retry */}
                   <Button variant="outline" className="w-full gap-2" onClick={reset}>
                     <Camera className="w-4 h-4" />
-                    Neue Analyse
+                    {t("skin.retry")}
                   </Button>
                 </motion.div>
               )}

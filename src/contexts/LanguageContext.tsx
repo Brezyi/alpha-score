@@ -35,6 +35,29 @@ const translations: Translations = {
   "dashboard.progress": { de: "Fortschritt", en: "Progress" },
   "dashboard.reachable": { de: "erreichbar", en: "reachable" },
   "dashboard.personalBest": { de: "Bestwert", en: "Personal Best" },
+  "dashboard.yourProgress": { de: "Dein Fortschritt", en: "Your Progress" },
+  "dashboard.pointsReachable": { de: "Punkte", en: "Points" },
+  "dashboard.outOf": { de: "von", en: "of" },
+  "dashboard.share": { de: "Teilen", en: "Share" },
+  "dashboard.nextSteps": { de: "Nächste Schritte", en: "Next Steps" },
+  "dashboard.revenueAndSubs": { de: "Umsatz & Abos", en: "Revenue & Subs" },
+  "dashboard.revenueDesc": { de: "Revenue & Affiliate-Übersicht", en: "Revenue & Affiliate Overview" },
+  
+  // Quick Actions
+  "quick.newAnalysis": { de: "Neue Analyse", en: "New Analysis" },
+  "quick.newAnalysisDesc": { de: "Lade Fotos hoch für deine KI-Bewertung", en: "Upload photos for your AI rating" },
+  "quick.myPlan": { de: "Mein Plan", en: "My Plan" },
+  "quick.myPlanDesc": { de: "Dein personalisierter Looksmax-Plan", en: "Your personalized looksmax plan" },
+  "quick.lifestyle": { de: "Lifestyle", en: "Lifestyle" },
+  "quick.lifestyleDesc": { de: "Tracke Schlaf, Wasser & Supplements", en: "Track sleep, water & supplements" },
+  "quick.friends": { de: "Freunde", en: "Friends" },
+  "quick.friendsDesc": { de: "Verbinde dich mit anderen", en: "Connect with others" },
+  "quick.progress": { de: "Fortschritt", en: "Progress" },
+  "quick.progressDesc": { de: "Verfolge deine Entwicklung", en: "Track your development" },
+  "quick.affiliate": { de: "Affiliate", en: "Affiliate" },
+  "quick.affiliateDesc": { de: "Verdiene 20% pro Abo", en: "Earn 20% per subscription" },
+  "quick.skinType": { de: "Hauttyp erkennen", en: "Detect Skin Type" },
+  "quick.skinTypeDesc": { de: "KI-gestützte Hautanalyse", en: "AI-powered skin analysis" },
   
   // Analysis
   "analysis.new": { de: "Neue Analyse", en: "New Analysis" },
@@ -70,6 +93,20 @@ const translations: Translations = {
   // Language
   "language.de": { de: "Deutsch", en: "German" },
   "language.en": { de: "Englisch", en: "English" },
+
+  // Skin Type Analyzer
+  "skin.detect": { de: "Hauttyp erkennen", en: "Detect Skin Type" },
+  "skin.title": { de: "AI Hauttyp-Erkennung", en: "AI Skin Type Detection" },
+  "skin.description": { de: "Lade ein Nahaufnahme-Foto deines Gesichts hoch für eine KI-gestützte Hauttyp-Analyse.", en: "Upload a close-up photo of your face for an AI-powered skin type analysis." },
+  "skin.upload": { de: "Tippe hier, um ein Foto hochzuladen", en: "Tap here to upload a photo" },
+  "skin.uploadTip": { de: "Am besten: Nahaufnahme, gutes Licht, kein Make-up", en: "Best: close-up, good lighting, no makeup" },
+  "skin.analyzing": { de: "Hauttyp wird analysiert...", en: "Analyzing skin type..." },
+  "skin.confidence": { de: "Sicherheit", en: "Confidence" },
+  "skin.characteristics": { de: "Merkmale", en: "Characteristics" },
+  "skin.recommendations": { de: "Empfohlene Produkte", en: "Recommended Products" },
+  "skin.tips": { de: "Tipps", en: "Tips" },
+  "skin.retry": { de: "Neue Analyse", en: "New Analysis" },
+  "skin.error": { de: "Analyse fehlgeschlagen", en: "Analysis failed" },
 };
 
 interface LanguageContextValue {
