@@ -608,10 +608,9 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="container px-4 py-8">
-        {/* Welcome + Motivation */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Welcome */}
+        <div className="mb-8">
           <WelcomeWidget />
-          <MotivationWidget />
         </div>
 
         {/* Stats Overview - Showcase Style */}
@@ -856,8 +855,9 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Next Steps Widget */}
+        {/* Motivation + Next Steps */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <MotivationWidget />
           {/* Next Steps Widget */}
           <div className="p-5 rounded-2xl glass-enhanced hover-glow opacity-0 animate-fade-in-up" style={{ animationDelay: "450ms", animationFillMode: "forwards" }}>
             <div className="flex items-center justify-between mb-3">
