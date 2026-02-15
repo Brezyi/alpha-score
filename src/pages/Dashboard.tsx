@@ -43,6 +43,7 @@ import { Link, useNavigate } from "react-router-dom";
 import React, { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -104,51 +105,51 @@ type Analysis = {
   detailed_results: any;
 };
 
-const quickActions = [
+const getQuickActions = (t: (key: string) => string) => [
   {
     icon: Camera,
-    title: "Neue Analyse",
-    description: "Lade Fotos hoch für deine KI-Bewertung",
+    title: t("quick.newAnalysis"),
+    description: t("quick.newAnalysisDesc"),
     href: "/upload",
     color: "bg-primary/10 text-primary",
     premium: false,
   },
   {
     icon: Target,
-    title: "Mein Plan",
-    description: "Dein personalisierter Looksmax-Plan",
+    title: t("quick.myPlan"),
+    description: t("quick.myPlanDesc"),
     href: "/plan",
     color: "bg-blue-500/10 text-blue-500",
     premium: true,
   },
   {
     icon: Heart,
-    title: "Lifestyle",
-    description: "Tracke Schlaf, Wasser & Supplements",
+    title: t("quick.lifestyle"),
+    description: t("quick.lifestyleDesc"),
     href: "/lifestyle",
     color: "bg-pink-500/10 text-pink-500",
     premium: true,
   },
   {
     icon: Users,
-    title: "Freunde",
-    description: "Verbinde dich mit anderen",
+    title: t("quick.friends"),
+    description: t("quick.friendsDesc"),
     href: "/friends",
     color: "bg-amber-500/10 text-amber-500",
     premium: false,
   },
   {
     icon: TrendingUp,
-    title: "Fortschritt",
-    description: "Verfolge deine Entwicklung",
+    title: t("quick.progress"),
+    description: t("quick.progressDesc"),
     href: "/progress",
     color: "bg-violet-500/10 text-violet-500",
     premium: true,
   },
   {
     icon: DollarSign,
-    title: "Affiliate",
-    description: "Verdiene 20% pro Abo",
+    title: t("quick.affiliate"),
+    description: t("quick.affiliateDesc"),
     href: "/affiliate",
     color: "bg-primary/10 text-primary",
     premium: false,
@@ -218,6 +219,8 @@ type UserTask = {
 const Dashboard = () => {
   const isNative = Capacitor.isNativePlatform();
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
+  const quickActions = getQuickActions(t);
   const { profile, updateProfile, loading: profileLoading } = useProfile();
   const [analyses, setAnalyses] = useState<Analysis[]>([]);
   const [analysesLoading, setAnalysesLoading] = useState(true);
@@ -584,9 +587,6 @@ const Dashboard = () => {
                   </Button>
                 </Link>
               )}
-              <div className="hidden sm:block">
-                <SkinTypeAnalyzer />
-              </div>
               <LanguageToggle />
               <NotificationCenter />
               <ProfileMenu />
@@ -717,7 +717,7 @@ const Dashboard = () => {
                           hasAnimated ? <AnimatedNumber value={latestScore} /> : latestScore.toFixed(1)
                         ) : "—"}
                       </span>
-                      <span className="text-xs text-muted-foreground">von 10</span>
+                      <span className="text-xs text-muted-foreground">{t("dashboard.outOf")} 10</span>
                     </div>
                   </div>
                   
@@ -736,7 +736,7 @@ const Dashboard = () => {
                           <Minus className="w-4 h-4" />
                         )}
                         <span>{parseFloat(scoreDiff) > 0 ? "+" : ""}{scoreDiff}</span>
-                        <span className="text-muted-foreground font-normal">seit letzter Analyse</span>
+                        <span className="text-muted-foreground font-normal">{t("dashboard.sinceLastAnalysis")}</span>
                       </div>
                     </div>
                   )}
@@ -751,7 +751,7 @@ const Dashboard = () => {
                         onClick={() => setShareOpen(true)}
                       >
                         <Share2 className="w-4 h-4" />
-                        Teilen
+                        {t("dashboard.share")}
                       </Button>
                     </div>
                   )}
@@ -788,13 +788,13 @@ const Dashboard = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-primary" />
-                        <span className="font-medium">Dein Potenzial</span>
+                        <span className="font-medium">{t("dashboard.potential")}</span>
                       </div>
                       <span className="text-2xl font-bold text-primary">{latestPotential.toFixed(1)}</span>
                     </div>
                     {pointsToGo && (
                       <div className="mt-2 text-sm text-muted-foreground">
-                        Noch <span className="text-primary font-semibold">+{pointsToGo} Punkte</span> erreichbar
+                        <span className="text-primary font-semibold">+{pointsToGo} {t("dashboard.pointsReachable")}</span> {t("dashboard.reachable")}
                       </div>
                     )}
                   </>
@@ -1144,7 +1144,7 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="mb-8" data-tour="quick-actions">
-          <h2 className="text-xl font-bold mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>Schnellzugriff</h2>
+          <h2 className="text-xl font-bold mb-4 opacity-0 animate-fade-in" style={{ animationDelay: "800ms", animationFillMode: "forwards" }}>{t("dashboard.quickAccess")}</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             {quickActions.map((action, index) => {
               const isLocked = action.premium && !isPremiumUser;
@@ -1194,13 +1194,30 @@ const Dashboard = () => {
                 </p>
               </Link>
             )}
+
+            {/* Skin Type Analyzer Quick Action */}
+            <div
+              className="group relative p-6 rounded-2xl glass-card hover-glow hover-lift transition-all duration-300 opacity-0 animate-fade-in"
+              style={{ animationDelay: `${950 + quickActions.length * 100}ms`, animationFillMode: "forwards" }}
+            >
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                <Sparkles className="w-6 h-6 text-pink-500" />
+              </div>
+              <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                {t("quick.skinType")}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                {t("quick.skinTypeDesc")}
+              </p>
+              <SkinTypeAnalyzer />
+            </div>
           </div>
         </div>
 
         {/* Gamification Section - XP, Challenges */}
         {isPremiumUser && (
           <div className="mb-8 space-y-6 opacity-0 animate-fade-in-up" style={{ animationDelay: "1100ms", animationFillMode: "forwards" }}>
-            <h2 className="text-xl font-bold">Dein Fortschritt</h2>
+            <h2 className="text-xl font-bold">{t("dashboard.yourProgress")}</h2>
             
             {/* XP, Challenges, Activity - this is the gamification tour target */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6" data-tour="gamification">
