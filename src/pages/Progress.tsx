@@ -15,6 +15,7 @@ import { StreakRewards } from "@/components/gamification/StreakRewards";
 import { MobileAppLayout } from "@/components/mobile/MobileAppLayout";
 import { MobileProgressContent } from "@/components/mobile/MobileProgressContent";
 import { Capacitor } from "@capacitor/core";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   ArrowLeft, 
   TrendingUp, 
@@ -38,7 +39,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Area } from "recharts";
 import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enGB } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { useOptimizedAnimations } from "@/hooks/useReducedMotion";
 
@@ -76,7 +77,6 @@ export default function Progress() {
   const [compareIndex, setCompareIndex] = useState(0);
   const achievementsSectionRef = useRef<HTMLDivElement>(null);
   const timelineSectionRef = useRef<HTMLDivElement>(null);
-  // userMilestones state removed - using achievements from useGamification
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -84,6 +84,8 @@ export default function Progress() {
   const { currentStreak, longestStreak } = useStreak();
   const { addXp, achievements, loading: achievementsLoading } = useGamification();
   const { shouldReduce, containerVariants, itemVariants, cardVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
+  const { t, language } = useLanguage();
+  const dateLocale = language === "en" ? enGB : de;
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -144,7 +146,7 @@ export default function Progress() {
       setAnalyses(analysesWithSignedUrls);
     } catch (err) {
       console.error("Error fetching analyses:", err);
-      setError("Analysen konnten nicht geladen werden.");
+      setError(t("progress.couldNotLoad"));
     } finally {
       setLoading(false);
     }
@@ -167,7 +169,7 @@ export default function Progress() {
           animate={{ opacity: 1, scale: 1 }}
         >
           <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Wird geladen...</p>
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         </motion.div>
       </div>
     );
@@ -198,7 +200,7 @@ export default function Progress() {
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
-            Zurück zum Dashboard
+            {t("progress.backToDashboard")}
           </Link>
 
           <motion.div 
@@ -215,9 +217,9 @@ export default function Progress() {
             >
               <Lock className="w-10 h-10 text-primary" />
             </motion.div>
-            <h1 className="text-2xl font-bold mb-2">Premium Feature</h1>
+            <h1 className="text-2xl font-bold mb-2">{t("progress.premiumTitle")}</h1>
             <p className="text-muted-foreground mb-8 max-w-sm mx-auto">
-              Verfolge deinen Fortschritt mit Vorher/Nachher-Vergleichen und detaillierten Statistiken.
+              {t("progress.premiumDesc")}
             </p>
             
             <motion.div 
@@ -227,10 +229,10 @@ export default function Progress() {
               animate="visible"
             >
               {[
-                "Vorher/Nachher Fotovergleich",
-                "Score-Entwicklung über Zeit",
-                "Detaillierte Statistiken",
-                "Stärken & Schwächen Trends"
+                t("progress.premiumFeature1"),
+                t("progress.premiumFeature2"),
+                t("progress.premiumFeature3"),
+                t("progress.premiumFeature4")
               ].map((feature, i) => (
                 <motion.div 
                   key={i} 
@@ -253,7 +255,7 @@ export default function Progress() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button variant="hero" size="lg" onClick={() => createCheckout("premium")}>
                 <Crown className="w-5 h-5" />
-                Jetzt Premium werden
+                {t("progress.goPremium")}
               </Button>
             </motion.div>
           </motion.div>
@@ -290,8 +292,8 @@ export default function Progress() {
     const prevScore = index > 0 ? chartDataRaw[index - 1].looks_score : null;
     const change = a.looks_score !== null && prevScore !== null ? a.looks_score - prevScore : null;
     return {
-      date: format(new Date(a.created_at), "dd.MM", { locale: de }),
-      fullDate: format(new Date(a.created_at), "dd. MMMM yyyy", { locale: de }),
+      date: format(new Date(a.created_at), "dd.MM", { locale: dateLocale }),
+      fullDate: format(new Date(a.created_at), "dd. MMMM yyyy", { locale: dateLocale }),
       score: a.looks_score,
       potential: a.potential_score,
       change,
@@ -306,7 +308,7 @@ export default function Progress() {
   const beforeAnalysis = completedAnalyses[compareIndex + 1];
 
   const formatDate = (dateStr: string) => {
-    return format(new Date(dateStr), "dd. MMM yyyy", { locale: de });
+    return format(new Date(dateStr), "dd. MMM yyyy", { locale: dateLocale });
   };
 
   // Strength/Weakness trends
@@ -340,10 +342,10 @@ export default function Progress() {
       
       // Estimate category improvements based on potential gap
       const categories = [
-        { key: 'skin', name: 'Skincare Routine', color: 'bg-pink-500', score: dr.skin?.score },
-        { key: 'hair', name: 'Hairstyle Optimierung', color: 'bg-purple-500', score: dr.hair?.score },
-        { key: 'jawline', name: 'Fitness & Body', color: 'bg-blue-500', score: dr.jawline?.score },
-        { key: 'eyes', name: 'Style & Grooming', color: 'bg-amber-500', score: dr.eyes?.score },
+        { key: 'skin', name: t("progress.skincareRoutine"), color: 'bg-pink-500', score: dr.skin?.score },
+        { key: 'hair', name: t("progress.hairstyleOpt"), color: 'bg-purple-500', score: dr.hair?.score },
+        { key: 'jawline', name: t("progress.fitnessBody"), color: 'bg-blue-500', score: dr.jawline?.score },
+        { key: 'eyes', name: t("progress.styleGrooming"), color: 'bg-amber-500', score: dr.eyes?.score },
       ];
       
       // Calculate potential improvements based on distance from 10
@@ -374,10 +376,10 @@ export default function Progress() {
       
       return {
         improvements: [
-          { category: 'Skincare Routine', improvement: (scoreImprovement * 0.35).toFixed(1), color: 'bg-pink-500' },
-          { category: 'Hairstyle Optimierung', improvement: (scoreImprovement * 0.25).toFixed(1), color: 'bg-purple-500' },
-          { category: 'Fitness & Body', improvement: (scoreImprovement * 0.25).toFixed(1), color: 'bg-blue-500' },
-          { category: 'Style & Grooming', improvement: (scoreImprovement * 0.15).toFixed(1), color: 'bg-amber-500' },
+          { category: t("progress.skincareRoutine"), improvement: (scoreImprovement * 0.35).toFixed(1), color: 'bg-pink-500' },
+          { category: t("progress.hairstyleOpt"), improvement: (scoreImprovement * 0.25).toFixed(1), color: 'bg-purple-500' },
+          { category: t("progress.fitnessBody"), improvement: (scoreImprovement * 0.25).toFixed(1), color: 'bg-blue-500' },
+          { category: t("progress.styleGrooming"), improvement: (scoreImprovement * 0.15).toFixed(1), color: 'bg-amber-500' },
         ],
         total: `+${scoreImprovement.toFixed(1)}`,
         isPotential: false
@@ -389,22 +391,22 @@ export default function Progress() {
     
     const categoryDiffs = [
       { 
-        category: 'Hautqualität', 
+        category: t("progress.skinQuality"), 
         improvement: ((newestDr.skin?.score || 0) - (oldestDr.skin?.score || 0)), 
         color: 'bg-pink-500' 
       },
       { 
-        category: 'Haare & Styling', 
+        category: t("progress.hairStyling"), 
         improvement: ((newestDr.hair?.score || 0) - (oldestDr.hair?.score || 0)), 
         color: 'bg-purple-500' 
       },
       { 
-        category: 'Jawline & Body', 
+        category: t("progress.jawlineBody"), 
         improvement: ((newestDr.jawline?.score || 0) - (oldestDr.jawline?.score || 0)), 
         color: 'bg-blue-500' 
       },
       { 
-        category: 'Augenbereich', 
+        category: t("progress.eyeArea"), 
         improvement: ((newestDr.eyes?.score || 0) - (oldestDr.eyes?.score || 0)), 
         color: 'bg-amber-500' 
       },
@@ -451,7 +453,7 @@ export default function Progress() {
                 disabled={loading}
               >
                 <RefreshCw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
-                Aktualisieren
+                {t("progress.refresh")}
               </Button>
             </motion.div>
             <motion.div 
@@ -472,9 +474,9 @@ export default function Progress() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-3xl font-bold mb-2">Dein Fortschritt</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("progress.title")}</h1>
           <p className="text-muted-foreground">
-            Verfolge deine Entwicklung über Zeit ({completedAnalyses.length} Analysen)
+            {t("progress.subtitle")} ({completedAnalyses.length} {t("progress.analyses")})
           </p>
         </motion.div>
 
@@ -496,7 +498,7 @@ export default function Progress() {
                       className="p-0 h-auto text-sm" 
                       onClick={fetchAnalyses}
                     >
-                      Erneut versuchen
+                      {t("progress.retryLoad")}
                     </Button>
                   </div>
                 </div>
@@ -518,7 +520,7 @@ export default function Progress() {
             >
               <Loader2 className="w-12 h-12 text-primary mx-auto mb-4" />
             </motion.div>
-            <p className="text-muted-foreground">Lade Analysen...</p>
+            <p className="text-muted-foreground">{t("progress.loadingAnalyses")}</p>
           </motion.div>
         ) : completedAnalyses.length === 0 ? (
           <motion.div
@@ -533,14 +535,14 @@ export default function Progress() {
               >
                 <Camera className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               </motion.div>
-              <h2 className="text-xl font-semibold mb-2">Keine Analysen vorhanden</h2>
+              <h2 className="text-xl font-semibold mb-2">{t("progress.noAnalyses")}</h2>
               <p className="text-muted-foreground mb-6">
-                Starte deine erste Analyse, um deinen Fortschritt zu tracken.
+                {t("progress.noAnalysesDesc")}
               </p>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                 <Button variant="hero" onClick={() => navigate("/upload")}>
                   <Camera className="w-4 h-4" />
-                  Erste Analyse starten
+                  {t("progress.firstAnalysis")}
                 </Button>
               </motion.div>
             </Card>
@@ -558,7 +560,7 @@ export default function Progress() {
                 <Card className="p-4 h-full">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <Target className="w-4 h-4" />
-                    <span className="text-xs">Aktuell</span>
+                    <span className="text-xs">{t("progress.current")}</span>
                   </div>
                   <div className="text-2xl font-bold">
                     {latestScore?.toFixed(1) || "-"}
@@ -570,13 +572,13 @@ export default function Progress() {
                 <Card className="p-4 h-full border-primary/30 bg-primary/5">
                   <div className="flex items-center gap-2 text-primary mb-2">
                     <Zap className="w-4 h-4" />
-                    <span className="text-xs">Potenzial</span>
+                    <span className="text-xs">{t("progress.potential")}</span>
                   </div>
                   <div className="text-2xl font-bold text-primary">
                     {latestPotential?.toFixed(1) || "-"}
                   </div>
                   {potentialGap && (
-                    <span className="text-xs text-muted-foreground">+{potentialGap} möglich</span>
+                    <span className="text-xs text-muted-foreground">+{potentialGap} {t("progress.possible")}</span>
                   )}
                 </Card>
               </motion.div>
@@ -585,7 +587,7 @@ export default function Progress() {
                 <Card className="p-4 h-full">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <BarChart3 className="w-4 h-4" />
-                    <span className="text-xs">Durchschnitt</span>
+                    <span className="text-xs">{t("progress.avgScore")}</span>
                   </div>
                   <div className="text-2xl font-bold">
                     {averageScore || "-"}
@@ -597,7 +599,7 @@ export default function Progress() {
                 <Card className="p-4 h-full">
                   <div className="flex items-center gap-2 text-muted-foreground mb-2">
                     <Flame className="w-4 h-4" />
-                    <span className="text-xs">Höchster</span>
+                    <span className="text-xs">{t("progress.highest")}</span>
                   </div>
                   <div className="text-2xl font-bold text-primary">
                     {highestScore || "-"}
@@ -615,7 +617,7 @@ export default function Progress() {
                     ) : (
                       <Minus className="w-4 h-4" />
                     )}
-                    <span className="text-xs">Gesamt</span>
+                    <span className="text-xs">{t("progress.total")}</span>
                   </div>
                   <div className={cn(
                     "text-2xl font-bold",
@@ -679,20 +681,20 @@ export default function Progress() {
                           <BarChart3 className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                          <h2 className="text-lg font-bold">Score-Entwicklung</h2>
-                          <p className="text-xs text-muted-foreground">{completedAnalyses.length} Analysen total</p>
+                          <h2 className="text-lg font-bold">{t("progress.scoreChart")}</h2>
+                          <p className="text-xs text-muted-foreground">{completedAnalyses.length} {t("progress.totalAnalyses")}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 text-xs">
                         <div className="flex items-center gap-1.5">
                           <div className="w-4 h-0.5 bg-primary rounded-full" />
-                          <span className="text-muted-foreground">Score</span>
+                          <span className="text-muted-foreground">{t("progress.score")}</span>
                         </div>
                         <div className="flex items-center gap-1.5">
                           <svg className="w-4 h-2" viewBox="0 0 16 2">
                             <line x1="0" y1="1" x2="16" y2="1" stroke="hsl(var(--primary))" strokeWidth="2" strokeDasharray="3 2" strokeOpacity="0.5" />
                           </svg>
-                          <span className="text-muted-foreground">Potenzial</span>
+                          <span className="text-muted-foreground">{t("progress.potential")}</span>
                         </div>
                       </div>
                     </div>
@@ -739,8 +741,8 @@ export default function Progress() {
                             formatter={(value: number, name: string, props: any) => {
                               const change = props?.payload?.change;
                               if (name === "score") {
-                                return [
-                                  <div key={name} className="flex items-center gap-2">
+                              return [
+                                <div key={name} className="flex items-center gap-2">
                                     <span className="font-medium">{value?.toFixed(1) || "—"}</span>
                                     {change !== null && change !== undefined && (
                                       <span className={`text-xs font-medium ${change > 0 ? 'text-green-500' : change < 0 ? 'text-red-500' : 'text-muted-foreground'}`}>
@@ -748,12 +750,12 @@ export default function Progress() {
                                       </span>
                                     )}
                                   </div>, 
-                                  "Score"
+                                  t("progress.score")
                                 ];
                               }
                               return [
                                 <span key={name} className="font-medium">{value?.toFixed(1) || "—"}</span>, 
-                                "Potenzial"
+                                t("progress.potential")
                               ];
                             }}
                             cursor={{ stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }}
@@ -808,15 +810,15 @@ export default function Progress() {
                         <Eye className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <h2 className="text-lg font-bold">Detaillierte Analyse</h2>
-                        <p className="text-xs text-muted-foreground">Bewertung nach Kategorie</p>
+                         <h2 className="text-lg font-bold">{t("progress.detailedAnalysis")}</h2>
+                        <p className="text-xs text-muted-foreground">{t("progress.byCategory")}</p>
                       </div>
                     </div>
                     <Link 
                       to={`/analysis/${completedAnalyses[0].id}`} 
                       className="text-sm text-primary hover:underline flex items-center gap-1 group"
                     >
-                      Vollständig ansehen
+                      {t("progress.viewFull")}
                       <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </div>
@@ -849,12 +851,12 @@ export default function Progress() {
                       };
                       
                       const featureScores = [
-                        { key: "face_symmetry", label: "Gesichtssymmetrie", score: extractScore(detailedResults?.face_symmetry, baseScore + 0.3), color: "bg-emerald-500", iconBg: "bg-emerald-500/20", iconColor: "text-emerald-500", issues: extractIssues(detailedResults?.face_symmetry), details: extractDetails(detailedResults?.face_symmetry) },
-                        { key: "jawline", label: "Jawline Definition", score: extractScore(detailedResults?.jawline, baseScore - 0.2), color: "bg-blue-500", iconBg: "bg-blue-500/20", iconColor: "text-blue-500", issues: extractIssues(detailedResults?.jawline), details: extractDetails(detailedResults?.jawline) },
-                        { key: "eyes", label: "Augenbereich", score: extractScore(detailedResults?.eyes, baseScore + 0.5), color: "bg-purple-500", iconBg: "bg-purple-500/20", iconColor: "text-purple-500", issues: extractIssues(detailedResults?.eyes), details: extractDetails(detailedResults?.eyes) },
-                        { key: "skin", label: "Hautqualität", score: extractScore(detailedResults?.skin, baseScore - 0.5), color: "bg-orange-500", iconBg: "bg-orange-500/20", iconColor: "text-orange-500", issues: extractIssues(detailedResults?.skin), details: extractDetails(detailedResults?.skin) },
-                        { key: "hair", label: "Haare & Styling", score: extractScore(detailedResults?.hair, baseScore - 0.3), color: "bg-pink-500", iconBg: "bg-pink-500/20", iconColor: "text-pink-500", issues: extractIssues(detailedResults?.hair), details: extractDetails(detailedResults?.hair) },
-                        { key: "overall_vibe", label: "Ausstrahlung", score: extractScore(detailedResults?.overall_vibe, baseScore), color: "bg-amber-500", iconBg: "bg-amber-500/20", iconColor: "text-amber-500", issues: extractIssues(detailedResults?.overall_vibe), details: extractDetails(detailedResults?.overall_vibe) },
+                        { key: "face_symmetry", label: t("progress.facialSymmetry"), score: extractScore(detailedResults?.face_symmetry, baseScore + 0.3), color: "bg-emerald-500", iconBg: "bg-emerald-500/20", iconColor: "text-emerald-500", issues: extractIssues(detailedResults?.face_symmetry), details: extractDetails(detailedResults?.face_symmetry) },
+                        { key: "jawline", label: t("progress.jawlineDefinition"), score: extractScore(detailedResults?.jawline, baseScore - 0.2), color: "bg-blue-500", iconBg: "bg-blue-500/20", iconColor: "text-blue-500", issues: extractIssues(detailedResults?.jawline), details: extractDetails(detailedResults?.jawline) },
+                        { key: "eyes", label: t("progress.eyeArea"), score: extractScore(detailedResults?.eyes, baseScore + 0.5), color: "bg-purple-500", iconBg: "bg-purple-500/20", iconColor: "text-purple-500", issues: extractIssues(detailedResults?.eyes), details: extractDetails(detailedResults?.eyes) },
+                        { key: "skin", label: t("progress.skinQuality"), score: extractScore(detailedResults?.skin, baseScore - 0.5), color: "bg-orange-500", iconBg: "bg-orange-500/20", iconColor: "text-orange-500", issues: extractIssues(detailedResults?.skin), details: extractDetails(detailedResults?.skin) },
+                        { key: "hair", label: t("progress.hairStyling"), score: extractScore(detailedResults?.hair, baseScore - 0.3), color: "bg-pink-500", iconBg: "bg-pink-500/20", iconColor: "text-pink-500", issues: extractIssues(detailedResults?.hair), details: extractDetails(detailedResults?.hair) },
+                        { key: "overall_vibe", label: t("progress.charisma"), score: extractScore(detailedResults?.overall_vibe, baseScore), color: "bg-amber-500", iconBg: "bg-amber-500/20", iconColor: "text-amber-500", issues: extractIssues(detailedResults?.overall_vibe), details: extractDetails(detailedResults?.overall_vibe) },
                       ];
                       
                       return featureScores.map((item, index) => (
@@ -931,7 +933,7 @@ export default function Progress() {
                     >
                       <TrendingUp className="w-5 h-5 text-green-500" />
                     </motion.div>
-                    <h3 className="font-bold">Häufigste Stärken</h3>
+                    <h3 className="font-bold">{t("progress.topStrengths")}</h3>
                   </div>
                   {topStrengths.length > 0 ? (
                     <motion.div 
@@ -961,7 +963,7 @@ export default function Progress() {
                     </motion.div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Noch keine Daten vorhanden
+                      {t("progress.noData")}
                     </p>
                   )}
                 </Card>
@@ -977,7 +979,7 @@ export default function Progress() {
                     >
                       <Target className="w-5 h-5 text-orange-500" />
                     </motion.div>
-                    <h3 className="font-bold">Fokus-Bereiche</h3>
+                    <h3 className="font-bold">{t("progress.focusAreas")}</h3>
                   </div>
                   {topWeaknesses.length > 0 ? (
                     <motion.div 
@@ -1007,7 +1009,7 @@ export default function Progress() {
                     </motion.div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      Noch keine Daten vorhanden
+                      {t("progress.noData")}
                     </p>
                   )}
                 </Card>
