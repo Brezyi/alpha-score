@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Conversation } from "@/hooks/useCoachHistory";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ConversationSidebarProps {
   conversations: Conversation[];
@@ -65,6 +66,7 @@ export function ConversationSidebar({
   onUnarchiveConversation,
   onRenameConversation,
 }: ConversationSidebarProps) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteAllOpen, setDeleteAllOpen] = useState(false);
@@ -79,11 +81,11 @@ export function ConversationSidebar({
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) {
-      return "Heute";
+      return t("sidebar.today");
     } else if (diffDays === 1) {
-      return "Gestern";
+      return t("sidebar.yesterday");
     } else if (diffDays < 7) {
-      return `Vor ${diffDays} Tagen`;
+      return t("sidebar.daysAgo").replace("{days}", diffDays.toString());
     } else {
       return date.toLocaleDateString("de-DE", { day: "2-digit", month: "short" });
     }
@@ -145,7 +147,7 @@ export function ConversationSidebar({
           <SheetHeader className="p-4 border-b border-border">
             <SheetTitle className="flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-primary" />
-              Chat-Verlauf
+              {t("sidebar.chatHistory")}
             </SheetTitle>
           </SheetHeader>
           
@@ -156,7 +158,7 @@ export function ConversationSidebar({
               variant="outline"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Neues Gespräch
+              {t("sidebar.newChat")}
             </Button>
             
             <div className="flex gap-2">
@@ -166,7 +168,7 @@ export function ConversationSidebar({
                 className="flex-1 text-xs"
                 onClick={() => setShowArchived(false)}
               >
-                Aktiv ({conversations.length})
+                {t("sidebar.active")} ({conversations.length})
               </Button>
               <Button
                 variant={showArchived ? "secondary" : "outline"}
@@ -175,7 +177,7 @@ export function ConversationSidebar({
                 onClick={() => setShowArchived(true)}
               >
                 <Archive className="w-3 h-3 mr-1" />
-                Archiv ({archivedConversations.length})
+                {t("sidebar.archive")} ({archivedConversations.length})
               </Button>
             </div>
           </div>
@@ -184,7 +186,7 @@ export function ConversationSidebar({
             <div className="p-2 space-y-1">
               {displayedConversations.length === 0 ? (
                 <p className="text-center text-muted-foreground text-sm py-8">
-                  {showArchived ? "Keine archivierten Gespräche" : "Noch keine Gespräche gespeichert"}
+                  {showArchived ? t("sidebar.noArchived") : t("sidebar.noSaved")}
                 </p>
               ) : (
                 displayedConversations.map((conv) => (
@@ -240,7 +242,7 @@ export function ConversationSidebar({
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={(e) => handleStartRename(conv, e as any)}>
                           <Pencil className="w-4 h-4 mr-2" />
-                          Umbenennen
+                          {t("sidebar.rename")}
                         </DropdownMenuItem>
                         {showArchived ? (
                           <DropdownMenuItem onClick={(e) => {
@@ -248,7 +250,7 @@ export function ConversationSidebar({
                             onUnarchiveConversation(conv.id);
                           }}>
                             <ArchiveRestore className="w-4 h-4 mr-2" />
-                            Wiederherstellen
+                            {t("sidebar.restore")}
                           </DropdownMenuItem>
                         ) : (
                           <DropdownMenuItem onClick={(e) => {
@@ -256,7 +258,7 @@ export function ConversationSidebar({
                             onArchiveConversation(conv.id);
                           }}>
                             <Archive className="w-4 h-4 mr-2" />
-                            Archivieren
+                            {t("sidebar.archiveChat")}
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />
@@ -268,7 +270,7 @@ export function ConversationSidebar({
                           }}
                         >
                           <Trash2 className="w-4 h-4 mr-2" />
-                          Löschen
+                          {t("sidebar.deleteChat")}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -288,7 +290,7 @@ export function ConversationSidebar({
                 onClick={() => setDeleteAllOpen(true)}
               >
                 <Trash className="w-4 h-4 mr-2" />
-                Alle löschen
+                {t("sidebar.deleteAll")}
               </Button>
             </div>
           )}
@@ -299,18 +301,18 @@ export function ConversationSidebar({
       <AlertDialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Gespräch löschen?</AlertDialogTitle>
+            <AlertDialogTitle>{t("sidebar.deleteConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Das Gespräch wird unwiderruflich gelöscht.
+              {t("sidebar.deleteConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Löschen
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -320,19 +322,18 @@ export function ConversationSidebar({
       <AlertDialog open={deleteAllOpen} onOpenChange={setDeleteAllOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Alle Gespräche löschen?</AlertDialogTitle>
+            <AlertDialogTitle>{t("sidebar.deleteAllConfirm")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Alle {conversations.length} Gespräche werden unwiderruflich gelöscht. 
-              Archivierte Gespräche bleiben erhalten.
+              {t("sidebar.deleteAllConfirmDesc").replace("{count}", conversations.length.toString())}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAll}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Alle löschen
+              {t("sidebar.deleteAll")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
