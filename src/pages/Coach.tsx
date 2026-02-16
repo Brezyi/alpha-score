@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useCoachHistory } from "@/hooks/useCoachHistory";
 import { ConversationSidebar } from "@/components/coach/ConversationSidebar";
@@ -97,6 +98,7 @@ interface UserAnalysis {
 
 export default function Coach() {
   const isNative = Capacitor.isNativePlatform();
+  const { t, language } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -105,9 +107,9 @@ export default function Coach() {
   const [userAnalysis, setUserAnalysis] = useState<UserAnalysis | null>(null);
   const [showCrisisHotline, setShowCrisisHotline] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([
-    "Was sollte ich zuerst verbessern?",
-    "Skincare Routine für Anfänger",
-    "Wie verbessere ich meine Jawline?",
+    t("coach.suggestion1"),
+    t("coach.suggestion2"),
+    t("coach.suggestion3"),
   ]);
   const { user, loading } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -121,13 +123,11 @@ export default function Coach() {
   const { toast } = useToast();
   const { isPremium, loading: subscriptionLoading, createCheckout } = useSubscription();
 
-  // Check for crisis keywords in messages
   const checkForCrisisKeywords = useCallback((text: string) => {
     const lowerText = text.toLowerCase();
     return CRISIS_KEYWORDS.some(keyword => lowerText.includes(keyword));
   }, []);
   
-  // Chat history
   const {
     conversations,
     archivedConversations,
@@ -143,11 +143,9 @@ export default function Coach() {
     renameConversation
   } = useCoachHistory();
 
-  // Check if speech recognition is supported
   const isSpeechSupported = typeof window !== 'undefined' && 
     ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window);
 
-  // Initialize speech recognition
   useEffect(() => {
     if (!isSpeechSupported) return;
 
@@ -155,7 +153,7 @@ export default function Coach() {
     const recognition = new SpeechRecognitionClass();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = 'de-DE';
+    recognition.lang = language === "en" ? 'en-GB' : 'de-DE';
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       speechHeardRef.current = true;
@@ -171,7 +169,6 @@ export default function Coach() {
         }
       }
 
-      // Update input with transcript
       if (finalTranscript) {
         setSpeechPreview("");
         speechPreviewRef.current = "";
@@ -192,26 +189,26 @@ export default function Coach() {
 
       if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
         toast({
-          title: "Mikrofon blockiert",
-          description: "Bitte erlaube den Zugriff auf dein Mikrofon (Browser-Popup oder Mikrofon-Symbol in der Adressleiste).",
+          title: t("coach.micBlocked"),
+          description: t("coach.micBlockedDesc"),
           variant: "destructive",
         });
       } else if (event.error === 'no-speech') {
         toast({
-          title: "Keine Sprache erkannt",
-          description: "Bitte sprich lauter / näher ans Mikrofon und versuche es erneut.",
+          title: t("coach.noSpeech"),
+          description: t("coach.noSpeechDesc"),
           variant: "destructive",
         });
       } else if (event.error === 'audio-capture') {
         toast({
-          title: "Mikrofon nicht verfügbar",
-          description: "Kein Audio-Eingang gefunden oder von einer anderen App belegt.",
+          title: t("coach.micUnavailable"),
+          description: t("coach.micBlockedDesc"),
           variant: "destructive",
         });
       } else if (event.error === 'network') {
         toast({
-          title: "Spracherkennung-Problem",
-          description: "Netzwerk-/Service-Fehler. Bitte kurz warten und erneut versuchen.",
+          title: t("common.error"),
+          description: t("common.retry"),
           variant: "destructive",
         });
       }
@@ -219,7 +216,6 @@ export default function Coach() {
 
     recognition.onend = () => {
       setIsListening(false);
-      // If we only got interim results, commit them when the user stops recording
       const preview = speechPreviewRef.current.trim();
       if (preview) {
         setInput(prev => (prev.trim().length ? `${prev.trimEnd()} ` : "") + preview);
@@ -229,8 +225,8 @@ export default function Coach() {
 
       if (!speechHeardRef.current && !preview) {
         toast({
-          title: "Keine Transkription",
-          description: "Wenn nichts passiert: nutze Chrome/Edge (Firefox/iOS kann Probleme machen).",
+          title: t("coach.noSpeech"),
+          description: t("coach.noSpeechDesc"),
           variant: "destructive",
         });
       }
@@ -243,13 +239,13 @@ export default function Coach() {
         recognitionRef.current.abort();
       }
     };
-  }, [isSpeechSupported, toast]);
+  }, [isSpeechSupported, toast, language, t]);
 
   const toggleListening = useCallback(() => {
     if (!recognitionRef.current) {
       toast({
-        title: "Nicht unterstützt",
-        description: "Spracherkennung wird von deinem Browser nicht unterstützt. Versuche Chrome oder Edge.",
+        title: t("common.error"),
+        description: t("coach.noSpeechDesc"),
         variant: "destructive",
       });
       return;
@@ -261,13 +257,11 @@ export default function Coach() {
       setSpeechPreview("");
     } else {
       try {
-        // IMPORTANT: start() should happen directly in the click handler (user gesture)
         speechHeardRef.current = false;
         setSpeechPreview("");
         recognitionRef.current.start();
         setIsListening(true);
 
-        // Also trigger mic permission prompt when needed
         if (navigator.mediaDevices?.getUserMedia) {
           void navigator.mediaDevices
             .getUserMedia({ audio: true })
@@ -281,20 +275,20 @@ export default function Coach() {
 
               if (error?.name === 'NotAllowedError' || error?.name === 'PermissionDeniedError') {
                 toast({
-                  title: "Mikrofon-Zugriff benötigt",
-                  description: "Bitte erlaube Mikrofonzugriff (Browser-Popup oder Mikrofon-Symbol in der Adressleiste).",
+                  title: t("coach.micBlocked"),
+                  description: t("coach.micBlockedDesc"),
                   variant: "destructive",
                 });
               } else if (error?.name === 'NotFoundError') {
                 toast({
-                  title: "Kein Mikrofon gefunden",
-                  description: "Bitte schließe ein Mikrofon an oder prüfe deine Geräteeinstellungen.",
+                  title: t("coach.micUnavailable"),
+                  description: t("coach.micBlockedDesc"),
                   variant: "destructive",
                 });
               } else {
                 toast({
-                  title: "Fehler",
-                  description: "Mikrofon konnte nicht aktiviert werden. Bitte prüfe deine Browser-Einstellungen.",
+                  title: t("common.error"),
+                  description: t("coach.micBlockedDesc"),
                   variant: "destructive",
                 });
               }
@@ -303,22 +297,20 @@ export default function Coach() {
       } catch (error) {
         console.error('Failed to start speech recognition:', error);
         toast({
-          title: "Fehler",
-          description: "Spracherkennung konnte nicht gestartet werden.",
+          title: t("common.error"),
+          description: t("coach.noSpeechDesc"),
           variant: "destructive",
         });
       }
     }
-  }, [isListening, toast]);
+  }, [isListening, toast, t]);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
     }
   }, [user, loading, navigate]);
 
-  // Load user analysis and create personalized greeting
   useEffect(() => {
     if (!user || !isPremium || hasLoadedAnalysis.current) return;
     
@@ -337,20 +329,18 @@ export default function Coach() {
       if (analysis) {
         setUserAnalysis(analysis);
         
-        // Generate personalized suggestions from weaknesses
         if (analysis.weaknesses?.length) {
           const personalSuggestions = analysis.weaknesses.slice(0, 3).map(
-            (weakness: string) => `Wie verbessere ich ${weakness}?`
+            (weakness: string) => `${language === "en" ? "How do I improve" : "Wie verbessere ich"} ${weakness}?`
           );
           setSuggestions(personalSuggestions);
         }
         
-        // Only set greeting if no conversation is loaded
         if (!currentConversationId) {
           const topWeakness = analysis.weaknesses?.[0];
           const greeting = topWeakness 
-            ? `Score: ${analysis.looks_score}/10. Dein größtes Potenzial: **${topWeakness}**. Was willst du wissen?`
-            : `Score: ${analysis.looks_score}/10. Frag mich, was du verbessern kannst.`;
+            ? `Score: ${analysis.looks_score}/10. ${language === "en" ? "Your biggest potential:" : "Dein größtes Potenzial:"} **${topWeakness}**. ${t("coach.greeting")}`
+            : `Score: ${analysis.looks_score}/10. ${t("coach.greeting")}`;
           
           setMessages([{ role: "assistant", content: greeting }]);
         }
@@ -358,9 +348,8 @@ export default function Coach() {
     };
     
     loadAnalysisAndGreet();
-  }, [user, isPremium, currentConversationId]);
+  }, [user, isPremium, currentConversationId, language, t]);
 
-  // Load conversation when selected
   useEffect(() => {
     if (currentConversationId) {
       loadMessages(currentConversationId).then((msgs) => {
@@ -369,56 +358,48 @@ export default function Coach() {
     }
   }, [currentConversationId, loadMessages]);
 
-  // Handle new conversation
   const handleNewConversation = useCallback(async () => {
     setCurrentConversationId(null);
     
-    // Reset to greeting
     if (userAnalysis) {
       const topWeakness = userAnalysis.weaknesses?.[0];
       const greeting = topWeakness 
-        ? `Score: ${userAnalysis.looks_score}/10. Dein größtes Potenzial: **${topWeakness}**. Was willst du wissen?`
-        : `Score: ${userAnalysis.looks_score}/10. Frag mich, was du verbessern kannst.`;
+        ? `Score: ${userAnalysis.looks_score}/10. ${language === "en" ? "Your biggest potential:" : "Dein größtes Potenzial:"} **${topWeakness}**. ${t("coach.greeting")}`
+        : `Score: ${userAnalysis.looks_score}/10. ${t("coach.greeting")}`;
       setMessages([{ role: "assistant", content: greeting }]);
     } else {
       setMessages([]);
     }
-  }, [setCurrentConversationId, userAnalysis]);
+  }, [setCurrentConversationId, userAnalysis, language, t]);
 
-  // Handle conversation selection
   const handleSelectConversation = useCallback(async (id: string) => {
     setCurrentConversationId(id);
   }, [setCurrentConversationId]);
 
-  // Handle conversation deletion
   const handleDeleteConversation = useCallback(async (id: string) => {
     await deleteConversation(id);
-    toast({ title: "Gespräch gelöscht" });
-  }, [deleteConversation, toast]);
+    toast({ title: t("coach.deleted") });
+  }, [deleteConversation, toast, t]);
 
-  // Handle delete all
   const handleDeleteAllConversations = useCallback(async () => {
     await deleteAllConversations();
-    toast({ title: "Alle Gespräche gelöscht" });
-  }, [deleteAllConversations, toast]);
+    toast({ title: t("coach.allDeleted") });
+  }, [deleteAllConversations, toast, t]);
 
-  // Handle archive
   const handleArchiveConversation = useCallback(async (id: string) => {
     await archiveConversation(id);
-    toast({ title: "Gespräch archiviert" });
-  }, [archiveConversation, toast]);
+    toast({ title: t("coach.archived") });
+  }, [archiveConversation, toast, t]);
 
-  // Handle unarchive
   const handleUnarchiveConversation = useCallback(async (id: string) => {
     await unarchiveConversation(id);
-    toast({ title: "Gespräch wiederhergestellt" });
-  }, [unarchiveConversation, toast]);
+    toast({ title: t("coach.unarchived") });
+  }, [unarchiveConversation, toast, t]);
 
-  // Handle rename
   const handleRenameConversation = useCallback(async (id: string, newTitle: string) => {
     await renameConversation(id, newTitle);
-    toast({ title: "Gespräch umbenannt" });
-  }, [renameConversation, toast]);
+    toast({ title: t("coach.renamed") });
+  }, [renameConversation, toast, t]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -429,7 +410,6 @@ export default function Coach() {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
       setIsLoading(false);
-      // Mark the last message as no longer streaming
       setMessages(prev => {
         const updated = [...prev];
         if (updated.length > 0 && updated[updated.length - 1].role === "assistant") {
@@ -441,7 +421,6 @@ export default function Coach() {
   }, []);
 
   const streamChat = useCallback(async (userMessage: string) => {
-    // Check for crisis keywords in user message
     if (checkForCrisisKeywords(userMessage)) {
       setShowCrisisHotline(true);
     }
@@ -450,7 +429,6 @@ export default function Coach() {
     setMessages(newMessages);
     setIsLoading(true);
 
-    // Create or get conversation ID
     let convId = currentConversationId;
     if (!convId) {
       convId = await createConversation();
@@ -459,12 +437,10 @@ export default function Coach() {
       }
     }
 
-    // Save user message
     if (convId) {
       await saveMessage(convId, "user", userMessage);
     }
 
-    // Create abort controller for this request
     abortControllerRef.current = new AbortController();
 
     let assistantContent = "";
@@ -499,7 +475,6 @@ export default function Coach() {
       const decoder = new TextDecoder();
       let buffer = "";
 
-      // Add empty assistant message with streaming indicator
       setMessages(prev => [...prev, { role: "assistant", content: "", isStreaming: true }]);
 
       while (true) {
@@ -519,7 +494,6 @@ export default function Coach() {
 
           const jsonStr = line.slice(6).trim();
           if (jsonStr === "[DONE]") {
-            // Mark streaming as complete
             setMessages(prev => {
               const updated = [...prev];
               if (updated.length > 0) {
@@ -549,14 +523,12 @@ export default function Coach() {
               });
             }
           } catch {
-            // Partial JSON, wait for more data
             buffer = line + "\n" + buffer;
             break;
           }
         }
       }
 
-      // Ensure streaming is marked as complete and save assistant message
       setMessages(prev => {
         const updated = [...prev];
         if (updated.length > 0 && updated[updated.length - 1].role === "assistant") {
@@ -565,11 +537,9 @@ export default function Coach() {
         return updated;
       });
 
-      // Save assistant message after streaming complete
       if (convId && assistantContent) {
         await saveMessage(convId, "assistant", assistantContent);
         
-        // Check for crisis keywords in AI response
         if (checkForCrisisKeywords(assistantContent)) {
           setShowCrisisHotline(true);
         }
@@ -577,7 +547,6 @@ export default function Coach() {
 
     } catch (error: any) {
       if (error.name === "AbortError") {
-        // User cancelled, still save partial response if any
         if (convId && assistantContent) {
           await saveMessage(convId, "assistant", assistantContent);
         }
@@ -585,17 +554,16 @@ export default function Coach() {
       }
       console.error("Chat error:", error);
       toast({
-        title: "Fehler",
-        description: error.message || "Nachricht konnte nicht gesendet werden",
+        title: t("common.error"),
+        description: error.message || t("common.retry"),
         variant: "destructive",
       });
-      // Remove the user message if failed
       setMessages(messages);
     } finally {
       setIsLoading(false);
       abortControllerRef.current = null;
     }
-  }, [messages, toast, currentConversationId, createConversation, setCurrentConversationId, saveMessage]);
+  }, [messages, toast, currentConversationId, createConversation, setCurrentConversationId, saveMessage, t]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -620,7 +588,6 @@ export default function Coach() {
     );
   }
 
-  // Premium gate
   if (!isPremium) {
     return (
       <div className="min-h-screen bg-background">
@@ -631,11 +598,11 @@ export default function Coach() {
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Zurück</span>
+              <span>{t("nav.back")}</span>
             </button>
             <h1 className="text-lg font-bold flex items-center gap-2">
               <Sparkles className="w-5 h-5 text-primary" />
-              AI Coach
+              {t("coach.title")}
             </h1>
             <div className="w-20" />
           </div>
@@ -644,9 +611,9 @@ export default function Coach() {
         <main className="container mx-auto px-4 py-12 max-w-md">
           <Card className="p-8 text-center bg-gradient-to-br from-primary/10 to-card border-primary/20">
             <Lock className="w-16 h-16 text-primary mx-auto mb-6" />
-            <h2 className="text-2xl font-bold mb-3">Premium Feature</h2>
+            <h2 className="text-2xl font-bold mb-3">{t("dashboard.premiumFeature")}</h2>
             <p className="text-muted-foreground mb-6">
-              Der AI Coach ist ein exklusives Premium-Feature. Upgrade jetzt für personalisierte Looksmaxing-Beratung basierend auf deiner Analyse.
+              {t("coach.premiumDescFull")}
             </p>
             <Button 
               variant="hero" 
@@ -655,10 +622,10 @@ export default function Coach() {
               onClick={() => createCheckout("premium")}
             >
               <Crown className="w-5 h-5" />
-              Premium freischalten
+              {t("coach.unlockPremium")}
             </Button>
             <p className="text-xs text-muted-foreground mt-4">
-              Ab 9,99€/Monat • Jederzeit kündbar
+              {t("coach.priceHint")}
             </p>
           </Card>
         </main>
@@ -666,10 +633,9 @@ export default function Coach() {
     );
   }
 
-  // Native mobile layout
   if (isNative) {
     return (
-      <MobileAppLayout title="AI Coach" showLogo={false} showBack>
+      <MobileAppLayout title={t("coach.title")} showLogo={false} showBack>
         <MobileCoachContent
           messages={messages}
           isLoading={isLoading}
@@ -690,7 +656,6 @@ export default function Coach() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -699,19 +664,19 @@ export default function Coach() {
               className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="hidden sm:inline">Zurück</span>
+              <span className="hidden sm:inline">{t("nav.back")}</span>
             </button>
           </div>
           <h1 className="text-lg font-bold flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            AI Coach
+            {t("coach.title")}
           </h1>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
               onClick={handleNewConversation}
-              title="Neues Gespräch"
+              title={t("coach.newChat")}
             >
               <Plus className="w-5 h-5" />
             </Button>
@@ -731,23 +696,21 @@ export default function Coach() {
         </div>
       </header>
 
-      {/* Messages */}
       <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-6 max-w-2xl space-y-4">
           {messages.length <= 1 && (
             <div className="text-center py-8 animate-fade-in">
               {messages.length === 0 && (
                 <div className="glass-card p-8 rounded-2xl max-w-md mx-auto">
-                  {/* Clean gradient avatar */}
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-primary/20">
                     <Bot className="w-8 h-8 text-primary-foreground" />
                   </div>
-                  <h2 className="text-xl font-bold mb-2">Coach Alex</h2>
-                  <p className="text-sm text-muted-foreground mb-1">Dein Personal Trainer für Looks</p>
+                  <h2 className="text-xl font-bold mb-2">{t("coach.coachName")}</h2>
+                  <p className="text-sm text-muted-foreground mb-1">{t("coach.coachSubtitle")}</p>
                   <p className="text-muted-foreground max-w-sm mx-auto text-sm">
                     {userAnalysis 
-                      ? `Score: ${userAnalysis.looks_score}/10 • Los geht's, Champ!`
-                      : "Bereit zum Grinden?"
+                      ? `Score: ${userAnalysis.looks_score}/10 • ${t("coach.letsGo")}`
+                      : t("coach.readyToGrind")
                     }
                   </p>
                 </div>
@@ -825,7 +788,6 @@ export default function Coach() {
             </div>
           ))}
           
-          {/* Crisis Hotline Card */}
           {showCrisisHotline && (
             <CrisisHotlineCard onDismiss={() => setShowCrisisHotline(false)} />
           )}
@@ -834,11 +796,9 @@ export default function Coach() {
         </div>
       </main>
 
-      {/* Input */}
       <div className="sticky bottom-0 bg-background border-t border-border">
         <form onSubmit={handleSubmit} className="container mx-auto px-4 py-4 max-w-2xl">
           <div className="flex gap-2">
-            {/* Microphone Button */}
             {isSpeechSupported && (
               <Button
                 type="button"
@@ -861,7 +821,7 @@ export default function Coach() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={isListening ? "Ich höre zu..." : "Schreib deine Frage..."}
+              placeholder={isListening ? t("coach.listening") : t("coach.inputPlaceholder")}
               className={cn(
                 "min-h-[48px] max-h-32 resize-none",
                 isListening && "border-destructive"
@@ -893,7 +853,7 @@ export default function Coach() {
           {isListening && (
             <div className="mt-2 text-center animate-fade-in">
               <p className="text-xs text-destructive">
-                🎙️ Sprich jetzt… Tippe auf das Mikrofon zum Beenden
+                🎙️ {t("coach.speakNow")}
               </p>
               {speechPreview && (
                 <p className="text-xs text-muted-foreground mt-1 italic">

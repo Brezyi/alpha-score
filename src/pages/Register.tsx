@@ -8,6 +8,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useGlobalSettings } from "@/contexts/SystemSettingsContext";
 import { validateDisplayName } from "@/lib/displayNameValidation";
@@ -23,15 +24,9 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const benefits = [
-  "KI-Analyse deines Aussehens",
-  "Personalisierter Looksmax-Plan",
-  "Progress Tracking mit Streak-System",
-  "Zugang zum AI Coach",
-];
-
 const Register = () => {
   const [searchParams] = useSearchParams();
+  const { t } = useLanguage();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -41,7 +36,6 @@ const Register = () => {
   const [referralCode, setReferralCode] = useState(searchParams.get("ref") || "");
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  // Rate limiting removed for development
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, loading: authLoading } = useAuth();
@@ -50,15 +44,19 @@ const Register = () => {
 
   const normalizeEmail = (value: string) => value.trim().toLowerCase();
 
+  const benefits = [
+    t("register.benefit1"),
+    t("register.benefit2"),
+    t("register.benefit3"),
+    t("register.benefit4"),
+  ];
 
-  // Redirect to dashboard if already logged in
   useEffect(() => {
     if (!authLoading && user) {
       navigate("/dashboard");
     }
   }, [user, authLoading, navigate]);
 
-  // Password strength calculation
   const getPasswordStrength = (pwd: string): { score: number; label: string; color: string } => {
     let score = 0;
     if (pwd.length >= 8) score += 1;
@@ -67,17 +65,16 @@ const Register = () => {
     if (/\d/.test(pwd)) score += 1;
     if (/[^a-zA-Z0-9]/.test(pwd)) score += 1;
 
-    if (score <= 1) return { score: 20, label: "Sehr schwach", color: "bg-destructive" };
-    if (score === 2) return { score: 40, label: "Schwach", color: "bg-orange-500" };
-    if (score === 3) return { score: 60, label: "Mittel", color: "bg-yellow-500" };
-    if (score === 4) return { score: 80, label: "Stark", color: "bg-primary/70" };
-    return { score: 100, label: "Sehr stark", color: "bg-primary" };
+    if (score <= 1) return { score: 20, label: t("register.passwordStrength.veryWeak"), color: "bg-destructive" };
+    if (score === 2) return { score: 40, label: t("register.passwordStrength.weak"), color: "bg-orange-500" };
+    if (score === 3) return { score: 60, label: t("register.passwordStrength.medium"), color: "bg-yellow-500" };
+    if (score === 4) return { score: 80, label: t("register.passwordStrength.strong"), color: "bg-primary/70" };
+    return { score: 100, label: t("register.passwordStrength.veryStrong"), color: "bg-primary" };
   };
 
   const passwordStrength = getPasswordStrength(password);
   const passwordsMatch = confirmPassword === "" || password === confirmPassword;
 
-  // Name validation - only letters, spaces, hyphens allowed
   const isValidName = (name: string): boolean => {
     return /^[a-zA-ZäöüÄÖÜßéèêëàâîïôûùç\s\-']+$/.test(name);
   };
@@ -86,64 +83,40 @@ const Register = () => {
   const lastNameValid = lastName === "" || isValidName(lastName);
 
   const handleNameChange = (value: string, setter: (val: string) => void) => {
-    // Allow typing but filter out invalid characters
     const filtered = value.replace(/[0-9]/g, '');
     setter(filtered);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-
     setLoading(true);
 
     try {
-
-      // Validate name format
       if (!isValidName(firstName.trim()) || !isValidName(lastName.trim())) {
-        toast({
-          title: "Ungültiger Name",
-          description: "Vor- und Nachname dürfen nur Buchstaben enthalten.",
-          variant: "destructive",
-        });
+        toast({ title: t("register.invalidName"), description: t("register.invalidNameDesc"), variant: "destructive" });
         setLoading(false);
         return;
       }
 
-      // Validate inputs
       if (!firstName.trim() || !lastName.trim()) {
-        toast({
-          title: "Fehlende Angaben",
-          description: "Bitte gib deinen Vor- und Nachnamen ein.",
-          variant: "destructive",
-        });
+        toast({ title: t("register.missingFields"), description: t("register.missingFieldsDesc"), variant: "destructive" });
         setLoading(false);
         return;
       }
 
-      // Check password confirmation
       if (password !== confirmPassword) {
-        toast({
-          title: "Passwörter stimmen nicht überein",
-          description: "Bitte stelle sicher, dass beide Passwörter identisch sind.",
-          variant: "destructive",
-        });
+        toast({ title: t("register.passwordMismatch"), description: t("register.passwordMismatch"), variant: "destructive" });
         setLoading(false);
         return;
       }
 
-      // Validate display name for forbidden content
       const nameValidation = validateDisplayName(displayName.trim());
       if (!nameValidation.valid) {
-        toast({
-          title: "Ungültiger Anzeigename",
-          description: nameValidation.error,
-          variant: "destructive",
-        });
+        toast({ title: t("register.invalidDisplayName"), description: nameValidation.error, variant: "destructive" });
         setLoading(false);
         return;
       }
 
-      // Check if display name is available
       const { data: isAvailable, error: checkError } = await supabase.rpc('check_display_name_available', {
         p_display_name: displayName.trim(),
         p_current_user_id: null
@@ -152,19 +125,13 @@ const Register = () => {
       if (checkError) throw checkError;
 
       if (!isAvailable) {
-        toast({
-          title: "Name nicht verfügbar",
-          description: "Dieser Anzeigename ist bereits vergeben. Bitte wähle einen anderen.",
-          variant: "destructive",
-        });
+        toast({ title: t("register.nameUnavailable"), description: t("register.nameUnavailableDesc"), variant: "destructive" });
         setLoading(false);
         return;
       }
 
-      // Avoid triggering signup email if the email is already registered
       const normalizedEmail = normalizeEmail(email);
       
-      // Check if email exists (with timeout to avoid hanging)
       let emailAlreadyExists = false;
       try {
         const controller = new AbortController();
@@ -177,35 +144,27 @@ const Register = () => {
         clearTimeout(timeoutId);
 
         if (existsError) {
-          // If the helper fails, continue with signup attempt
           console.error("check_email_exists error:", existsError);
         } else if (exists === true) {
           emailAlreadyExists = true;
         }
       } catch (checkError: any) {
-        // If aborted or network error, continue with signup
         console.error("Email check failed:", checkError);
       }
 
       if (emailAlreadyExists) {
-        toast({
-          title: "E-Mail bereits registriert",
-          description: "Diese E-Mail existiert bereits. Falls du noch keine Bestätigung hast, sende die Bestätigungs-Mail erneut.",
-          variant: "destructive",
-        });
+        toast({ title: t("register.emailExists"), description: t("register.emailExistsDesc"), variant: "destructive" });
         navigate(`/email-confirmation?email=${encodeURIComponent(normalizedEmail)}`);
         setLoading(false);
         return;
       }
 
-      // Sign up user
       const { data: signUpData, error } = await supabase.auth.signUp({
         email: normalizeEmail(email),
         password,
         options: {
           data: {
             full_name: displayName.trim(),
-            // Store first/last name temporarily in metadata for the post-login hook
             pending_first_name: firstName.trim(),
             pending_last_name: lastName.trim(),
           },
@@ -215,64 +174,45 @@ const Register = () => {
 
       if (error) throw error;
 
-      if (error) throw error;
-
-      // Store sensitive data for later (will be processed on first login after email verification)
       if (signUpData?.user) {
         localStorage.setItem('pending_sensitive_data', JSON.stringify({
           firstName: firstName.trim(),
           lastName: lastName.trim(),
         }));
 
-        // Record referral if code was provided
         if (referralCode.trim()) {
           await recordReferral(referralCode.trim(), signUpData.user.id);
         }
       }
 
-      // Check if email confirmation is required
       if (signUpData?.user && !signUpData.session) {
-        // Email confirmation required - redirect to confirmation page
         navigate(`/email-confirmation?email=${encodeURIComponent(email)}`);
         return;
       } else {
-        toast({
-          title: "Konto erstellt!",
-          description: "Du kannst dich jetzt anmelden.",
-        });
+        toast({ title: t("register.accountCreated"), description: t("register.canLogin") });
         navigate("/login");
       }
     } catch (error: any) {
-      // Handle specific error cases with user-friendly messages
-      let errorTitle = "Registrierung fehlgeschlagen";
-      let errorDescription = error.message || "Bitte versuche es erneut.";
+      let errorTitle = t("register.failedTitle");
+      let errorDescription = error.message || t("common.retry");
 
       const errorLower = error.message?.toLowerCase?.() ?? "";
 
-      // Check for rate limit error - no redirect, just show message
       if (errorLower.includes("rate limit") || errorLower.includes("email rate limit") || error?.status === 429) {
-        errorTitle = "Zu viele Anfragen";
-        errorDescription = "Das E-Mail-Limit wurde erreicht. Bitte warte ca. 1 Stunde oder verwende eine andere E-Mail-Adresse.";
-      }
-      // Check for weak/pwned password error
-      else if (error.message?.toLowerCase().includes("weak") || 
+        errorTitle = t("register.rateLimitTitle");
+        errorDescription = t("register.rateLimitDesc");
+      } else if (error.message?.toLowerCase().includes("weak") || 
           error.message?.toLowerCase().includes("pwned") ||
           error.code === "weak_password") {
-        errorTitle = "Unsicheres Passwort";
-        errorDescription = "Dieses Passwort wurde in Datenlecks gefunden und ist nicht sicher. Bitte wähle ein anderes, einzigartiges Passwort.";
-      }
-      // Check for email already registered
-      else if (error.message?.toLowerCase().includes("already registered") ||
-               error.message?.toLowerCase().includes("already exists")) {
-        errorTitle = "E-Mail bereits registriert";
-        errorDescription = "Diese E-Mail-Adresse ist bereits registriert. Bitte melde dich an oder verwende eine andere E-Mail.";
+        errorTitle = t("register.weakPassword");
+        errorDescription = t("register.weakPasswordDesc");
+      } else if (error.message?.toLowerCase().includes("already registered") ||
+                 error.message?.toLowerCase().includes("already exists")) {
+        errorTitle = t("register.emailExists");
+        errorDescription = t("register.emailExistsDesc");
       }
 
-      toast({
-        title: errorTitle,
-        description: errorDescription,
-        variant: "destructive",
-      });
+      toast({ title: errorTitle, description: errorDescription, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -291,39 +231,35 @@ const Register = () => {
       if (error) throw error;
     } catch (error: any) {
       toast({
-        title: "Google-Registrierung fehlgeschlagen",
-        description: error.message || "Bitte versuche es erneut.",
+        title: t("register.googleFailed"),
+        description: error.message || t("common.retry"),
         variant: "destructive",
       });
       setGoogleLoading(false);
     }
   };
 
-  // Native app layout - simplified, full screen form
+  // Native app layout
   if (isNative) {
     return (
       <div className="min-h-screen bg-background flex flex-col safe-area-inset">
         <div className="flex-1 overflow-y-auto px-6 py-6">
           <div className="w-full max-w-sm mx-auto">
-            {/* Logo */}
             <div className="mb-6 flex justify-center">
               <ScannerLogo size="lg" labelSize="lg" />
             </div>
 
-            {/* Header */}
             <div className="mb-6 text-center">
-              <h1 className="text-2xl font-bold mb-2">Konto erstellen</h1>
+              <h1 className="text-2xl font-bold mb-2">{t("register.title")}</h1>
               <p className="text-muted-foreground text-sm">
-                Starte kostenlos – keine Kreditkarte nötig
+                {t("register.subtitle")}
               </p>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleRegister} className="space-y-4">
-              {/* Name Row */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="firstName" className="text-sm">Vorname</Label>
+                  <Label htmlFor="firstName" className="text-sm">{t("register.firstName")}</Label>
                   <Input
                     id="firstName"
                     type="text"
@@ -338,7 +274,7 @@ const Register = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="lastName" className="text-sm">Nachname</Label>
+                  <Label htmlFor="lastName" className="text-sm">{t("register.lastName")}</Label>
                   <Input
                     id="lastName"
                     type="text"
@@ -354,15 +290,14 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Display Name */}
               <div className="space-y-1.5">
-                <Label htmlFor="displayName" className="text-sm">Anzeigename</Label>
+                <Label htmlFor="displayName" className="text-sm">{t("register.displayName")}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="displayName"
                     type="text"
-                    placeholder="Dein Anzeigename"
+                    placeholder={t("register.displayNamePlaceholder")}
                     value={displayName}
                     onChange={(e) => setDisplayName(e.target.value)}
                     className="pl-10 h-11 bg-card border-border text-base"
@@ -374,9 +309,8 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Email */}
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-sm">E-Mail</Label>
+                <Label htmlFor="email" className="text-sm">{t("register.email")}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -392,15 +326,14 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Password */}
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-sm">Passwort</Label>
+                <Label htmlFor="password" className="text-sm">{t("register.password")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Mind. 8 Zeichen"
+                    placeholder={t("register.passwordMin")}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 h-11 bg-card border-border text-base"
@@ -416,21 +349,20 @@ const Register = () => {
                       <span className="text-xs text-muted-foreground">{passwordStrength.label}</span>
                     </div>
                     <p className="text-xs text-muted-foreground/70">
-                      ⚠ Passwörter aus Datenlecks werden abgelehnt
+                      ⚠ {t("register.passwordReq.breach")}
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Confirm Password */}
               <div className="space-y-1.5">
-                <Label htmlFor="confirmPassword" className="text-sm">Passwort bestätigen</Label>
+                <Label htmlFor="confirmPassword" className="text-sm">{t("register.confirmPassword")}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
                     type="password"
-                    placeholder="Passwort wiederholen"
+                    placeholder={t("register.confirmPasswordPlaceholder")}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     className={`pl-10 h-11 bg-card border-border text-base ${!passwordsMatch ? "border-destructive" : ""}`}
@@ -441,14 +373,13 @@ const Register = () => {
                 {!passwordsMatch && (
                   <p className="text-xs text-destructive flex items-center gap-1">
                     <AlertCircle className="w-3 h-3" />
-                    Passwörter stimmen nicht überein
+                    {t("register.passwordMismatch")}
                   </p>
                 )}
               </div>
 
-              {/* Referral Code */}
               <div className="space-y-1.5">
-                <Label htmlFor="referralCode" className="text-sm">Freundescode (optional)</Label>
+                <Label htmlFor="referralCode" className="text-sm">{t("register.referralCode")}</Label>
                 <div className="relative">
                   <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -463,7 +394,7 @@ const Register = () => {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Hast du einen Code von einem Freund erhalten?
+                  {t("register.referralCodeHint")}
                 </p>
               </div>
 
@@ -477,24 +408,22 @@ const Register = () => {
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Registrieren...
+                    {t("register.submitting")}
                   </>
                 ) : (
-                  "Registrieren"
+                  t("register.submit")
                 )}
               </Button>
 
-              {/* Divider */}
               <div className="relative py-2">
                 <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t border-border" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">oder</span>
+                  <span className="bg-background px-2 text-muted-foreground">{t("common.or")}</span>
                 </div>
               </div>
 
-              {/* Google */}
               <Button
                 type="button"
                 variant="outline"
@@ -506,28 +435,27 @@ const Register = () => {
                 {googleLoading ? (
                   <>
                     <Loader2 className="w-5 h-5 animate-spin" />
-                    Verbinde...
+                    {t("register.connecting")}
                   </>
                 ) : (
                   <>
                     <GoogleIcon />
-                    Mit Google registrieren
+                    {t("register.googleRegister")}
                   </>
                 )}
               </Button>
 
               <p className="text-xs text-muted-foreground text-center">
-                Mit der Registrierung akzeptierst du unsere{" "}
-                <Link to="/agb" className="text-primary hover:underline">AGB</Link> und{" "}
-                <Link to="/datenschutz" className="text-primary hover:underline">Datenschutz</Link>.
+                {t("register.termsPrefix")}{" "}
+                <Link to="/agb" className="text-primary hover:underline">{t("register.termsLink")}</Link> {t("register.termsAnd")}{" "}
+                <Link to="/datenschutz" className="text-primary hover:underline">{t("register.privacyLink")}</Link>.
               </p>
             </form>
 
-            {/* Login Link */}
             <p className="text-center text-muted-foreground mt-6 text-sm">
-              Bereits registriert?{" "}
+              {t("register.hasAccount")}{" "}
               <Link to="/login" className="text-primary hover:underline font-medium">
-                Jetzt anmelden
+                {t("register.loginNow")}
               </Link>
             </p>
           </div>
@@ -601,7 +529,7 @@ const Register = () => {
         <div className="relative z-10 flex flex-col items-center justify-center w-full p-16">
           <div className="max-w-md">
             <h2 className="text-3xl font-bold mb-6">
-              Starte deine <span className="text-gradient">Transformation</span>
+              {t("register.startTransformation")} <span className="text-gradient">{t("register.transformation")}</span>
             </h2>
             <ul className="space-y-4">
               {benefits.map((benefit) => (
@@ -620,34 +548,29 @@ const Register = () => {
       {/* Right Side - Form */}
       <div className="flex-1 flex flex-col justify-center px-8 md:px-16 lg:px-24">
         <div className="w-full max-w-md mx-auto">
-          {/* Back Link */}
           <Link 
             to="/" 
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
           >
             <ArrowLeft className="w-4 h-4" />
-            Zurück zur Startseite
+            {t("nav.backToHome")}
           </Link>
 
-          {/* Logo */}
           <div className="mb-8">
             <ScannerLogo size="md" labelSize="lg" />
           </div>
 
-          {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">Konto erstellen</h1>
+            <h1 className="text-3xl font-bold mb-2">{t("register.title")}</h1>
             <p className="text-muted-foreground">
-              Starte kostenlos – keine Kreditkarte erforderlich.
+              {t("register.subtitleDesktop")}
             </p>
           </div>
 
-          {/* Form */}
           <form onSubmit={handleRegister} className="space-y-5">
-            {/* First & Last Name Row */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">Vorname</Label>
+                <Label htmlFor="firstName">{t("register.firstName")}</Label>
                 <div className="relative">
                   <Input
                     id="firstName"
@@ -670,7 +593,7 @@ const Register = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">Nachname</Label>
+                <Label htmlFor="lastName">{t("register.lastName")}</Label>
                 <div className="relative">
                   <Input
                     id="lastName"
@@ -696,26 +619,25 @@ const Register = () => {
             {(!firstNameValid || !lastNameValid) && (firstName || lastName) ? (
               <p className="text-xs text-destructive -mt-3 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" />
-                Nur Buchstaben erlaubt (keine Zahlen oder Sonderzeichen)
+                {t("register.onlyLetters")}
               </p>
             ) : (
               <p className="text-xs text-muted-foreground -mt-3">
-                Dein echter Name wird privat gespeichert und ist nur für dich sichtbar.
+                {t("register.nameHint")}
               </p>
             )}
 
-            {/* Display Name */}
             <div className="space-y-2">
-              <Label htmlFor="displayName">Anzeigename</Label>
+              <Label htmlFor="displayName">{t("register.displayName")}</Label>
               <p className="text-xs text-muted-foreground">
-                Dieser Name wird öffentlich angezeigt. Du kannst ihn später ändern.
+                {t("register.displayNameHint")}
               </p>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="displayName"
                   type="text"
-                  placeholder="Dein Anzeigename"
+                  placeholder={t("register.displayNamePlaceholder")}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="pl-10 h-12 bg-card border-border"
@@ -726,9 +648,8 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">E-Mail</Label>
+              <Label htmlFor="email">{t("register.email")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -743,15 +664,14 @@ const Register = () => {
               </div>
             </div>
 
-            {/* Password */}
             <div className="space-y-2">
-              <Label htmlFor="password">Passwort</Label>
+              <Label htmlFor="password">{t("register.password")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Mind. 8 Zeichen"
+                  placeholder={t("register.passwordMin")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 h-12 bg-card border-border"
@@ -759,11 +679,10 @@ const Register = () => {
                   required
                 />
               </div>
-              {/* Password Strength Indicator */}
               {password && (
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-muted-foreground">Passwortstärke:</span>
+                    <span className="text-muted-foreground">{t("register.passwordStrength.label")}</span>
                     <span className={`font-medium ${
                       passwordStrength.score <= 40 ? "text-destructive" : 
                       passwordStrength.score <= 60 ? "text-yellow-500" : "text-primary"
@@ -778,34 +697,33 @@ const Register = () => {
                   />
                   <ul className="text-xs text-muted-foreground space-y-0.5 mt-1">
                     <li className={password.length >= 8 ? "text-primary" : ""}>
-                      {password.length >= 8 ? "✓" : "○"} Mindestens 8 Zeichen
+                      {password.length >= 8 ? "✓" : "○"} {t("register.passwordReq.min8")}
                     </li>
                     <li className={/[a-z]/.test(password) && /[A-Z]/.test(password) ? "text-primary" : ""}>
-                      {/[a-z]/.test(password) && /[A-Z]/.test(password) ? "✓" : "○"} Groß- und Kleinbuchstaben
+                      {/[a-z]/.test(password) && /[A-Z]/.test(password) ? "✓" : "○"} {t("register.passwordReq.cases")}
                     </li>
                     <li className={/\d/.test(password) ? "text-primary" : ""}>
-                      {/\d/.test(password) ? "✓" : "○"} Mindestens eine Zahl
+                      {/\d/.test(password) ? "✓" : "○"} {t("register.passwordReq.number")}
                     </li>
                     <li className={/[^a-zA-Z0-9]/.test(password) ? "text-primary" : ""}>
-                      {/[^a-zA-Z0-9]/.test(password) ? "✓" : "○"} Sonderzeichen (z.B. !@#$)
+                      {/[^a-zA-Z0-9]/.test(password) ? "✓" : "○"} {t("register.passwordReq.special")}
                     </li>
                     <li className="text-muted-foreground/70">
-                      ⚠ Passwörter aus Datenlecks werden abgelehnt
+                      ⚠ {t("register.passwordReq.breach")}
                     </li>
                   </ul>
                 </div>
               )}
             </div>
 
-            {/* Confirm Password */}
             <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
+              <Label htmlFor="confirmPassword">{t("register.confirmPassword")}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
                   type="password"
-                  placeholder="Passwort wiederholen"
+                  placeholder={t("register.confirmPasswordPlaceholder")}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className={`pl-10 h-12 bg-card border-border ${
@@ -827,14 +745,13 @@ const Register = () => {
               {confirmPassword && !passwordsMatch && (
                 <p className="text-xs text-destructive flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
-                  Passwörter stimmen nicht überein
+                  {t("register.passwordMismatch")}
                 </p>
               )}
             </div>
 
-            {/* Referral Code */}
             <div className="space-y-2">
-              <Label htmlFor="referralCodeDesktop">Freundescode (optional)</Label>
+              <Label htmlFor="referralCodeDesktop">{t("register.referralCode")}</Label>
               <div className="relative">
                 <Gift className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <Input
@@ -849,7 +766,7 @@ const Register = () => {
                 />
               </div>
               <p className="text-xs text-muted-foreground">
-                Hast du einen Code von einem Freund erhalten? Gib ihn hier ein!
+                {t("register.referralCodeHintDesktop")}
               </p>
             </div>
 
@@ -863,26 +780,24 @@ const Register = () => {
               {loading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Wird erstellt...
+                  {t("register.submittingDesktop")}
                 </>
               ) : (
-                "Kostenlos registrieren"
+                t("register.submitDesktop")
               )}
             </Button>
 
-            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  oder
+                  {t("common.or")}
                 </span>
               </div>
             </div>
 
-            {/* Google Signup */}
             <Button
               type="button"
               variant="outline"
@@ -894,28 +809,27 @@ const Register = () => {
               {googleLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Verbinde mit Google...
+                  {t("register.connecting")}...
                 </>
               ) : (
                 <>
                   <GoogleIcon />
-                  Mit Google registrieren
+                  {t("register.googleRegister")}
                 </>
               )}
             </Button>
 
             <p className="text-xs text-muted-foreground text-center">
-              Mit der Registrierung akzeptierst du unsere{" "}
-              <Link to="/agb" className="text-primary hover:underline">AGB</Link> und{" "}
-              <Link to="/datenschutz" className="text-primary hover:underline">Datenschutzrichtlinien</Link>.
+              {t("register.termsPrefix")}{" "}
+              <Link to="/agb" className="text-primary hover:underline">{t("register.termsLink")}</Link> {t("register.termsAnd")}{" "}
+              <Link to="/datenschutz" className="text-primary hover:underline">{t("register.privacyLink")}</Link>.
             </p>
           </form>
 
-          {/* Login Link */}
           <p className="text-center text-muted-foreground mt-8">
-            Bereits registriert?{" "}
+            {t("register.hasAccount")}{" "}
             <Link to="/login" className="text-primary hover:underline font-medium">
-              Jetzt anmelden
+              {t("register.loginNow")}
             </Link>
           </p>
         </div>

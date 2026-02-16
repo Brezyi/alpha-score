@@ -22,6 +22,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { Progress } from "@/components/ui/progress";
@@ -55,17 +56,9 @@ type Analysis = {
   detailed_results: any;
 };
 
-const CATEGORIES = [
-  { id: "skincare", name: "Skincare", icon: Droplets, color: "bg-cyan-500/10 text-cyan-500", borderColor: "border-cyan-500/20" },
-  { id: "hair", name: "Haare & Bart", icon: Scissors, color: "bg-purple-500/10 text-purple-500", borderColor: "border-purple-500/20" },
-  { id: "body", name: "Körper & Gym", icon: Dumbbell, color: "bg-orange-500/10 text-orange-500", borderColor: "border-orange-500/20" },
-  { id: "style", name: "Style & Kleidung", icon: Shirt, color: "bg-pink-500/10 text-pink-500", borderColor: "border-pink-500/20" },
-  { id: "teeth", name: "Zähne & Lächeln", icon: SmilePlus, color: "bg-emerald-500/10 text-emerald-500", borderColor: "border-emerald-500/20" },
-  { id: "mindset", name: "Mindset & Haltung", icon: Brain, color: "bg-blue-500/10 text-blue-500", borderColor: "border-blue-500/20" },
-];
-
 const Plan = () => {
   const { user, loading } = useAuth();
+  const { t } = useLanguage();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
@@ -80,6 +73,15 @@ const Plan = () => {
   const { settings } = useGlobalSettings();
   const { shouldReduce, containerVariants, itemVariants, hoverScale, tapScale, hoverScaleSmall } = useOptimizedAnimations();
 
+  const CATEGORIES = [
+    { id: "skincare", name: t("plan.skincare"), icon: Droplets, color: "bg-cyan-500/10 text-cyan-500", borderColor: "border-cyan-500/20" },
+    { id: "hair", name: t("plan.hairBeard"), icon: Scissors, color: "bg-purple-500/10 text-purple-500", borderColor: "border-purple-500/20" },
+    { id: "body", name: t("plan.bodyGym"), icon: Dumbbell, color: "bg-orange-500/10 text-orange-500", borderColor: "border-orange-500/20" },
+    { id: "style", name: t("plan.styleClothing"), icon: Shirt, color: "bg-pink-500/10 text-pink-500", borderColor: "border-pink-500/20" },
+    { id: "teeth", name: t("plan.teethSmile"), icon: SmilePlus, color: "bg-emerald-500/10 text-emerald-500", borderColor: "border-emerald-500/20" },
+    { id: "mindset", name: t("plan.mindsetPosture"), icon: Brain, color: "bg-blue-500/10 text-blue-500", borderColor: "border-blue-500/20" },
+  ];
+
   // Handle scroll to face-fitness section and auto-expand exercise
   useEffect(() => {
     if (location.hash === "#face-fitness") {
@@ -89,7 +91,6 @@ const Plan = () => {
         setInitialExercise(exercise);
       }
       
-      // Small delay to ensure DOM is ready
       setTimeout(() => {
         const element = document.getElementById("face-fitness");
         if (element) {
@@ -98,20 +99,18 @@ const Plan = () => {
       }, 300);
     }
   }, [location]);
-  // Redirect to login if not authenticated
+
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
     }
   }, [user, loading, navigate]);
 
-  // Fetch tasks and latest analysis
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
       
       try {
-        // Fetch user tasks
         const { data: tasksData, error: tasksError } = await supabase
           .from("user_tasks")
           .select("*")
@@ -121,7 +120,6 @@ const Plan = () => {
         if (tasksError) throw tasksError;
         setTasks(tasksData || []);
 
-        // Fetch latest completed analysis
         const { data: analysisData, error: analysisError } = await supabase
           .from("analyses")
           .select("id, looks_score, weaknesses, priorities, strengths, detailed_results")
@@ -134,7 +132,6 @@ const Plan = () => {
         if (analysisError) throw analysisError;
         setLatestAnalysis(analysisData);
 
-        // Auto-select first category with tasks
         if (tasksData && tasksData.length > 0) {
           const firstCatWithTasks = CATEGORIES.find(c => 
             tasksData.some(t => t.category === c.id)
@@ -161,8 +158,8 @@ const Plan = () => {
     
     if (!latestAnalysis) {
       toast({
-        title: "Keine Analyse vorhanden",
-        description: "Mache zuerst eine Analyse, damit wir deinen Plan personalisieren können.",
+        title: t("plan.noAnalysis"),
+        description: t("plan.noAnalysisDesc"),
         variant: "destructive",
       });
       return;
@@ -190,7 +187,6 @@ const Plan = () => {
         throw new Error(result.error || "Plan generation failed");
       }
 
-      // Re-fetch tasks from database to ensure consistency
       const { data: freshTasks, error: fetchError } = await supabase
         .from("user_tasks")
         .select("*")
@@ -199,7 +195,6 @@ const Plan = () => {
 
       if (fetchError) {
         console.error("Error fetching fresh tasks:", fetchError);
-        // Fallback to response tasks if fetch fails
         setTasks(result.tasks || []);
       } else {
         setTasks(freshTasks || []);
@@ -208,11 +203,10 @@ const Plan = () => {
       setFocusAreas(result.focus_areas || []);
 
       toast({
-        title: "Plan erstellt! 🎯",
-        description: "Dein personalisierter Looksmax-Plan basiert auf deiner Analyse.",
+        title: t("plan.generated"),
+        description: t("plan.generatedDesc"),
       });
 
-      // Select first category with new tasks
       const tasksToUse = freshTasks || result.tasks || [];
       if (tasksToUse.length > 0) {
         const firstCat = CATEGORIES.find(c => 
@@ -224,8 +218,8 @@ const Plan = () => {
     } catch (error: any) {
       console.error("Error generating plan:", error);
       toast({
-        title: "Fehler",
-        description: error.message || "Plan konnte nicht erstellt werden.",
+        title: t("common.error"),
+        description: error.message || t("plan.noAnalysisDesc"),
         variant: "destructive",
       });
     } finally {
@@ -264,10 +258,9 @@ const Plan = () => {
     );
   }
 
-  // Native mobile layout
   if (isNative && isPremium) {
     return (
-      <MobileAppLayout title="Plan" showLogo={false}>
+      <MobileAppLayout title={t("nav.plan")} showLogo={false}>
         <MobilePlanContent
           tasks={tasks}
           loading={tasksLoading}
@@ -280,7 +273,6 @@ const Plan = () => {
     );
   }
 
-  // Premium gate
   if (!isPremium) {
     return (
       <div className="min-h-screen bg-background">
@@ -289,7 +281,7 @@ const Plan = () => {
             <div className="flex items-center justify-between h-16">
               <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="w-5 h-5" />
-                <span>Zurück</span>
+                <span>{t("nav.back")}</span>
               </Link>
               <div className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-primary" />
@@ -314,15 +306,14 @@ const Plan = () => {
             >
               <Lock className="w-10 h-10 text-primary" />
             </motion.div>
-            <h1 className="text-3xl font-bold mb-4">Premium Feature</h1>
+            <h1 className="text-3xl font-bold mb-4">{t("dashboard.premiumFeature")}</h1>
             <p className="text-muted-foreground mb-8">
-              Der personalisierte Looksmax-Plan ist nur für Premium-Mitglieder verfügbar. 
-              Erhalte deinen maßgeschneiderten Verbesserungsplan.
+              {t("plan.premiumDesc")}
             </p>
             <Link to="/pricing">
               <Button variant="hero" size="lg">
                 <Crown className="w-5 h-5" />
-                Premium werden
+                {t("plan.goPremium")}
               </Button>
             </Link>
           </motion.div>
@@ -340,20 +331,18 @@ const Plan = () => {
   const overallTotal = tasks.length;
   const overallProgress = overallTotal > 0 ? (overallCompleted / overallTotal) * 100 : 0;
 
-  // Get detailed scores from analysis
   const detailedResults = latestAnalysis?.detailed_results as any || {};
   const subScores = [
-    { name: "Symmetrie", score: detailedResults.face_symmetry?.score, icon: Target },
-    { name: "Jawline", score: detailedResults.jawline?.score, icon: Zap },
-    { name: "Augen", score: detailedResults.eyes?.score, icon: Sparkles },
-    { name: "Haut", score: detailedResults.skin?.score, icon: Droplets },
-    { name: "Haare", score: detailedResults.hair?.score, icon: Scissors },
-    { name: "Ausstrahlung", score: detailedResults.overall_vibe?.score, icon: Flame },
+    { name: t("plan.symmetry"), score: detailedResults.face_symmetry?.score, icon: Target },
+    { name: t("plan.jawline"), score: detailedResults.jawline?.score, icon: Zap },
+    { name: t("plan.eyes"), score: detailedResults.eyes?.score, icon: Sparkles },
+    { name: t("plan.skin"), score: detailedResults.skin?.score, icon: Droplets },
+    { name: t("plan.hair"), score: detailedResults.hair?.score, icon: Scissors },
+    { name: t("plan.charisma"), score: detailedResults.overall_vibe?.score, icon: Flame },
   ].filter(s => s.score !== undefined);
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <motion.header 
         className="sticky top-0 z-50 backdrop-blur-xl bg-background/80 border-b border-border"
         initial={{ y: -100 }}
@@ -364,7 +353,7 @@ const Plan = () => {
           <div className="flex items-center justify-between h-16">
             <Link to="/dashboard" className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="w-5 h-5" />
-              <span>Dashboard</span>
+              <span>{t("common.dashboard")}</span>
             </Link>
             <motion.div 
               className="flex items-center gap-2"
@@ -373,31 +362,29 @@ const Plan = () => {
               transition={{ delay: 0.2 }}
             >
               <Sparkles className="w-5 h-5 text-primary" />
-              <span className="font-bold">Looksmax Plan</span>
+              <span className="font-bold">{t("plan.headerTitle")}</span>
             </motion.div>
           </div>
         </div>
       </motion.header>
 
       <main className="container px-4 py-8">
-        {/* Title & Analysis Info */}
         <motion.div 
           className="mb-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <h1 className="text-3xl font-bold mb-2">Dein Looksmax-Plan</h1>
+          <h1 className="text-3xl font-bold mb-2">{t("plan.title")}</h1>
           <p className="text-muted-foreground">
             {latestAnalysis ? (
-              <>Personalisiert basierend auf deiner Analyse (Score: {latestAnalysis.looks_score?.toFixed(1)})</>
+              <>{t("plan.subtitle")} ({t("plan.subtitleScore")} {latestAnalysis.looks_score?.toFixed(1)})</>
             ) : (
-              <>Starte eine Analyse für einen personalisierten Plan.</>
+              <>{t("plan.subtitleNoAnalysis")}</>
             )}
           </p>
         </motion.div>
 
-        {/* Sub-Scores from Analysis */}
         {subScores.length > 0 && (
           <motion.div 
             className="mb-6"
@@ -405,7 +392,7 @@ const Plan = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h3 className="text-sm font-medium text-muted-foreground mb-3">Deine Teil-Scores</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-3">{t("plan.yourSubScores")}</h3>
             <motion.div 
               className="grid grid-cols-3 md:grid-cols-6 gap-2"
               variants={containerVariants}
@@ -463,7 +450,6 @@ const Plan = () => {
           </motion.div>
         )}
 
-        {/* Focus Areas / Priorities */}
         <AnimatePresence>
           {(focusAreas.length > 0 || (latestAnalysis?.priorities && latestAnalysis.priorities.length > 0)) && (
             <motion.div
@@ -484,7 +470,7 @@ const Plan = () => {
                   ) : (
                     <Target className="w-4 h-4 text-primary" />
                   )}
-                  <span className="text-sm font-medium text-primary">Deine Top-Prioritäten</span>
+                  <span className="text-sm font-medium text-primary">{t("plan.topPriorities")}</span>
                 </div>
                 <motion.div 
                   className="space-y-2"
@@ -516,7 +502,6 @@ const Plan = () => {
           )}
         </AnimatePresence>
 
-        {/* Overall Progress */}
         {tasks.length > 0 && (
           <motion.div 
             className="p-6 rounded-2xl glass-card mb-6 overflow-hidden relative"
@@ -524,7 +509,6 @@ const Plan = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
-            {/* Animated background glow - only on desktop */}
             {!shouldReduce && (
               <motion.div
                 className="absolute inset-0 bg-gradient-to-r from-primary/5 via-primary/10 to-primary/5"
@@ -535,9 +519,9 @@ const Plan = () => {
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-semibold">Gesamtfortschritt</span>
+                <span className="font-semibold">{t("plan.overallProgress")}</span>
                 <span className="text-sm text-muted-foreground">
-                  {overallCompleted} / {overallTotal} Aufgaben
+                  {overallCompleted} / {overallTotal} {t("plan.tasks")}
                 </span>
               </div>
               <div className="relative">
@@ -556,17 +540,16 @@ const Plan = () => {
                 )}
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                {overallProgress >= 100 ? "🎉 Alles erledigt! Großartige Arbeit." :
-                 overallProgress >= 75 ? "💪 Fast geschafft! Bleib dran." :
-                 overallProgress >= 50 ? "👍 Gute Fortschritte! Weiter so." :
-                 overallProgress >= 25 ? "🚀 Guter Start! Jeden Tag ein bisschen besser." :
-                 "📋 Beginne mit deinem Plan!"}
+                {overallProgress >= 100 ? t("plan.allDone") :
+                 overallProgress >= 75 ? t("plan.almostDone") :
+                 overallProgress >= 50 ? t("plan.goodProgress") :
+                 overallProgress >= 25 ? t("plan.goodStart") :
+                 t("plan.startPlan")}
               </p>
             </div>
           </motion.div>
         )}
 
-        {/* Empty State / Generate Button */}
         {tasks.length === 0 && !tasksLoading && (
           <motion.div 
             className="text-center py-12 rounded-2xl glass-card mb-8"
@@ -583,14 +566,14 @@ const Plan = () => {
                 >
                   <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 </motion.div>
-                <h3 className="text-xl font-bold mb-2">Zuerst Analyse durchführen</h3>
+                <h3 className="text-xl font-bold mb-2">{t("plan.doAnalysisFirst")}</h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Für einen personalisierten Plan brauchen wir deine Analyse-Ergebnisse.
+                  {t("plan.doAnalysisFirstDesc")}
                 </p>
                 <Link to="/upload">
                   <Button variant="hero" size="lg">
                     <Sparkles className="w-5 h-5" />
-                    Analyse starten
+                    {t("plan.startAnalysis")}
                   </Button>
                 </Link>
               </>
@@ -609,21 +592,21 @@ const Plan = () => {
                 ) : (
                   <Sparkles className="w-12 h-12 text-primary mx-auto mb-4" />
                 )}
-                <h3 className="text-xl font-bold mb-2">Personalisierter Plan bereit</h3>
+                <h3 className="text-xl font-bold mb-2">{t("plan.planReady")}</h3>
                 <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                  Basierend auf deiner Analyse erstellen wir einen Plan, der genau auf deine Schwächen abzielt.
+                  {t("plan.planReadyDesc")}
                 </p>
                 <motion.div whileHover={hoverScale} whileTap={tapScale}>
                   <Button variant="hero" size="lg" onClick={generatePersonalizedPlan} disabled={generating}>
                     {generating ? (
                       <>
                         <Loader2 className="w-5 h-5 animate-spin" />
-                        KI erstellt Plan...
+                        {t("plan.generatingAI")}
                       </>
                     ) : (
                       <>
                         <Sparkles className="w-5 h-5" />
-                        Plan generieren
+                        {t("plan.generatePlan")}
                       </>
                     )}
                   </Button>
@@ -633,10 +616,8 @@ const Plan = () => {
           </motion.div>
         )}
 
-        {/* Category Cards Grid - Showcase Style with Tasks */}
         {tasks.length > 0 && (
           <>
-            {/* Header */}
             <motion.div 
               className="flex items-center gap-3 mb-6"
               initial={{ opacity: 0, y: 20 }}
@@ -647,12 +628,11 @@ const Plan = () => {
                 <Check className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <h3 className="text-xl font-bold">Dein persönlicher Plan</h3>
-                <p className="text-sm text-muted-foreground">Basierend auf deiner Analyse</p>
+                <h3 className="text-xl font-bold">{t("plan.yourPlan")}</h3>
+                <p className="text-sm text-muted-foreground">{t("plan.basedOnAnalysis")}</p>
               </div>
             </motion.div>
 
-            {/* Category Cards - Showcase Style 3-Column */}
             <motion.div 
               className="grid md:grid-cols-3 gap-4 mb-6"
               variants={containerVariants}
@@ -673,7 +653,6 @@ const Plan = () => {
                     variants={itemVariants}
                     whileHover={hoverScaleSmall}
                   >
-                    {/* Category Header */}
                     <div className="flex items-center gap-2 mb-3">
                       <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", cat.color)}>
                         <cat.icon className="w-4 h-4" />
@@ -681,7 +660,6 @@ const Plan = () => {
                       <span className="font-semibold">{cat.name}</span>
                     </div>
                     
-                    {/* Tasks List - Showcase Style */}
                     <div className="space-y-2 mb-4">
                       {catTasks.slice(0, 3).map((task, i) => (
                         <div 
@@ -707,12 +685,11 @@ const Plan = () => {
                           onClick={() => setActiveCategory(cat.id)}
                           className="text-xs text-primary hover:underline pl-6"
                         >
-                          +{catTasks.length - 3} weitere
+                          +{catTasks.length - 3} {t("common.more")}
                         </button>
                       )}
                     </div>
                     
-                    {/* Progress Bar */}
                     <div className="h-2 rounded-full bg-muted overflow-hidden">
                       <motion.div 
                         className="h-full rounded-full bg-primary"
@@ -727,7 +704,6 @@ const Plan = () => {
               })}
             </motion.div>
 
-            {/* Active Category Detail View */}
             <motion.div
               key={activeCategory}
               initial={{ opacity: 0, y: 20 }}
@@ -746,7 +722,7 @@ const Plan = () => {
                         </div>
                         <div>
                           <h4 className="font-bold">{cat.name}</h4>
-                          <p className="text-sm text-muted-foreground">{completedCount} von {totalCount} erledigt</p>
+                          <p className="text-sm text-muted-foreground">{completedCount} {t("plan.ofCompleted")} {totalCount} {t("plan.completed")}</p>
                         </div>
                       </>
                     );
@@ -755,7 +731,6 @@ const Plan = () => {
                 <div className="text-2xl font-bold text-primary">{Math.round(progress)}%</div>
               </div>
 
-              {/* Full Task List */}
               <div className="space-y-2">
                 <AnimatePresence mode="popLayout">
                   {categoryTasks.map((task) => (
@@ -791,7 +766,7 @@ const Plan = () => {
                       </div>
                       {task.priority === 1 && !task.completed && (
                         <span className="px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 text-xs">
-                          Priorität
+                          {t("common.priority")}
                         </span>
                       )}
                     </motion.div>
@@ -800,7 +775,6 @@ const Plan = () => {
               </div>
             </motion.div>
 
-            {/* Face Fitness Section */}
             <motion.div
               id="face-fitness"
               initial={{ opacity: 0, y: 20 }}
@@ -811,7 +785,6 @@ const Plan = () => {
               <FaceFitnessExercises initialExpandedExercise={initialExercise} />
             </motion.div>
 
-            {/* Regenerate Button */}
             <div className="text-center">
               <motion.div whileHover={hoverScale} whileTap={tapScale}>
                 <Button
@@ -825,11 +798,11 @@ const Plan = () => {
                   ) : (
                     <RefreshCw className="w-4 h-4 mr-2" />
                   )}
-                  Plan neu generieren
+                  {t("plan.regenerate")}
                 </Button>
               </motion.div>
               <p className="text-xs text-muted-foreground mt-2">
-                Basierend auf deiner aktuellen Analyse
+                {t("plan.basedOnCurrentAnalysis")}
               </p>
             </div>
           </>
